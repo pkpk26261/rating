@@ -316,6 +316,23 @@
     .tile:active{ cursor:grabbing; }
     .tile .seat-badge{ transform:scale(.95); }
 
+    /* 觸控：避免捲動攔截拖曳；加上選取高亮 */
+    .tile{ touch-action: none; }              /* 減少「拖就捲頁」 */
+    .seat-cell{ touch-action: manipulation; } /* 觸控點擊更靈敏 */
+
+    .tile.picked{
+      outline:3px solid color-mix(in oklab, var(--accent) 75%, black);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.25) inset, 0 16px 36px rgba(124,58,237,.25);
+      transform: scale(1.03);
+    }
+
+    /* 粗指標（平板/手機）把點擊面積放大一點 */
+    @media (pointer: coarse){
+      .seatboard{ gap:10px; }
+      .seat-cell .tile{ padding:10px 12px; }
+    }
+
+
     .unassigned{ border:1px solid var(--line); border-radius:12px; padding:12px; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); height: 68vh; max-height: 540px; min-height: 200px; display:flex; flex-direction:column; overflow:hidden; }
     @media (max-width: 880px){ .unassigned{ height: 52vh; max-height: 420px; } }
     .unassigned h4{ margin:0 0 8px 0; font-size:14px; color:var(--muted); position: sticky; top: 0; padding-bottom:8px; z-index: 1; text-align:center; }
@@ -676,6 +693,33 @@
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
       hw:{}, savedHW:{}
     };
+
+    /* === 觸控備援：點一下選取 → 點一下放置 === */
+    const IS_COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    let pickedId = null;
+
+    function pickTileById(id){
+      if(!id) return;
+      // 清掉舊的
+      document.querySelectorAll('.tile.picked').forEach(el=> el.classList.remove('picked'));
+      pickedId = id;
+      const el = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
+      el?.classList.add('picked');
+      // 視覺提示（在座位模式才顯示）
+      const hint = document.getElementById('seat-hint');
+      if (hint) hint.textContent = '已選取：點任一座位格放置；點右側空白區可放回未安排。';
+    }
+
+    function clearPicked(){
+      pickedId = null;
+      document.querySelectorAll('.tile.picked').forEach(el=> el.classList.remove('picked'));
+      const hint = document.getElementById('seat-hint');
+      if (hint && document.getElementById('mode-seat').classList.contains('active')){
+        hint.textContent = IS_COARSE ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
+                                    : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
+      }
+    }
+
 
     // ===== 本機暫存（整份狀態） =====
     const SESSION_KEY = 'pscore_session_v1';
@@ -1349,7 +1393,10 @@
       const {rows, cols} = getCurrentRowsCols(cls);
 
       elRows.value = rows; elCols.value = cols;
-      elSeatHint.textContent=`拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。`;
+      elSeatHint.textContent = IS_COARSE
+        ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
+        : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
+
       elSeatboard.style.setProperty('--cols', cols);
       elSeatboard.style.setProperty('--rows', rows);                // 把列數也傳進 CSS
       if (rows>=8 || cols>=8) elSeatboard.setAttribute('data-dense','1');
@@ -1371,7 +1418,16 @@
           cell.addEventListener('dragleave', ()=> cell.classList.remove('dragover'));
           cell.addEventListener('drop', e=>{ e.preventDefault(); cell.classList.remove('dragover'); const id=e.dataTransfer.getData('text/plain'); placeStudent(cls, r, c, id); });
           cell.addEventListener('contextmenu', e=>{ e.preventDefault(); if(st.map[key]){ delete st.map[key]; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); } });
-
+          cell.addEventListener('click', ()=>{
+            if(!IS_COARSE) return;          // 桌機維持拖曳
+            const key = r + '-' + c;
+            const currentId = st.map[key];
+            if (pickedId){
+              placeStudent(cls, r, c, pickedId);
+            }else if(currentId){
+              pickTileById(currentId);
+            }
+          });
           if(id){ 
             const stu=list.find(x=>x.id===id); 
             if(stu){ 
@@ -1400,6 +1456,17 @@
       elUnassigned.addEventListener('dragover', onUnDragOver);
       elUnassigned.addEventListener('dragleave', onUnDragLeave);
       elUnassigned.addEventListener('drop', onUnDrop);
+      // 觸控：點未安排名單的空白處 → 把選取的學生放回未安排
+      elUnassigned.addEventListener('click', (e)=>{
+        if(!IS_COARSE || !pickedId) return;
+        if (e.target.closest('.tile')) return;  // 點到人就跳過
+        const st2 = ensureSeatState(cls);
+        for (const k in st2.map){ if (st2.map[k] === pickedId) delete st2.map[k]; }
+        saveSeatState(cls, st2);
+        clearPicked();
+        renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
+      });
+
 
       renderStudents(cls);
 
@@ -1418,14 +1485,37 @@
       const seatNow=s.seat; 
       tile.innerHTML=`${seatNow?`<span class="seat-badge">${highlightSeat(seatNow, qForHighlight)}</span>`:''}<span class="student-name">${isHit?highlightHTML(s.name, qForHighlight):escapeHTML(s.name)}</span>`;
       tile.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s.id); }); 
+      // 觸控：點一下選取，再點座位放置
+      tile.addEventListener('click', (e)=>{
+        if(!IS_COARSE) return;           // 桌機仍用拖曳
+        e.preventDefault();
+        if (pickedId === s.id) clearPicked();
+        else pickTileById(s.id);
+      });
       return tile;
     }
+
     function placeStudent(cls, r, c, id){
-      if(!id) return; const st=ensureSeatState(cls);
-      for(const k in st.map){ if(st.map[k]===id) delete st.map[k]; }
-      st.map[r+'-'+c]=id; saveSeatState(cls, st);
+      if(!id) return;
+      const st = ensureSeatState(cls);
+      const dstKey = r + '-' + c;
+      const dstOld = st.map[dstKey];          // 目標座位原本的人
+      const srcPos = findSeatPos(cls, id);    // 這位學生目前是否在座位上
+
+      if (dstOld && srcPos){                  // 兩邊都有人 → 交換
+        st.map[dstKey] = id;
+        st.map[srcPos.r + '-' + srcPos.c] = dstOld;
+      } else {
+        // 一般放置：先把此人從舊位移除，再放到新位（若新位原本有人會被覆蓋→到未安排名單）
+        for (const k in st.map){ if (st.map[k] === id) delete st.map[k]; }
+        st.map[dstKey] = id;
+      }
+
+      saveSeatState(cls, st);
+      clearPicked();                 // 若是點選流程，放下後清除選取
       renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
     }
+
     function autoArrange(cls){
       const st=ensureSeatState(cls); const list=(state.classMap[cls]||[]).slice();
       const {rows, cols} = getCurrentRowsCols(cls); const coords=[];
