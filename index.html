@@ -184,11 +184,11 @@
     }
     /* 讓三個模式的內容區塊填滿剩餘高度，並在區塊內捲動 */
     .main > .grid,
-    .main > .seatwrap,
+    .main > .seatwrap{
+      flex:1 1 auto; min-height:0; overflow:auto;
+    }
     .main > #hw-pane{
-      flex:1 1 auto;
-      min-height:0;   /* 關鍵：避免被內容撐爆 */
-      overflow:auto;  /* 在各自區塊內出現卷軸，不會超過 main 的下邊界 */
+      flex:1 1 auto; min-height:0; overflow:hidden; /* 讓捲動只在 .hwtbl-wrap */
     }
 
 
@@ -353,16 +353,25 @@
     .hw-controls{ display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
     .hw-title{ font-weight:900; letter-spacing:.04em; margin:6px 0 2px 0; display:flex; align-items:center; gap:8px; }
     .hwtbl-wrap{
-      margin-top:10px; border:1px solid var(--line); border-radius:14px;
+      margin-top:10px; border:1px solid var(--line); border-radius:0px;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       box-shadow: var(--shadow);
-      max-height:64vh;
+      max-height: 1 1 auto;
+      min-height: 0;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       overflow-x:auto; overflow-y:auto;
       cursor: grab;
     }
     .hwtbl-wrap.grabbing{ cursor: grabbing; }
+
+    /* 讓作業頁成為直向 flex 容器 */
+    #hw-pane{
+      display: flex;
+      flex-direction: column;
+      min-height: 0;      /* 允許縮到可用高度 */
+      overflow: hidden;   /* 捲動交給內層 .hwtbl-wrap */
+    }
 
     table.hwtbl{
       width: max-content;
@@ -904,35 +913,85 @@
       }
     });
 
+    /* ===== 匯出 Excel（可選資料夾＋可改檔名；不支援則退回下載） ===== */
+    async function exportWorkbookWithPicker(wb, suggestedName){
+      const mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+      // 走原生另存對話框（Chrome / Edge 等；需 https 或 localhost）
+      if (window.showSaveFilePicker && isSecureContext) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName,
+            types: [{
+              description: 'Excel 活頁簿 (.xlsx)',
+              accept: { [mime]: ['.xlsx'] }
+            }],
+            excludeAcceptAllOption: false
+          });
+
+          // 由 xlsx 產出位元組陣列 → blob → 寫入使用者選的路徑
+          const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([data], { type: mime });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+
+          setStatus(`已儲存：${handle.name}`);
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') {
+            setStatus('已取消匯出。');
+            return;
+          }
+          console.warn('showSaveFilePicker 失敗，改用下載：', err);
+          // 失敗就落回下載
+        }
+      }
+
+      // 退回原本下載方式
+      XLSX.writeFile(wb, suggestedName);
+      setStatus(`已開始下載：${suggestedName}`);
+    }
+
     /* ===== 匯出 Excel ===== */
-    document.getElementById('btn-export').addEventListener('click',()=>{
+    document.getElementById('btn-export').addEventListener('click', async ()=>{
       try{
         const wb = XLSX.utils.book_new();
+
         for(const cls of state.classOrder){
           const list = state.classMap[cls] || [];
           const seatSt = ensureSeatState(cls);
           const hwSt = ensureHWState(cls);
+
           const header = ['學號','座號','姓名','分數', ...hwSt.cols, COL.R, COL.C];
           const aoa = [header];
+
           for(const s of list){
             const id=s.id, sc=state.scores[id]??0;
             const sid = s.sid || (state.sidMap[id]?.sid) || '';
             const pos = findSeatPos(cls, id);
-            let rr='', cc=''; if(pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
+            let rr='', cc='';
+            if(pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
             const arr = (hwSt.data[id] || []).slice(0, hwSt.cols.length);
             while(arr.length < hwSt.cols.length) arr.push('');
             aoa.push([sid, s.seat ?? '', s.name ?? '', sc, ...arr, rr, cc]);
           }
+
           const ws = XLSX.utils.aoa_to_sheet(aoa);
           const baseCols = [{wch:14},{wch:6},{wch:12},{wch:8}];
           const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
           ws['!cols'] = [...baseCols, ...hwColsW, {wch:8},{wch:8}];
           XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
         }
+
+        // 預設檔名：與原本一致
         const ts=new Date(), pad=n=>String(n).padStart(2,'0');
         const fname=`成績匯出_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}.xlsx`;
-        XLSX.writeFile(wb, fname);
-      }catch(err){ alert('匯出失敗：'+err.message); }
+
+        await exportWorkbookWithPicker(wb, fname);
+      }catch(err){
+        alert('匯出失敗：'+err.message);
+      }
     });
 
     // 取得按鈕
@@ -1134,8 +1193,6 @@
       stage.className = 'stage';
       stage.setAttribute('role', 'presentation');
       stage.textContent = '講台';
-      // （可選）與 seat 模式相同，強制跨欄
-      // stage.style.gridColumn = `1 / -1`;
       frag.appendChild(stage);
 
       // 接著再把 frag 丟進 DOM（原本就有的程式）
