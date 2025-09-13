@@ -696,7 +696,12 @@
 
     /* === 觸控備援：點一下選取 → 點一下放置 === */
     const IS_COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    // 新增：只要裝置有觸控就啟用「點選移動」模式（iPad/部分平板會回報 fine）
+    const HAS_TOUCH = (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+    const ENABLE_TAP_PICK = IS_COARSE || HAS_TOUCH;
+
     let pickedId = null;
+
 
     function pickTileById(id){
       if(!id) return;
@@ -715,8 +720,9 @@
       document.querySelectorAll('.tile.picked').forEach(el=> el.classList.remove('picked'));
       const hint = document.getElementById('seat-hint');
       if (hint && document.getElementById('mode-seat').classList.contains('active')){
-        hint.textContent = IS_COARSE ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
-                                    : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
+        hint.textContent = ENABLE_TAP_PICK
+          ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
+          : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
       }
     }
 
@@ -1479,7 +1485,7 @@
       const {rows, cols} = getCurrentRowsCols(cls);
 
       elRows.value = rows; elCols.value = cols;
-      elSeatHint.textContent = IS_COARSE
+      elSeatHint.textContent = ENABLE_TAP_PICK
         ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
         : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
 
@@ -1504,23 +1510,20 @@
           cell.addEventListener('dragleave', ()=> cell.classList.remove('dragover'));
           cell.addEventListener('drop', e=>{ e.preventDefault(); cell.classList.remove('dragover'); const id=e.dataTransfer.getData('text/plain'); placeStudent(cls, r, c, id); });
           cell.addEventListener('contextmenu', e=>{ e.preventDefault(); if(st.map[key]){ delete st.map[key]; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); } });
-          // ✅ 觸控「點一下」交給 seat-cell 先處理（捕獲階段）
           const onTapPlace = (e) => {
-            if (!IS_COARSE) return;
+            if (!ENABLE_TAP_PICK || state.mode !== 'seat') return;
             e.preventDefault();
-            e.stopPropagation();  // 先攔截，不讓 .tile 的 click 把選取改掉
-
+            e.stopPropagation();
+            // 後面邏輯同原本：有 pickedId 就放置；否則點到有人就選取
             const key = r + '-' + c;
             const currentId = st.map[key];
-
             if (pickedId) {
-              // 已選了別人 → 放到這格（若這格有人就交換）
               placeStudent(cls, r, c, pickedId);
             } else if (currentId) {
-              // 尚未選 → 點有人的格會選取那個人
               pickTileById(currentId);
             }
           };
+
 
           // 捕獲階段綁定，行動裝置上更穩定
           cell.addEventListener('pointerup', onTapPlace, { capture: true });
@@ -1557,8 +1560,8 @@
       // 觸控：點未安排名單的空白處 → 把選取的學生放回未安排
       // ✅ 觸控：點未安排名單的空白處 → 把選取的學生放回未安排（pointerup 版本）
       const onUnassignedTap = (e)=>{
-        if(!IS_COARSE || !pickedId) return;
-        if (e.target.closest('.tile')) return;  // 點到人就略過
+          if(!ENABLE_TAP_PICK || !pickedId) return;
+          if (e.target.closest('.tile')) return;
         const st2 = ensureSeatState(cls);
         for (const k in st2.map){ if (st2.map[k] === pickedId) delete st2.map[k]; }
         saveSeatState(cls, st2);
@@ -1566,8 +1569,6 @@
         renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
       };
       elUnassigned.addEventListener('pointerup', onUnassignedTap);
-
-
 
       renderStudents(cls);
 
@@ -1588,13 +1589,14 @@
       tile.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s.id); }); 
       // 觸控：點一下選取，再點座位放置
       tile.addEventListener('click', (e)=>{
-        if(!IS_COARSE) return;   // 桌機仍用拖曳
+        if(!ENABLE_TAP_PICK || state.mode !== 'seat') return; // ← 這行取代原本的 IS_COARSE
         e.preventDefault();
-        // 這裡不做交換，避免與 seat-cell 邏輯打架
         if (pickedId === s.id) clearPicked();
         else pickTileById(s.id);
       });
 
+      //（可選）避免滑動誤觸：指標捕捉
+      tile.addEventListener('pointerdown', (e)=>{ try{ tile.setPointerCapture(e.pointerId); }catch{} });
       return tile;
     }
 
