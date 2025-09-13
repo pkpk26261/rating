@@ -18,7 +18,9 @@
       --gold:#f59e0b; --silver:#9ca3af; --bronze:#d97706; --rank4:#60a5fa; --rank5:#34d399;
       --accent:#7c3aed; --accent-2:#22d3ee; --ok:#16a34a; --bad:#dc2626;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
-
+      --chip-fz:14px;
+      --chip-py:8px;
+      --chip-px:12px;
       --page-x: 10px;
       --list-cols: 6;
     }
@@ -557,11 +559,11 @@
     .chip{
       display:inline-flex; align-items:center; gap:8px;
       border:1px solid var(--line); border-radius:999px;
-      padding:8px 12px; background:var(--card); box-shadow: var(--shadow);
-      font-weight:900;
+      padding:var(--chip-py) var(--chip-px); background:var(--card); box-shadow: var(--shadow);
+      font-weight:900;font-size: var(--chip-fz);
     }
     .chip .seat-badge{ transform:scale(.95); }
-    .chip.big{ font-size:18px; padding:10px 14px; }
+    .chip.big{ font-size:var(--chip-fz); padding:var(--chip-py) var(--chip-px); }
     .chip.pop{ animation: popIn .25s ease-out; }
     @keyframes popIn{ from{ transform:scale(.88); opacity:0 } to{ transform:scale(1); opacity:1 } }
 
@@ -593,7 +595,7 @@
       max-height:none; /* 取消 36vh 上限 */
     }
     /* 🎲 抽號：固定「本次結果」高度 */
-    :root{ --draw-result-h: 110px; } /* 想調高低，改這裡即可 */
+    :root{ --draw-result-h: auto; } /* 想調高低，改這裡即可 */
 
     #draw-pane .spotlight-card{
       display:flex;
