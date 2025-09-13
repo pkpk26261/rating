@@ -1504,16 +1504,28 @@
           cell.addEventListener('dragleave', ()=> cell.classList.remove('dragover'));
           cell.addEventListener('drop', e=>{ e.preventDefault(); cell.classList.remove('dragover'); const id=e.dataTransfer.getData('text/plain'); placeStudent(cls, r, c, id); });
           cell.addEventListener('contextmenu', e=>{ e.preventDefault(); if(st.map[key]){ delete st.map[key]; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); } });
-          cell.addEventListener('click', ()=>{
-            if(!IS_COARSE) return;          // 桌機維持拖曳
+          // ✅ 觸控「點一下」交給 seat-cell 先處理（捕獲階段）
+          const onTapPlace = (e) => {
+            if (!IS_COARSE) return;
+            e.preventDefault();
+            e.stopPropagation();  // 先攔截，不讓 .tile 的 click 把選取改掉
+
             const key = r + '-' + c;
             const currentId = st.map[key];
-            if (pickedId){
+
+            if (pickedId) {
+              // 已選了別人 → 放到這格（若這格有人就交換）
               placeStudent(cls, r, c, pickedId);
-            }else if(currentId){
+            } else if (currentId) {
+              // 尚未選 → 點有人的格會選取那個人
               pickTileById(currentId);
             }
-          });
+          };
+
+          // 捕獲階段綁定，行動裝置上更穩定
+          cell.addEventListener('pointerup', onTapPlace, { capture: true });
+          cell.addEventListener('click',      onTapPlace, { capture: true });
+
           if(id){ 
             const stu=list.find(x=>x.id===id); 
             if(stu){ 
