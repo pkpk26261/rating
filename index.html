@@ -1555,15 +1555,18 @@
       elUnassigned.addEventListener('dragleave', onUnDragLeave);
       elUnassigned.addEventListener('drop', onUnDrop);
       // 觸控：點未安排名單的空白處 → 把選取的學生放回未安排
-      elUnassigned.addEventListener('click', (e)=>{
+      // ✅ 觸控：點未安排名單的空白處 → 把選取的學生放回未安排（pointerup 版本）
+      const onUnassignedTap = (e)=>{
         if(!IS_COARSE || !pickedId) return;
-        if (e.target.closest('.tile')) return;  // 點到人就跳過
+        if (e.target.closest('.tile')) return;  // 點到人就略過
         const st2 = ensureSeatState(cls);
         for (const k in st2.map){ if (st2.map[k] === pickedId) delete st2.map[k]; }
         saveSeatState(cls, st2);
         clearPicked();
         renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
-      });
+      };
+      elUnassigned.addEventListener('pointerup', onUnassignedTap);
+
 
 
       renderStudents(cls);
@@ -1585,26 +1588,13 @@
       tile.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s.id); }); 
       // 觸控：點一下選取，再點座位放置
       tile.addEventListener('click', (e)=>{
-        if(!IS_COARSE) return;           // 桌機仍用拖曳
+        if(!IS_COARSE) return;   // 桌機仍用拖曳
         e.preventDefault();
-
-        const currentPicked = pickedId;
-        const myId = s.id;
-
-        // 若已選了別人，且現在點的是座位盤上的一格 → 直接把 pickedId 放到這格（觸發交換）
-        if (currentPicked && currentPicked !== myId){
-          const cell = e.currentTarget.closest('.seat-cell');
-          if (cell && cell.dataset.r && cell.dataset.c){
-            placeStudent(cls, Number(cell.dataset.r), Number(cell.dataset.c), currentPicked);
-            e.stopPropagation();         // 避免再冒泡到 seat-cell 造成二次處理
-            return;
-          }
-        }
-
-        // 否則維持原本「選取/取消選取」行為
-        if (currentPicked === myId) clearPicked();
-        else pickTileById(myId);
+        // 這裡不做交換，避免與 seat-cell 邏輯打架
+        if (pickedId === s.id) clearPicked();
+        else pickTileById(s.id);
       });
+
       return tile;
     }
 
