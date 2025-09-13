@@ -496,6 +496,32 @@
         max-height: none;
       }
     }
+
+    /* ===== 🎲 抽號模式 ===== */
+    .draw-controls{ display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+    .draw-seq .input{ width:260px; }
+    .draw-subtitle{ margin:12px 0 6px 0; font-weight:900; letter-spacing:.04em; color:var(--muted); }
+    .draw-result-wrap,.draw-history-wrap{
+      border:1px solid var(--line); border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      padding:10px; box-shadow: var(--shadow); margin-top:10px;
+    }
+    .draw-result{ display:flex; flex-wrap:wrap; gap:8px; min-height:42px; align-items:center; }
+    .draw-history{ display:flex; flex-direction:column; gap:10px; max-height:36vh; overflow:auto; }
+    .draw-history.empty{ color:var(--muted); }
+    .draw-row{ border:1px solid var(--line); border-radius:10px; padding:8px; background:var(--card); }
+    .draw-row .time{ font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      display:inline-flex; align-items:center; gap:6px;
+      border:1px solid var(--line); border-radius:999px;
+      padding:6px 10px; background:var(--card); box-shadow: var(--shadow);
+      font-weight:800;
+    }
+    .chip .seat-badge{ transform:scale(.95); }
+    .chip.pop{ animation: popIn .25s ease-out; }
+    @keyframes popIn{ from{ transform:scale(.88); opacity:0 } to{ transform:scale(1); opacity:1 } }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -568,6 +594,8 @@
             <button id="mode-list" class="seg-btn active" data-mode="list">座位</button>
             <button id="mode-seat" class="seg-btn" data-mode="seat">設置座位</button>
             <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
+            <button id="mode-draw" class="seg-btn" data-mode="draw">抽號</button>
+
           </div>
         </div>
 
@@ -604,6 +632,38 @@
           </div>
           <div class="hwtbl-wrap">
             <table class="hwtbl" id="hw-table" role="grid"></table>
+          </div>
+        </section>
+        <!-- 🎲 抽號模式 -->
+        <section id="draw-pane" class="hidden" aria-label="抽號模式">
+          <h3 class="hw-title">🎲 抽號 <span class="pill" id="draw-class-pill">尚未載入</span></h3>
+          <div class="draw-controls">
+            <label>本次抽幾人
+              <input id="draw-count" type="number" class="input" min="1" value="1" style="width:90px;">
+            </label>
+
+            <label style="display:flex;gap:6px;align-items:center;">
+              <input id="draw-unique" type="checkbox" checked> 不重覆抽取
+            </label>
+
+            <label class="draw-seq">
+              每次不同（序列）
+              <input id="draw-seq" class="input" type="text" placeholder="例：2,3,2,4（留白則不用序列）" style="min-width:260px;">
+            </label>
+
+            <button id="btn-draw" class="btn add">🎯 抽！</button>
+            <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">重置</button>
+            <span id="draw-hint" class="hint"></span>
+          </div>
+
+          <div class="draw-result-wrap">
+            <div class="draw-subtitle">本次結果</div>
+            <div id="draw-result" class="draw-result"></div>
+          </div>
+
+          <div class="draw-history-wrap">
+            <div class="draw-subtitle">歷史紀錄</div>
+            <div id="draw-history" class="draw-history empty">尚無紀錄</div>
           </div>
         </section>
       </section>
@@ -691,7 +751,7 @@
     /* ====== 全域狀態 ====== */
     const state={
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
-      hw:{}, savedHW:{}
+      hw:{}, savedHW:{}, draw:{}
     };
 
     /* === 觸控備援：點一下選取 → 點一下放置 === */
@@ -777,7 +837,9 @@
           // 依照上次模式恢復畫面
           if(state.mode==='seat') setMode('seat');
           else if(state.mode==='hw') setMode('hw');
+          else if(state.mode==='draw') setMode('draw'); // ★
           else setMode('list');
+
 
           renderStudents(elSelect.value);
           renderLeaderboard(elSelect.value);
@@ -821,6 +883,19 @@
     const elHWTable=document.getElementById('hw-table');
     const elHWAdd=document.getElementById('btn-hw-add');
     const elHWDel=document.getElementById('btn-hw-del');
+
+    /* ★ 抽號 DOM */
+    const elModeDraw = document.getElementById('mode-draw');
+    const elDrawPane = document.getElementById('draw-pane');
+    const elDrawClassPill = document.getElementById('draw-class-pill');
+    const elDrawCount = document.getElementById('draw-count');
+    const elDrawSeq = document.getElementById('draw-seq');
+    const elDrawUnique = document.getElementById('draw-unique');
+    const elBtnDraw = document.getElementById('btn-draw');
+    const elBtnDrawReset = document.getElementById('btn-draw-reset');
+    const elDrawResult = document.getElementById('draw-result');
+    const elDrawHistory = document.getElementById('draw-history');
+    const elDrawHint = document.getElementById('draw-hint');
 
     /* 說明彈窗 DOM */
     const helpBtn = document.getElementById('btn-help');
@@ -942,6 +1017,7 @@
       renderStudents(cls); renderLeaderboard(cls);
       if(state.mode==='seat') renderSeatUI(cls);
       if(state.mode==='hw') renderHW(cls);
+      if(state.mode==='draw') renderDraw(cls);
       saveSession('class change');   // ★ 新增
     });
 
@@ -1636,21 +1712,26 @@
       elModeList.classList.toggle('active', m==='list');
       elModeSeat.classList.toggle('active', m==='seat');
       elModeHW.classList.toggle('active', m==='hw');
+      elModeDraw.classList.toggle('active', m==='draw'); // ★
 
       document.getElementById('students').classList.toggle('hidden', m!=='list');
       document.getElementById('seat-controls').classList.toggle('hidden', m!=='seat');
       document.getElementById('seatwrap').classList.toggle('hidden', m!=='seat');
       elHWPane.classList.toggle('hidden', m!=='hw');
+      elDrawPane.classList.toggle('hidden', m!=='draw'); // ★
 
       const cls=elSelect.value;
       if(m==='seat'){ ensureSeatState(cls); renderSeatUI(cls); }
       else if(m==='list'){ renderStudents(cls); }
       else if(m==='hw'){ renderHW(cls); }
-      saveSession('mode change');    // ★ 新增
+      else if(m==='draw'){ renderDraw(cls); } // ★
+      saveSession('mode change');
     }
+
     document.getElementById('mode-list').addEventListener('click', ()=> setMode('list'));
     document.getElementById('mode-seat').addEventListener('click', ()=> setMode('seat'));
     document.getElementById('mode-hw').addEventListener('click', ()=> setMode('hw'));
+    document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
 
     document.getElementById('btn-auto')?.addEventListener('click', ()=>{ autoArrange(elSelect.value); });
     document.getElementById('btn-clear')?.addEventListener('click', ()=>{ const cls=elSelect.value; const st=ensureSeatState(cls); st.map={}; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); });
@@ -1790,6 +1871,202 @@
       }).join('');
 
       elHWTable.innerHTML = th + `<tbody>${rows || '<tr><td colspan="999" class="hint">尚無學生資料</td></tr>'}</tbody>`;
+
+    /* ===== 🎲 抽號 — 狀態與工具 ===== */
+    function ensureDrawState(cls){
+      if(!cls) return { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
+      if(!state.draw) state.draw = {};
+      if(!state.draw[cls]){
+        try{
+          const raw = localStorage.getItem('draw_v1__' + cls);
+          state.draw[cls] = raw ? JSON.parse(raw) : { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
+        }catch{
+          state.draw[cls] = { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
+        }
+      }
+      // 容錯缺欄位
+      const d = state.draw[cls];
+      d.unique   = !!d.unique;
+      d.seqText  = String(d.seqText ?? '');
+      d.seqPos   = Number(d.seqPos ?? 0) || 0;
+      d.lastCount= Math.max(1, Number(d.lastCount ?? 1) || 1);
+      d.history  = Array.isArray(d.history) ? d.history : [];
+      d.drawn    = Array.isArray(d.drawn) ? d.drawn : [];
+      return d;
+    }
+    function saveDrawToLS(cls){
+      try{ localStorage.setItem('draw_v1__' + cls, JSON.stringify(state.draw[cls]||{})); saveSession('draw change'); }catch{}
+    }
+    function parseSeq(text){
+      return String(text||'')
+        .split(/[，、,\s]+/)
+        .map(s=>Number(s))
+        .filter(n=>Number.isFinite(n) && n>=1)
+        .map(n=>Math.floor(n));
+    }
+    function pickN(arr, n){
+      n = Math.max(0, Math.min(n, arr.length));
+      const a = arr.slice(); // 複本
+      // Fisher-Yates with crypto
+      const rnd = (max)=> {
+        if(window.crypto?.getRandomValues){
+          const u32 = new Uint32Array(1); window.crypto.getRandomValues(u32);
+          return u32[0] % max;
+        }else{
+          return Math.floor(Math.random()*max);
+        }
+      };
+      for(let i=a.length-1;i>0;i--){
+        const j = rnd(i+1);
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a.slice(0, n);
+    }
+    function fmtTime(ts){
+      const d = new Date(ts);
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+      const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0'), ss=String(d.getSeconds()).padStart(2,'0');
+      return `${y}/${m}/${dd} ${hh}:${mm}:${ss}`;
+    }
+
+    /* ===== 🎲 抽號 — UI ===== */
+    function renderDraw(cls){
+      elDrawClassPill.textContent = cls || '未選擇';
+
+      if(!cls){
+        elDrawHint.textContent = '請先上傳學生名單';
+        elDrawResult.innerHTML = '';
+        elDrawHistory.classList.add('empty');
+        elDrawHistory.innerHTML = '尚無紀錄';
+        return;
+      }
+
+      const d = ensureDrawState(cls);
+      // 同步 UI
+      elDrawCount.value = d.lastCount;
+      elDrawSeq.value   = d.seqText;
+      elDrawUnique.checked = d.unique;
+
+      // 名單與可抽數
+      const list = (state.classMap[cls]||[]).slice();
+      const drawnSet = new Set(d.drawn);
+      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
+      const tips = d.unique
+        ? `可抽名額：${candidates.length}/${list.length}（不重覆）`
+        : `可抽名額：${candidates.length}（可重覆）`;
+      elDrawHint.textContent = tips;
+
+      // 歷史
+      if(!d.history.length){
+        elDrawHistory.classList.add('empty');
+        elDrawHistory.textContent = '尚無紀錄';
+      }else{
+        elDrawHistory.classList.remove('empty');
+        const byId = new Map(list.map(s=>[s.id, s]));
+        elDrawHistory.innerHTML = d.history.map(h=>{
+          const chips = (h.ids||[]).map(id=>{
+            const s = byId.get(id);
+            if(!s) return '';
+            const seat = s.seat ? `#${padSeat(s.seat)}` : '';
+            return `<span class="chip"><span class="seat-badge">${seat||'--'}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
+          }).join('');
+          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
+        }).join('');
+      }
+    }
+
+    // 事件：抽！
+    elBtnDraw?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls) return alert('請先選擇班級');
+      const d = ensureDrawState(cls);
+
+      const list = (state.classMap[cls]||[]).slice();
+      if(!list.length) return alert('此班級沒有名單');
+
+      // 解析序列 → 取得本次人數
+      const seq = parseSeq(elDrawSeq.value);
+      let count;
+      if(seq.length){
+        count = seq[d.seqPos % seq.length];
+        d.seqPos++;
+      }else{
+        count = Math.max(1, Number(elDrawCount.value)||1);
+      }
+      d.lastCount = count;
+
+      // 建候選名單
+      const drawnSet = new Set(d.drawn);
+      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
+
+      if(candidates.length===0){
+        alert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
+        return;
+      }
+
+      if(count>candidates.length) count = candidates.length; // 夠幾個抽幾個
+
+      const picks = pickN(candidates, count);
+      // 更新結果視覺
+      elDrawResult.innerHTML = picks.map(s=>{
+        const seat = s.seat ? `#${padSeat(s.seat)}` : '';
+        return `<span class="chip pop"><span class="seat-badge">${seat||'--'}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
+      }).join('');
+
+      // 記錄歷史 + 已抽
+      const ids = picks.map(s=>s.id);
+      d.history.unshift({ ts: Date.now(), count, ids });
+      // 保留近 200 筆即可（避免無限成長）
+      if(d.history.length > 200) d.history.length = 200;
+
+      if(d.unique){
+        for(const id of ids) drawnSet.add(id);
+        d.drawn = Array.from(drawnSet);
+      }
+
+      saveDrawToLS(cls);
+      renderDraw(cls); // 重畫 hint/歷史
+    });
+
+    // 事件：重置
+    elBtnDrawReset?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls) return;
+      const d = ensureDrawState(cls);
+      d.drawn = [];
+      d.history = [];
+      d.seqPos = 0;
+      saveDrawToLS(cls);
+      elDrawResult.innerHTML = '';
+      renderDraw(cls);
+    });
+
+    // 變更設定即保存
+    elDrawUnique?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      d.unique = !!elDrawUnique.checked;
+      saveDrawToLS(cls);
+      renderDraw(cls);
+    });
+    elDrawSeq?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      d.seqText = String(elDrawSeq.value||'');
+      d.seqPos = 0; // 換了序列，從頭開始
+      saveDrawToLS(cls);
+      renderDraw(cls);
+    });
+    elDrawCount?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      const n = Math.max(1, Number(elDrawCount.value)||1);
+      d.lastCount = n;
+      elDrawCount.value = n;
+      saveDrawToLS(cls);
+      renderDraw(cls);
+    });
+
 
       // 欄位輸入即時更新
       elHWTable.querySelectorAll('tbody tr').forEach(tr=>{
