@@ -309,6 +309,7 @@
     .modal .close{ cursor:pointer; border:1px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--card); }
     .hint{ font-size:13px; color:var(--muted); }
     .divider{ height:1px; background:var(--line); margin:10px 0; }
+    .help-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
     /* ===== ★ 作業成績（表格） ===== */
     .hw-controls{ display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
@@ -434,7 +435,7 @@
         <button id="btn-help" class="btn" title="顯示操作說明">❓ 操作說明</button>
 
         <section class="board">
-          <h3>🏆 排行榜 <span id="board-class" class="badge">尚未載入</span></h3>
+          <h3>🏆 加分排行榜 <span id="board-class" class="badge">尚未載入</span></h3>
           <div id="leaderboard"></div>
         </section>
 
@@ -442,6 +443,7 @@
         <section id="help-src" class="hint hidden" aria-hidden="true">
           <strong>操作說明</strong>
           <div class="divider"></div>
+
           <ol>
             <li>可匯入：學生名單 或 之前匯出的「成績表」。</li>
             <li>每個工作表代表一個班級；若含「學號/分數/座標/作業成績」欄位會自動帶入。</li>
@@ -449,7 +451,15 @@
             <li>作業成績頁可按「＋新增作業」動態增加欄位。</li>
             <li>匯出 Excel 會包含每份作業欄位，下次匯入即帶回。</li>
           </ol>
+
+          <div class="divider"></div>
+
+          <div class="help-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <a href="#" id="btn-dl-sample" class="btn">📥 下載 Excel 範例檔</a>
+            <span class="hint">包含「班級A / 班級B」，各 30 位，欄位含「學號／座號／姓名」。</span>
+          </div>
         </section>
+
 
         <section class="statusbar">
           <div id="status" class="hint">尚未載入名單。</div>
@@ -859,7 +869,7 @@
         XLSX.writeFile(wb, fname);
       }catch(err){ alert('匯出失敗：'+err.message); }
     });
-    
+
     // 取得按鈕
     const elReset = document.getElementById('btn-reset');
 
@@ -914,6 +924,8 @@
       elBoardClass.textContent = '尚未載入';
       elHWTable.innerHTML = '';
       elHWClassPill.textContent = '尚未載入';
+      elSeatboard.innerHTML = '';
+      elUnassignedList.innerHTML = '';
 
       setMode('list');            // 回到預設頁籤
       setStatus('已清除本機暫存。'); // 狀態列提示
@@ -1175,6 +1187,19 @@
 
     /* ====== 設置座位模式 ====== */
     function renderSeatUI(cls){
+      // 👉 若尚未選班級，直接清空座位區與未安排名單，並設置預設欄數
+      if(!cls){
+        try{
+          elRows.value = 6; 
+          elCols.value = 6;
+          elSeatboard.style.setProperty('--cols', 6);
+        }catch{}
+        elSeatHint.textContent = '請先上傳名單';
+        elSeatboard.innerHTML = '';       // ← 清空座位盤
+        elUnassignedList.innerHTML = '';  // ← 清空未安排名單
+        return;
+      }
+
       if(!cls) return;
       const st=ensureSeatState(cls);
       const list=state.classMap[cls]||[];
@@ -1305,10 +1330,43 @@
 
 
     /* ===== 說明彈窗 ===== */
-    function openHelp(){ if(helpSrc&&helpContent){ helpContent.innerHTML=helpSrc.innerHTML; } helpMask.classList.add('show'); helpClose?.focus(); const onKey=(e)=>{ if(e.key==='Escape'){ closeHelp(); } }; window.addEventListener('keydown', onKey, { once:true }); helpMask.addEventListener('click', (e)=>{ if(e.target===helpMask){ closeHelp(); } }, { once:true }); }
+    function openHelp(){ if(helpSrc&&helpContent){ helpContent.innerHTML=helpSrc.innerHTML; const dlBtn = helpContent.querySelector('#btn-dl-sample'); dlBtn?.addEventListener('click', (e)=>{ e.preventDefault(); downloadSampleWorkbook(); });} helpMask.classList.add('show'); helpClose?.focus(); const onKey=(e)=>{ if(e.key==='Escape'){ closeHelp(); } }; window.addEventListener('keydown', onKey, { once:true }); helpMask.addEventListener('click', (e)=>{ if(e.target===helpMask){ closeHelp(); } }, { once:true }); }
     function closeHelp(){ helpMask.classList.remove('show'); }
     helpBtn?.addEventListener('click', ()=>{ bindRipple(helpBtn); openHelp(); });
     document.getElementById('help-close')?.addEventListener('click', closeHelp);
+
+    /* ===== ★ 產生範例 Excel：2 個班級 × 各 30 位 ===== */
+    function buildSampleSheet(classKey, sheetName){
+      // 使用系統既有的欄位名稱常數，避免打錯
+      const header = ['學號','座號','姓名'];
+      const aoa = [header];
+
+      for(let i=1;i<=30;i++){
+        const seat = i;                                    // 座號 1~30
+        const sid  = `${classKey}${String(i).padStart(3,'0')}`; // 學號：A001/B001...，跨班不會重複
+        const name = `學生${String(i).padStart(2,'0')}`;        // 姓名：學生01 ~ 學生30
+        // 分數/作業/座位列/座位欄 先留空，使用者可自行填
+        aoa.push([sid, seat, name, '', '', '', '', '']);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [{wch:12},{wch:6},{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+      return { ws, sheetName };
+    }
+
+    function buildSampleWorkbook(){
+      const wb = XLSX.utils.book_new();
+      const s1 = buildSampleSheet('A', '班級A');
+      const s2 = buildSampleSheet('B', '班級B');
+      XLSX.utils.book_append_sheet(wb, s1.ws, s1.sheetName);
+      XLSX.utils.book_append_sheet(wb, s2.ws, s2.sheetName);
+      return wb;
+    }
+
+    function downloadSampleWorkbook(){
+      const wb = buildSampleWorkbook();
+      XLSX.writeFile(wb, '平時成績_範例.xlsx');
+    }
 
     /* ===== 姓名自動縮字 ===== */
     let nameResizeObserver=null;
