@@ -190,6 +190,28 @@
     .main > #hw-pane{
       flex:1 1 auto; min-height:0; overflow:hidden; /* 讓捲動只在 .hwtbl-wrap */
     }
+    /* 讓「抽號」頁跟作業頁一樣吃滿 main 的可用高度 */
+    .main > #draw-pane{
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;      /* 關鍵：允許縮到可用高度 */
+      overflow: hidden;   /* 裡面自己滾動 */
+    }
+
+    /* 讓內層 grid 填滿父層高度；需要時在它裡面捲動 */
+    #draw-pane .draw-wrap{
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+      overflow: auto;     /* 若不想整張頁捲動，把滾動交給這層 */
+    }
+
+    #draw-pane .draw-history-wrap{
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+    }
 
 
     .sidebar{ display:flex; flex-direction:column; gap:16px; padding-bottom:0; }
@@ -497,30 +519,108 @@
       }
     }
 
-    /* ===== 🎲 抽號模式 ===== */
-    .draw-controls{ display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap; }
-    .draw-seq .input{ width:260px; }
-    .draw-subtitle{ margin:12px 0 6px 0; font-weight:900; letter-spacing:.04em; color:var(--muted); }
-    .draw-result-wrap,.draw-history-wrap{
+    /* ===== 🎲 抽號模式（新版） ===== */
+    .draw-wrap{
+      display:grid; grid-template-columns: 360px 1fr; gap:16px; margin-top:12px; align-items:stretch;
+    }
+    @media (max-width: 980px){ .draw-wrap{ grid-template-columns: 1fr; } }
+
+    .controls-card,
+    .spotlight-card{
       border:1px solid var(--line); border-radius:12px;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      padding:10px; box-shadow: var(--shadow); margin-top:10px;
+      box-shadow: var(--shadow);
     }
-    .draw-result{ display:flex; flex-wrap:wrap; gap:8px; min-height:42px; align-items:center; }
-    .draw-history{ display:flex; flex-direction:column; gap:10px; max-height:36vh; overflow:auto; }
-    .draw-history.empty{ color:var(--muted); }
-    .draw-row{ border:1px solid var(--line); border-radius:10px; padding:8px; background:var(--card); }
-    .draw-row .time{ font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+
+    .controls-card{ padding:12px; display:flex; flex-direction:column; gap:12px; }
+    .controls-card .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .controls-card .presets{ display:flex; gap:8px; flex-wrap:wrap; }
+    .controls-card .presets .btn{ padding:8px 10px; font-weight:900; }
+    .controls-card .ops{ display:flex; gap:8px; flex-wrap:wrap; }
+    .controls-card .ops .btn.add{ flex: 1 1 auto; font-size:16px; padding:12px; }
+    .controls-card .hint{ margin-top:2px; }
+
+    .spotlight-card{ padding:12px; display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .draw-stats{ display:flex; gap:8px; flex-wrap:wrap; }
+    .draw-stats .badge b{ font-variant-numeric: tabular-nums; padding-left:4px; }
+
+    .draw-result-wrap,.draw-history-wrap{
+      border:1px solid var(--line); border-radius:12px;
+      background:var(--card); padding:12px;
+      min-height:0; /* 讓右側可以彈性伸縮 */
+    }
+    .draw-subtitle{ font-weight:900; letter-spacing:.04em; color:var(--muted); margin-bottom:8px; }
+
+    .draw-result{
+      display:flex; flex-wrap:wrap; gap:10px; min-height:48px; align-items:center;
+    }
     .chip{
-      display:inline-flex; align-items:center; gap:6px;
+      display:inline-flex; align-items:center; gap:8px;
       border:1px solid var(--line); border-radius:999px;
-      padding:6px 10px; background:var(--card); box-shadow: var(--shadow);
-      font-weight:800;
+      padding:8px 12px; background:var(--card); box-shadow: var(--shadow);
+      font-weight:900;
     }
     .chip .seat-badge{ transform:scale(.95); }
+    .chip.big{ font-size:18px; padding:10px 14px; }
     .chip.pop{ animation: popIn .25s ease-out; }
     @keyframes popIn{ from{ transform:scale(.88); opacity:0 } to{ transform:scale(1); opacity:1 } }
+
+    .draw-history{ display:flex; flex-direction:column; gap:10px; }
+    .draw-history.empty{ color:var(--muted); }
+    .draw-row{ border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--card); }
+    .draw-row .time{ font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .draw-row .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+
+    /* 抽號：讓歷史區塊貼齊底並在自身滾動 */
+    #draw-pane .spotlight-card{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    #draw-pane .draw-history-wrap{
+      /* wrapper 只負責排版，不再滾動 */
+      display:flex;
+      flex-direction:column;
+      flex:1 1 auto;
+      min-height:0;
+      overflow:hidden; /* 蓋掉先前的 overflow:auto */
+    }
+    #draw-pane .draw-history{
+      /* 由內容區自己吃滿剩餘高度並滾動 */
+      flex:1 1 auto;
+      min-height:0;
+      overflow:auto;
+      max-height:none; /* 取消 36vh 上限 */
+    }
+    /* 🎲 抽號：固定「本次結果」高度 */
+    :root{ --draw-result-h: 110px; } /* 想調高低，改這裡即可 */
+
+    #draw-pane .spotlight-card{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    #draw-pane .draw-result-wrap{
+      flex: 0 0 var(--draw-result-h); /* 固定高度 */
+      overflow:auto;                  /* 內容太多可自行捲動 */
+    }
+
+    #draw-pane .draw-history-wrap{
+      display:flex;
+      flex-direction:column;
+      flex:1 1 auto;  /* 吃滿剩餘空間 */
+      min-height:0;
+      overflow:hidden;
+    }
+
+    #draw-pane .draw-history{
+      flex:1 1 auto;  /* 自己裡面捲動 */
+      min-height:0;
+      overflow:auto;
+      max-height:none; /* 取消舊的 36vh 限制（若有） */
+    }
+
 
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -634,38 +734,68 @@
             <table class="hwtbl" id="hw-table" role="grid"></table>
           </div>
         </section>
-        <!-- 🎲 抽號模式 -->
+        <!-- 🎲 抽號模式（新版） -->
         <section id="draw-pane" class="hidden" aria-label="抽號模式">
           <h3 class="hw-title">🎲 抽號 <span class="pill" id="draw-class-pill">尚未載入</span></h3>
-          <div class="draw-controls">
-            <label>本次抽幾人
-              <input id="draw-count" type="number" class="input" min="1" value="1" style="width:90px;">
-            </label>
 
-            <label style="display:flex;gap:6px;align-items:center;">
-              <input id="draw-unique" type="checkbox" checked> 不重覆抽取
-            </label>
+          <div class="draw-wrap">
+            <!-- 左：控制卡 -->
+            <aside class="controls-card">
+              <div class="row">
+                <label>本次抽幾人
+                  <input id="draw-count" type="number" class="input" min="1" value="1" style="width:90px;">
+                </label>
+                <label style="display:flex;gap:6px;align-items:center;">
+                  <input id="draw-unique" type="checkbox" checked> 不重覆抽取
+                </label>
+                <label style="display:flex;gap:6px;align-items:center;">
+                  <input id="draw-auto" type="checkbox"> 抽到即 +1 分
+                </label>
+              </div>
 
-            <label class="draw-seq">
-              每次不同（序列）
-              <input id="draw-seq" class="input" type="text" placeholder="例：2,3,2,4（留白則不用序列）" style="min-width:260px;">
-            </label>
+              <label class="row" style="flex-direction:column; align-items:flex-start;">
+                <span>每次不同（序列）</span>
+                <input id="draw-seq" class="input" type="text" placeholder="例：2,3,2,4（留白則不用序列）" style="min-width:260px; width:100%;">
+              </label>
 
-            <button id="btn-draw" class="btn add">🎯 抽！</button>
-            <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">重置</button>
-            <span id="draw-hint" class="hint"></span>
-          </div>
+              <div class="presets">
+                <span class="hint">快速： </span>
+                <button class="btn" data-preset="1">1人</button>
+                <button class="btn" data-preset="2">2人</button>
+                <button class="btn" data-preset="3">3人</button>
+                <button class="btn" data-preset="5">5人</button>
+              </div>
 
-          <div class="draw-result-wrap">
-            <div class="draw-subtitle">本次結果</div>
-            <div id="draw-result" class="draw-result"></div>
-          </div>
+              <div class="ops">
+                <button id="btn-draw" class="btn add">🎯 抽！</button>
+                <button id="btn-draw-undo" class="btn" title="撤銷最近一次抽取">↩️ 撤銷</button>
+                <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">重置</button>
+              </div>
 
-          <div class="draw-history-wrap">
-            <div class="draw-subtitle">歷史紀錄</div>
-            <div id="draw-history" class="draw-history empty">尚無紀錄</div>
+              <div class="hint" id="draw-hint">尚未載入名單</div>
+            </aside>
+
+            <!-- 右：聚光區 -->
+            <section class="spotlight-card">
+              <div class="draw-stats">
+                <span class="badge">剩餘 <b id="draw-rem">--</b></span>
+                <span class="badge">全班 <b id="draw-total">--</b></span>
+                <span class="badge">下一次 <b id="draw-next">--</b> 人</span>
+              </div>
+
+              <div class="draw-result-wrap">
+                <div class="draw-subtitle">本次結果</div>
+                <div id="draw-result" class="draw-result"></div>
+              </div>
+
+              <div class="draw-history-wrap">
+                <div class="draw-subtitle">歷史紀錄</div>
+                <div id="draw-history" class="draw-history empty">尚無紀錄</div>
+              </div>
+            </section>
           </div>
         </section>
+
       </section>
     </main>
   </div>
@@ -876,6 +1006,12 @@
     const elRows=document.getElementById('rows-input');
     const elCols=document.getElementById('cols-input');
     const elApplySize=document.getElementById('btn-apply-size');
+    const elBtnDrawUndo = document.getElementById('btn-draw-undo');
+    const elDrawAuto    = document.getElementById('draw-auto');
+    const elDrawRem     = document.getElementById('draw-rem');
+    const elDrawTotal   = document.getElementById('draw-total');
+    const elDrawNext    = document.getElementById('draw-next');
+
 
     /* ★ 作業成績 DOM */
     const elHWPane=document.getElementById('hw-pane');
@@ -1872,202 +2008,6 @@
 
       elHWTable.innerHTML = th + `<tbody>${rows || '<tr><td colspan="999" class="hint">尚無學生資料</td></tr>'}</tbody>`;
 
-    /* ===== 🎲 抽號 — 狀態與工具 ===== */
-    function ensureDrawState(cls){
-      if(!cls) return { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
-      if(!state.draw) state.draw = {};
-      if(!state.draw[cls]){
-        try{
-          const raw = localStorage.getItem('draw_v1__' + cls);
-          state.draw[cls] = raw ? JSON.parse(raw) : { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
-        }catch{
-          state.draw[cls] = { unique:true, seqText:'', seqPos:0, lastCount:1, history:[], drawn:[] };
-        }
-      }
-      // 容錯缺欄位
-      const d = state.draw[cls];
-      d.unique   = !!d.unique;
-      d.seqText  = String(d.seqText ?? '');
-      d.seqPos   = Number(d.seqPos ?? 0) || 0;
-      d.lastCount= Math.max(1, Number(d.lastCount ?? 1) || 1);
-      d.history  = Array.isArray(d.history) ? d.history : [];
-      d.drawn    = Array.isArray(d.drawn) ? d.drawn : [];
-      return d;
-    }
-    function saveDrawToLS(cls){
-      try{ localStorage.setItem('draw_v1__' + cls, JSON.stringify(state.draw[cls]||{})); saveSession('draw change'); }catch{}
-    }
-    function parseSeq(text){
-      return String(text||'')
-        .split(/[，、,\s]+/)
-        .map(s=>Number(s))
-        .filter(n=>Number.isFinite(n) && n>=1)
-        .map(n=>Math.floor(n));
-    }
-    function pickN(arr, n){
-      n = Math.max(0, Math.min(n, arr.length));
-      const a = arr.slice(); // 複本
-      // Fisher-Yates with crypto
-      const rnd = (max)=> {
-        if(window.crypto?.getRandomValues){
-          const u32 = new Uint32Array(1); window.crypto.getRandomValues(u32);
-          return u32[0] % max;
-        }else{
-          return Math.floor(Math.random()*max);
-        }
-      };
-      for(let i=a.length-1;i>0;i--){
-        const j = rnd(i+1);
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a.slice(0, n);
-    }
-    function fmtTime(ts){
-      const d = new Date(ts);
-      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-      const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0'), ss=String(d.getSeconds()).padStart(2,'0');
-      return `${y}/${m}/${dd} ${hh}:${mm}:${ss}`;
-    }
-
-    /* ===== 🎲 抽號 — UI ===== */
-    function renderDraw(cls){
-      elDrawClassPill.textContent = cls || '未選擇';
-
-      if(!cls){
-        elDrawHint.textContent = '請先上傳學生名單';
-        elDrawResult.innerHTML = '';
-        elDrawHistory.classList.add('empty');
-        elDrawHistory.innerHTML = '尚無紀錄';
-        return;
-      }
-
-      const d = ensureDrawState(cls);
-      // 同步 UI
-      elDrawCount.value = d.lastCount;
-      elDrawSeq.value   = d.seqText;
-      elDrawUnique.checked = d.unique;
-
-      // 名單與可抽數
-      const list = (state.classMap[cls]||[]).slice();
-      const drawnSet = new Set(d.drawn);
-      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
-      const tips = d.unique
-        ? `可抽名額：${candidates.length}/${list.length}（不重覆）`
-        : `可抽名額：${candidates.length}（可重覆）`;
-      elDrawHint.textContent = tips;
-
-      // 歷史
-      if(!d.history.length){
-        elDrawHistory.classList.add('empty');
-        elDrawHistory.textContent = '尚無紀錄';
-      }else{
-        elDrawHistory.classList.remove('empty');
-        const byId = new Map(list.map(s=>[s.id, s]));
-        elDrawHistory.innerHTML = d.history.map(h=>{
-          const chips = (h.ids||[]).map(id=>{
-            const s = byId.get(id);
-            if(!s) return '';
-            const seat = s.seat ? `#${padSeat(s.seat)}` : '';
-            return `<span class="chip"><span class="seat-badge">${seat||'--'}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
-          }).join('');
-          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
-        }).join('');
-      }
-    }
-
-    // 事件：抽！
-    elBtnDraw?.addEventListener('click', ()=>{
-      const cls = elSelect.value;
-      if(!cls) return alert('請先選擇班級');
-      const d = ensureDrawState(cls);
-
-      const list = (state.classMap[cls]||[]).slice();
-      if(!list.length) return alert('此班級沒有名單');
-
-      // 解析序列 → 取得本次人數
-      const seq = parseSeq(elDrawSeq.value);
-      let count;
-      if(seq.length){
-        count = seq[d.seqPos % seq.length];
-        d.seqPos++;
-      }else{
-        count = Math.max(1, Number(elDrawCount.value)||1);
-      }
-      d.lastCount = count;
-
-      // 建候選名單
-      const drawnSet = new Set(d.drawn);
-      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
-
-      if(candidates.length===0){
-        alert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
-        return;
-      }
-
-      if(count>candidates.length) count = candidates.length; // 夠幾個抽幾個
-
-      const picks = pickN(candidates, count);
-      // 更新結果視覺
-      elDrawResult.innerHTML = picks.map(s=>{
-        const seat = s.seat ? `#${padSeat(s.seat)}` : '';
-        return `<span class="chip pop"><span class="seat-badge">${seat||'--'}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
-      }).join('');
-
-      // 記錄歷史 + 已抽
-      const ids = picks.map(s=>s.id);
-      d.history.unshift({ ts: Date.now(), count, ids });
-      // 保留近 200 筆即可（避免無限成長）
-      if(d.history.length > 200) d.history.length = 200;
-
-      if(d.unique){
-        for(const id of ids) drawnSet.add(id);
-        d.drawn = Array.from(drawnSet);
-      }
-
-      saveDrawToLS(cls);
-      renderDraw(cls); // 重畫 hint/歷史
-    });
-
-    // 事件：重置
-    elBtnDrawReset?.addEventListener('click', ()=>{
-      const cls = elSelect.value;
-      if(!cls) return;
-      const d = ensureDrawState(cls);
-      d.drawn = [];
-      d.history = [];
-      d.seqPos = 0;
-      saveDrawToLS(cls);
-      elDrawResult.innerHTML = '';
-      renderDraw(cls);
-    });
-
-    // 變更設定即保存
-    elDrawUnique?.addEventListener('change', ()=>{
-      const cls = elSelect.value; if(!cls) return;
-      const d = ensureDrawState(cls);
-      d.unique = !!elDrawUnique.checked;
-      saveDrawToLS(cls);
-      renderDraw(cls);
-    });
-    elDrawSeq?.addEventListener('change', ()=>{
-      const cls = elSelect.value; if(!cls) return;
-      const d = ensureDrawState(cls);
-      d.seqText = String(elDrawSeq.value||'');
-      d.seqPos = 0; // 換了序列，從頭開始
-      saveDrawToLS(cls);
-      renderDraw(cls);
-    });
-    elDrawCount?.addEventListener('change', ()=>{
-      const cls = elSelect.value; if(!cls) return;
-      const d = ensureDrawState(cls);
-      const n = Math.max(1, Number(elDrawCount.value)||1);
-      d.lastCount = n;
-      elDrawCount.value = n;
-      saveDrawToLS(cls);
-      renderDraw(cls);
-    });
-
-
       // 欄位輸入即時更新
       elHWTable.querySelectorAll('tbody tr').forEach(tr=>{
         const id=tr.getAttribute('data-id');
@@ -2114,6 +2054,247 @@
         if(first){ first.scrollIntoView({ behavior:'smooth', block:'center' }); }
       }
     }
+
+    /* ===== 🎲 抽號 — 狀態、工具、UI（新版） ===== */
+    function ensureDrawState(cls){
+      if(!cls) return { unique:true, seqText:'', seqPos:0, lastCount:1, autoScore:false, history:[], drawn:[] };
+      if(!state.draw) state.draw = {};
+      if(!state.draw[cls]){
+        try{
+          const raw = localStorage.getItem('draw_v1__' + cls);
+          state.draw[cls] = raw ? JSON.parse(raw) : {};
+        }catch{ state.draw[cls] = {}; }
+      }
+      const d = state.draw[cls];
+      d.unique    = !!d.unique;
+      d.seqText   = String(d.seqText ?? '');
+      d.seqPos    = Number(d.seqPos ?? 0) || 0;
+      d.lastCount = Math.max(1, Number(d.lastCount ?? 1) || 1);
+      d.autoScore = !!d.autoScore;
+      d.history   = Array.isArray(d.history) ? d.history : [];
+      d.drawn     = Array.isArray(d.drawn) ? d.drawn : [];
+      return d;
+    }
+    function saveDrawToLS(cls){
+      try{ localStorage.setItem('draw_v1__' + cls, JSON.stringify(state.draw[cls]||{})); saveSession('draw change'); }catch{}
+    }
+
+    function parseSeq(text){
+      return String(text||'')
+        .split(/[，、,\s]+/)
+        .map(s=>Number(s))
+        .filter(n=>Number.isFinite(n) && n>=1)
+        .map(n=>Math.floor(n));
+    }
+    function pickN(arr, n){
+      n = Math.max(0, Math.min(n, arr.length));
+      const a = arr.slice();
+      const rnd = (max)=> {
+        if(window.crypto?.getRandomValues){
+          const u32 = new Uint32Array(1); window.crypto.getRandomValues(u32);
+          return u32[0] % max;
+        }else{
+          return Math.floor(Math.random()*max);
+        }
+      };
+      for(let i=a.length-1;i>0;i--){
+        const j = rnd(i+1);
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a.slice(0, n);
+    }
+    function fmtTime(ts){
+      const d = new Date(ts);
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+      const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0'), ss=String(d.getSeconds()).padStart(2,'0');
+      return `${y}/${m}/${dd} ${hh}:${mm}:${ss}`;
+    }
+
+    function renderDraw(cls){
+      elDrawClassPill.textContent = cls || '未選擇';
+
+      if(!cls){
+        elDrawHint.textContent = '請先上傳學生名單';
+        elDrawResult.innerHTML = '';
+        elDrawHistory.classList.add('empty');
+        elDrawHistory.innerHTML = '尚無紀錄';
+        elDrawRem.textContent='--'; elDrawTotal.textContent='--'; elDrawNext.textContent='--';
+        return;
+      }
+
+      const d = ensureDrawState(cls);
+      // 同步 UI 控制
+      elDrawCount.value = d.lastCount;
+      elDrawSeq.value   = d.seqText;
+      elDrawUnique.checked = d.unique;
+      elDrawAuto.checked   = d.autoScore;
+
+      // 名單 & 候選
+      const list = (state.classMap[cls]||[]).slice();
+      const drawnSet = new Set(d.drawn);
+      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
+
+      // 統計
+      elDrawTotal.textContent = String(list.length);
+      elDrawRem.textContent   = String(candidates.length);
+
+      const seq = parseSeq(d.seqText);
+      const nextN = seq.length ? seq[d.seqPos % seq.length] : d.lastCount;
+      elDrawNext.textContent = String(nextN);
+
+      const tips = d.unique
+        ? `可抽名額：${candidates.length}/${list.length}（不重覆）`
+        : `可抽名額：${candidates.length}（可重覆）`;
+      elDrawHint.textContent = tips;
+
+      // 歷史
+      if(!d.history.length){
+        elDrawHistory.classList.add('empty');
+        elDrawHistory.textContent = '尚無紀錄';
+      }else{
+        elDrawHistory.classList.remove('empty');
+        const byId = new Map(list.map(s=>[s.id, s]));
+        elDrawHistory.innerHTML = d.history.map(h=>{
+          const chips = (h.ids||[]).map(id=>{
+            const s = byId.get(id);
+            if(!s) return '';
+            const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
+            return `<span class="chip"><span class="seat-badge">${seat}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
+          }).join('');
+          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
+        }).join('');
+      }
+    }
+
+    // === 事件：抽！ ===
+    elBtnDraw?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls) return alert('請先選擇班級');
+      const d = ensureDrawState(cls);
+
+      const list = (state.classMap[cls]||[]).slice();
+      if(!list.length) return alert('此班級沒有名單');
+
+      // 決定本次人數
+      const seq = parseSeq(elDrawSeq.value);
+      let count;
+      if(seq.length){
+        count = seq[d.seqPos % seq.length];
+        d.seqPos++;
+      }else{
+        count = Math.max(1, Number(elDrawCount.value)||1);
+      }
+      d.lastCount = count;
+
+      // 候選
+      const drawnSet = new Set(d.drawn);
+      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
+      if(candidates.length===0){
+        alert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
+        return;
+      }
+      if(count>candidates.length) count = candidates.length;
+
+      const picks = pickN(candidates, count);
+
+      // 視覺：本次結果（大籌碼）
+      elDrawResult.innerHTML = picks.map(s=>{
+        const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
+        return `<span class="chip big pop"><span class="seat-badge">${seat}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
+      }).join('');
+
+      // 歷史 + 已抽
+      const ids = picks.map(s=>s.id);
+      d.history.unshift({ ts: Date.now(), count, ids });
+      if(d.history.length > 200) d.history.length = 200;
+
+      if(d.unique){
+        for(const id of ids) drawnSet.add(id);
+        d.drawn = Array.from(drawnSet);
+      }
+
+      // 抽到即 +1 分（可選）
+      if(d.autoScore){
+        ids.forEach(id=>{
+          state.scores[id] = Number(state.scores[id]||0) + 1;
+        });
+        try{ localStorage.setItem('scores_v1', JSON.stringify(state.scores)); saveSession('score change by draw'); }catch{}
+        renderLeaderboard(cls);
+        if(state.mode==='list') renderStudents(cls); // 讓列表上的分數即時更新
+      }
+
+      saveDrawToLS(cls);
+      renderDraw(cls); // 更新統計/歷史
+    });
+
+    // === 事件：撤銷最近一次 ===
+    elBtnDrawUndo?.addEventListener('click', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      const last = d.history.shift();
+      if(!last){ alert('沒有可撤銷的紀錄'); return; }
+      if(d.unique && Array.isArray(last.ids)){
+        const set = new Set(d.drawn);
+        last.ids.forEach(id=> set.delete(id));
+        d.drawn = Array.from(set);
+      }
+      // 如果有自動加分，也一起回退
+      if(d.autoScore && Array.isArray(last.ids)){
+        last.ids.forEach(id=>{
+          state.scores[id] = Math.max(0, Number(state.scores[id]||0) - 1);
+        });
+        try{ localStorage.setItem('scores_v1', JSON.stringify(state.scores)); saveSession('score undo by draw'); }catch{}
+        renderLeaderboard(cls);
+        if(state.mode==='list') renderStudents(cls);
+      }
+      saveDrawToLS(cls);
+      elDrawResult.innerHTML = '';
+      renderDraw(cls);
+    });
+
+    // === 事件：重置 ===
+    elBtnDrawReset?.addEventListener('click', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      d.drawn = []; d.history = []; d.seqPos = 0;
+      saveDrawToLS(cls);
+      elDrawResult.innerHTML = '';
+      renderDraw(cls);
+    });
+
+    // === 事件：控制變更（即存即用） ===
+    elDrawUnique?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls); d.unique = !!elDrawUnique.checked;
+      saveDrawToLS(cls); renderDraw(cls);
+    });
+    elDrawAuto?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls); d.autoScore = !!elDrawAuto.checked;
+      saveDrawToLS(cls); renderDraw(cls);
+    });
+    elDrawSeq?.addEventListener('input', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls); d.seqText = String(elDrawSeq.value||''); d.seqPos = 0;
+      saveDrawToLS(cls); renderDraw(cls);
+    });
+    elDrawCount?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls);
+      const n = Math.max(1, Number(elDrawCount.value)||1);
+      d.lastCount = n; elDrawCount.value = n;
+      saveDrawToLS(cls); renderDraw(cls);
+    });
+
+    // === 事件：快速預設人數 ===
+    document.querySelectorAll('.presets .btn[data-preset]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const n = Number(btn.getAttribute('data-preset'))||1;
+        elDrawCount.value = n;
+        const evt = new Event('change'); elDrawCount.dispatchEvent(evt);
+      });
+    });
+
 
     /* ===== ★ 批次輸入彈窗邏輯 ===== */
     function openBulkModal(cls, colIndex){
