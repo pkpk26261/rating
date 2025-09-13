@@ -1575,8 +1575,23 @@
       tile.addEventListener('click', (e)=>{
         if(!IS_COARSE) return;           // 桌機仍用拖曳
         e.preventDefault();
-        if (pickedId === s.id) clearPicked();
-        else pickTileById(s.id);
+
+        const currentPicked = pickedId;
+        const myId = s.id;
+
+        // 若已選了別人，且現在點的是座位盤上的一格 → 直接把 pickedId 放到這格（觸發交換）
+        if (currentPicked && currentPicked !== myId){
+          const cell = e.currentTarget.closest('.seat-cell');
+          if (cell && cell.dataset.r && cell.dataset.c){
+            placeStudent(cls, Number(cell.dataset.r), Number(cell.dataset.c), currentPicked);
+            e.stopPropagation();         // 避免再冒泡到 seat-cell 造成二次處理
+            return;
+          }
+        }
+
+        // 否則維持原本「選取/取消選取」行為
+        if (currentPicked === myId) clearPicked();
+        else pickTileById(myId);
       });
       return tile;
     }
