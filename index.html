@@ -1007,24 +1007,43 @@
           const seatSt = ensureSeatState(cls);
           const hwSt = ensureHWState(cls);
 
-          const header = ['學號','座號','姓名','分數', ...hwSt.cols, COL.R, COL.C];
+          // === 建表頭（在 for(const cls of state.classOrder) 內）===
+          const header = ['學號','座號','姓名','分數', ...hwSt.cols, '小計', '平均', COL.R, COL.C];
           const aoa = [header];
 
-          for(const s of list){
-            const id=s.id, sc=state.scores[id]??0;
+          for (const s of list){
+            const id = s.id, sc = state.scores[id] ?? 0;
             const sid = s.sid || (state.sidMap[id]?.sid) || '';
+
+            // 目前座標（照你原邏輯轉回右下角為 1 的座標）
             const pos = findSeatPos(cls, id);
             let rr='', cc='';
-            if(pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
+            if (pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
+
+            // 作業分數陣列
             const arr = (hwSt.data[id] || []).slice(0, hwSt.cols.length);
-            while(arr.length < hwSt.cols.length) arr.push('');
-            aoa.push([sid, s.seat ?? '', s.name ?? '', sc, ...arr, rr, cc]);
+            while (arr.length < hwSt.cols.length) arr.push('');
+
+            // ★ 小計 / 平均（平均僅計入有填寫的格）
+            const sum = arr.reduce((t,v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
+            const cnt = arr.filter(v => v!=='' && v!=null && Number.isFinite(Number(v))).length;
+            const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;  // 保留兩位
+
+            // ★ 一起匯出（小計、平均 接在各作業後面）
+            aoa.push([sid, s.seat ?? '', s.name ?? '', sc, ...arr, sum, avg, rr, cc]);
           }
 
+          // 欄寬（多了「小計」「平均」各一欄）
           const ws = XLSX.utils.aoa_to_sheet(aoa);
-          const baseCols = [{wch:14},{wch:6},{wch:12},{wch:8}];
+          const baseCols = [{wch:14},{wch:6},{wch:12},{wch:8}];       // 學號/座號/姓名/分數
           const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
-          ws['!cols'] = [...baseCols, ...hwColsW, {wch:8},{wch:8}];
+          ws['!cols'] = [
+            ...baseCols,
+            ...hwColsW,
+            {wch:8},                 // 小計
+            {wch:8},                 // 平均
+            {wch:8}, {wch:8}         // 座位列 / 座位欄
+          ];
           XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
         }
 
@@ -1042,72 +1061,74 @@
     const elReset = document.getElementById('btn-reset');
 
     // 清除本系統使用到的 localStorage（不影響主題 KEY）
-    function clearAppStorageKeepSeatGrid(){
+    // ✅ 完全清空本系統使用到的 localStorage（保留主題 KEY）
+    function clearAllAppStorage(){
       try{
-        const sizes = {};
-        (state.classOrder || []).forEach(cls=>{
-          const st = ensureSeatState(cls);
-          sizes[cls] = { rows: st?.rows || 6, cols: st?.cols || 6 };
-        });
+        localStorage.removeItem(SESSION_KEY);          // 整份快照
+        localStorage.removeItem('scores_v1');          // 平時分數
 
-        localStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem('scores_v1');
-
-        const toRemove=[];
+        // 作業 & 座位都一併清除
+        const toRemove = [];
         for(let i=0;i<localStorage.length;i++){
           const k = localStorage.key(i);
-          if(k && k.startsWith('hw_v1__')) toRemove.push(k);
+          if(!k) continue;
+          if (k.startsWith('hw_v1__') || k.startsWith('seat_v1__')) toRemove.push(k);
         }
-        toRemove.forEach(k=> localStorage.removeItem(k));
-
-        for(const [cls, sz] of Object.entries(sizes)){
-          const st = { rows: clampSize(sz.rows), cols: clampSize(sz.cols), map:{} };
-          localStorage.setItem('seat_v1__'+cls, JSON.stringify(st));
-        }
+        toRemove.forEach(k => localStorage.removeItem(k));
       }catch(e){
         console.warn('清除暫存時發生錯誤', e);
       }
     }
 
+    // ✅ 回到剛開頁時的乾淨 UI（像還沒上傳檔案）
+    function hardResetApp(){
+      // 1) 清空記憶體狀態
+      state.classMap   = {};
+      state.classOrder = [];
+      state.sidMap     = {};
+      state.seating    = {};
+      state.scores     = {};
+      state.savedScores= {};
+      state.hw         = {};
+      state.savedHW    = {};
+      state.filter     = '';
+      state.mode       = 'list';
 
-    // 點擊清除 → 還原到剛載入狀態
+      // 2) 還原 UI 控制
+      elSelect.innerHTML = '<option value="" selected>請先上傳學生名單</option>';
+      elSelect.disabled = true;
+
+      elSearch.value = '';
+      elSearch.disabled = true;
+
+      // 列表 / 排行榜
+      document.getElementById('students').innerHTML = '';
+      elBoard.innerHTML = '<div class="empty">此班級尚無成員</div>';
+      elBoardClass.textContent = '尚未載入';
+
+      // 座位頁
+      elRows.value = 6; 
+      elCols.value = 6;
+      elSeatboard.innerHTML = '';
+      elUnassignedList.innerHTML = '';
+      elSeatHint.textContent = '請先上傳學生名單';
+
+      // 作業頁
+      elHWTable.innerHTML = '';
+      elHWClassPill.textContent = '尚未載入';
+
+      // 顯示模式回列表、狀態提示
+      setMode('list');
+      setStatus('已清除所有本機暫存與名單。');
+    }
+
+    // ✅ 清除 → 完全回到未上傳檔案的狀態
     elReset?.addEventListener('click', ()=>{
-      if(!confirm('確定清除本機暫存嗎？\n將移除：分數、作業成績與快速還原；座位保留格數但清空配位。')) return;
-
-      const sizes = {};
-      (state.classOrder || []).forEach(cls=>{
-        const st = ensureSeatState(cls);
-        sizes[cls] = { rows: st?.rows || 6, cols: st?.cols || 6 };
-      });
-
-      clearAppStorageKeepSeatGrid();
-
-      state.scores = {};
-      state.savedScores = {};
-      state.hw = {};
-      state.savedHW = {};
-
-      (state.classOrder || []).forEach(cls=>{
-        const st = ensureSeatState(cls);
-        st.rows = clampSize(sizes[cls]?.rows ?? st.rows ?? 6);
-        st.cols = clampSize(sizes[cls]?.cols ?? st.cols ?? 6);
-        st.map = {};
-        saveSeatState(cls, st);
-      });
-
-      if(!elSelect.value && state.classOrder.length){
-        elSelect.value = state.classOrder[0];
-      }
-
-      const cls = elSelect.value;
-      renderStudents(cls);
-      renderLeaderboard(cls);
-      renderHW(cls);
-      if(state.mode==='seat') renderSeatUI(cls);
-
-      setStatus('已清除本機暫存（座位格數保留，配位清空）。');
+      if(!confirm('確定清除所有本機資料嗎？\n將移除：學生名單、分數、作業、座位（含格數與配位）與快速還原。'))
+        return;
+      clearAllAppStorage();
+      hardResetApp();
     });
-
 
     // 讓清除按鈕也有 ripple 效果（可選）
     if (typeof bindRipple === 'function' && elReset) bindRipple(elReset);
@@ -1204,11 +1225,47 @@
 
     /* ====== 列表渲染：鏡像座位表（座位模式） ====== */
     function renderStudents(cls){
-      if(!cls) return;
+      const elStudents = document.getElementById('students');
+
+      // ✅ 沒選班級/剛清除暫存：也畫出一盤空格（並把卡片顯示出來）
+      if(!cls){
+        const defaultRows = clampSize((elRows && elRows.value) || 6);
+        const defaultCols = clampSize((elCols && elCols.value) || 6);
+
+        elStudents.style.setProperty('--list-cols', defaultCols);
+
+        const frag = document.createDocumentFragment();
+        for(let r=1; r<=defaultRows; r++){
+          for(let c=1; c<=defaultCols; c++){
+            frag.appendChild(
+              buildPlaceholderCard(seatIndexLabel(r, c, defaultRows, defaultCols))
+            );
+          }
+        }
+        // 講台
+        const stage = document.createElement('div');
+        stage.className = 'stage';
+        stage.setAttribute('role','presentation');
+        stage.textContent = '講台';
+        frag.appendChild(stage);
+
+        elStudents.innerHTML = '';
+        elStudents.appendChild(frag);
+
+        // 🔧 關鍵：讓卡片顯示（原本沒綁 observer 會保持 opacity:0）
+        elStudents.querySelectorAll('.card').forEach(c=>{
+          io.observe(c);         // 和原本一致
+          c.classList.add('show'); // 立刻顯示，避免 observer 沒即時觸發
+        });
+        requestAnimationFrame(()=> setupAutoFitForNames(elStudents));
+        return;
+      }
+
+      // ✅ 原本已有班級時的既有邏輯
       const st = ensureSeatState(cls);
       const list = state.classMap[cls] || [];
       const {rows, cols} = getCurrentRowsCols(cls);
-      document.getElementById('students').style.setProperty('--list-cols', cols);
+      elStudents.style.setProperty('--list-cols', cols);
 
       const byId = new Map(list.map(s=>[s.id, s]));
       const frag = document.createDocumentFragment();
@@ -1232,15 +1289,12 @@
         }
       }
 
-      // ✅ 在座位模式最下方加一條「講台」
       const stage = document.createElement('div');
       stage.className = 'stage';
       stage.setAttribute('role', 'presentation');
       stage.textContent = '講台';
       frag.appendChild(stage);
 
-      // 接著再把 frag 丟進 DOM（原本就有的程式）
-      const elStudents=document.getElementById('students');
       elStudents.innerHTML = '';
       elStudents.appendChild(frag);
       elStudents.querySelectorAll('.card').forEach(c=> io.observe(c));
@@ -1375,16 +1429,48 @@
     function renderSeatUI(cls){
       // 👉 若尚未選班級，直接清空座位區與未安排名單，並設置預設欄數
       if(!cls){
-        try{
-          elRows.value = 6; 
-          elCols.value = 6;
-          elSeatboard.style.setProperty('--cols', 6);
-        }catch{}
+        const defaultRows = clampSize(elRows.value || 6);
+        const defaultCols = clampSize(elCols.value || 6);
+
+        // 同步控制列數字與 CSS 變數
+        elRows.value = defaultRows;
+        elCols.value = defaultCols;
+        elSeatboard.style.setProperty('--cols', defaultCols);
+        elSeatboard.style.setProperty('--rows', defaultRows);
+        if (defaultRows >= 8 || defaultCols >= 8) elSeatboard.setAttribute('data-dense','1');
+        else elSeatboard.removeAttribute('data-dense');
+
+        // 建一盤空格（只顯示座位編號，不放學生磁磚）
+        const frag = document.createDocumentFragment();
+        for(let r=1; r<=defaultRows; r++){
+          for(let c=1; c<=defaultCols; c++){
+            const idx = seatIndexLabel(r, c, defaultRows, defaultCols);
+            const cell = document.createElement('div');
+            cell.className = 'seat-cell';
+            const badge = document.createElement('div');
+            badge.className = 'seat-no';
+            badge.textContent = idx;
+            cell.appendChild(badge);
+            frag.appendChild(cell);
+          }
+        }
+        // 講台
+        const stage = document.createElement('div');
+        stage.className = 'stage';
+        stage.setAttribute('role','presentation');
+        stage.textContent = '講台';
+        stage.style.gridColumn = `1 / span ${defaultCols}`;
+        frag.appendChild(stage);
+
+        elSeatboard.innerHTML = '';
+        elSeatboard.appendChild(frag);
+
+        // 右側未安排名單清空即可（沒有學生）
+        elUnassignedList.innerHTML = '';
         elSeatHint.textContent = '請先上傳學生名單';
-        elSeatboard.innerHTML = '';       // ← 清空座位盤
-        elUnassignedList.innerHTML = '';  // ← 清空未安排名單
         return;
       }
+
 
       if(!cls) return;
       const st=ensureSeatState(cls);
@@ -1550,12 +1636,21 @@
     document.getElementById('btn-auto')?.addEventListener('click', ()=>{ autoArrange(elSelect.value); });
     document.getElementById('btn-clear')?.addEventListener('click', ()=>{ const cls=elSelect.value; const st=ensureSeatState(cls); st.map={}; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); });
     document.getElementById('btn-apply-size')?.addEventListener('click', ()=>{
-      const cls=elSelect.value; if(!cls) return;
+      const cls=elSelect.value; 
+      if(!cls){
+        // 尚未載入名單時，只需要重畫空盤即可
+        renderSeatUI('');
+        return;
+      }
       const st=ensureSeatState(cls);
       st.rows = clampSize(elRows.value||6);
       st.cols = clampSize(elCols.value||6);
-      saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
+      saveSeatState(cls, st); 
+      renderSeatUI(cls); 
+      renderStudents(cls); 
+      renderLeaderboard(cls);
     });
+
 
     // 啟動：先嘗試從本機暫存還原；失敗才顯示空畫面
     if (!tryRestoreSession()) {
