@@ -23,6 +23,7 @@
       --chip-px:12px;
       --page-x: 10px;
       --list-cols: 6;
+      --sidebar-w: 320px; /* ★ 新增：側欄展開寬度 */
     }
 
     /* ★ 淺色主題覆寫：當 <html data-theme="light"> 時套用 */
@@ -166,47 +167,63 @@
     /* ===== 容器 ===== */
     .app{ width:100%; margin:0; height:100svh; display:grid; grid-template-rows: 78px 1fr; }
     .layout{
-      display:grid; grid-template-columns: var(--sidebar-w, 320px) 1fr; gap:16px;
-      padding: var(--page-x); grid-template-rows: 1fr; align-items: stretch;
+      position: relative;                     /* ★ 讓收合按鈕可絕對定位於 layout 內 */
+      display:grid;
+      grid-template-columns: var(--sidebar-w) 1fr;  /* ★ 用變數控制側欄寬 */
+      gap:16px;
+      padding: var(--page-x);
+      grid-template-rows: 1fr;
+      align-items: stretch;
       min-height:0; height:100%;
-      transition: grid-template-columns .25s ease;
+      transition: grid-template-columns .25s ease;  /* 平滑伸縮 */
     }
 
-    /* === Sidebar 收納樣式 === */
-    .sidebar{ position: relative; overflow: hidden; transition: padding .2s ease; }
-    .layout[data-collapsed="1"]{ --sidebar-w: 28px; }          /* 收納後欄寬（留給按鈕） */
-    .layout[data-collapsed="1"] .sidebar{ padding: 6px; }      /* 收納時縮小內距 */
-
-    /* 收納時隱藏 sidebar 裡所有內容，但保留收納按鈕 */
-    .layout[data-collapsed="1"] .sidebar > *:not(.collapse-btn){
-      opacity: 0; pointer-events: none; visibility: hidden;
-      height: 0; margin: 0; padding: 0; overflow: hidden;
+    /* 側欄可以被隱藏／滑動 */
+    .sidebar{
+      overflow:hidden;
+      transition: transform .25s ease, opacity .2s ease;
+      will-change: transform;
     }
 
-    /* 收納按鈕（垂直長條） */
-    .collapse-btn{
-      position: absolute; top: 50%; right: -10px; transform: translateY(-50%);
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 120px; border-radius: 999px;
-      border:1px solid var(--line); background: var(--card); color: var(--fg);
+    /* ★ 收合狀態：把第一欄寬度變 0，主區填滿 */
+    .layout.is-collapsed{
+      grid-template-columns: 0px 1fr;
+    }
+    .layout.is-collapsed .sidebar{
+      opacity:0;
+      pointer-events:none;
+      transform: translateX(calc(-1 * var(--sidebar-w))); /* 收合時滑出去一點，視覺更自然 */
+    }
+    /* ★ 左側細長按鈕（固定在 layout 左邊界） */
+    .side-toggle{
+      position:absolute;
+      z-index:25;
+      /* 展開時，按鈕靠在「側欄與主區」的交界；+6px 讓它略微凸出 */
+      left: calc(var(--sidebar-w) + 6px);
+      top: 50%;
+      transform: translate(-50%, -50%);  /* 垂直置中，水平往左半個寬 */
+      width: 26px;
+      height: 160px;        /* 長條感 */
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background: var(--card);
+      color: var(--fg);
       box-shadow: var(--shadow);
-      cursor: pointer; user-select: none; z-index: 2;
-      font-weight: 900;
+      cursor:pointer; user-select:none;
+      font-size:18px; font-weight:900;   /* 顯眼的箭頭 */
     }
-    .collapse-btn:hover{ box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+    .side-toggle:hover{ box-shadow:0 10px 24px rgba(0,0,0,.28); }
 
-    /* 箭頭字元 */
-    .collapse-btn .arr{ font-size: 14px; line-height: 1; }
+    /* 收合後，把按鈕移到最左邊 8px 處（方便點開） */
+    .layout.is-collapsed .side-toggle{
+      left: 8px;
+    }
 
-    /* 收納時，箭頭改朝右（▶）—如果你用 JS 改字，就不需要這條 */
-    .layout[data-collapsed="1"] .collapse-btn .arr{ }
-
-    /* 手機版單欄時就不顯示收納按鈕，欄位回 1fr */
+    /* 手機一欄式時，這顆按鈕通常不需要，直接隱藏（要保留就刪掉這段） */
     @media (max-width: 880px){
-      .collapse-btn{ display:none; }
-      .layout{ grid-template-columns: 1fr !important; }
+      .side-toggle{ display:none; }
     }
-
 
     .sidebar,.main{
       border:1px solid var(--line); border-radius:16px; padding:16px;
@@ -688,11 +705,10 @@
 
 
     <main class="layout">
-      <aside class="sidebar">
-        <button id="sidebar-toggle" class="collapse-btn" aria-label="收合側欄" aria-expanded="true">
-          <span class="arr">◀</span>
-        </button>
+      <!-- ★ 側欄收合按鈕（固定在 layout 左側） -->
+      <button id="btn-sidebar" class="side-toggle" aria-label="收合側欄" aria-controls="sidebar" aria-expanded="true">‹</button>
 
+      <aside id="sidebar" class="sidebar">
         <button id="btn-help" class="btn" title="顯示操作說明">❓ 操作說明</button>
 
         <section class="board">
@@ -1644,38 +1660,31 @@
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
 
-      /* ====== Sidebar 收納切換 ====== */
-      (function initSidebarCollapse(){
-        const KEY = 'sidebar_collapsed_v1';
-        const layout = document.querySelector('.layout');
-        const btn = document.getElementById('sidebar-toggle');
-        if(!layout || !btn) return;
+    /* ===== ★ 側欄收合切換（記憶狀態） ===== */
+    (function initSidebarToggle(){
+      const KEY = 'sidebar_collapsed_v1';
+      const layout = document.querySelector('.layout');
+      const btn = document.getElementById('btn-sidebar');
 
-        // 套用狀態
-        function apply(collapsed){
-          if(collapsed){
-            layout.setAttribute('data-collapsed','1');
-            btn.setAttribute('aria-expanded','false');
-            btn.querySelector('.arr').textContent = '▶'; // 收納後，顯示朝右
-          }else{
-            layout.removeAttribute('data-collapsed');
-            btn.setAttribute('aria-expanded','true');
-            btn.querySelector('.arr').textContent = '◀'; // 展開時，顯示朝左
-          }
-        }
+      function apply(collapsed){
+        layout.classList.toggle('is-collapsed', collapsed);
+        // 展開時顯示 ‹；收合時顯示 ›
+        btn.textContent = collapsed ? '›' : '‹';
+        btn.setAttribute('aria-expanded', String(!collapsed));
+        btn.setAttribute('title', collapsed ? '展開側欄' : '收合側欄');
+        try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch{}
+      }
 
-        // 讀取上次狀態
-        let collapsed = false;
-        try{ collapsed = localStorage.getItem(KEY) === '1'; }catch{}
-        apply(collapsed);
+      // 點按切換
+      btn?.addEventListener('click', ()=>{
+        const collapsed = layout.classList.contains('is-collapsed');
+        apply(!collapsed);
+      });
 
-        // 點擊切換
-        btn.addEventListener('click', ()=>{
-          collapsed = !collapsed;
-          apply(collapsed);
-          try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch{}
-        });
-      })();
+      // 開頁還原上次狀態
+      const collapsed = localStorage.getItem(KEY) === '1';
+      apply(collapsed);
+    })();
 
 
     // 套用主題（用 <html data-theme="light"> 作為切換）
