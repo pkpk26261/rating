@@ -518,7 +518,7 @@
     }
     .seat-badge .hl{ padding:0 3px; border-radius:6px; }
 
-    /* 🔎 設置座位模式的磁磚高亮（加強） */
+    /* 🔎 安排座位模式的磁磚高亮（加強） */
     .tile.match{
       outline:3px solid color-mix(in oklab, var(--accent) 75%, black);
       box-shadow: 0 0 0 3px rgba(124,58,237,.25) inset, 0 16px 36px rgba(124,58,237,.25);
@@ -725,7 +725,7 @@
           <ol>
             <li>可匯入：學生名單 或 之前匯出的「成績表」。</li>
             <li>每個工作表代表一個班級；若含「學號/分數/座標/作業成績」欄位會自動帶入。</li>
-            <li>右側可切換「座位 / 設置座位 / 作業成績」。</li>
+            <li>右側可切換「座位 / 安排座位 / 作業成績」。</li>
             <li>作業成績頁可按「＋新增作業」動態增加欄位。</li>
             <li>匯出 Excel 會包含每份作業欄位，下次匯入即帶回。</li>
           </ol>
@@ -751,18 +751,22 @@
             <option value="" selected>請先上傳學生名單</option>
           </select>
           <input id="search-input" class="input" type="search" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
+          <label id="toggle-stage-wrap" class="hidden" style="display:flex;gap:6px;align-items:center;">
+            <input id="chk-show-stage" type="checkbox" checked>
+            <span>顯示講台</span>
+          </label>
           <div class="seg" role="tablist" aria-label="顯示模式">
             <button id="mode-list" class="seg-btn active" data-mode="list">座位</button>
-            <button id="mode-seat" class="seg-btn" data-mode="seat">設置座位</button>
+            <button id="mode-seat" class="seg-btn" data-mode="seat">安排座位</button>
             <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
             <button id="mode-draw" class="seg-btn" data-mode="draw">抽號</button>
 
           </div>
         </div>
 
-        <!-- 設置座位 -->
+        <!-- 安排座位 -->
         <div id="seat-controls" class="seat-controls hidden">
-          <span>設置座位：</span>
+          <span>安排座位：</span>
           <input id="rows-input" type="number" class="input" min="1" max="9" value="6" aria-label="列數">
           <span>×</span>
           <input id="cols-input" type="number" class="input" min="1" max="9" value="6" aria-label="欄數">
@@ -773,7 +777,7 @@
         </div>
 
         <div id="seatwrap" class="seatwrap hidden">
-          <div id="seatboard" class="seatboard" role="grid" aria-label="設置座位"></div>
+          <div id="seatboard" class="seatboard" role="grid" aria-label="安排座位"></div>
           <aside id="unassigned" class="unassigned">
             <h4>未安排名單</h4>
             <div id="unassigned-list" class="list"></div>
@@ -942,7 +946,7 @@
     /* ====== 全域狀態 ====== */
     const state={
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
-      hw:{}, savedHW:{}, draw:{}
+      hw:{}, savedHW:{}, draw:{}, showStageInList: true
     };
 
     /* === 觸控備援：點一下選取 → 點一下放置 === */
@@ -992,6 +996,7 @@
         hw: state.hw,
         selectedClass: elSelect?.value || '',
         mode: state.mode,
+        showStageInList: state.showStageInList,
         ts: Date.now()
       };
     }
@@ -1017,6 +1022,8 @@
         state.seating    = s.seating    || {};
         state.hw         = s.hw         || {};
         state.mode       = s.mode       || 'list';
+
+        state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
 
         if(state.classOrder.length){
           renderClassOptions(state.classOrder);
@@ -1072,6 +1079,11 @@
     const elDrawRem     = document.getElementById('draw-rem');
     const elDrawTotal   = document.getElementById('draw-total');
     const elDrawNext    = document.getElementById('draw-next');
+    const elToggleStage = document.getElementById('btn-toggle-stage');
+    const elToggleStageWrap = document.getElementById('toggle-stage-wrap');
+    const elChkShowStage    = document.getElementById('chk-show-stage');
+
+
 
 
     /* ★ 作業成績 DOM */
@@ -1417,6 +1429,22 @@
 
     const io = new IntersectionObserver((entries)=>{ entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } }); }, { threshold:.2 });
 
+    function applyStageToggleUI(){
+      if(!elToggleStage) return;
+      const on = !!state.showStageInList;
+      elToggleStage.textContent = on ? '📣 隱藏講台' : '📣 顯示講台';
+      elToggleStage.setAttribute('aria-pressed', String(on));
+      elToggleStage.title = '僅座位模式有效';
+    }
+
+    elToggleStage?.addEventListener('click', ()=>{
+      state.showStageInList = !state.showStageInList;
+      applyStageToggleUI();
+      if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
+      saveSession('toggle stage in list');
+    });
+
+
     /* ====== 共用工具 ====== */
     function animateNumber(el, from, to, dur){ const start=performance.now(); const fmt=n=>Math.round(n); function frame(t){ const p=Math.min(1,(t-start)/dur); const v=from+(to-from)*(1-Math.pow(1-p,3)); el.textContent=fmt(v); if(p<1) requestAnimationFrame(frame); } requestAnimationFrame(frame); }
     function bindRipple(btn){ btn.addEventListener('click', (e)=>{ const r=document.createElement('span'); r.className='ripple'; const rect=btn.getBoundingClientRect(); r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px'; btn.appendChild(r); setTimeout(()=>r.remove(), 480); }); }
@@ -1522,11 +1550,15 @@
           }
         }
         // 講台
-        const stage = document.createElement('div');
-        stage.className = 'stage';
-        stage.setAttribute('role','presentation');
-        stage.textContent = '講台';
-        frag.appendChild(stage);
+        // 講台（僅當需要顯示時）
+        if(state.showStageInList){
+          const stage = document.createElement('div');
+          stage.className = 'stage';
+          stage.setAttribute('role','presentation');
+          stage.textContent = '講台';
+          frag.appendChild(stage);
+        }
+
 
         elStudents.innerHTML = '';
         elStudents.appendChild(frag);
@@ -1568,11 +1600,14 @@
         }
       }
 
-      const stage = document.createElement('div');
-      stage.className = 'stage';
-      stage.setAttribute('role', 'presentation');
-      stage.textContent = '講台';
-      frag.appendChild(stage);
+      if(state.showStageInList){
+        const stage = document.createElement('div');
+        stage.className = 'stage';
+        stage.setAttribute('role', 'presentation');
+        stage.textContent = '講台';
+        frag.appendChild(stage);
+      }
+
 
       elStudents.innerHTML = '';
       elStudents.appendChild(frag);
@@ -1731,7 +1766,7 @@
     }
     initThemeToggle();
 
-    /* ====== 設置座位模式 ====== */
+    /* ====== 安排座位模式 ====== */
     function renderSeatUI(cls){
       // 👉 若尚未選班級，直接清空座位區與未安排名單，並設置預設欄數
       if(!cls){
@@ -1930,6 +1965,19 @@
       saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
     }
 
+    function applyStageToggleUI(){
+      if(!elChkShowStage) return;
+      elChkShowStage.checked = !!state.showStageInList;
+    }
+
+    elChkShowStage?.addEventListener('change', ()=>{
+      state.showStageInList = !!elChkShowStage.checked;
+      applyStageToggleUI();
+      if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
+      saveSession('toggle stage (checkbox)');
+    });
+
+
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
       state.mode=m;
@@ -1937,6 +1985,10 @@
       elModeSeat.classList.toggle('active', m==='seat');
       elModeHW.classList.toggle('active', m==='hw');
       elModeDraw.classList.toggle('active', m==='draw'); // ★
+      // 只在「座位」模式顯示講台切換鈕
+      // 只在「座位」模式顯示「顯示講台」勾選
+      elToggleStageWrap.classList.toggle('hidden', m!=='list');
+      applyStageToggleUI();
 
       document.getElementById('students').classList.toggle('hidden', m!=='list');
       document.getElementById('seat-controls').classList.toggle('hidden', m!=='seat');
