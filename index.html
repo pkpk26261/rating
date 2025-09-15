@@ -166,10 +166,48 @@
     /* ===== 容器 ===== */
     .app{ width:100%; margin:0; height:100svh; display:grid; grid-template-rows: 78px 1fr; }
     .layout{
-      display:grid; grid-template-columns: 320px 1fr; gap:16px;
+      display:grid; grid-template-columns: var(--sidebar-w, 320px) 1fr; gap:16px;
       padding: var(--page-x); grid-template-rows: 1fr; align-items: stretch;
       min-height:0; height:100%;
+      transition: grid-template-columns .25s ease;
     }
+
+    /* === Sidebar 收納樣式 === */
+    .sidebar{ position: relative; overflow: hidden; transition: padding .2s ease; }
+    .layout[data-collapsed="1"]{ --sidebar-w: 28px; }          /* 收納後欄寬（留給按鈕） */
+    .layout[data-collapsed="1"] .sidebar{ padding: 6px; }      /* 收納時縮小內距 */
+
+    /* 收納時隱藏 sidebar 裡所有內容，但保留收納按鈕 */
+    .layout[data-collapsed="1"] .sidebar > *:not(.collapse-btn){
+      opacity: 0; pointer-events: none; visibility: hidden;
+      height: 0; margin: 0; padding: 0; overflow: hidden;
+    }
+
+    /* 收納按鈕（垂直長條） */
+    .collapse-btn{
+      position: absolute; top: 50%; right: -10px; transform: translateY(-50%);
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 120px; border-radius: 999px;
+      border:1px solid var(--line); background: var(--card); color: var(--fg);
+      box-shadow: var(--shadow);
+      cursor: pointer; user-select: none; z-index: 2;
+      font-weight: 900;
+    }
+    .collapse-btn:hover{ box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+
+    /* 箭頭字元 */
+    .collapse-btn .arr{ font-size: 14px; line-height: 1; }
+
+    /* 收納時，箭頭改朝右（▶）—如果你用 JS 改字，就不需要這條 */
+    .layout[data-collapsed="1"] .collapse-btn .arr{ }
+
+    /* 手機版單欄時就不顯示收納按鈕，欄位回 1fr */
+    @media (max-width: 880px){
+      .collapse-btn{ display:none; }
+      .layout{ grid-template-columns: 1fr !important; }
+    }
+
+
     .sidebar,.main{
       border:1px solid var(--line); border-radius:16px; padding:16px;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); box-shadow: var(--shadow);
@@ -651,6 +689,10 @@
 
     <main class="layout">
       <aside class="sidebar">
+        <button id="sidebar-toggle" class="collapse-btn" aria-label="收合側欄" aria-expanded="true">
+          <span class="arr">◀</span>
+        </button>
+
         <button id="btn-help" class="btn" title="顯示操作說明">❓ 操作說明</button>
 
         <section class="board">
@@ -1601,6 +1643,40 @@
         if(saved === 'light' || saved === 'dark') return saved;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
+
+      /* ====== Sidebar 收納切換 ====== */
+      (function initSidebarCollapse(){
+        const KEY = 'sidebar_collapsed_v1';
+        const layout = document.querySelector('.layout');
+        const btn = document.getElementById('sidebar-toggle');
+        if(!layout || !btn) return;
+
+        // 套用狀態
+        function apply(collapsed){
+          if(collapsed){
+            layout.setAttribute('data-collapsed','1');
+            btn.setAttribute('aria-expanded','false');
+            btn.querySelector('.arr').textContent = '▶'; // 收納後，顯示朝右
+          }else{
+            layout.removeAttribute('data-collapsed');
+            btn.setAttribute('aria-expanded','true');
+            btn.querySelector('.arr').textContent = '◀'; // 展開時，顯示朝左
+          }
+        }
+
+        // 讀取上次狀態
+        let collapsed = false;
+        try{ collapsed = localStorage.getItem(KEY) === '1'; }catch{}
+        apply(collapsed);
+
+        // 點擊切換
+        btn.addEventListener('click', ()=>{
+          collapsed = !collapsed;
+          apply(collapsed);
+          try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch{}
+        });
+      })();
+
 
     // 套用主題（用 <html data-theme="light"> 作為切換）
     function applyTheme(theme){
