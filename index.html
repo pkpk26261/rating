@@ -1128,7 +1128,9 @@
     const bulkPaste = document.getElementById('bulk-paste');
 
     /* ====== 輕量持久化（讀取） ====== */
-    try{ state.savedScores = JSON.parse(localStorage.getItem('scores_v1')||'{}'); }catch{ state.savedScores = {}; }
+    try{
+      state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
+    }catch{ state.scores = {}; }
     function loadHWFromLS(cls){ try{ const raw=localStorage.getItem('hw_v1__'+cls); if(raw){ state.hw[cls]=JSON.parse(raw); } }catch{} }
     function saveHWToLS(cls){ try{ localStorage.setItem('hw_v1__'+cls, JSON.stringify(state.hw[cls]||{}));saveSession('hw change'); }catch{} }
 
@@ -1182,15 +1184,24 @@
               }
             }
 
-            if(scoreIdx>=0){
-              const sc=Number(row[scoreIdx]);
-              if(!Number.isNaN(sc)) state.scores[id]=sc;
-              else if(id in state.savedScores) state.scores[id]=Number(state.savedScores[id])||0;
-              else if(!(id in state.scores)) state.scores[id]=0;
+            // —— 原本找到 scoreIdx 之後的處理，改成：
+            if (scoreIdx >= 0){
+              const sc = Number(row[scoreIdx]);
+              if (Number.isFinite(sc)){
+                setScore(sheetName, id, sc);                // ★ 班級命名空間
+              }else if (!hasScore(sheetName, id)){
+                const legacy = Number(state.legacyScores?.[id]);
+                if (Number.isFinite(legacy)) setScore(sheetName, id, legacy); // 兼容舊資料
+                else setScore(sheetName, id, 0);
+              }
             }else{
-              if(id in state.savedScores) state.scores[id]=Number(state.savedScores[id])||0;
-              else if(!(id in state.scores)) state.scores[id]=0;
+              if (!hasScore(sheetName, id)){
+                const legacy = Number(state.legacyScores?.[id]);
+                if (Number.isFinite(legacy)) setScore(sheetName, id, legacy);
+                else setScore(sheetName, id, 0);
+              }
             }
+
             if(sid) state.sidMap[id]={sid, sheet:sheetName, seat, name};
 
             if(hwCols.length){
@@ -1304,7 +1315,7 @@
           const aoa = [header];
 
           for (const s of list){
-            const id = s.id, sc = state.scores[id] ?? 0;
+            const id = s.id, sc = getScore(cls, id);
             const sid = s.sid || (state.sidMap[id]?.sid) || '';
 
             // 目前座標（照你原邏輯轉回右下角為 1 的座標）
@@ -1358,6 +1369,7 @@
       try{
         localStorage.removeItem(SESSION_KEY);          // 整份快照
         localStorage.removeItem('scores_v1');          // 平時分數
+        localStorage.removeItem('scores_v2');   // ★ 新版分數也清掉
 
         // 作業 & 座位都一併清除
         const toRemove = [];
@@ -1380,7 +1392,7 @@
       state.sidMap     = {};
       state.seating    = {};
       state.scores     = {};
-      state.savedScores= {};
+      state.legacyScores = {};
       state.hw         = {};
       state.savedHW    = {};
       state.filter     = '';
@@ -1447,6 +1459,31 @@
 
 
     /* ====== 共用工具 ====== */
+    // ★ 分數用的複合鍵：班級 + id，避免跨表相撞
+    function scoreKey(cls, id){
+      return `C:${safeSheetName(cls)}::${id}`;
+    }
+
+    function hasScore(cls, id){
+      return (scoreKey(cls, id) in state.scores);
+    }
+
+    function getScore(cls, id){
+      const v = state.scores[scoreKey(cls, id)];
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    // 儲存到新版 localStorage（scores_v2）並快照
+    function setScore(cls, id, val){
+      state.scores[scoreKey(cls, id)] = Number(val) || 0;
+      try{
+        localStorage.setItem('scores_v2', JSON.stringify(state.scores));
+        saveSession('score change');
+      }catch{}
+    }
+
+
     function animateNumber(el, from, to, dur){ const start=performance.now(); const fmt=n=>Math.round(n); function frame(t){ const p=Math.min(1,(t-start)/dur); const v=from+(to-from)*(1-Math.pow(1-p,3)); el.textContent=fmt(v); if(p<1) requestAnimationFrame(frame); } requestAnimationFrame(frame); }
     function bindRipple(btn){ btn.addEventListener('click', (e)=>{ const r=document.createElement('span'); r.className='ripple'; const rect=btn.getBoundingClientRect(); r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px'; btn.appendChild(r); setTimeout(()=>r.remove(), 480); }); }
 
@@ -1634,7 +1671,8 @@
         : '';
 
       const nameHTML = isHighlight ? highlightHTML(s.name, qForHighlight) : escapeHTML(s.name);
-      const score = state.scores[s.id] ?? 0;
+      const score = getScore(cls, s.id);   // ★
+
 
       card.innerHTML=`
         <div class="score-chip" id="score-${s.id}">${score}</div>
@@ -1660,16 +1698,27 @@
       return card;
     }
     function changeScore(cls, id, delta, scoreEl, floater){
-      const old=Number(state.scores[id]??0); const next=old+delta; state.scores[id]=next;
-      animateNumber(scoreEl, old, next, 260); scoreEl.classList.add('bump'); setTimeout(()=>scoreEl.classList.remove('bump'), 360);
-      showFloater(floater, delta); renderLeaderboard(cls);
-      try{ localStorage.setItem('scores_v1', JSON.stringify(state.scores));saveSession('score change'); }catch{}
+      const old  = getScore(cls, id);        // ★
+      const next = old + delta;
+      setScore(cls, id, next);               // ★
+
+      animateNumber(scoreEl, old, next, 260);
+      scoreEl.classList.add('bump'); setTimeout(()=>scoreEl.classList.remove('bump'), 360);
+      showFloater(floater, delta);
+      renderLeaderboard(cls);
     }
+
     function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 
     function renderLeaderboard(cls){
       elBoardClass.textContent=cls||'未選擇';
-      const list=(state.classMap[cls]||[]).map(s=>({ id:s.id, name:s.name, seat:s.seat, score: state.scores[s.id]??0 }));
+      const list = (state.classMap[cls]||[]).map(s => ({
+        id: s.id,
+        name: s.name,
+        seat: s.seat,
+        score: getScore(cls, s.id)   // ★
+      }));
+
       if(list.length===0){ elBoard.innerHTML='<div class="empty">此班級尚無成員</div>'; return; }
       list.sort((a,b)=>{ if(b.score!==a.score) return b.score-a.score; const na=Number(a.seat), nb=Number(b.seat); if(!Number.isNaN(na)&&!Number.isNaN(nb)&&na!==nb) return na-nb; return a.name.localeCompare(b.name,'zh-Hant'); });
       const rows = list.map((s,idx)=>{
@@ -2355,14 +2404,12 @@
       }
 
       // 抽到即 +1 分（可選）
-      if(d.autoScore){
-        ids.forEach(id=>{
-          state.scores[id] = Number(state.scores[id]||0) + 1;
-        });
-        try{ localStorage.setItem('scores_v1', JSON.stringify(state.scores)); saveSession('score change by draw'); }catch{}
+      if(d.autoScore && Array.isArray(last.ids)){
+        last.ids.forEach(id => setScore(cls, id, Math.max(0, getScore(cls, id) - 1)));  // ★
         renderLeaderboard(cls);
-        if(state.mode==='list') renderStudents(cls); // 讓列表上的分數即時更新
+        if(state.mode==='list') renderStudents(cls);
       }
+
 
       saveDrawToLS(cls);
       renderDraw(cls); // 更新統計/歷史
