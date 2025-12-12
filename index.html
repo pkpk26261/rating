@@ -311,6 +311,38 @@
     .note-btn:hover{ filter:brightness(1.1); }
     .hw-seatcell{ display:flex; align-items:center; gap:6px; }
     .hw-seattext{ display:inline-block; min-width: 24px; }
+
+    /* 作業成績：學生備註彈窗（加大輸入欄位） */
+    #note-mask .modal{ width:min(920px, 96vw); max-height: 88vh; }
+    #note-mask .content{ display:flex; flex-direction:column; gap:10px; }
+    #note-mask .note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    #note-mask .note-help{ font-size:12px; opacity:.8; }
+    #note-mask .note-count{ margin-left:auto; font-size:12px; opacity:.8; }
+    #note-text{
+      width:100%;
+      min-height: 240px;
+      height: 300px;
+      resize: vertical;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--fg);
+      font-size: 15px;
+      line-height: 1.65;
+      outline:none;
+      box-sizing:border-box;
+    }
+    #note-text:focus{
+      border-color: color-mix(in oklab, var(--accent) 55%, white);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+    }
+    #note-mask .note-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+    @media (max-width: 520px){
+      #note-text{ min-height: 220px; height: 260px; }
+      #note-mask .note-count{ width:100%; margin-left:0; text-align:right; }
+    }
+
     .btn.sub:hover{ background-color: color-mix(in oklab, var(--bad) 36%, black); }
     .ripple{ position:absolute; border-radius:999px; transform:translate(-50%,-50%); pointer-events:none; width:12px; height:12px; opacity:.55; background:radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(255,255,255,.0) 60%); animation:ripple .45s ease-out forwards; }
     @keyframes ripple{ to{ opacity:0; width:240px; height:240px; } }
@@ -973,24 +1005,33 @@
 
   <!-- ★ 作業成績：學生備註彈窗 -->
   <div id="note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="note-title">
-    <div class="modal" role="document" style="max-width:640px;">
+    <div class="modal" role="document">
       <header>
         <h3 id="note-title">📝 學生備註</h3>
         <button id="note-close" class="close" aria-label="關閉">✕</button>
       </header>
       <div class="content">
-        <div class="hint">
-          班級：<span id="note-class" class="pill"></span>
-         　學生：<span id="note-student" class="pill"></span>
+        <div class="note-meta">
+          <div class="hint">
+            班級：<span id="note-class" class="pill"></span>
+            　學生：<span id="note-student" class="pill"></span>
+          </div>
+          <div class="note-help">提示：Ctrl+Enter 儲存（Mac 可用 ⌘+Enter）</div>
+          <div class="note-count">字數：<span id="note-count">0</span></div>
         </div>
-        <textarea id="note-text" class="textarea" rows="6" placeholder="輸入備註（例如：補交、需要關懷、家長聯絡紀錄…）"></textarea>
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
-          <button id="note-del" class="btn sub">清空</button>
-          <button id="note-save" class="btn">儲存</button>
+
+        <textarea id="note-text" rows="12" placeholder="輸入備註（例如：補交、需要關懷、家長聯絡紀錄…）"></textarea>
+
+        <div class="note-actions">
+          <button id="note-del" class="btn sub" title="清空備註">清空</button>
+          <button id="note-cancel" class="btn" title="取消（不儲存）">取消</button>
+          <button id="note-save" class="btn" title="儲存備註">儲存</button>
         </div>
       </div>
     </div>
   </div>
+
+</div>
 
   <script>
     /* ====== 標題下方即時時鐘 ====== */
@@ -1211,7 +1252,10 @@
     const noteSave = document.getElementById('note-save');
     const noteDel = document.getElementById('note-del');
 
-    /* ====== 輕量持久化（讀取） ====== */
+    
+    const noteCancel = document.getElementById('note-cancel');
+    const noteCount = document.getElementById('note-count');
+/* ====== 輕量持久化（讀取） ====== */
     try{
       state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
     }catch{ state.scores = {}; }
@@ -2704,16 +2748,44 @@ for(let i=0;i<header.length;i++){ if(/座|號|seat|no|number/i.test(header[i])) 
     // 學生備註彈窗（作業成績）
     let _noteCtx = { cls:'', id:'', label:'' };
 
-    function openNoteModal(cls, id, label){
+    
+    function _noteCountText(v){
+      const s = (v||'').toString();
+      // 以 code points 計算，中文/emoji 也比較準
+      try{ return Array.from(s).length; }catch{ return s.length; }
+    }
+    function _updateNoteCount(){
+      if(!noteCount) return;
+      noteCount.textContent = String(_noteCountText(noteText?.value || ''));
+    }
+    function _autoSizeNote(){
+      if(!noteText) return;
+      // 自動長到內容高度（但不超過視窗高度的一半左右）
+      noteText.style.height = 'auto';
+      const cap = Math.max(220, Math.floor(window.innerHeight * 0.55));
+      noteText.style.height = Math.min(noteText.scrollHeight + 2, cap) + 'px';
+    }
+function openNoteModal(cls, id, label){
       if(!noteMask) return;
       _noteCtx = { cls: cls||'', id: id||'', label: label||'' };
 
       noteClass.textContent = _noteCtx.cls || '';
       noteStudent.textContent = _noteCtx.label || _noteCtx.id || '';
       noteText.value = getNote(_noteCtx.cls, _noteCtx.id);
+      _updateNoteCount();
+      // 開啟時先把高度拉到舒服的大小
+      _autoSizeNote();
 
       noteMask.classList.add('show');
       noteText.focus();
+
+      // Ctrl/⌘ + Enter 快速儲存
+      noteText.onkeydown = (e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+          e.preventDefault();
+          noteSave?.click();
+        }
+      };
 
       const onKey=(e)=>{ if(e.key==='Escape'){ closeNoteModal(); } };
       window.addEventListener('keydown', onKey, { once:true });
@@ -2724,7 +2796,11 @@ for(let i=0;i<header.length;i++){ if(/座|號|seat|no|number/i.test(header[i])) 
     }
     noteClose?.addEventListener('click', closeNoteModal);
 
-    noteSave?.addEventListener('click', ()=>{
+    
+
+    noteCancel?.addEventListener('click', closeNoteModal);
+    noteText?.addEventListener('input', ()=>{ _updateNoteCount(); _autoSizeNote(); });
+noteSave?.addEventListener('click', ()=>{
       if(!_noteCtx.cls || !_noteCtx.id) return;
       setNote(_noteCtx.cls, _noteCtx.id, noteText.value);
       // 立即刷新作業表：更新圖示狀態
