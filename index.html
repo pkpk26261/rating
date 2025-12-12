@@ -247,7 +247,11 @@
       flex:1 1 auto; min-height:0; overflow:auto;
     }
     .main > #hw-pane{
-      flex:1 1 auto; min-height:0; overflow:hidden; /* 讓捲動只在 .hwtbl-wrap */
+      display:flex;
+      flex-direction:column;
+      flex:1 1 auto;
+      min-height:0;
+      overflow:hidden; /* 捲動只在 .hwtbl-wrap */
     }
     /* 讓「抽號」頁跟作業頁一樣吃滿 main 的可用高度 */
     .main > #draw-pane{
@@ -295,6 +299,18 @@
     .btn.add{ background-color:color-mix(in oklab, var(--ok) 22%, black); border-color: color-mix(in oklab, var(--ok) 60%, black); color:white; }
     .btn.add:hover{ background-color: color-mix(in oklab, var(--ok) 36%, black); }
     .btn.sub{ background-color:color-mix(in oklab, var(--bad) 24%, black); border-color: color-mix(in oklab, var(--bad) 60%, black); color:white; }
+
+    /* 作業成績：學生備註按鈕（座號前） */
+    .note-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; margin-right:6px;
+      border:1px solid var(--line); background:rgba(255,255,255,.02);
+      border-radius:8px; cursor:pointer;
+      user-select:none;
+    }
+    .note-btn:hover{ filter:brightness(1.1); }
+    .hw-seatcell{ display:flex; align-items:center; gap:6px; }
+    .hw-seattext{ display:inline-block; min-width: 24px; }
     .btn.sub:hover{ background-color: color-mix(in oklab, var(--bad) 36%, black); }
     .ripple{ position:absolute; border-radius:999px; transform:translate(-50%,-50%); pointer-events:none; width:12px; height:12px; opacity:.55; background:radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(255,255,255,.0) 60%); animation:ripple .45s ease-out forwards; }
     @keyframes ripple{ to{ opacity:0; width:240px; height:240px; } }
@@ -454,7 +470,9 @@
       margin-top:10px; border:1px solid var(--line); border-radius:0px;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       box-shadow: var(--shadow);
-      max-height: 1 1 auto;
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: 100%;
       min-height: 0;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
@@ -751,6 +769,8 @@
           <select id="class-select" class="select" disabled>
             <option value="" selected>請先上傳學生名單</option>
           </select>
+          <button id="btn-add-student" class="btn" disabled>＋ 新增學生</button>
+          <button id="btn-del-student" class="btn" disabled>－ 刪除學生</button>
           <input id="search-input" class="input" type="search" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
           <label id="toggle-stage-wrap" class="hidden" style="display:flex;gap:6px;align-items:center;">
             <input id="chk-show-stage" type="checkbox" checked>
@@ -928,6 +948,50 @@
     </div>
   </div>
 
+
+  <!-- ★ 刪除學生彈窗 -->
+  <div id="del-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="del-title">
+    <div class="modal" role="document">
+      <header>
+        <h3 id="del-title">🗑 刪除學生</h3>
+        <button id="del-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div class="hint">目前班級：<span id="del-class" class="pill"></span></div>
+        <div style="margin:10px 0;">
+          <label for="del-stu-select">請選擇要刪除的學生：</label>
+          <select id="del-stu-select" class="select" size="8" style="width:100%;"></select>
+        </div>
+        <div class="hint">刪除後會同時從座位安排、作業成績、抽號紀錄中移除該學生，且無法復原。</div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+          <button id="del-confirm" class="btn sub">刪除學生</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ★ 作業成績：學生備註彈窗 -->
+  <div id="note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="note-title">
+    <div class="modal" role="document" style="max-width:640px;">
+      <header>
+        <h3 id="note-title">📝 學生備註</h3>
+        <button id="note-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div class="hint">
+          班級：<span id="note-class" class="pill"></span>
+         　學生：<span id="note-student" class="pill"></span>
+        </div>
+        <textarea id="note-text" class="textarea" rows="6" placeholder="輸入備註（例如：補交、需要關懷、家長聯絡紀錄…）"></textarea>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+          <button id="note-del" class="btn sub">清空</button>
+          <button id="note-save" class="btn">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ====== 標題下方即時時鐘 ====== */
     (function initTitleClock(){
@@ -1032,6 +1096,8 @@
           elSelect.value = (s.selectedClass && state.classOrder.includes(s.selectedClass))
             ? s.selectedClass : state.classOrder[0];
           elSearch.disabled=false; state.filter='';
+          if(elAddStudent) elAddStudent.disabled=false;
+          if(elDelStudent) elDelStudent.disabled=false;
 
           // 依照上次模式恢復畫面
           if(state.mode==='seat') setMode('seat');
@@ -1064,6 +1130,8 @@
     const elBoardClass=document.getElementById('board-class');
     const elExport=document.getElementById('btn-export');
     const elSearch=document.getElementById('search-input');
+    const elAddStudent=document.getElementById('btn-add-student');
+    const elDelStudent=document.getElementById('btn-del-student');
     const elModeList=document.getElementById('mode-list');
     const elModeSeat=document.getElementById('mode-seat');
     const elModeHW=document.getElementById('mode-hw');
@@ -1127,10 +1195,52 @@
     const bulkApplyPaste = document.getElementById('bulk-apply-paste');
     const bulkPaste = document.getElementById('bulk-paste');
 
+    /* ★ 刪除學生彈窗 DOM */
+    const delMask = document.getElementById('del-mask');
+    const delClose = document.getElementById('del-close');
+    const delClass = document.getElementById('del-class');
+    const delSelect = document.getElementById('del-stu-select');
+    const delConfirm = document.getElementById('del-confirm');
+
+    /* ★ 學生備註彈窗 DOM */
+    const noteMask = document.getElementById('note-mask');
+    const noteClose = document.getElementById('note-close');
+    const noteClass = document.getElementById('note-class');
+    const noteStudent = document.getElementById('note-student');
+    const noteText = document.getElementById('note-text');
+    const noteSave = document.getElementById('note-save');
+    const noteDel = document.getElementById('note-del');
+
     /* ====== 輕量持久化（讀取） ====== */
     try{
       state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
     }catch{ state.scores = {}; }
+
+    // ★ 學生備註（作業成績座號前的 📝）
+    try{
+      state.notes = JSON.parse(localStorage.getItem('stu_notes_v1') || '{}') || {};
+    }catch{ state.notes = {}; }
+    function saveNotes(){
+      try{ localStorage.setItem('stu_notes_v1', JSON.stringify(state.notes||{})); }catch(e){}
+    }
+    function getNote(cls, id){
+      if(!cls || !id) return '';
+      return (state.notes && state.notes[cls] && state.notes[cls][id]) ? String(state.notes[cls][id]) : '';
+    }
+    function setNote(cls, id, note){
+      if(!cls || !id) return;
+      if(!state.notes) state.notes = {};
+      if(!state.notes[cls]) state.notes[cls] = {};
+      const v = String(note||'').trim();
+      if(v===''){
+        delete state.notes[cls][id];
+        if(Object.keys(state.notes[cls]).length===0) delete state.notes[cls];
+      }else{
+        state.notes[cls][id] = v;
+      }
+      saveNotes();
+    }
+
     function loadHWFromLS(cls){ try{ const raw=localStorage.getItem('hw_v1__'+cls); if(raw){ state.hw[cls]=JSON.parse(raw); } }catch{} }
     function saveHWToLS(cls){ try{ localStorage.setItem('hw_v1__'+cls, JSON.stringify(state.hw[cls]||{}));saveSession('hw change'); }catch{} }
 
@@ -1159,6 +1269,7 @@
           const seatIdx=findSeatColumnIndex(header);
           const nameIdx=findNameColumnIndex(header);
           const scoreIdx=findScoreColumnIndex(header);
+          const noteIdx=findNoteColumnIndex(header);
 
           const seatRIdx = header.findIndex(h => h === COL.R);
           const seatCIdx = header.findIndex(h => h === COL.C);
@@ -1176,6 +1287,16 @@
             const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
             const id = sid ? `SID__${sid}` : makeFallbackId(sheetName, seat, name);
             list.push({id,sid,name, seat, row:r+1, sheet:sheetName});
+
+            // 備註（可選）
+            if(noteIdx>=0){
+              const note = String(row[noteIdx]??'').trim();
+              if(note){
+                if(!state.notes) state.notes = {};
+                if(!state.notes[sheetName]) state.notes[sheetName] = {};
+                state.notes[sheetName][id] = note;
+              }
+            }
 
             if(seatRIdx>=0 && seatCIdx>=0){
               const rr=Number(row[seatRIdx]); const cc=Number(row[seatCIdx]);
@@ -1227,7 +1348,10 @@
         renderClassOptions(order);
         elSelect.disabled=true; elSelect.disabled=false; elSelect.value=order[0];
         elSearch.disabled=false; elSearch.value=""; state.filter="";
+        if(elAddStudent) elAddStudent.disabled=false;
+        if(elDelStudent) elDelStudent.disabled=false;
         renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
+        saveNotes();
         setStatus(`已載入 ${order.length} 個班級。`);
         saveSession('after import');   // ★ 新增：匯入後即暫存整份狀態
       }catch(err){ alert('解析失敗：'+err.message); setStatus('解析失敗'); }
@@ -1240,6 +1364,57 @@
       if(state.mode==='hw') renderHW(cls);
       if(state.mode==='draw') renderDraw(cls);
       saveSession('class change');   // ★ 新增
+    });
+
+    // ➕ 新增轉學生
+    elAddStudent?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls){
+        alert('請先選擇班級');
+        return;
+      }
+
+      const sid = (prompt('請輸入【學號】（例：A031）：') || '').trim();
+      if(!sid) return;
+
+      const id = `SID__${sid}`;
+      const list = state.classMap[cls] || [];
+
+      if(list.some(s => s.id === id)){
+        alert('這個學號在本班已經存在囉！');
+        return;
+      }
+
+      const name = (prompt('請輸入【姓名】：') || '').trim() || sid;
+      const seatRaw = (prompt('請輸入【座號】（可留空）：') || '').trim();
+      const seat = seatRaw || '';
+
+      const student = { id, sid, name, seat, row: null, sheet: cls };
+
+      list.push(student);
+      state.classMap[cls] = list;
+
+      state.sidMap[id] = { sid, sheet: cls, seat, name };
+
+      setScore(cls, id, 0);
+
+      renderStudents(cls);
+      renderLeaderboard(cls);
+      if(state.mode==='seat') renderSeatUI(cls);
+      if(state.mode==='hw') renderHW(cls);
+      if(state.mode==='draw') renderDraw(cls);
+
+      saveSession('add student');
+    });
+
+    // 🗑 刪除學生（轉學生）
+    elDelStudent?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls){
+        alert('請先選擇班級');
+        return;
+      }
+      openDelModal(cls);
     });
 
     // 🔎 依目前模式即時渲染 + Enter 清除
@@ -1311,7 +1486,7 @@
           const hwSt = ensureHWState(cls);
 
           // === 建表頭（在 for(const cls of state.classOrder) 內）===
-          const header = ['學號','座號','姓名','分數', ...hwSt.cols, '小計', '平均', COL.R, COL.C];
+          const header = ['學號','座號','姓名','備註','分數', ...hwSt.cols, '小計', '平均', COL.R, COL.C];
           const aoa = [header];
 
           for (const s of list){
@@ -1333,12 +1508,12 @@
             const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;  // 保留兩位
 
             // ★ 一起匯出（小計、平均 接在各作業後面）
-            aoa.push([sid, s.seat ?? '', s.name ?? '', sc, ...arr, sum, avg, rr, cc]);
+            aoa.push([sid, s.seat ?? '', s.name ?? '', getNote(cls, id), sc, ...arr, sum, avg, rr, cc]);
           }
 
           // 欄寬（多了「小計」「平均」各一欄）
           const ws = XLSX.utils.aoa_to_sheet(aoa);
-          const baseCols = [{wch:14},{wch:6},{wch:12},{wch:8}];       // 學號/座號/姓名/分數
+          const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:8}];       // 學號/座號/姓名/備註/分數
           const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
           ws['!cols'] = [
             ...baseCols,
@@ -1370,6 +1545,7 @@
         localStorage.removeItem(SESSION_KEY);          // 整份快照
         localStorage.removeItem('scores_v1');          // 平時分數
         localStorage.removeItem('scores_v2');   // ★ 新版分數也清掉
+        localStorage.removeItem('stu_notes_v1'); // ★ 學生備註
 
         // 作業 & 座位都一併清除
         const toRemove = [];
@@ -1404,6 +1580,9 @@
 
       elSearch.value = '';
       elSearch.disabled = true;
+
+      if(elAddStudent) elAddStudent.disabled = true;
+      if(elDelStudent) elDelStudent.disabled = true;
 
       // 列表 / 排行榜
       document.getElementById('students').innerHTML = '';
@@ -1546,7 +1725,9 @@
 
     function findIdColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['學號','學籍號','student id','id','學號碼']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/學號|student\s*id|^id$/i.test(header[i])) return i; } return -1; }
     function findNameColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['姓名','學生姓名','學生','name','student']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/name|姓名|學生/i.test(header[i])) return i; } return 0; }
-    function findSeatColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['座號','號','seat','no','number']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/座|號|seat|no|number/i.test(header[i])) return i; } return -1; }
+    function findSeatColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['座號','號','seat','no','number']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } 
+    function findNoteColumnIndex(header){ for(let i=0;i<header.length;i++){ const h=String(header[i]||'').trim(); if(/^(備註|註記|備考|note|remark|comments?)$/i.test(h)) return i; } return -1; }
+for(let i=0;i<header.length;i++){ if(/座|號|seat|no|number/i.test(header[i])) return i; } return -1; }
     function findScoreColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['分數','成績','score','points']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/分數|成績|score|points?/i.test(header[i])) return i; } return -1; }
 
     function makeFallbackId(sheet, seat, name){ const norm=(v)=>String(v??'').trim().replace(/\s+/g,'_').replace(/[^\w\u4e00-\u9fa5\-]/g,''); return `FALLBACK__${norm(sheet)}__${norm(seat)}__${norm(name)}`; }
@@ -2188,7 +2369,7 @@
         const isHit = q && matchFilter(s, q);
         return `
           <tr data-id="${s.id}" class="${isHit?'match':''}">
-            <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
+            <td><div class="hw-seatcell"><button class="note-btn" data-note-id="${s.id}" title="備註">${getNote(cls, s.id)?'🗒️':'📝'}</button><span class="hw-seattext">${highlightSeat(s.seat||'', isHit ? q : '')}</span></div></td>
             <td>${isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'')}</td>
             ${arr.map((v,ci)=>`<td class="num"><input type="number" step="1" inputmode="numeric" value="${v!==''?String(v):''}" data-col="${ci}" /></td>`).join('')}
             <td class="num" data-sum>${sum}</td>
@@ -2215,6 +2396,19 @@
           });
         });
       });
+
+
+      // 綁定「學生備註」按鈕
+      elHWTable.querySelectorAll('.note-btn[data-note-id]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault(); e.stopPropagation();
+          const id = btn.getAttribute('data-note-id');
+          const stu = (state.classMap[cls]||[]).find(x=>x.id===id);
+          const label = stu ? `${(stu.seat||'').toString().trim()?('座號 '+stu.seat+' '):''}${stu.name||''}${(stu.sid||'')?(' ('+stu.sid+')'):''}` : id;
+          openNoteModal(cls, id, label);
+        });
+      });
+
 
       // 綁定每個作業欄的⚡批次輸入
       elHWTable.querySelectorAll('.mini-btn[data-col]').forEach(btn=>{
@@ -2505,6 +2699,176 @@
     }
     function closeBulkModal(){ bulkMask.classList.remove('show'); }
     bulkClose.addEventListener('click', closeBulkModal);
+
+
+    // 學生備註彈窗（作業成績）
+    let _noteCtx = { cls:'', id:'', label:'' };
+
+    function openNoteModal(cls, id, label){
+      if(!noteMask) return;
+      _noteCtx = { cls: cls||'', id: id||'', label: label||'' };
+
+      noteClass.textContent = _noteCtx.cls || '';
+      noteStudent.textContent = _noteCtx.label || _noteCtx.id || '';
+      noteText.value = getNote(_noteCtx.cls, _noteCtx.id);
+
+      noteMask.classList.add('show');
+      noteText.focus();
+
+      const onKey=(e)=>{ if(e.key==='Escape'){ closeNoteModal(); } };
+      window.addEventListener('keydown', onKey, { once:true });
+      noteMask.addEventListener('click', (e)=>{ if(e.target===noteMask){ closeNoteModal(); } }, { once:true });
+    }
+    function closeNoteModal(){
+      if(noteMask) noteMask.classList.remove('show');
+    }
+    noteClose?.addEventListener('click', closeNoteModal);
+
+    noteSave?.addEventListener('click', ()=>{
+      if(!_noteCtx.cls || !_noteCtx.id) return;
+      setNote(_noteCtx.cls, _noteCtx.id, noteText.value);
+      // 立即刷新作業表：更新圖示狀態
+      if(state.mode==='hw') renderHW(_noteCtx.cls);
+      saveSession('note save');
+      closeNoteModal();
+    });
+    noteDel?.addEventListener('click', ()=>{
+      if(!_noteCtx.cls || !_noteCtx.id) return;
+      noteText.value = '';
+      setNote(_noteCtx.cls, _noteCtx.id, '');
+      if(state.mode==='hw') renderHW(_noteCtx.cls);
+      saveSession('note clear');
+      closeNoteModal();
+    });
+
+    // 刪除學生彈窗
+    function openDelModal(cls){
+      if(!delMask || !delSelect){
+        alert('介面尚未準備完成');
+        return;
+      }
+      if(!cls){
+        alert('請先選擇班級');
+        return;
+      }
+      const list = getSortedList(cls);
+      if(!list || list.length===0){
+        alert('本班目前沒有學生可以刪除');
+        return;
+      }
+
+      delClass.textContent = cls;
+      delSelect.innerHTML = '';
+
+      list.forEach(s=>{
+        const opt = document.createElement('option');
+        const seat = String(s.seat||'').trim();
+        const sid  = String(s.sid||'').trim();
+        const name = String(s.name||'').trim();
+        const parts = [];
+        if(seat) parts.push(`座號 ${seat}`);
+        if(name) parts.push(name);
+        if(sid)  parts.push(`學號 ${sid}`);
+        opt.textContent = parts.join(' ｜ ') || s.id;
+        opt.value = s.id;
+        delSelect.appendChild(opt);
+      });
+
+      delMask.classList.add('show');
+      if(delSelect.options.length>0) delSelect.selectedIndex = 0;
+      delSelect.focus();
+
+      const onKey=(e)=>{ if(e.key==='Escape'){ closeDelModal(); } };
+      window.addEventListener('keydown', onKey, { once:true });
+      delMask.addEventListener('click', (e)=>{ if(e.target===delMask){ closeDelModal(); } }, { once:true });
+    }
+    function closeDelModal(){ if(delMask) delMask.classList.remove('show'); }
+    delClose?.addEventListener('click', closeDelModal);
+    delConfirm?.addEventListener('click', ()=>{
+      const cls = elSelect.value || delClass.textContent || '';
+      if(!cls){
+        alert('請先選擇班級');
+        return;
+      }
+      if(!delSelect || !delSelect.value){
+        alert('請先選擇要刪除的學生');
+        return;
+      }
+      const id = delSelect.value;
+      const list = state.classMap[cls] || [];
+      const idx = list.findIndex(s=>s.id===id);
+      if(idx<0){
+        alert('找不到這位學生（可能已被刪除）');
+        closeDelModal();
+        return;
+      }
+      if(!confirm('確定要刪除這位學生嗎？此動作無法復原。')) return;
+
+      // 從班級名單移除
+      list.splice(idx,1);
+      state.classMap[cls] = list;
+
+      // sidMap
+      if(state.sidMap) delete state.sidMap[id];
+
+      // 備註
+      if(state.notes && state.notes[cls] && (id in state.notes[cls])){
+        delete state.notes[cls][id];
+        if(Object.keys(state.notes[cls]).length===0) delete state.notes[cls];
+        saveNotes();
+      }
+
+      // 座位表
+      const st = ensureSeatState(cls);
+      if(st && st.map){
+        Object.keys(st.map).forEach(key=>{ if(st.map[key]===id) delete st.map[key]; });
+        saveSeatState(cls, st);
+      }
+
+      // 加分成績
+      const k = scoreKey(cls, id);
+      if(k in state.scores){
+        delete state.scores[k];
+        try{
+          localStorage.setItem('scores_v2', JSON.stringify(state.scores));
+          saveSession('score delete');
+        }catch{}
+      }
+
+      // 作業成績
+      const hw = ensureHWState(cls);
+      if(hw && hw.data && hw.data[id]){
+        delete hw.data[id];
+        saveHWToLS(cls);
+      }
+
+      // 抽號紀錄
+      if(state.draw && state.draw[cls]){
+        const d = ensureDrawState(cls);
+        if(Array.isArray(d.drawn)) d.drawn = d.drawn.filter(x=>x!==id);
+        if(Array.isArray(d.history)) d.history = d.history.map(arr=>Array.isArray(arr)?arr.filter(x=>x!==id):arr);
+        saveDrawToLS(cls);
+      }
+
+      // 舊版成績快取
+      if(state.legacyScores && (id in state.legacyScores)){
+        delete state.legacyScores[id];
+      }
+
+      // 更新畫面
+      renderStudents(cls);
+      renderLeaderboard(cls);
+      renderSeatUI(cls);
+      renderHW(cls);
+      renderDraw(cls);
+
+      saveSession('delete student');
+      closeDelModal();
+
+      if(!state.classMap[cls] || state.classMap[cls].length===0){
+        alert('此班級目前已沒有學生。');
+      }
+    });
 
     // 整欄同分
     bulkApplySame.addEventListener('click', ()=>{
