@@ -1844,9 +1844,36 @@ px;
 
     function findIdColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['學號','學籍號','student id','id','學號碼']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/學號|student\s*id|^id$/i.test(header[i])) return i; } return -1; }
     function findNameColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['姓名','學生姓名','學生','name','student']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/name|姓名|學生/i.test(header[i])) return i; } return 0; }
-    function findSeatColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['座號','號','seat','no','number']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } 
-    function findNoteColumnIndex(header){ for(let i=0;i<header.length;i++){ const h=String(header[i]||'').trim(); if(/^(備註|註記|備考|note|remark|comments?)$/i.test(h)) return i; } return -1; }
-for(let i=0;i<header.length;i++){ if(/座|號|seat|no|number/i.test(header[i])) return i; } return -1; }
+    function findSeatColumnIndex(header){
+      const low = header.map(h=>String(h||'').trim().toLowerCase().replace(/\s+/g,''));
+      const cand = [
+        '座號','座位','座位號','座號(座位)','座位(座號)','號碼','號',
+        'no','number','seat','seatno','seatnumber','seat_no','seat-number','#'
+      ].map(s=>s.toLowerCase().replace(/\s+/g,''));
+      for(let i=0;i<low.length;i++){
+        if(cand.includes(low[i])) return i;
+      }
+      // 再放寬一點：只要像「座號/座位/seat/no/number」
+      for(let i=0;i<header.length;i++){
+        const h=String(header[i]||'');
+        if(/座號|座位|seat|\bno\b|number|^#$/i.test(h)) return i;
+      }
+      return -1;
+    }
+
+    function findNoteColumnIndex(header){
+      // 嚴格匹配（最穩）
+      for(let i=0;i<header.length;i++){
+        const h=String(header[i]||'').trim();
+        if(/^(備註|註記|備考|備忘|備註內容|note|remark|comments?)$/i.test(h)) return i;
+      }
+      // 放寬匹配（允許「學生備註」「備註(可選)」）
+      for(let i=0;i<header.length;i++){
+        const h=String(header[i]||'').trim();
+        if(/備註|註記|note|remark|comment/i.test(h)) return i;
+      }
+      return -1;
+    }
     function findScoreColumnIndex(header){ const low=header.map(h=>String(h||'').toLowerCase()); const cand=['分數','成績','score','points']; for(let i=0;i<low.length;i++){ if(cand.includes(low[i])) return i; } for(let i=0;i<header.length;i++){ if(/分數|成績|score|points?/i.test(header[i])) return i; } return -1; }
 
     function makeFallbackId(sheet, seat, name){ const norm=(v)=>String(v??'').trim().replace(/\s+/g,'_').replace(/[^\w\u4e00-\u9fa5\-]/g,''); return `FALLBACK__${norm(sheet)}__${norm(seat)}__${norm(name)}`; }
