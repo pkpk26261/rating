@@ -56,16 +56,22 @@ px;
 
     /* ★ 淺色主題：少數使用硬編顏色的元件做額外覆寫 */
     /* ===== 動態背景（淺色）覆寫 ===== */
+        /* ===== 動態背景（淺色）覆寫 ===== */
     :root[data-theme="light"] body::before{
       background:
-        radial-gradient(45% 45% at 20% 20%, rgba(124,58,237,.20), transparent 60%),
-        radial-gradient(55% 55% at 80% 80%, rgba(6,182,212,.16), transparent 60%),
-        linear-gradient(180deg, #f7f9fc 0%, #edf2f7 100%);
-      background-size: 160% 160%, 160% 160%, 100% 100%;
-      background-position: 20% 20%, 80% 80%, 50% 0%;
+        radial-gradient(40% 45% at 18% 22%, rgba(124,58,237,.18), transparent 68%),
+        radial-gradient(55% 55% at 84% 18%, rgba(6,182,212,.14), transparent 70%),
+        radial-gradient(50% 55% at 58% 88%, rgba(2,132,199,.12), transparent 72%),
+        radial-gradient(60% 60% at 45% 55%, rgba(15,23,42,.05), transparent 70%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      background-repeat:no-repeat;
+      background-size: 190% 190%, 180% 180%, 200% 200%, 160% 160%, 100% 100%;
+      background-position: 18% 22%, 84% 18%, 58% 88%, 50% 55%, 50% 0%;
+      filter: blur(34px) saturate(1.05);
+      opacity:1;
     }
-    
-    :root[data-theme="light"] body::after{
+
+:root[data-theme="light"] body::after{
       opacity:.6;
       mix-blend-mode: multiply;
     }
@@ -108,29 +114,33 @@ px;
     html,body{overflow-x:hidden}
     body{margin:0; color:var(--fg); font-family: ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","Helvetica Neue",Arial;}
 
-    /* ===== 動態背景（深色）— 防露白版 ===== */
+        /* ===== 動態背景（深色）— Aurora 版（低干擾） ===== */
     body::before{
       content:"";
       position:fixed;
-      inset:-20vmax;                 /* 覆蓋到對角，避免旋轉露邊 */
+      inset:-28vmax;                 /* 覆蓋到對角，避免露邊 */
       z-index:-2;
+      pointer-events:none;
       background:
-        radial-gradient(45% 45% at 20% 20%, rgba(124,58,237,.32), transparent 60%),
-        radial-gradient(55% 55% at 80% 80%, rgba(34,211,238,.22), transparent 60%),
-        linear-gradient(180deg, #0b1220 0%, #0b1526 100%);
+        radial-gradient(40% 45% at 18% 22%, rgba(124,58,237,.36), transparent 68%),
+        radial-gradient(55% 55% at 84% 18%, rgba(34,211,238,.26), transparent 70%),
+        radial-gradient(50% 55% at 58% 88%, rgba(14,165,233,.18), transparent 72%),
+        radial-gradient(60% 60% at 45% 55%, rgba(255,255,255,.03), transparent 70%),
+        linear-gradient(180deg, #0b1220 0%, #08101e 100%);
       background-repeat:no-repeat;
-      background-size: 160% 160%, 160% 160%, 100% 100%;
-      background-position: 20% 20%, 80% 80%, 50% 0%;
-      transform-origin: 50% 50%;
-      transform: rotate(0deg) scale(1.2);      /* 放大後再旋轉 */
+      background-size: 190% 190%, 180% 180%, 200% 200%, 160% 160%, 100% 100%;
+      background-position: 18% 22%, 84% 18%, 58% 88%, 50% 55%, 50% 0%;
+      filter: blur(42px) saturate(1.15);
+      opacity:.95;
+      transform: translate3d(0,0,0) scale(1.08);
       animation:
-        bgSpin 36s linear infinite,            /* 慢速旋轉 */
-        bgPulse 14s ease-in-out infinite alternate; /* 呼吸縮放（背景尺寸） */
+        auroraDrift 26s ease-in-out infinite alternate,
+        auroraBreathe 78s ease-in-out infinite alternate;
       will-change: transform, background-size, background-position;
       backface-visibility: hidden;
     }
 
-    /* 噪點層（覆在漸層上方） */
+/* 噪點層（覆在漸層上方） */
     body::after{
       content:"";
       position:fixed;
@@ -143,12 +153,24 @@ px;
     }
 
 
-    @keyframes bgSpin{
-      to{ transform: rotate(360deg) scale(1.2); }
+        @keyframes auroraDrift{
+      0%{
+        transform: translate3d(-2%, -1%, 0) scale(1.06);
+        background-position: 18% 22%, 84% 18%, 58% 88%, 50% 55%, 50% 0%;
+      }
+      100%{
+        transform: translate3d(2%, 1%, 0) scale(1.10);
+        background-position: 24% 30%, 76% 10%, 62% 82%, 48% 50%, 50% 0%;
+      }
     }
-    @keyframes bgPulse{
-      0%  { background-size: 150% 150%, 150% 150%, 100% 100%; }
-      100%{ background-size: 190% 190%, 170% 170%, 100% 100%; }
+
+}
+        @keyframes auroraBreathe{
+      0%  { background-size: 175% 175%, 165% 165%, 185% 185%, 150% 150%, 100% 100%; }
+      100%{ background-size: 205% 205%, 185% 185%, 215% 215%, 170% 170%, 100% 100%; }
+    }
+
+100%{ background-size: 190% 190%, 170% 170%, 100% 100%; }
     }
 
     /* 動態減弱偏好時停用動畫 */
@@ -165,20 +187,18 @@ px;
     .topbar{
       position:sticky; top:0; z-index:20;
       display:grid; grid-template-columns: 1fr auto 1fr; align-items:center;
-      height:78px; border-bottom:1px solid var(--line);
+      min-height:78px; height:auto; padding-block:10px; border-bottom:1px solid var(--line);
       background:rgba(15,23,42,.75); backdrop-filter: blur(8px);
       padding-inline: var(--page-x);
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
     .topbar__left{ justify-self:start; }
     .topbar__right{ justify-self:end; }
-    .title-stack{ grid-column:2; display:flex; flex-direction:column; align-items:center; line-height:1.1; }
+    .title-stack{ grid-column:2; display:flex; flex-direction:column; align-items:center; gap:6px; line-height:1.1; }
     .title{ font-weight:900; letter-spacing:0.06em; margin:0; font-size:20px; }
     .title::after{ content:""; display:block; margin:6px auto 0; width:64px; height:2px; border-radius:2px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); opacity:.6; }
-    .title-clock{ margin-top:6px; font-size:12px; color:var(--muted); font-variant-numeric: tabular-nums; }
-
     /* ===== 容器 ===== */
-    .app{ width:100%; margin:0; height:100svh; display:grid; grid-template-rows: 78px 1fr; }
+    .app{ width:100%; margin:0; height:100svh; display:grid; grid-template-rows: auto 1fr; }
     .layout{
       position: relative;                     /* ★ 讓收合按鈕可絕對定位於 layout 內 */
       display:grid;
@@ -245,6 +265,31 @@ px;
       min-height:0;
       min-width: 0;
     }
+    /* ===== 顯示模式列（在 main 外、上方右上角） ===== */
+    .main-col{
+      min-height:0;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .modebar{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:4px;
+    }
+    /* 讓 main 在 main-col 內撐滿剩餘高度 */
+    .main-col > .main{
+      flex:1;
+      min-height:0;
+    }
+    /* 小螢幕時，右上角容易擠：改為靠左、自然換行 */
+    @media (max-width: 880px){
+      .modebar{ justify-content:center; }
+    }
     /* 讓 main 本身不被內容撐破；下面的內容區會各自滾動 */
     .main{
       display:flex;
@@ -301,7 +346,7 @@ px;
     .input:focus{ border-color: color-mix(in oklab, var(--accent) 60%, #000); box-shadow: 0 0 0 4px rgba(124,58,237,.15); }
 
     .seg{ display:flex; gap:8px; border:1px solid var(--line); border-radius:12px; padding:4px; background:rgba(255,255,255,.04); }
-    .seg-btn{ appearance:none; border:0; background:transparent; color:var(--fg); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:800; }
+    .seg-btn{ appearance:none; border:0; background:transparent; color:var(--fg); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:800; font-size:13px; }
     .seg-btn.active{ background:rgba(124,58,237,.25); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
 
     /* ===== 通用按鈕 + Ripple ===== */
@@ -360,14 +405,14 @@ px;
     @keyframes ripple{ to{ opacity:0; width:240px; height:240px; } }
 
     /* ===== 列表模式卡片 ===== */
-    .grid{ display:grid; grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr)); gap:8px; margin-top:12px; align-items:start; justify-items:stretch; }
+    .grid{ display:grid; grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr)); gap:8px; margin-top:12px; align-items:stretch; justify-items:stretch; }
     .card{ position:relative; border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:72px; box-shadow: var(--shadow); transform: translateY(6px); opacity:0; width:auto; }
     .card.show{ opacity:1; transform: translateY(0); transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease; }
     .card:hover{ outline:1px solid rgba(124,58,237,.35); box-shadow: 0 12px 30px rgba(124,58,237,.12); }
     .name{ display:flex; align-items:center; gap:6px; font-weight:800; letter-spacing:.02em; line-height:1.05; min-width:0; }
     .name .student-name{ display:inline-block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
     .seat-badge{ background: color-mix(in oklab, var(--seat) 22%, black); border:1px solid color-mix(in oklab, var(--seat) 60%, black); color:white; font-weight:800; font-variant-numeric: tabular-nums; padding:1px 6px; border-radius:999px; line-height:1.2; font-size:10px; flex:0 0 auto; }
-    .card.placeholder{ border:1px dashed var(--line); background: repeating-linear-gradient(45deg, rgba(255,255,255,.015), rgba(255,255,255,.015) 8px, rgba(255,255,255,.02) 8px, rgba(255,255,255,.02) 16px); color: var(--muted); align-items:center; justify-content:center; gap:6px; min-height:60px; }
+    .card.placeholder{ border:1px dashed var(--line); background: repeating-linear-gradient(45deg, rgba(255,255,255,.015), rgba(255,255,255,.015) 8px, rgba(255,255,255,.02) 8px, rgba(255,255,255,.02) 16px); color: var(--muted); align-items:center; justify-content:center; gap:6px; min-height:72px; }
     .placeholder .seat-ind{ font-size:12px; opacity:.85; }
     .placeholder .empty-text{ font-weight:800; letter-spacing:.04em; }
     .actions{ display:flex; gap:6px; margin-top:auto; }
@@ -743,7 +788,36 @@ px;
     }
 
 
-  </style>
+  
+    /* ===== Compact Topbar (reduce title row height) ===== */
+    .topbar{ min-height: 56px; padding-block: 6px; }
+    .title-stack{ gap: 3px; line-height: 1.05; }
+    .title{ font-size: 18px; }
+    .modebar{ margin-top: 0; gap: 6px; }
+    .seg-btn{ padding: 6px 10px; }
+
+  
+    /* ===== 工具列：新增/刪除學生按鈕與搜尋欄等高、字體更小 ===== */
+    :root{ --toolbar-ctl-h: 36px; }
+
+    /* 搜尋欄 */
+    #search-input{
+      height: var(--toolbar-ctl-h);
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    /* 新增/刪除學生（只影響這兩顆，不會動到 +1/-1 等其他按鈕） */
+    #btn-add-student, #btn-del-student{
+      height: var(--toolbar-ctl-h);
+      padding: 0 12px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+</style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -757,7 +831,15 @@ px;
 
       <div class="title-stack">
         <h1 class="title">平時成績系統</h1>
-        <div class="title-clock" id="titleClock">台北時間 — --/--/-- (週-) --:--:--</div>
+        <div class="modebar">
+          <div class="seg" role="tablist" aria-label="顯示模式">
+                                <button id="mode-list" class="seg-btn active" data-mode="list">座位</button>
+                                <button id="mode-seat" class="seg-btn" data-mode="seat">安排座位</button>
+                                <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
+                                <button id="mode-draw" class="seg-btn" data-mode="draw">抽號</button>
+          
+                              </div>
+        </div>
       </div>
 
       <div class="topbar__right">
@@ -807,7 +889,8 @@ px;
         </section>
       </aside>
 
-      <section class="main">
+            <div class="main-col">
+<section class="main">
         <div class="toolbar">
           <label for="class-select">班級</label>
           <select id="class-select" class="select" disabled>
@@ -820,13 +903,7 @@ px;
             <input id="chk-show-stage" type="checkbox" checked>
             <span>顯示講台</span>
           </label>
-          <div class="seg" role="tablist" aria-label="顯示模式">
-            <button id="mode-list" class="seg-btn active" data-mode="list">座位</button>
-            <button id="mode-seat" class="seg-btn" data-mode="seat">安排座位</button>
-            <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
-            <button id="mode-draw" class="seg-btn" data-mode="draw">抽號</button>
-
-          </div>
+          
         </div>
 
         <!-- 安排座位 -->
@@ -927,6 +1004,7 @@ px;
         </section>
 
       </section>
+      </div>
     </main>
   </div>
 
@@ -1046,21 +1124,6 @@ px;
 </div>
 
   <script>
-    /* ====== 標題下方即時時鐘 ====== */
-    (function initTitleClock(){
-      const el = document.getElementById('titleClock');
-      const tz = 'Asia/Taipei';
-      function tick(){
-        const now = new Date();
-        const parts = new Intl.DateTimeFormat('zh-TW', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, weekday: 'short' }).formatToParts(now);
-        const get = (t)=>parts.find(p=>p.type===t)?.value || '';
-        const y=get('year'), m=get('month'), d=get('day'); const hh=get('hour'), mm=get('minute'), ss=get('second');
-        let wk=get('weekday'); if (wk) wk=wk.replace('星期','週').slice(-1);
-        el.textContent = `台北時間 — ${y}/${m}/${d} (週${wk}) ${hh}:${mm}:${ss}`;
-      }
-      tick(); setInterval(tick, 1000);
-    })();
-
     /* ====== 全域狀態 ====== */
     const state={
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
