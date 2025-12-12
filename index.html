@@ -20,7 +20,19 @@
       --accent:#7c3aed; --accent-2:#22d3ee; --ok:#16a34a; --bad:#dc2626;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --chip-fz:14px;
-      --chip-py:8px;
+      --chip-py:8
+
+    /* ★ 刪除學生清單：座號/姓名對齊（等寬字＋表格數字） */
+    #del-stu-select{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+      white-space: pre; /* 讓 padStart/padEnd 用的空白能顯示 */
+    }
+    #del-stu-select option{
+      font-family: inherit;
+      white-space: pre;
+    }
+px;
       --chip-px:12px;
       --page-x: 10px;
       --list-cols: 6;
@@ -2836,16 +2848,37 @@ noteSave?.addEventListener('click', ()=>{
       delClass.textContent = cls;
       delSelect.innerHTML = '';
 
+      // ★ 對齊：座號用 0 補齊位數，搭配等寬字/表格數字
+      const seatNums = list
+        .map(x => parseInt(String(x.seat||'').trim(), 10))
+        .filter(n => Number.isFinite(n));
+      const seatW = seatNums.length ? String(Math.max(...seatNums)).length : 2;
+
+      const nameLens = list.map(x => {
+        const nm = String(x.name||'').trim();
+        return (nm ? nm : '(未命名)').length;
+      });
+      const nameW = nameLens.length ? Math.max(2, ...nameLens) : 2;
+
       list.forEach(s=>{
         const opt = document.createElement('option');
-        const seat = String(s.seat||'').trim();
+        const seatRaw = String(s.seat||'').trim();
         const sid  = String(s.sid||'').trim();
         const name = String(s.name||'').trim();
-        const parts = [];
-        if(seat) parts.push(`座號 ${seat}`);
-        if(name) parts.push(name);
-        if(sid)  parts.push(`學號 ${sid}`);
-        opt.textContent = parts.join(' ｜ ') || s.id;
+
+        const seatNum = parseInt(seatRaw, 10);
+        const seatPad = Number.isFinite(seatNum)
+          ? String(seatNum).padStart(seatW, '0')
+          : (seatRaw || '--');
+
+        const displayName = name || '(未命名)';
+        const namePad = displayName.padEnd(nameW, '　'); // 用全形空白補齊，兩字/三字都會對齊
+
+        // 顯示格式：<座號>  <姓名>  (<學號>)
+        let line = `${seatPad}  ${namePad}`;
+        if(sid) line += `  (${sid})`;
+
+        opt.textContent = line;
         opt.value = s.id;
         delSelect.appendChild(opt);
       });
