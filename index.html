@@ -817,6 +817,58 @@ px;
       white-space: nowrap;
     }
 
+
+    /* ===== 📚 教學進度 ===== */
+    #progress-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden; }
+    .prog-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+    .progtbl-wrap{ flex:1 1 auto; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
+    .progtbl{ width:100%; border-collapse:separate; border-spacing:0; min-width: 520px; }
+    .progtbl th, .progtbl td{ border-bottom:1px solid var(--line); padding:10px 10px; text-align:center; }
+    .progtbl th{ position:sticky; top:0; background:rgba(15,23,42,.92); backdrop-filter: blur(6px); z-index:1; font-size:13px; }
+    :root[data-theme="light"] .progtbl th{ background: rgba(255,255,255,.92); }
+    .progtbl td:first-child, .progtbl th:first-child{ text-align:left; min-width: 220px; }
+    .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none; }
+    :root[data-theme="light"] .prog-input{ background: rgba(2,6,23,.03); }
+    .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
+
+    /* ===== ⏳ 倒數計時 ===== */
+    #timer-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden; }
+    .timer-wrap{ display:flex; flex-direction:column; gap:14px; flex:1 1 auto; min-height:0; }
+    .timer-display{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      box-shadow: var(--shadow);
+      padding:18px 16px;
+      text-align:center;
+      font-weight: 900;
+      letter-spacing: .06em;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(44px, 7vw, 88px);
+    }
+    .timer-set, .timer-actions, .timer-presets{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .timer-presets .btn{ padding:8px 10px; font-weight:900; }
+
+
+    /* ===== In-app Modal ===== */
+    .ui-modal.hidden{ display:none; }
+    .ui-modal{ position:fixed; inset:0; z-index:9999; }
+    .ui-modal__backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+    .ui-modal__panel{
+      position:relative;
+      max-width: 360px;
+      width: calc(100% - 32px);
+      margin: 18vh auto 0;
+      background: var(--card, #111);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+      padding: 14px 14px 12px;
+    }
+    .ui-modal__title{ font-weight: 800; font-size: 16px; margin-bottom: 8px; }
+    .ui-modal__msg{ line-height: 1.6; font-size: 14px; opacity: .95; white-space: pre-wrap; }
+    .ui-modal__actions{ display:flex; justify-content:flex-end; gap:10px; margin-top: 12px; }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -833,10 +885,12 @@ px;
         <h1 class="title">平時成績系統</h1>
         <div class="modebar">
           <div class="seg" role="tablist" aria-label="顯示模式">
-                                <button id="mode-list" class="seg-btn active" data-mode="list">座位</button>
-                                <button id="mode-seat" class="seg-btn" data-mode="seat">安排座位</button>
+                                <button id="mode-progress" class="seg-btn" data-mode="progress">教學進度</button>
+                                <button id="mode-list" class="seg-btn active" data-mode="list">加扣分</button>
+                                <button id="mode-seat" class="seg-btn" data-mode="seat">座位</button>
                                 <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
                                 <button id="mode-draw" class="seg-btn" data-mode="draw">抽號</button>
+                                <button id="mode-timer" class="seg-btn" data-mode="timer">倒數計時</button>
           
                               </div>
         </div>
@@ -930,7 +984,51 @@ px;
         <div id="students" class="grid"></div>
 
         <!-- ★ 作業成績頁 -->
-        <section id="hw-pane" class="hidden" aria-label="作業成績頁">
+        
+        <!-- 📚 教學進度 -->
+        <section id="progress-pane" class="hidden" aria-label="教學進度">
+          <h3 class="hw-title">📚 教學進度 <span class="pill" id="prog-pill">可跨班勾選</span></h3>
+          <div class="prog-controls">
+            <button id="btn-prog-add" class="btn add">＋新增進度</button>
+            <button id="btn-prog-del" class="btn">刪除最後一列</button>
+            <span class="hint">提示：第一欄輸入進度名稱；每個班級欄位可勾選已完成。</span>
+          </div>
+          <div class="progtbl-wrap">
+            <table class="progtbl" id="prog-table" role="grid"></table>
+          </div>
+        </section>
+
+        <!-- ⏳ 倒數計時 -->
+        <section id="timer-pane" class="hidden" aria-label="倒數計時">
+          <h3 class="hw-title">⏳ 倒數計時</h3>
+          <div class="timer-wrap">
+            <div class="timer-display" id="timer-display">00:00</div>
+            <div class="timer-set">
+              <label>分鐘
+                <input id="timer-min" type="number" class="input" min="0" value="5" style="width:90px;">
+              </label>
+              <label>秒
+                <input id="timer-sec" type="number" class="input" min="0" max="59" value="0" style="width:90px;">
+              </label>
+              <button id="btn-timer-set" class="btn">設定</button>
+            </div>
+            <div class="timer-actions">
+              <button id="btn-timer-start" class="btn add">開始</button>
+              <button id="btn-timer-pause" class="btn">暫停</button>
+              <button id="btn-timer-reset" class="btn">重置</button>
+            </div>
+            <div class="timer-presets">
+              <span class="hint">快速：</span>
+              <button class="btn" data-preset="60">1分</button>
+              <button class="btn" data-preset="180">3分</button>
+              <button class="btn" data-preset="300">5分</button>
+              <button class="btn" data-preset="600">10分</button>
+            </div>
+            <div class="hint" id="timer-hint"></div>
+          </div>
+        </section>
+
+<section id="hw-pane" class="hidden" aria-label="作業成績頁">
           <h3 class="hw-title">📝 作業成績 <span class="pill" id="hw-class-pill">尚未載入</span></h3>
           <div class="hw-controls">
             <button id="btn-hw-add" class="btn add">＋新增作業</button>
@@ -1127,7 +1225,10 @@ px;
     /* ====== 全域狀態 ====== */
     const state={
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
-      hw:{}, savedHW:{}, draw:{}, showStageInList: true
+      hw:{}, savedHW:{}, draw:{}, showStageInList: true,
+      // ★ 新增：教學進度（跨班勾選）與倒數計時
+      progress:{ items: [] },
+      timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
     };
 
     /* === 觸控備援：點一下選取 → 點一下放置 === */
@@ -1175,6 +1276,9 @@ px;
         sidMap: state.sidMap,
         seating: state.seating,
         hw: state.hw,
+        // ★ 教學進度 & 倒數計時
+        progress: state.progress,
+        timer: state.timer,
         selectedClass: elSelect?.value || '',
         mode: state.mode,
         showStageInList: state.showStageInList,
@@ -1202,6 +1306,17 @@ px;
         state.sidMap     = s.sidMap     || {};
         state.seating    = s.seating    || {};
         state.hw         = s.hw         || {};
+        // ★ 教學進度/倒數計時
+        state.progress   = s.progress   || { items: [] };
+        state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
+
+        // 若倒數計時正在進行，讓它在背景繼續跑
+        try{
+          ensureTimerState();
+          syncTimerFromEndAt();
+          if(state.timer?.running) startTimerInterval();
+        }catch(e){ /* ignore */ }
+
         state.mode       = s.mode       || 'list';
 
         state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
@@ -1251,6 +1366,8 @@ px;
     const elModeList=document.getElementById('mode-list');
     const elModeSeat=document.getElementById('mode-seat');
     const elModeHW=document.getElementById('mode-hw');
+    const elModeProgress=document.getElementById('mode-progress');
+    const elModeTimer=document.getElementById('mode-timer');
     const elSeatControls=document.getElementById('seat-controls');
     const elSeatboard=document.getElementById('seatboard');
     const elUnassigned=document.getElementById('unassigned');
@@ -1272,6 +1389,22 @@ px;
 
 
     /* ★ 作業成績 DOM */
+    const elProgressPane=document.getElementById('progress-pane');
+    const elProgTable=document.getElementById('prog-table');
+    const elProgPill=document.getElementById('prog-pill');
+    const elProgAdd=document.getElementById('btn-prog-add');
+    const elProgDel=document.getElementById('btn-prog-del');
+
+    const elTimerPane=document.getElementById('timer-pane');
+    const elTimerDisplay=document.getElementById('timer-display');
+    const elTimerMin=document.getElementById('timer-min');
+    const elTimerSec=document.getElementById('timer-sec');
+    const elTimerSet=document.getElementById('btn-timer-set');
+    const elTimerStart=document.getElementById('btn-timer-start');
+    const elTimerPause=document.getElementById('btn-timer-pause');
+    const elTimerReset=document.getElementById('btn-timer-reset');
+    const elTimerHint=document.getElementById('timer-hint');
+
     const elHWPane=document.getElementById('hw-pane');
     const elHWClassPill=document.getElementById('hw-class-pill');
     const elHWTable=document.getElementById('hw-table');
@@ -1379,6 +1512,12 @@ px;
         const wb=XLSX.read(data,{type:'array'});
         const map={}; const order=[];
         wb.SheetNames.forEach((sheetName)=>{
+          // ★ 系統專用表單：教學進度（非班級名單）
+          if(String(sheetName||'').trim().startsWith('教學進度')){
+            try{ parseProgressSheet(wb.Sheets[sheetName]); }catch(e){ console.warn('教學進度解析失敗', e); }
+            return;
+          }
+
           const ws=wb.Sheets[sheetName]; if(!ws) return;
           const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
           if(!rows||rows.length===0) return;
@@ -1644,7 +1783,10 @@ px;
           XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
         }
 
-        // 預設檔名：與原本一致
+                // ★ 另外匯出：教學進度（新表單）
+        appendProgressSheet(wb);
+
+// 預設檔名：與原本一致
         const ts=new Date(), pad=n=>String(n).padStart(2,'0');
         const fname=`成績匯出_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}.xlsx`;
 
@@ -1692,6 +1834,9 @@ px;
       state.savedHW    = {};
       state.filter     = '';
       state.mode       = 'list';
+      state.progress   = { items: [] };
+      state.timer = { setSec: 300, remainingSec: 300, running:false, endAt: 0, doneNotified:false };
+      stopTimerInterval();
 
       // 2) 還原 UI 控制
       elSelect.innerHTML = '<option value="" selected>請先上傳學生名單</option>';
@@ -1718,6 +1863,14 @@ px;
       // 作業頁
       elHWTable.innerHTML = '';
       elHWClassPill.textContent = '尚未載入';
+
+      // 教學進度 / 倒數計時
+      if(elProgTable) elProgTable.innerHTML = '';
+      if(elTimerDisplay) elTimerDisplay.textContent = '00:00';
+      if(elTimerHint) elTimerHint.textContent = '';
+      if(elTimerMin) elTimerMin.value = 5;
+      if(elTimerSec) elTimerSec.value = 0;
+
 
       // 顯示模式回列表、狀態提示
       setMode('list');
@@ -2355,36 +2508,496 @@ px;
     });
 
 
+    
+    /* ====== 📚 教學進度（跨班勾選） ====== */
+    function ensureProgressState(){
+      if(!state.progress || typeof state.progress!=='object') state.progress = { items: [] };
+      if(!Array.isArray(state.progress.items)) state.progress.items = [];
+      // 修正每一列的格式
+      state.progress.items = state.progress.items.map(it=>{
+        if(!it || typeof it!=='object') return { title:'', checked:{} };
+        if(typeof it.title!=='string') it.title = String(it.title ?? '');
+        if(!it.checked || typeof it.checked!=='object') it.checked = {};
+        return it;
+      });
+      return state.progress;
+    }
+
+    function isCheckedCell(v){
+      if(v===true) return true;
+      if(v===1) return true;
+      const s = String(v ?? '').trim().toLowerCase();
+      return ['1','true','y','yes','是','✓','v','ok','完成','已完成'].includes(s);
+    }
+
+    function parseProgressSheet(ws){
+      if(!ws) return;
+      const rows = XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+      if(!rows || rows.length===0) return;
+      const header = (rows[0]||[]).map(v=>String(v||'').trim());
+      if(!header.length) return;
+      // 允許第一格不是完全一致（但只要包含教學進度字樣即可）
+      if(String(header[0]||'').replace(/\s+/g,'') !== '教學進度') return;
+
+      const classes = header.slice(1).map(v=>String(v||'').trim()).filter(Boolean);
+      const items = [];
+      for(let r=1;r<rows.length;r++){
+        const row = rows[r] || [];
+        const title = String(row[0]||'').trim();
+        const tail = row.slice(1).map(v=>String(v||'').trim());
+        const hasAny = title || tail.some(v=>v);
+        if(!hasAny) continue;
+
+        const checked = {};
+        classes.forEach((cls, i)=>{ checked[cls] = isCheckedCell(row[i+1]); });
+        items.push({ title, checked });
+      }
+      state.progress = { items };
+      saveSession('import progress sheet');
+    }
+
+    function buildProgressAOA(){
+      const prog = ensureProgressState();
+      const classes = state.classOrder || [];
+      const header = ['教學進度', ...classes];
+      const aoa = [header];
+
+      // 若沒有任何進度，仍輸出一列空白，避免空表單不好編輯
+      if(!prog.items.length){
+        aoa.push(['']);
+        return aoa;
+      }
+
+      for(const it of prog.items){
+        const title = String(it.title||'').trim();
+        const checked = it.checked || {};
+        const row = [title];
+        for(const cls of classes){
+          row.push(checked[cls] ? 1 : 0);
+        }
+        aoa.push(row);
+      }
+      return aoa;
+    }
+
+    function appendProgressSheet(wb){
+      try{
+        const aoa = buildProgressAOA();
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        const classes = state.classOrder || [];
+        ws['!cols'] = [{wch:28}, ...classes.map(()=>({wch:10}))];
+
+        // 避免重名
+        let name = '教學進度';
+        if(wb.SheetNames.includes(name)){
+          let i=2;
+          while(wb.SheetNames.includes(`${name}_${i}`)) i++;
+          name = `${name}_${i}`;
+        }
+        XLSX.utils.book_append_sheet(wb, ws, name);
+      }catch(e){
+        console.warn('建立教學進度表單失敗', e);
+      }
+    }
+
+    function renderProgress(){
+      ensureProgressState();
+      if(!elProgTable) return;
+
+      const classes = state.classOrder || [];
+      if(elProgPill){
+        elProgPill.textContent = classes.length ? `共 ${classes.length} 班` : '請先匯入班級名單';
+      }
+
+      // 表頭
+      elProgTable.innerHTML = '';
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      const th0 = document.createElement('th');
+      th0.textContent = '教學進度';
+      trh.appendChild(th0);
+      classes.forEach(cls=>{
+        const th = document.createElement('th');
+        th.textContent = cls;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+
+      const tbody = document.createElement('tbody');
+      const prog = ensureProgressState();
+
+      // 如果完全沒有列，先補一列空白方便輸入
+      if(!prog.items.length){
+        prog.items.push({ title:'', checked:{} });
+      }
+
+      prog.items.forEach((it, idx)=>{
+        const tr = document.createElement('tr');
+
+        // 第一欄：進度名稱
+        const td0 = document.createElement('td');
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'prog-input';
+        inp.placeholder = '輸入進度...';
+        inp.value = it.title || '';
+        inp.addEventListener('input', ()=>{
+          it.title = inp.value;
+          saveSession('progress title');
+        });
+        td0.appendChild(inp);
+        tr.appendChild(td0);
+
+        // 各班級：勾選
+        classes.forEach(cls=>{
+          const td = document.createElement('td');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'prog-check';
+          cb.checked = !!(it.checked && it.checked[cls]);
+          cb.addEventListener('change', ()=>{
+            if(!it.checked) it.checked = {};
+            it.checked[cls] = !!cb.checked;
+            saveSession('progress tick');
+          });
+          td.appendChild(cb);
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      elProgTable.appendChild(thead);
+      elProgTable.appendChild(tbody);
+    }
+
+    /* ====== ⏳ 倒數計時 ====== */
+    let timerInterval = null;
+
+    function ensureTimerState(){
+      if(!state.timer || typeof state.timer!=='object'){
+        state.timer = { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
+      }
+      // 修正數值
+      state.timer.setSec = Math.max(0, Number(state.timer.setSec) || 0);
+      state.timer.remainingSec = Math.max(0, Number(state.timer.remainingSec) || 0);
+      state.timer.endAt = Number(state.timer.endAt) || 0;
+      state.timer.running = !!state.timer.running;
+      state.timer.doneNotified = !!state.timer.doneNotified;
+      return state.timer;
+    }
+
+    function fmtTime(totalSec){
+      totalSec = Math.max(0, Math.floor(totalSec || 0));
+      const hh = Math.floor(totalSec / 3600);
+      const mm = Math.floor((totalSec % 3600) / 60);
+      const ss = totalSec % 60;
+      const pad = n => String(n).padStart(2,'0');
+      if(hh>0) return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+      return `${pad(mm)}:${pad(ss)}`;
+    }
+
+    function syncTimerFromEndAt(){
+      const t = ensureTimerState();
+      if(t.running && t.endAt){
+        const rem = Math.max(0, Math.ceil((t.endAt - Date.now()) / 1000));
+        t.remainingSec = rem;
+        if(rem<=0){
+          t.running = false;
+      t.doneNotified = false;
+          t.endAt = 0;
+          t.remainingSec = 0;
+          onTimerDone();
+        }
+      }
+    }
+
+    function updateTimerDisplay(){
+      const t = ensureTimerState();
+      syncTimerFromEndAt();
+      if(elTimerDisplay) elTimerDisplay.textContent = fmtTime(t.remainingSec);
+      if(elTimerHint){
+        if(t.running) elTimerHint.textContent = '倒數中…';
+        else if(t.remainingSec===0) elTimerHint.textContent = '時間到！';
+        else elTimerHint.textContent = '已暫停';
+      }
+    }
+
+    function stopTimerInterval(){
+      if(timerInterval){
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function startTimerInterval(){
+      if(timerInterval) return;
+      timerInterval = setInterval(()=>{
+        const t = ensureTimerState();
+        if(!t.running){
+          stopTimerInterval();
+          updateTimerDisplay();
+          return;
+        }
+        updateTimerDisplay();
+      }, 250);
+    }
+
+    function setTimerSeconds(sec){
+      const t = ensureTimerState();
+      sec = Math.max(0, Math.floor(Number(sec) || 0));
+      t.setSec = sec;
+      t.remainingSec = sec;
+      t.running = false;
+      t.endAt = 0;
+      stopTimerInterval();
+      updateTimerInputs();
+      updateTimerDisplay();
+      saveSession('timer set');
+    }
+
+    function updateTimerInputs(){
+      if(!elTimerMin || !elTimerSec) return;
+      const t = ensureTimerState();
+      const sec = Math.max(0, Math.floor(t.remainingSec));
+      elTimerMin.value = Math.floor(sec/60);
+      elTimerSec.value = sec%60;
+    }
+
+    function startTimer(){
+      const t = ensureTimerState();
+      if(t.running) return;
+      if(t.remainingSec<=0) t.remainingSec = t.setSec || 0;
+      if(t.remainingSec<=0) return;
+
+      t.running = true;
+      t.doneNotified = false;
+      t.endAt = Date.now() + t.remainingSec*1000;
+      startTimerInterval();
+      updateTimerDisplay();
+      saveSession('timer start');
+    }
+
+    function pauseTimer(){
+      const t = ensureTimerState();
+      if(!t.running) return;
+      syncTimerFromEndAt();
+      t.running = false;
+      t.endAt = 0;
+      stopTimerInterval();
+      updateTimerDisplay();
+      saveSession('timer pause');
+    }
+
+    function resetTimer(){
+      const t = ensureTimerState();
+      t.running = false;
+      t.doneNotified = false;
+      t.endAt = 0;
+      t.remainingSec = t.setSec || 0;
+      stopTimerInterval();
+      updateTimerInputs();
+      updateTimerDisplay();
+      saveSession('timer reset');
+    }
+
+    
+
+// ===== In-app Modal (避免瀏覽器 alert「這個網站」視窗) =====
+let __inAppMask = null;
+function ensureInAppModal(){
+  if(__inAppMask) return;
+  const mask = document.createElement('div');
+  mask.id = 'inapp-mask';
+  mask.className = 'modal-mask';
+  mask.setAttribute('role','dialog');
+  mask.setAttribute('aria-modal','true');
+
+  mask.innerHTML = `
+    <div class="modal" role="document">
+      <header>
+        <h3 id="inapp-title">提示</h3>
+        <button id="inapp-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div id="inapp-body" class="hint" style="font-size:15px; line-height:1.6;"></div>
+        <div class="divider"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
+          <button id="inapp-ok" class="btn primary">停止提醒</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(mask);
+
+  const close = ()=>{ try{ stopAlarmSound?.(); }catch(_){} hideInAppModal(); };
+  mask.addEventListener('click', (e)=>{ if(e.target===mask) close(); });
+  mask.querySelector('#inapp-close').addEventListener('click', close);
+  mask.querySelector('#inapp-ok').addEventListener('click', ()=>{
+    try{ stopAlarmSound?.(); }catch(_){}
+    close();
+  });
+
+  __inAppMask = mask;
+}
+function showInAppModal(title, body){
+  ensureInAppModal();
+  __inAppMask.querySelector('#inapp-title').textContent = title || '提示';
+  __inAppMask.querySelector('#inapp-body').textContent = body || '';
+  __inAppMask.classList.add('show');
+}
+function hideInAppModal(){
+  if(!__inAppMask) return;
+  __inAppMask.classList.remove('show');
+}
+
+
+// ===== 鬧鐘式提醒音效（可停止、會連續響） =====
+let __alarmCtx = null;
+let __alarmTimer = null;
+let __alarmStopAt = 0;
+
+function stopAlarmSound(){
+  try{
+    if(__alarmTimer){ clearInterval(__alarmTimer); __alarmTimer = null; }
+  }catch(_){}
+  try{
+    if(__alarmCtx){
+      // 有些瀏覽器 close 會失敗，保守處理
+      __alarmCtx.close?.();
+    }
+  }catch(_){}
+  __alarmCtx = null;
+  __alarmStopAt = 0;
+}
+
+function playAlarmSound(){
+  stopAlarmSound();
+
+  // 1) 語音：先說「結束」（如果使用者允許）
+  try{
+    if('speechSynthesis' in window){
+      const u = new SpeechSynthesisUtterance('結束');
+      u.lang = 'zh-TW';
+      u.rate = 1.0;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+  }catch(_){}
+
+  // 2) WebAudio：做出「鬧鐘」那種連續嗶嗶嗶（節奏 + 頻率變化）
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+
+    const ctx = new AC();
+    __alarmCtx = ctx;
+
+    const beepOnce = (t0)=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';                 // square 比較像鬧鐘
+      o.frequency.setValueAtTime(880, t0);
+      o.frequency.exponentialRampToValueAtTime(1320, t0 + 0.12); // 上滑頻率
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);    // 快速收尾
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0);
+      o.stop(t0 + 0.2);
+    };
+
+    const ringPattern = ()=>{
+      // 一組 3 下，像鬧鐘「嗶-嗶-嗶」
+      const now = ctx.currentTime;
+      beepOnce(now + 0.00);
+      beepOnce(now + 0.28);
+      beepOnce(now + 0.56);
+    };
+
+    // 立即響一次
+    ringPattern();
+
+    // 每 1.2 秒重複一次，直到使用者按「停止提醒」或自動停（30 秒）
+    __alarmStopAt = Date.now() + 30000;
+    __alarmTimer = setInterval(()=>{
+      if(Date.now() >= __alarmStopAt){
+        stopAlarmSound();
+        return;
+      }
+      // 某些瀏覽器會把 AudioContext 暫停，這裡嘗試喚醒
+      try{ if(ctx.state === 'suspended') ctx.resume?.(); }catch(_){}
+      ringPattern();
+    }, 1200);
+
+  }catch(_){}
+}
+
+
+function onTimerDone(){
+      const t = ensureTimerState();
+      if(t.doneNotified) return;
+      t.doneNotified = true;
+      try{ navigator.vibrate?.(250); }catch(_){ }
+      stopTimerInterval();
+      updateTimerDisplay();
+      // 跳出提示 + 音效
+      showInAppModal('計時結束','倒數計時');
+      playAlarmSound();
+      saveSession('timer done');
+    }
+
+    function renderTimerUI(){
+      ensureTimerState();
+      syncTimerFromEndAt();
+      updateTimerInputs();
+      updateTimerDisplay();
+      if(state.timer.running) startTimerInterval();
+    }
+
+
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
       state.mode=m;
+
+      // 模式按鈕狀態
+      elModeProgress?.classList.toggle('active', m==='progress');
       elModeList.classList.toggle('active', m==='list');
       elModeSeat.classList.toggle('active', m==='seat');
       elModeHW.classList.toggle('active', m==='hw');
-      elModeDraw.classList.toggle('active', m==='draw'); // ★
-      // 只在「座位」模式顯示講台切換鈕
+      elModeDraw.classList.toggle('active', m==='draw');
+      elModeTimer?.classList.toggle('active', m==='timer');
+
       // 只在「座位」模式顯示「顯示講台」勾選
       elToggleStageWrap.classList.toggle('hidden', m!=='list');
       applyStageToggleUI();
 
+      // 各頁顯示/隱藏
       document.getElementById('students').classList.toggle('hidden', m!=='list');
       document.getElementById('seat-controls').classList.toggle('hidden', m!=='seat');
       document.getElementById('seatwrap').classList.toggle('hidden', m!=='seat');
+      elProgressPane?.classList.toggle('hidden', m!=='progress');
       elHWPane.classList.toggle('hidden', m!=='hw');
-      elDrawPane.classList.toggle('hidden', m!=='draw'); // ★
+      elDrawPane.classList.toggle('hidden', m!=='draw');
+      elTimerPane?.classList.toggle('hidden', m!=='timer');
 
       const cls=elSelect.value;
       if(m==='seat'){ ensureSeatState(cls); renderSeatUI(cls); }
       else if(m==='list'){ renderStudents(cls); }
+      else if(m==='progress'){ renderProgress(); }
       else if(m==='hw'){ renderHW(cls); }
-      else if(m==='draw'){ renderDraw(cls); } // ★
+      else if(m==='draw'){ renderDraw(cls); }
+      else if(m==='timer'){ renderTimerUI(); }
+
       saveSession('mode change');
     }
 
+    document.getElementById('mode-progress')?.addEventListener('click', ()=> setMode('progress'));
     document.getElementById('mode-list').addEventListener('click', ()=> setMode('list'));
     document.getElementById('mode-seat').addEventListener('click', ()=> setMode('seat'));
     document.getElementById('mode-hw').addEventListener('click', ()=> setMode('hw'));
     document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
+    document.getElementById('mode-timer')?.addEventListener('click', ()=> setMode('timer'));
 
     document.getElementById('btn-auto')?.addEventListener('click', ()=>{ autoArrange(elSelect.value); });
     document.getElementById('btn-clear')?.addEventListener('click', ()=>{ const cls=elSelect.value; const st=ensureSeatState(cls); st.map={}; saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); });
@@ -2403,6 +3016,48 @@ px;
       renderStudents(cls); 
       renderLeaderboard(cls);
     });
+
+    /* ===== 教學進度：新增/刪除列 ===== */
+    elProgAdd?.addEventListener('click', ()=>{
+      const p = ensureProgressState();
+      p.items.push({ title:'', checked:{} });
+      renderProgress();
+      saveSession('progress add');
+      setTimeout(()=>{ elProgTable?.querySelector('tbody tr:last-child .prog-input')?.focus(); }, 0);
+    });
+    elProgDel?.addEventListener('click', ()=>{
+      const p = ensureProgressState();
+      if(p.items.length>1) p.items.pop();
+      else if(p.items.length===1) p.items[0] = { title:'', checked:{} };
+      renderProgress();
+      saveSession('progress del');
+    });
+
+    /* ===== 倒數計時：按鈕 ===== */
+    elTimerSet?.addEventListener('click', ()=>{
+      const mm = Math.max(0, Number(elTimerMin?.value||0) || 0);
+      const ss = Math.min(59, Math.max(0, Number(elTimerSec?.value||0) || 0));
+      setTimerSeconds(mm*60 + ss);
+    });
+    elTimerStart?.addEventListener('click', startTimer);
+    elTimerPause?.addEventListener('click', pauseTimer);
+    elTimerReset?.addEventListener('click', resetTimer);
+    document.querySelectorAll('#timer-pane .timer-presets .btn[data-preset]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const sec = Number(btn.dataset.preset)||0;
+        setTimerSeconds(sec);
+      });
+    });
+
+    // ripple（可選）
+    if (typeof bindRipple === 'function'){
+      [elProgAdd, elProgDel, elTimerSet, elTimerStart, elTimerPause, elTimerReset]
+        .filter(Boolean)
+        .forEach(b=> bindRipple(b));
+      document.querySelectorAll('#timer-pane .timer-presets .btn[data-preset]').forEach(b=> bindRipple(b));
+    }
+
+
 
 
     // 啟動：先嘗試從本機暫存還原；失敗才顯示空畫面
@@ -2633,7 +3288,7 @@ px;
       }
       return a.slice(0, n);
     }
-    function fmtTime(ts){
+    function fmtDateTime(ts){
       const d = new Date(ts);
       const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
       const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0'), ss=String(d.getSeconds()).padStart(2,'0');
@@ -2691,7 +3346,7 @@ px;
             const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
             return `<span class="chip"><span class="seat-badge">${seat}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
           }).join('');
-          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
+          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtDateTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
         }).join('');
       }
     }
@@ -3184,5 +3839,18 @@ noteSave?.addEventListener('click', ()=>{
     window.addEventListener('pagehide', () => saveSession('pagehide'));
     window.addEventListener('beforeunload', ()=> saveSession('beforeunload'));
   </script>
+
+  <!-- In-app Modal (避免瀏覽器 alert「這個網站」視窗) -->
+  <div id="uiModal" class="ui-modal hidden" role="dialog" aria-modal="true" aria-labelledby="uiModalTitle">
+    <div class="ui-modal__backdrop" data-close="1"></div>
+    <div class="ui-modal__panel" role="document">
+      <div class="ui-modal__title" id="uiModalTitle">提示</div>
+      <div class="ui-modal__msg" id="uiModalMsg"></div>
+      <div class="ui-modal__actions">
+        <button id="uiModalOk" class="btn primary" type="button">確定</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
