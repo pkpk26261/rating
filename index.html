@@ -1734,14 +1734,17 @@ const helpMask = document.getElementById('help-mask');
         setStatus(`正在解析：${file.name} ...`);
         const data=await file.arrayBuffer();
         const wb=XLSX.read(data,{type:'array'});
+        // ★ 匯入 XLSX 時：教學進度分頁「整批取代」，不沿用舊檔/暫存
+        state.progress = { pages:{}, order:[], active:'' };
         const map={}; const order=[];
+        let importedProgress = false;
         wb.SheetNames.forEach((sheetName)=>{
           // ★ 教學進度分頁（用 A1=教學進度 判定，不依賴工作表名稱）
           const ws=wb.Sheets[sheetName]; if(!ws) return;
 
           const a1 = String((ws['A1'] && (ws['A1'].v ?? ws['A1'].w)) || '').trim();
           if(a1.replace(/\s+/g,'') === '教學進度'){
-            try{ parseProgressSheet(ws, sheetName); }catch(e){ console.warn('教學進度解析失敗', e); }
+            try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
             return;
           }
 
@@ -1826,6 +1829,9 @@ const helpMask = document.getElementById('help-mask');
 
           if(list.length){ map[sheetName]=list; order.push(sheetName); }
         });
+        // 解析完後：若檔案沒有教學進度分頁，會建立乾淨的預設分頁
+        ensureProgressState(true);
+
 
         if(order.length===0) throw new Error('沒有偵測到任何班級或姓名資料');
         state.classMap=map; state.classOrder=order;
@@ -1835,6 +1841,8 @@ const helpMask = document.getElementById('help-mask');
         if(elAddStudent) elAddStudent.disabled=false;
         if(elDelStudent) elDelStudent.disabled=false;
         renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
+        // ★ 若目前就在教學進度模式，匯入後立即刷新
+        if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
         saveNotes();
         setStatus(`已載入 ${order.length} 個班級。`);
         saveSession('after import');   // ★ 新增：匯入後即暫存整份狀態
@@ -2060,7 +2068,7 @@ const helpMask = document.getElementById('help-mask');
       state.savedHW    = {};
       state.filter     = '';
       state.mode       = 'list';
-      state.progress   = { items: [] };
+      state.progress   = { pages:{}, order:[], active:'' };
       state.timer = { setSec: 300, remainingSec: 300, running:false, endAt: 0, doneNotified:false };
       stopTimerInterval();
 
@@ -2759,14 +2767,14 @@ const helpMask = document.getElementById('help-mask');
 
     
     /* ====== 📚 教學進度（跨班勾選） ====== */
-    function ensureProgressState(){
+    function ensureProgressState(createDefault=true){
       if(!state.progress || typeof state.progress!=='object') state.progress = { pages:{}, order:[], active:'' };
       if(!state.progress.pages || typeof state.progress.pages!=='object') state.progress.pages = {};
       if(!Array.isArray(state.progress.order)) state.progress.order = [];
       if(typeof state.progress.active!=='string') state.progress.active = '';
 
       // 確保至少有一個分頁
-      if(!state.progress.order.length){
+      if(createDefault && !state.progress.order.length){
         const def = '進度1';
         state.progress.order = [def];
         state.progress.active = def;
@@ -2833,7 +2841,7 @@ const helpMask = document.getElementById('help-mask');
         items.push({ title, checked });
       }
 
-      const prog = ensureProgressState();
+      const prog = ensureProgressState(false);
       const name = String(sheetName||'').trim() || `進度${(prog.order?.length||0)+1}`;
       if(!prog.pages[name]){
         prog.order.push(name);
