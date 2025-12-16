@@ -192,7 +192,21 @@ px;
       padding-inline: var(--page-x);
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
-    .topbar__left{ justify-self:start; }
+    
+    /* ===== 匯入區：狀態顯示在匯入按鈕下方（高度不宜過高） ===== */
+    .import-block{ display:flex; flex-direction:column; gap:4px; }
+    .status-inline{
+      font-size:12px;
+      line-height:1.2;
+      opacity:.88;
+      max-width: 340px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      padding:0;
+      margin:0 0 0 2px;
+    }
+.topbar__left{ justify-self:start; }
     .topbar__right{ justify-self:end; }
     .title-stack{ grid-column:2; display:flex; flex-direction:column; align-items:center; gap:6px; line-height:1.1; }
     .title{ font-weight:900; letter-spacing:0.06em; margin:0; font-size:20px; }
@@ -339,8 +353,8 @@ px;
     .statusbar .hint{ display:block; margin:0; padding:12px 0; border-top:1px solid var(--line); }
 
     /* ===== 控制列 / Segmented ===== */
-    .toolbar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding-inline: 0px; padding-top: 0px; }
-    .toolbar .seg{ margin-left:auto; }
+    .controls-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding-inline: 0px; padding-top: 0px; }
+    .controls-row .seg{ margin-left:auto; }
     .select,.input{ appearance:none; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
     .select{ min-width:220px; } .input{ min-width:240px; outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.03); }
     .input:focus{ border-color: color-mix(in oklab, var(--accent) 60%, #000); box-shadow: 0 0 0 4px rgba(124,58,237,.15); }
@@ -451,6 +465,7 @@ px;
 
     /* ==== 座位表 UI ==== */
     .hidden{ display:none !important; }
+    body[data-mode="progress"] .controls-row{ display:none !important; }
     .seat-controls{ display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
     .seat-controls .input{ min-width:auto; width:70px; text-align:center; padding:8px 10px; }
 
@@ -549,6 +564,9 @@ px;
     .modal .content li{ margin:6px 0; }
     .modal .close{ cursor:pointer; border:1px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--card); }
     .hint{ font-size:13px; color:var(--muted); }
+    /* ★ 應需求：移除提示(hint)與工具列 */
+    .hint{ display:none !important; }
+
     .divider{ height:1px; background:var(--line); margin:10px 0; }
     .help-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
@@ -798,18 +816,18 @@ px;
 
   
     /* ===== 工具列：新增/刪除學生按鈕與搜尋欄等高、字體更小 ===== */
-    :root{ --toolbar-ctl-h: 36px; }
+    :root{ --ctl-h: 36px; }
 
     /* 搜尋欄 */
     #search-input{
-      height: var(--toolbar-ctl-h);
+      height: var(--ctl-h);
       padding-top: 0;
       padding-bottom: 0;
     }
 
     /* 新增/刪除學生（只影響這兩顆，不會動到 +1/-1 等其他按鈕） */
     #btn-add-student, #btn-del-student{
-      height: var(--toolbar-ctl-h);
+      height: var(--ctl-h);
       padding: 0 12px;
       font-size: 12px;
       display: inline-flex;
@@ -821,6 +839,63 @@ px;
     /* ===== 📚 教學進度 ===== */
     #progress-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden; }
     .prog-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+
+    .prog-pagebox{
+      position:relative;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    }
+    body.light .prog-pagebox{ background:rgba(0,0,0,.03); }
+    .prog-pagebox__title{
+      font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+      opacity:.75; margin-right:2px; white-space:nowrap;
+    }
+    .prog-student-actions{ display:flex; align-items:center; gap:10px; }
+
+    .prog-page-menuwrap{ position:relative; }
+    .btn.icon{ width:42px; padding:0; justify-content:center; font-weight:700; }
+    .menu{
+      position:absolute;
+      right:0;
+      top:calc(100% + 8px);
+      min-width:140px;
+      padding:6px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(20,22,28,.92);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.22);
+      z-index: 50;
+    }
+    body.light .menu{ background: rgba(255,255,255,.92); }
+    .menu.hidden{ display:none !important; }
+    .menu-item{
+      width:100%;
+      text-align:left;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid transparent;
+      background: transparent;
+      color: var(--fg);
+      cursor:pointer;
+      font-size:14px;
+    }
+    .menu-item:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.10); }
+    body.light .menu-item:hover{ background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.10); }
+    .menu-item.danger{ color: var(--danger, #ff5a5a); }
+
+    .btn.danger{
+      border-color: rgba(255,90,90,.45);
+      background: rgba(255,90,90,.10);
+    }
+    body.light .btn.danger{
+      border-color: rgba(255,90,90,.35);
+      background: rgba(255,90,90,.08);
+    }
     .progtbl-wrap{ flex:1 1 auto; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
     .progtbl{ width:100%; border-collapse:separate; border-spacing:0; min-width: 520px; }
     .progtbl th, .progtbl td{ border-bottom:1px solid var(--line); padding:10px 10px; text-align:center; }
@@ -869,6 +944,57 @@ px;
     .ui-modal__msg{ line-height: 1.6; font-size: 14px; opacity: .95; white-space: pre-wrap; }
     .ui-modal__actions{ display:flex; justify-content:flex-end; gap:10px; margin-top: 12px; }
 
+
+/* ==== PATCH v7: 統一按鈕高度（修正教學進度按鈕高度不一致） ==== */
+:root{ --btn-h: 38px; }
+
+.btn{
+  position:relative;
+  overflow:hidden;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height: var(--btn-h);
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: transform .08s, background-color .2s, border-color .2s, box-shadow .2s;
+  user-select:none;
+  font-size:14px;
+  color:var(--fg);
+  background:var(--card);
+}
+
+.btn:hover{ box-shadow:0 6px 18px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.03); }
+.btn:active{ transform: translateY(1px); }
+
+.btn.add{
+  background-color: color-mix(in oklab, var(--ok) 22%, black);
+  border-color: color-mix(in oklab, var(--ok) 40%, black);
+  color: white;
+}
+.btn.add:hover{ background-color: color-mix(in oklab, var(--ok) 36%, black); }
+
+.btn.sub{
+  background-color: color-mix(in oklab, var(--bad) 24%, black);
+  border-color: color-mix(in oklab, var(--bad) 45%, black);
+  color: white;
+}
+.btn.sub:hover{ background-color: color-mix(in oklab, var(--bad) 36%, black); }
+
+/* 教學進度區按鈕跟工具列一致 */
+#progress-pane .prog-controls .btn{ height: var(--btn-h); padding: 0 12px; }
+/* 讓提示文字不被按鈕撐高 */
+#progress-pane .prog-controls .hint{ line-height: var(--btn-h); }
+
+
+/* 教學進度：班級欄位可拖移排序 */
+.progtbl th.prog-th-class{ cursor: grab; user-select:none; }
+.progtbl th.prog-th-class.dragging{ opacity:.55; cursor: grabbing; }
+.progtbl th.prog-th-class.drag-over{ outline:2px dashed var(--accent); outline-offset:-4px; }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -876,10 +1002,13 @@ px;
   <div class="app" id="app">
     <header class="topbar">
       <div class="topbar__left">
-        <label class="btn" for="file-input" title="上傳 Excel">📂 匯入學生名單 / 成績</label>
-        <input id="file-input" type="file" accept=".xlsx,.xls" hidden />
+        <div class="import-block">
+          <label class="btn" for="file-input" title="上傳 Excel">📂 匯入學生名單 / 成績</label>
+          <input id="file-input" type="file" accept=".xlsx,.xls" hidden />
+        </div>
         <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除暫存</button>
-      </div>
+        <div id="status" class="status-inline">尚未載入名單。</div>
+</div>
 
       <div class="title-stack">
         <h1 class="title">平時成績系統</h1>
@@ -909,9 +1038,7 @@ px;
       <button id="btn-sidebar" class="side-toggle" aria-label="收合側欄" aria-controls="sidebar" aria-expanded="true">‹</button>
 
       <aside id="sidebar" class="sidebar">
-        <button id="btn-help" class="btn" title="顯示操作說明">❓ 操作說明</button>
-
-        <section class="board">
+<section class="board">
           <h3>🏆 加分排行榜 <span id="board-class" class="badge">尚未載入</span></h3>
           <div id="leaderboard"></div>
         </section>
@@ -936,16 +1063,11 @@ px;
             <span class="hint">包含「班級A / 班級B」，各 30 位，欄位含「學號／座號／姓名」。</span>
           </div>
         </section>
-
-
-        <section class="statusbar">
-          <div id="status" class="hint">尚未載入名單。</div>
-        </section>
-      </aside>
+</aside>
 
             <div class="main-col">
 <section class="main">
-        <div class="toolbar">
+        <div class="controls-row">
           <label for="class-select">班級</label>
           <select id="class-select" class="select" disabled>
             <option value="" selected>請先上傳學生名單</option>
@@ -989,8 +1111,25 @@ px;
         <section id="progress-pane" class="hidden" aria-label="教學進度">
           <h3 class="hw-title">📚 教學進度 <span class="pill" id="prog-pill">可跨班勾選</span></h3>
           <div class="prog-controls">
+            <div class="prog-pagebox" aria-label="分頁管理">
+              <div class="prog-pagebox__title">分頁</div>
+              <select id="prog-page-select" class="select" style="min-width:180px;"></select>
+              <div class="prog-page-menuwrap" aria-label="分頁選單">
+                <button id="btn-prog-page-menu" class="btn icon" type="button" aria-haspopup="menu" aria-expanded="false" title="分頁選單">⋯</button>
+                <div id="prog-page-menu" class="menu hidden" role="menu">
+                  <button type="button" class="menu-item" data-action="add" role="menuitem">新增分頁</button>
+                  <button type="button" class="menu-item" data-action="ren" role="menuitem">重新命名分頁</button>
+                  <button type="button" class="menu-item danger" data-action="del" role="menuitem">刪除分頁</button>
+                </div>
+              </div>
+            </div>
+            <div class="prog-student-actions" aria-label="學生管理">
+                          </div>
+
             <button id="btn-prog-add" class="btn add">＋新增進度</button>
             <button id="btn-prog-del" class="btn">刪除最後一列</button>
+            <button id="btn-prog-addclass" class="btn">＋加入班級</button>
+            <button id="btn-prog-delclass" class="btn">－刪除班級</button>
             <span class="hint">提示：第一欄輸入進度名稱；每個班級欄位可勾選已完成。</span>
           </div>
           <div class="progtbl-wrap">
@@ -1227,7 +1366,7 @@ px;
       classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
       hw:{}, savedHW:{}, draw:{}, showStageInList: true,
       // ★ 新增：教學進度（跨班勾選）與倒數計時
-      progress:{ items: [] },
+      progress:{ pages:{}, order:[], active:'' },
       timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
     };
 
@@ -1392,8 +1531,13 @@ px;
     const elProgressPane=document.getElementById('progress-pane');
     const elProgTable=document.getElementById('prog-table');
     const elProgPill=document.getElementById('prog-pill');
+    const elProgPageSel=document.getElementById('prog-page-select');
+    const elProgPageMenuBtn=document.getElementById('btn-prog-page-menu');
+    const elProgPageMenu=document.getElementById('prog-page-menu');
     const elProgAdd=document.getElementById('btn-prog-add');
     const elProgDel=document.getElementById('btn-prog-del');
+    const elProgAddClass=document.getElementById('btn-prog-addclass');
+    const elProgDelClass=document.getElementById('btn-prog-delclass');
 
     const elTimerPane=document.getElementById('timer-pane');
     const elTimerDisplay=document.getElementById('timer-display');
@@ -1512,13 +1656,15 @@ px;
         const wb=XLSX.read(data,{type:'array'});
         const map={}; const order=[];
         wb.SheetNames.forEach((sheetName)=>{
-          // ★ 系統專用表單：教學進度（非班級名單）
-          if(String(sheetName||'').trim().startsWith('教學進度')){
-            try{ parseProgressSheet(wb.Sheets[sheetName]); }catch(e){ console.warn('教學進度解析失敗', e); }
+          // ★ 教學進度分頁（用 A1=教學進度 判定，不依賴工作表名稱）
+          const ws=wb.Sheets[sheetName]; if(!ws) return;
+
+          const a1 = String((ws['A1'] && (ws['A1'].v ?? ws['A1'].w)) || '').trim();
+          if(a1.replace(/\s+/g,'') === '教學進度'){
+            try{ parseProgressSheet(ws, sheetName); }catch(e){ console.warn('教學進度解析失敗', e); }
             return;
           }
 
-          const ws=wb.Sheets[sheetName]; if(!ws) return;
           const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
           if(!rows||rows.length===0) return;
           const header=rows[0].map(v=>String(v||'').trim());
@@ -1904,6 +2050,29 @@ px;
     elToggleStage?.addEventListener('click', ()=>{
       state.showStageInList = !state.showStageInList;
       applyStageToggleUI();
+
+      // ★ 側欄/排行榜：只在「加扣分」模式顯示，其他模式自動收合並隱藏切換鈕
+      try{
+        const layout = document.querySelector('.layout');
+        const sbtn   = document.getElementById('btn-sidebar');
+        if(m !== 'list'){
+          layout?.classList.add('is-collapsed');
+          sbtn?.classList.add('hidden');
+        }else{
+          sbtn?.classList.remove('hidden');
+          const collapsed = localStorage.getItem('sidebar_collapsed_v1') === '1';
+          layout?.classList.toggle('is-collapsed', collapsed);
+          if(sbtn){
+            sbtn.textContent = collapsed ? '›' : '‹';
+            sbtn.setAttribute('aria-expanded', String(!collapsed));
+            sbtn.setAttribute('title', collapsed ? '展開側欄' : '收合側欄');
+          }
+        }
+      }catch(_){}
+
+      // ★ 教學進度模式不顯示工具列
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress');
+
       if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
       saveSession('toggle stage in list');
     });
@@ -2511,15 +2680,47 @@ px;
     
     /* ====== 📚 教學進度（跨班勾選） ====== */
     function ensureProgressState(){
-      if(!state.progress || typeof state.progress!=='object') state.progress = { items: [] };
-      if(!Array.isArray(state.progress.items)) state.progress.items = [];
-      // 修正每一列的格式
-      state.progress.items = state.progress.items.map(it=>{
-        if(!it || typeof it!=='object') return { title:'', checked:{} };
-        if(typeof it.title!=='string') it.title = String(it.title ?? '');
-        if(!it.checked || typeof it.checked!=='object') it.checked = {};
-        return it;
-      });
+      if(!state.progress || typeof state.progress!=='object') state.progress = { pages:{}, order:[], active:'' };
+      if(!state.progress.pages || typeof state.progress.pages!=='object') state.progress.pages = {};
+      if(!Array.isArray(state.progress.order)) state.progress.order = [];
+      if(typeof state.progress.active!=='string') state.progress.active = '';
+
+      // 確保至少有一個分頁
+      if(!state.progress.order.length){
+        const def = '進度1';
+        state.progress.order = [def];
+        state.progress.active = def;
+        state.progress.pages[def] = { items: [], classes: (state.classOrder||[]).slice() };
+      }
+
+      // 修正 active
+      if(!state.progress.active || !state.progress.pages[state.progress.active]){
+        state.progress.active = state.progress.order.find(n=>state.progress.pages[n]) || state.progress.order[0];
+      }
+
+      // 正規化每個分頁資料
+      state.progress.order = state.progress.order.map(v=>String(v||'').trim()).filter(Boolean);
+      state.progress.order = Array.from(new Set(state.progress.order));
+      for(const name of state.progress.order){
+        if(!state.progress.pages[name] || typeof state.progress.pages[name]!=='object'){
+          state.progress.pages[name] = { items: [], classes: (state.classOrder||[]).slice() };
+        }
+        const pg = state.progress.pages[name];
+        if(!Array.isArray(pg.items)) pg.items = [];
+        if(!Array.isArray(pg.classes)) pg.classes = (state.classOrder||[]).slice();
+
+        // 正規化班級欄位（去空白、去重）
+        pg.classes = pg.classes.map(v=>String(v||'').trim()).filter(Boolean);
+        pg.classes = Array.from(new Set(pg.classes));
+
+        // 修正每一列的格式
+        pg.items = pg.items.map(it=>{
+          if(!it || typeof it!=='object') return { title:'', checked:{} };
+          if(typeof it.title!=='string') it.title = String(it.title ?? '');
+          if(!it.checked || typeof it.checked!=='object') it.checked = {};
+          return it;
+        });
+      }
       return state.progress;
     }
 
@@ -2530,14 +2731,13 @@ px;
       return ['1','true','y','yes','是','✓','v','ok','完成','已完成'].includes(s);
     }
 
-    function parseProgressSheet(ws){
-      if(!ws) return;
+    function parseProgressSheet(ws, sheetName){
+      if(!ws) return false;
       const rows = XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
-      if(!rows || rows.length===0) return;
+      if(!rows || rows.length===0) return false;
       const header = (rows[0]||[]).map(v=>String(v||'').trim());
-      if(!header.length) return;
-      // 允許第一格不是完全一致（但只要包含教學進度字樣即可）
-      if(String(header[0]||'').replace(/\s+/g,'') !== '教學進度') return;
+      if(!header.length) return false;
+      if(String(header[0]||'').replace(/\s+/g,'') !== '教學進度') return false;
 
       const classes = header.slice(1).map(v=>String(v||'').trim()).filter(Boolean);
       const items = [];
@@ -2552,23 +2752,35 @@ px;
         classes.forEach((cls, i)=>{ checked[cls] = isCheckedCell(row[i+1]); });
         items.push({ title, checked });
       }
-      state.progress = { items };
+
+      const prog = ensureProgressState();
+      const name = String(sheetName||'').trim() || `進度${(prog.order?.length||0)+1}`;
+      if(!prog.pages[name]){
+        prog.order.push(name);
+      }
+      prog.pages[name] = { items, classes: classes.length ? classes : (state.classOrder||[]).slice() };
+      if(!prog.active) prog.active = name;
       saveSession('import progress sheet');
+      return true;
     }
 
-    function buildProgressAOA(){
+    function buildProgressAOA(pageName){
       const prog = ensureProgressState();
-      const classes = state.classOrder || [];
+      const name = pageName || prog.active;
+      const pg = prog.pages[name] || { items: [], classes: (state.classOrder||[]).slice() };
+
+      if(!pg.classes || !pg.classes.length){ pg.classes = (state.classOrder || []).slice(); }
+      const classes = pg.classes;
       const header = ['教學進度', ...classes];
       const aoa = [header];
 
       // 若沒有任何進度，仍輸出一列空白，避免空表單不好編輯
-      if(!prog.items.length){
+      if(!pg.items.length){
         aoa.push(['']);
         return aoa;
       }
 
-      for(const it of prog.items){
+      for(const it of pg.items){
         const title = String(it.title||'').trim();
         const checked = it.checked || {};
         const row = [title];
@@ -2582,31 +2794,47 @@ px;
 
     function appendProgressSheet(wb){
       try{
-        const aoa = buildProgressAOA();
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        const classes = state.classOrder || [];
-        ws['!cols'] = [{wch:28}, ...classes.map(()=>({wch:10}))];
+        const prog = ensureProgressState();
+        for(const pageName of (prog.order||[])){
+          const aoa = buildProgressAOA(pageName);
+          const ws = XLSX.utils.aoa_to_sheet(aoa);
+          const pg = prog.pages[pageName] || {};
+          const classes = (pg.classes && pg.classes.length) ? pg.classes : (state.classOrder||[]);
+          ws['!cols'] = [{wch:28}, ...classes.map(()=>({wch:10}))];
 
-        // 避免重名
-        let name = '教學進度';
-        if(wb.SheetNames.includes(name)){
-          let i=2;
-          while(wb.SheetNames.includes(`${name}_${i}`)) i++;
-          name = `${name}_${i}`;
+          // 以「分頁名稱」當工作表名稱；若衝突則自動加尾碼避免覆蓋
+          let name = safeSheetName(pageName || '教學進度');
+          if(!name) name = '教學進度';
+          if(wb.SheetNames.includes(name)){
+            let i=2;
+            while(wb.SheetNames.includes(`${name}_${i}`)) i++;
+            name = `${name}_${i}`;
+          }
+          XLSX.utils.book_append_sheet(wb, ws, name);
         }
-        XLSX.utils.book_append_sheet(wb, ws, name);
       }catch(e){
         console.warn('建立教學進度表單失敗', e);
       }
     }
 
     function renderProgress(){
-      ensureProgressState();
+      const prog = ensureProgressState();
+      const pageName = prog.active;
+      const pg = prog.pages[pageName] || (prog.pages[pageName] = { items:[], classes:(state.classOrder||[]).slice() });
       if(!elProgTable) return;
 
-      const classes = state.classOrder || [];
+      // 分頁下拉選單
+      if(elProgPageSel){
+        elProgPageSel.innerHTML = (prog.order||[]).map(n=>`<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+        elProgPageSel.value = pageName;
+      }
+
+      // 進度模式也提供「新增/刪除學生」快捷
+
+      if(!pg.classes || !pg.classes.length){ pg.classes = (state.classOrder || []).slice(); }
+      const classes = pg.classes;
       if(elProgPill){
-        elProgPill.textContent = classes.length ? `共 ${classes.length} 班` : '請先匯入班級名單';
+        elProgPill.textContent = classes.length ? `分頁：${pageName}｜共 ${classes.length} 班` : `分頁：${pageName}｜請先匯入班級名單`;
       }
 
       // 表頭
@@ -2616,22 +2844,67 @@ px;
       const th0 = document.createElement('th');
       th0.textContent = '教學進度';
       trh.appendChild(th0);
-      classes.forEach(cls=>{
-        const th = document.createElement('th');
-        th.textContent = cls;
-        trh.appendChild(th);
-      });
+      // 可拖移排序（班級欄位）
+let __dragClsIndex = null;
+classes.forEach((cls, idx)=>{
+  const th = document.createElement('th');
+  th.textContent = cls;
+  th.classList.add('prog-th-class');
+  th.draggable = true;
+  th.dataset.cls = cls;
+  th.dataset.idx = String(idx);
+
+  th.addEventListener('dragstart', (e)=>{
+    __dragClsIndex = Number(th.dataset.idx);
+    th.classList.add('dragging');
+    try{ e.dataTransfer.setData('text/plain', th.dataset.idx); }catch(_){}
+    try{ e.dataTransfer.effectAllowed = 'move'; }catch(_){}
+  });
+  th.addEventListener('dragend', ()=>{
+    __dragClsIndex = null;
+    th.classList.remove('dragging');
+    // 清除所有提示樣式
+    elProgTable.querySelectorAll('th.prog-th-class').forEach(x=>x.classList.remove('drag-over'));
+  });
+  th.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    th.classList.add('drag-over');
+    try{ e.dataTransfer.dropEffect = 'move'; }catch(_){}
+  });
+  th.addEventListener('dragleave', ()=> th.classList.remove('drag-over'));
+  th.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    th.classList.remove('drag-over');
+    const from = (__dragClsIndex!==null && !Number.isNaN(__dragClsIndex))
+      ? __dragClsIndex
+      : Number((()=>{ try{return e.dataTransfer.getData('text/plain');}catch(_){return '';} })());
+    const to = Number(th.dataset.idx);
+    if(Number.isNaN(from) || Number.isNaN(to) || from===to) return;
+
+    // 以 pg.classes 為主維持順序
+    const prog = ensureProgressState();
+      const p = prog.pages[prog.active];
+    if(!p.classes || !p.classes.length){ p.classes = (state.classOrder || []).slice(); }
+    const arr = p.classes.slice();
+    const item = arr.splice(from, 1)[0];
+    arr.splice(to, 0, item);
+    p.classes = arr;
+    saveSession('progress reorder classes');
+    renderProgress();
+  });
+
+  trh.appendChild(th);
+});
       thead.appendChild(trh);
 
       const tbody = document.createElement('tbody');
-      const prog = ensureProgressState();
 
       // 如果完全沒有列，先補一列空白方便輸入
-      if(!prog.items.length){
-        prog.items.push({ title:'', checked:{} });
+      if(!pg.items.length){
+        pg.items.push({ title:'', checked:{} });
       }
 
-      prog.items.forEach((it, idx)=>{
+      pg.items.forEach((it, idx)=>{
         const tr = document.createElement('tr');
 
         // 第一欄：進度名稱
@@ -2959,6 +3232,8 @@ function onTimerDone(){
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
       state.mode=m;
+      document.body.dataset.mode = m;
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress');
 
       // 模式按鈕狀態
       elModeProgress?.classList.toggle('active', m==='progress');
@@ -3018,20 +3293,382 @@ function onTimerDone(){
     });
 
     /* ===== 教學進度：新增/刪除列 ===== */
-    elProgAdd?.addEventListener('click', ()=>{
-      const p = ensureProgressState();
-      p.items.push({ title:'', checked:{} });
+    
+/* ===== 教學進度：班級欄位手動增刪 ===== */
+let __progClassMask = null;
+let __progClassOk = null;
+
+function ensureProgClassModal(){
+  if(__progClassMask) return;
+  const mask = document.createElement('div');
+  mask.id = 'progclass-mask';
+  mask.className = 'modal-mask';
+  mask.setAttribute('role','dialog');
+  mask.setAttribute('aria-modal','true');
+
+  mask.innerHTML = `
+    <div class="modal" role="document">
+      <header>
+        <h3 id="progclass-title">班級</h3>
+        <button id="progclass-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div id="progclass-content"></div>
+        <div class="divider"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
+          <button id="progclass-cancel" class="btn">取消</button>
+          <button id="progclass-ok" class="btn primary">確定</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(mask);
+
+  const close = ()=>{ hideProgClassModal(); };
+  mask.addEventListener('click', (e)=>{ if(e.target===mask) close(); });
+  mask.querySelector('#progclass-close').addEventListener('click', close);
+  mask.querySelector('#progclass-cancel').addEventListener('click', close);
+  mask.querySelector('#progclass-ok').addEventListener('click', ()=>{
+    try{ __progClassOk?.(__progClassMask); }catch(e){ console.warn(e); }
+  });
+
+  __progClassMask = mask;
+}
+
+function showProgClassModal({title, okText, html, body: bodyHtml, onOk, onOpen}){
+  ensureProgClassModal();
+  __progClassOk = onOk || null;
+  __progClassMask.querySelector('#progclass-title').textContent = title || '班級';
+  __progClassMask.querySelector('#progclass-ok').textContent = okText || '確定';
+  const contentEl = __progClassMask.querySelector('#progclass-content');
+  contentEl.innerHTML = (html || bodyHtml || '');
+  __progClassMask.classList.add('show');
+  try{ if(typeof onOpen==='function') onOpen(__progClassMask); }catch(e){ console.warn(e); }
+}
+
+function hideProgClassModal(){
+  if(!__progClassMask) return;
+  __progClassMask.classList.remove('show');
+  __progClassOk = null;
+}
+
+function openAddProgressClass(){
+  const prog = ensureProgressState();
+      const p = prog.pages[prog.active];
+  const all = (state.classOrder || []).slice().map(v=>String(v||'').trim()).filter(Boolean);
+  const cur = (p.classes || []).slice().map(v=>String(v||'').trim()).filter(Boolean);
+  const options = all.filter(cls => !cur.includes(cls));
+  if(!options.length){
+    showInAppModal('加入班級', '沒有可加入的班級（可能已全部加入教學進度）。');
+    return;
+  }
+
+  const listHtml = options.map((c,i)=>`
+    <label style="display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);">
+      <input type="checkbox" class="progclass-addchk" value="${escapeHTML(c)}">
+      <span>${escapeHTML(c)}</span>
+    </label>
+  `).join('');
+
+  showProgClassModal({
+    title: '加入班級到教學進度',
+    body: `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;">
+        <div style="font-size:13px; opacity:.85;">可一次勾選多個班級加入。</div>
+        <div style="display:flex; gap:8px;">
+          <button id="progclass-selall" class="btn" style="height:34px; padding:0 10px;">全選</button>
+          <button id="progclass-unsel" class="btn" style="height:34px; padding:0 10px;">全不選</button>
+        </div>
+      </div>
+      <div style="max-height:42vh; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:10px;">
+        ${listHtml}
+      </div>
+    `,
+    okText: '加入',
+    onOpen: (mask)=>{
+      const selAll = mask.querySelector('#progclass-selall');
+      const unsel  = mask.querySelector('#progclass-unsel');
+      selAll?.addEventListener('click', ()=>{
+        mask.querySelectorAll('.progclass-addchk').forEach(x=>{ x.checked = true; });
+      });
+      unsel?.addEventListener('click', ()=>{
+        mask.querySelectorAll('.progclass-addchk').forEach(x=>{ x.checked = false; });
+      });
+    },
+    onOk: (mask)=>{
+      const picked = Array.from(mask.querySelectorAll('.progclass-addchk:checked'))
+        .map(x=>String(x.value||'').trim())
+        .filter(Boolean);
+
+      if(!picked.length){ hideProgClassModal(); return; }
+
+      if(!p.classes) p.classes = [];
+      picked.forEach(v=>{ if(!p.classes.includes(v)) p.classes.push(v); });
+      p.classes = Array.from(new Set(p.classes.map(x=>String(x||'').trim()).filter(Boolean)));
+
+      hideProgClassModal();
+      renderProgress();
+      saveSession('progress add class multi');
+    }
+  });
+}
+
+function openDelProgressClass(){
+  const prog = ensureProgressState();
+      const p = prog.pages[prog.active];
+  const cur = (p.classes || []).slice().map(v=>String(v||'').trim()).filter(Boolean);
+  if(!cur.length){
+    showInAppModal('刪除班級', '目前教學進度表沒有任何班級欄位。');
+    return;
+  }
+
+  const listHtml = cur.map(c=>`
+    <label style="display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);">
+      <input type="checkbox" class="progclass-chk" value="${escapeHTML(c)}">
+      <span>${escapeHTML(c)}</span>
+    </label>
+  `).join('');
+
+  showProgClassModal({
+    title: '刪除教學進度上的班級欄位',
+    body: `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;">
+        <div class="hint" style="margin:0;">可一次勾選多個班級刪除（只會移除教學進度欄位）。</div>
+        <div style="display:flex; gap:8px;">
+          <button id="progclass-selall" class="btn" style="height:34px; padding:0 10px;">全選</button>
+          <button id="progclass-unsel" class="btn" style="height:34px; padding:0 10px;">全不選</button>
+        </div>
+      </div>
+      <div style="max-height:42vh; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:10px;">
+        ${listHtml}
+      </div>
+    `,
+    okText: '刪除',
+    onOpen: (mask)=>{
+      const selAll = mask.querySelector('#progclass-selall');
+      const unsel  = mask.querySelector('#progclass-unsel');
+      selAll?.addEventListener('click', ()=>{
+        mask.querySelectorAll('.progclass-chk').forEach(x=>{ x.checked = true; });
+      });
+      unsel?.addEventListener('click', ()=>{
+        mask.querySelectorAll('.progclass-chk').forEach(x=>{ x.checked = false; });
+      });
+    },
+    onOk: (mask)=>{
+      const chks = Array.from(mask.querySelectorAll('.progclass-chk:checked'))
+        .map(x=>String(x.value||'').trim())
+        .filter(Boolean);
+
+      if(!chks.length){ hideProgClassModal(); return; }
+
+      p.classes = cur.filter(c=>!chks.includes(c));
+
+      // 清掉每列 checked 裡對應的班級 key
+      p.items = (p.items||[]).map(it=>{
+        if(!it || typeof it!=='object') return it;
+        if(!it.checked || typeof it.checked!=='object') it.checked = {};
+        chks.forEach(c=>{ try{ delete it.checked[c]; }catch(_){} });
+        return it;
+      });
+
+      hideProgClassModal();
+      renderProgress();
+      saveSession('progress del class multi');
+    }
+  });
+}
+    function openAddProgressPage(){
+      const prog = ensureProgressState();
+      showProgClassModal({
+        title: '新增分頁',
+        okText: '新增',
+        html: `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="font-size:13px; opacity:.85;">請輸入分頁名稱（會用這個名稱建立新的工作表）。</div>
+            <input id="progpage-name" class="input" type="text" placeholder="例如：第1單元 / 12月進度" style="height:38px;">
+            <div class="hint" style="font-size:12px; opacity:.75;">提醒：避免與班級工作表同名，可減少匯入時誤判。</div>
+          </div>
+        `,
+        onOpen:(mask)=>{
+          const ip = mask.querySelector('#progpage-name');
+          setTimeout(()=> ip?.focus(), 0);
+          ip?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ mask.querySelector('#progclass-ok')?.click(); } });
+        },
+        onOk:(mask)=>{
+          const ip = mask.querySelector('#progpage-name');
+          const name = String(ip?.value||'').trim();
+          if(!name){ showInAppModal('新增分頁', '請先輸入分頁名稱。'); return false; }
+
+          // 去重（同名就自動加尾碼）
+          let finalName = name;
+          if(prog.pages[finalName]){
+            let i=2;
+            while(prog.pages[`${finalName}_${i}`]) i++;
+            finalName = `${finalName}_${i}`;
+          }
+
+          prog.order.push(finalName);
+          prog.pages[finalName] = { items: [], classes: (state.classOrder||[]).slice() };
+          prog.active = finalName;
+          hideProgClassModal();
+          renderProgress();
+          saveSession('progress add page');
+        }
+      });
+    }
+
+    function openDelProgressPage(){
+      const prog = ensureProgressState();
+      const name = prog.active;
+      if((prog.order||[]).length<=1){
+        showInAppModal('刪除分頁', '至少需要保留一個分頁。');
+        return;
+      }
+
+      showProgClassModal({
+        title: '刪除分頁',
+        okText: '刪除',
+        html: `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div>確定要刪除分頁「<b>${escapeHTML(name)}</b>」嗎？</div>
+            <div class="hint" style="font-size:12px; opacity:.75;">刪除後無法復原（除非你尚未關閉頁面且可用瀏覽器返回）。</div>
+          </div>
+        `,
+        onOk:()=>{
+          // 移除
+          delete prog.pages[name];
+          prog.order = (prog.order||[]).filter(n=>n!==name);
+          prog.active = prog.order[0];
+          hideProgClassModal();
+          renderProgress();
+          saveSession('progress del page');
+        }
+      });
+    }
+
+    
+    function openRenameProgressPage(){
+      const prog = ensureProgressState();
+      const oldName = String(prog.active||'').trim();
+      if(!oldName || !prog.pages[oldName]) return;
+
+      showProgClassModal({
+        title: '重新命名分頁',
+        okText: '儲存',
+        html: `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div>目前分頁：<b>${escapeHTML(oldName)}</b></div>
+            <input id="progpage-rename" class="input" type="text" value="${escapeHTML(oldName)}" style="height:38px;">
+            <div class="hint" style="font-size:12px; opacity:.75;">提示：雙擊分頁下拉選單或分頁資訊，也可以快速重新命名。</div>
+          </div>
+        `,
+        onOpen:(mask)=>{
+          const ip = mask.querySelector('#progpage-rename');
+          setTimeout(()=>{ ip?.focus(); try{ ip?.select(); }catch(_){} }, 0);
+          ip?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ mask.querySelector('#progclass-ok')?.click(); } });
+        },
+        onOk:(mask)=>{
+          const ip = mask.querySelector('#progpage-rename');
+          const newName0 = String(ip?.value||'').trim();
+          if(!newName0){ showInAppModal('重新命名分頁', '請輸入新的分頁名稱。'); return false; }
+
+          const newName = newName0;
+          if(newName === oldName){
+            hideProgClassModal();
+            return;
+          }
+          if(prog.pages[newName]){
+            showInAppModal('重新命名分頁', '此名稱已存在，請換一個。');
+            return false;
+          }
+
+          // 1) pages key 轉移
+          prog.pages[newName] = prog.pages[oldName];
+          delete prog.pages[oldName];
+
+          // 2) order 與 active 更新
+          prog.order = (prog.order||[]).map(n=> n===oldName ? newName : n);
+          prog.active = newName;
+
+          hideProgClassModal();
+          renderProgress();
+          saveSession('progress rename page');
+        }
+      });
+    }
+function bindProgressPageUI(){
+      elProgPageSel?.addEventListener('change', ()=>{
+        const prog = ensureProgressState();
+        const v = String(elProgPageSel.value||'').trim();
+        if(v && prog.pages[v]){
+          prog.active = v;
+          renderProgress();
+          saveSession('progress switch page');
+        }
+      });
+      // 雙擊分頁名稱：快速重新命名
+      elProgPageSel?.addEventListener('dblclick', ()=>{ openRenameProgressPage(); });
+      elProgPill?.addEventListener('dblclick', ()=>{
+        if(document.body?.dataset?.mode==='progress') openRenameProgressPage();
+      });
+
+      // 分頁選單：把「新增/刪除分頁」濃縮到同一個選單內
+      function closeProgPageMenu(){
+        elProgPageMenu?.classList.add('hidden');
+        if(elProgPageMenuBtn) elProgPageMenuBtn.setAttribute('aria-expanded','false');
+      }
+      function toggleProgPageMenu(){
+        if(!elProgPageMenu) return;
+        const willOpen = elProgPageMenu.classList.contains('hidden');
+        if(willOpen){
+          elProgPageMenu.classList.remove('hidden');
+          elProgPageMenuBtn?.setAttribute('aria-expanded','true');
+        }else{
+          closeProgPageMenu();
+        }
+      }
+      elProgPageMenuBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggleProgPageMenu(); });
+      elProgPageMenu?.addEventListener('click', (e)=>{
+        const btn = e.target?.closest?.('[data-action]');
+        if(!btn) return;
+        const act = btn.getAttribute('data-action');
+        closeProgPageMenu();
+        if(act==='add') openAddProgressPage();
+        if(act==='ren') openRenameProgressPage();
+        if(act==='del') openDelProgressPage();
+      });
+      document.addEventListener('click', (e)=>{
+        if(!elProgPageMenu || elProgPageMenu.classList.contains('hidden')) return;
+        // 點選選單外部就關閉
+        if(elProgPageMenu.contains(e.target) || elProgPageMenuBtn?.contains(e.target)) return;
+        closeProgPageMenu();
+      });
+      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeProgPageMenu(); });
+
+      // 進度模式上的學生按鈕：直接呼叫原本 sidebar 的行為
+    }
+
+elProgAdd?.addEventListener('click', ()=>{
+      const prog = ensureProgressState();
+      const pg = prog.pages[prog.active];
+      pg.items.push({ title:'', checked:{} });
       renderProgress();
       saveSession('progress add');
       setTimeout(()=>{ elProgTable?.querySelector('tbody tr:last-child .prog-input')?.focus(); }, 0);
     });
     elProgDel?.addEventListener('click', ()=>{
-      const p = ensureProgressState();
-      if(p.items.length>1) p.items.pop();
-      else if(p.items.length===1) p.items[0] = { title:'', checked:{} };
+      const prog = ensureProgressState();
+      const pg = prog.pages[prog.active];
+      if(pg.items.length>1) pg.items.pop();
+      else if(pg.items.length===1) pg.items[0] = { title:'', checked:{} };
       renderProgress();
       saveSession('progress del');
     });
+
+    elProgAddClass?.addEventListener('click', openAddProgressClass);
+    elProgDelClass?.addEventListener('click', openDelProgressClass);
+
+    bindProgressPageUI();
 
     /* ===== 倒數計時：按鈕 ===== */
     elTimerSet?.addEventListener('click', ()=>{
