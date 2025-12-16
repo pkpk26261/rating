@@ -1034,6 +1034,19 @@ px;
 .progtbl th.prog-th-class.dragging{ opacity:.55; cursor: grabbing; }
 .progtbl th.prog-th-class.drag-over{ outline:2px dashed var(--accent); outline-offset:-4px; }
 
+
+    /* 加扣分(列表)模式：#students.grid 不要陰影 */
+    body[data-mode="list"] #students.grid{
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    body[data-mode="list"] #students.grid .card{
+      box-shadow: none !important;
+    }
+    body[data-mode="list"] #students.grid .card:hover{
+      box-shadow: none !important;
+    }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
