@@ -190,6 +190,7 @@ px;
       padding-inline: var(--page-x);
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
+    .dt-display{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:12px; line-height:1.1; opacity:.92; user-select:none; }
     
     /* ===== 匯入區：狀態顯示在匯入按鈕下方（高度不宜過高） ===== */
     .import-block{ display:flex; flex-direction:column; gap:4px; }
@@ -914,6 +915,32 @@ px;
     .progtbl th{ position:sticky; top:0; background:rgba(15,23,42,.92); backdrop-filter: blur(6px); z-index:1; font-size:13px; }
     :root[data-theme="light"] .progtbl th{ background: rgba(255,255,255,.92); }
     .progtbl td:first-child, .progtbl th:first-child{ text-align:left; min-width: 220px; }
+    .prog-inputwrap{ display:flex; align-items:center; gap:8px; }
+    .prog-row-del{
+      width:22px; height:22px;
+      display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      cursor:pointer;
+      user-select:none;
+
+      /* 預設隱藏：只有碰到輸入匡（hover/focus）才顯示 */
+      opacity:0;
+      pointer-events:none;
+      transform: translateX(-2px);
+      transition: opacity .15s ease, transform .15s ease, filter .15s ease;
+    }
+    .prog-inputwrap:hover .prog-row-del,
+    .prog-inputwrap:focus-within .prog-row-del{
+      opacity:1;
+      pointer-events:auto;
+      transform: translateX(0);
+    }
+    .prog-row-del:hover{ filter: brightness(1.15); color: var(--fg); }
+    :root[data-theme="light"] .prog-row-del{ background: rgba(2,6,23,.03); }
+
     .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none;  min-width:20em; max-width:100%; }
     :root[data-theme="light"] .prog-input{ background: rgba(2,6,23,.03); }
     .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
@@ -1039,6 +1066,11 @@ px;
 
       <div class="topbar__right">
         <!-- ★ 新增主題切換按鈕 -->
+        <!-- ★ 日期時間（民國年 + 24 小時） -->
+        <div id="dt-display" class="dt-display" aria-label="日期時間">
+          <div id="dt-date">114年12月16日</div>
+          <div id="dt-time">00:00:00</div>
+        </div>
         <button id="btn-help" class="btn" title="開啟操作說明">❔ 操作</button>
         <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
         <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
@@ -1585,7 +1617,27 @@ px;
 
     /* 說明彈窗 DOM */
     const helpBtn = document.getElementById('btn-help');
-    const helpMask = document.getElementById('help-mask');
+    
+    /* ★ 日期時間（民國年 + 24 小時） */
+    const dtDateEl = document.getElementById('dt-date');
+    const dtTimeEl = document.getElementById('dt-time');
+    function pad2(n){ return String(n).padStart(2,'0'); }
+    function updateDateTime(){
+      if(!dtDateEl || !dtTimeEl) return;
+      const now = new Date();
+      const rocYear = now.getFullYear() - 1911;
+      const mm = pad2(now.getMonth()+1);
+      const dd = pad2(now.getDate());
+      const hh = pad2(now.getHours());
+      const mi = pad2(now.getMinutes());
+      const ss = pad2(now.getSeconds());
+      dtDateEl.textContent = `${rocYear}年${mm}月${dd}日`;
+      dtTimeEl.textContent = `${hh}:${mi}:${ss}`;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+const helpMask = document.getElementById('help-mask');
     const helpClose = document.getElementById('help-close');
     const helpContent = document.getElementById('help-content');
     const helpSrc = document.getElementById('help-src');
@@ -2924,6 +2976,33 @@ classes.forEach((cls, idx)=>{
 
         // 第一欄：進度名稱
         const td0 = document.createElement('td');
+
+        // 左側：刪除本列（碰到輸入匡時才顯示）
+        const wrap = document.createElement('div');
+        wrap.className = 'prog-inputwrap';
+
+        const del = document.createElement('span');
+        del.className = 'prog-row-del';
+        del.title = '刪除這一列';
+        del.setAttribute('role','button');
+        del.setAttribute('aria-label','刪除這一列教學進度');
+        del.textContent = '×';
+        del.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+
+          const progNow = ensureProgressState();
+          const pNow = progNow.pages[progNow.active] || (progNow.pages[progNow.active] = { items:[], classes:(state.classOrder||[]).slice() });
+          if(!Array.isArray(pNow.items)) pNow.items = [];
+
+          pNow.items.splice(idx, 1);
+          if(pNow.items.length===0){ pNow.items.push({ title:'', checked:{} }); }
+
+          saveSession('progress del row');
+          renderProgress();
+        });
+
+        // 右側：進度名稱
         const inp = document.createElement('input');
         inp.type = 'text';
         inp.className = 'prog-input';
@@ -2933,7 +3012,10 @@ classes.forEach((cls, idx)=>{
           it.title = inp.value;
           saveSession('progress title');
         });
-        td0.appendChild(inp);
+
+        wrap.appendChild(del);
+        wrap.appendChild(inp);
+        td0.appendChild(wrap);
         tr.appendChild(td0);
 
         // 各班級：勾選
