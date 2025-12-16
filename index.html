@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-  <title>平時成績系統</title>
+  <title>成績管理系統</title>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -89,9 +89,7 @@ px;
     :root[data-theme="light"] .dropmask{
       background: rgba(15,23,42,.15);
     }
-    :root[data-theme="light"] .modal{
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.96));
-    }
+    :root[data-theme="light"] .modal{ width:min(760px, 92vw); max-height: 82vh; overflow:auto; border:1px solid var(--line); border-radius:18px; box-shadow: 0 18px 70px rgba(0,0,0,.35); background: var(--card); }
     :root[data-theme="light"] .unassigned .list::-webkit-scrollbar-track{
       background: rgba(2,6,23,.06);
     }
@@ -268,6 +266,15 @@ px;
       left: 8px;
     }
 
+    
+
+    /* ★ 只有「加扣分(列表)」模式顯示 sidebar；其他模式完全隱藏 sidebar */
+    .layout.sidebar-off{
+      grid-template-columns: 1fr !important;
+    }
+    .layout.sidebar-off .sidebar{ display:none !important; }
+    .layout.sidebar-off .side-toggle{ display:none !important; }
+
     /* 手機一欄式時，這顆按鈕通常不需要，直接隱藏（要保留就刪掉這段） */
     @media (max-width: 880px){
       .side-toggle{ display:none; }
@@ -385,6 +392,9 @@ px;
 
     /* 作業成績：學生備註彈窗（加大輸入欄位） */
     #note-mask .modal{ width:min(920px, 96vw); max-height: 88vh; }
+
+    /* 操作說明彈窗：寬度再加寬一點，字比較好排 */
+    #help-mask .modal{ width:min(980px, 96vw); max-height: 88vh; }
     #note-mask .content{ display:flex; flex-direction:column; gap:10px; }
     #note-mask .note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     #note-mask .note-help{ font-size:12px; opacity:.8; }
@@ -554,10 +564,10 @@ px;
     }
 
     /* ===== 🔍 說明彈窗 ===== */
-    .modal-mask{ position:fixed; inset:0; z-index:60; display:none; background: rgba(2,6,23,.65); backdrop-filter: blur(4px); }
+    .modal-mask{ position:fixed; inset:0; z-index:60; display:none; background: rgba(2,6,23,.62); backdrop-filter: blur(8px); }
     .modal-mask.show{ display:flex; align-items:center; justify-content:center; animation: fadeIn .12s ease; }
     .modal{ width:min(720px, 92vw); max-height: 80vh; overflow:auto; border:1px solid var(--line); border-radius:16px; box-shadow: var(--shadow); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); }
-    .modal header{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); position:sticky; top:0; background:inherit; backdrop-filter: blur(2px); }
+    .modal header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background: var(--card); }
     .modal h3{ margin:0; font-size:16px; display:flex; gap:8px; align-items:center; }
     .modal .content{ padding:12px 16px; }
     .modal .content ol{ margin:0 0 8px 18px; }
@@ -569,6 +579,8 @@ px;
 
     .divider{ height:1px; background:var(--line); margin:10px 0; }
     .help-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .note{ font-size:13px; color:var(--muted); }
+
 
     /* ===== ★ 作業成績（表格） ===== */
     .hw-controls{ display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
@@ -849,7 +861,7 @@ px;
       border-radius:14px;
       box-shadow: 0 8px 20px rgba(0,0,0,.08);
     }
-    body.light .prog-pagebox{ background:rgba(0,0,0,.03); }
+    :root[data-theme="light"] .prog-pagebox{ background:rgba(0,0,0,.03); }
     .prog-pagebox__title{
       font-size:12px; letter-spacing:.08em; text-transform:uppercase;
       opacity:.75; margin-right:2px; white-space:nowrap;
@@ -871,7 +883,7 @@ px;
       box-shadow: 0 16px 40px rgba(0,0,0,.22);
       z-index: 50;
     }
-    body.light .menu{ background: rgba(255,255,255,.92); }
+    :root[data-theme="light"] .menu{ background: rgba(255,255,255,.92); }
     .menu.hidden{ display:none !important; }
     .menu-item{
       width:100%;
@@ -885,24 +897,24 @@ px;
       font-size:14px;
     }
     .menu-item:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.10); }
-    body.light .menu-item:hover{ background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.10); }
+    :root[data-theme="light"] .menu-item:hover{ background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.10); }
     .menu-item.danger{ color: var(--danger, #ff5a5a); }
 
     .btn.danger{
       border-color: rgba(255,90,90,.45);
       background: rgba(255,90,90,.10);
     }
-    body.light .btn.danger{
+    :root[data-theme="light"] .btn.danger{
       border-color: rgba(255,90,90,.35);
       background: rgba(255,90,90,.08);
     }
     .progtbl-wrap{ flex:1 1 auto; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
-    .progtbl{ width:100%; border-collapse:separate; border-spacing:0; min-width: 520px; }
+    .progtbl{ width:100%; border-collapse:separate; border-spacing:0; min-width: 980px; }
     .progtbl th, .progtbl td{ border-bottom:1px solid var(--line); padding:10px 10px; text-align:center; }
     .progtbl th{ position:sticky; top:0; background:rgba(15,23,42,.92); backdrop-filter: blur(6px); z-index:1; font-size:13px; }
     :root[data-theme="light"] .progtbl th{ background: rgba(255,255,255,.92); }
     .progtbl td:first-child, .progtbl th:first-child{ text-align:left; min-width: 220px; }
-    .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none; }
+    .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none;  min-width:20em; max-width:100%; }
     :root[data-theme="light"] .prog-input{ background: rgba(2,6,23,.03); }
     .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
 
@@ -1003,15 +1015,15 @@ px;
     <header class="topbar">
       <div class="topbar__left">
         <div class="import-block">
-          <label class="btn" for="file-input" title="上傳 Excel">📂 匯入學生名單 / 成績</label>
+          <label class="btn" for="file-input" title="上傳 Excel">📂 匯入</label>
           <input id="file-input" type="file" accept=".xlsx,.xls" hidden />
         </div>
-        <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除暫存</button>
+        <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
         <div id="status" class="status-inline">尚未載入名單。</div>
 </div>
 
       <div class="title-stack">
-        <h1 class="title">平時成績系統</h1>
+        <h1 class="title">成績管理系統</h1>
         <div class="modebar">
           <div class="seg" role="tablist" aria-label="顯示模式">
                                 <button id="mode-progress" class="seg-btn" data-mode="progress">教學進度</button>
@@ -1027,8 +1039,9 @@ px;
 
       <div class="topbar__right">
         <!-- ★ 新增主題切換按鈕 -->
+        <button id="btn-help" class="btn" title="開啟操作說明">❔ 操作</button>
         <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
-        <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出成績</button>
+        <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
       </div>
     </header>
 
@@ -1049,18 +1062,20 @@ px;
           <div class="divider"></div>
 
           <ol>
-            <li>可匯入：學生名單 或 之前匯出的「成績表」。</li>
-            <li>每個工作表代表一個班級；若含「學號/分數/座標/作業成績」欄位會自動帶入。</li>
-            <li>右側可切換「座位 / 安排座位 / 作業成績」。</li>
-            <li>作業成績頁可按「＋新增作業」動態增加欄位。</li>
-            <li>匯出 Excel 會包含每份作業欄位，下次匯入即帶回。</li>
+            <li><b>匯入成績</b>：支援匯入 Excel（每個工作表＝一個班級）。建議先用下方的「下載 Excel 範例檔」建立資料。</li>
+            <li><b>左側欄</b>：顯示「🏆 加分排行榜」，用來查看目前班級的加分排名（在加扣分/成績相關模式會更新）。</li>
+            <li><b>模式切換</b>：在頁面上方可切換 <b>座位區</b>／<b>安排座位</b>／<b>作業成績</b>／<b>抽號</b>／<b>倒數計時</b> 等功能。</li>
+            <li><b>新增/刪除學生</b>：在學生名單/作業成績等頁面可新增轉學生，也可開啟刪除介面批次選取移除。</li>
+            <li><b>作業成績</b>：可「＋新增作業」動態增加欄位；需要大量輸入時可用批次輸入功能加快填寫。</li>
+            <li><b>匯出成績</b>：右上角「💾 匯出成績」會把目前所有班級的資料輸出成 Excel，之後可再匯入續用。</li>
+            <li><b>深色/淺色</b>：右上角可切換主題；所有資料會保留，不影響匯入/匯出。</li>
           </ol>
 
           <div class="divider"></div>
 
           <div class="help-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <a href="#" id="btn-dl-sample" class="btn">📥 下載 Excel 範例檔</a>
-            <span class="hint">包含「班級A / 班級B」，各 30 位，欄位含「學號／座號／姓名」。</span>
+            <span class="note">範例包含「班級A / 班級B」，各 30 位，欄位含「學號／座號／姓名／分數／作業成績」。</span>
           </div>
         </section>
 </aside>
@@ -3233,6 +3248,8 @@ function onTimerDone(){
     function setMode(m){
       state.mode=m;
       document.body.dataset.mode = m;
+      // ★ 只有「list（加扣分）」模式顯示 sidebar
+      document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list');
       document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress');
 
       // 模式按鈕狀態
@@ -3712,7 +3729,7 @@ elProgAdd?.addEventListener('click', ()=>{
     /* ===== ★ 產生範例 Excel：2 個班級 × 各 30 位 ===== */
     function buildSampleSheet(classKey, sheetName){
       // 使用系統既有的欄位名稱常數，避免打錯
-      const header = ['學號','座號','姓名'];
+      const header = ['學號','座號','姓名','分數','座位列','座位欄','作業1','備註'];
       const aoa = [header];
 
       for(let i=1;i<=30;i++){
