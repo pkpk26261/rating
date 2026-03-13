@@ -2011,11 +2011,13 @@
     <header class="topbar">
       <div class="topbar__left">
         <div class="import-block">
-          <label class="btn" for="file-input" title="上傳一或多個 Excel 檔案">📂 匯入</label>
-          <input id="file-input" type="file" accept=".xlsx,.xls" hidden multiple />
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label class="btn" for="file-input" title="上傳一或多個 Excel 檔案">📂 匯入</label>
+            <input id="file-input" type="file" accept=".xlsx,.xls" hidden multiple />
+            <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
+          </div>
+          <div id="status" class="status-inline">尚未載入名單。</div>
         </div>
-        <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
-        <div id="status" class="status-inline">尚未載入名單。</div>
 </div>
 
       <div class="title-stack">
