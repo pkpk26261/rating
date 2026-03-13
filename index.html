@@ -551,6 +551,7 @@
     .hidden{ display:none !important; }
     body[data-mode="progress"] .controls-row{ display:none !important; }
     body[data-mode="timer"] .controls-row{ display:none !important; }
+    body[data-mode="draw"] .controls-row{ display:none !important; }
     .seat-controls{ display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
     .seat-controls .input{ min-width:auto; width:70px; text-align:center; padding:8px 10px; }
 
@@ -917,40 +918,246 @@
       }
     }
 
-    /* ===== 🎲 抽號模式（新版） ===== */
+    /* ===== 🎲 抽號模式（新版：抽籤動畫） ===== */
     .draw-wrap{
-      display:grid; grid-template-columns: 360px 1fr; gap:16px; margin-top:12px; align-items:stretch;
+      display:grid; grid-template-columns: 340px 1fr; gap:18px; margin-top:12px; align-items:stretch;
+      flex: 1 1 auto; min-height: 0;
     }
     @media (max-width: 980px){ .draw-wrap{ grid-template-columns: 1fr; } }
 
     .controls-card,
     .spotlight-card{
-      border:1px solid var(--line); border-radius:12px;
+      border:1px solid var(--line); border-radius:16px;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       box-shadow: var(--shadow);
     }
 
-    .controls-card{ padding:12px; display:flex; flex-direction:column; gap:12px; }
+    .controls-card{ padding:14px; display:flex; flex-direction:column; gap:12px; }
     .controls-card .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .controls-card .presets{ display:flex; gap:8px; flex-wrap:wrap; }
     .controls-card .presets .btn{ padding:8px 10px; font-weight:900; }
     .controls-card .ops{ display:flex; gap:8px; flex-wrap:wrap; }
-    .controls-card .ops .btn.add{ flex: 1 1 auto; font-size:16px; padding:12px; }
+    .controls-card .ops .btn.add{
+      flex: 1 1 auto; font-size:17px; padding:14px 18px;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      color: #fff; border:none; border-radius:14px;
+      font-weight:900; letter-spacing:.06em;
+      box-shadow: 0 4px 20px rgba(124,58,237,.35);
+      transition: transform .15s, box-shadow .15s;
+      position: relative; overflow:hidden;
+    }
+    .controls-card .ops .btn.add::after{
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform .4s;
+    }
+    .controls-card .ops .btn.add:hover::after{ transform: translateX(100%); }
+    .controls-card .ops .btn.add:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(124,58,237,.45);
+    }
+    .controls-card .ops .btn.add:active{ transform: scale(.97); }
     .controls-card .hint{ margin-top:2px; }
 
-    .spotlight-card{ padding:12px; display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .spotlight-card{ padding:16px; display:flex; flex-direction:column; gap:14px; min-height:0; }
     .draw-stats{ display:flex; gap:8px; flex-wrap:wrap; }
-    .draw-stats .badge b{ font-variant-numeric: tabular-nums; padding-left:4px; }
+    .draw-stats .badge{
+      background: rgba(124,58,237,.1); border:1px solid rgba(124,58,237,.2);
+      border-radius:10px; padding:6px 12px; font-size:13px;
+    }
+    .draw-stats .badge b{ font-variant-numeric: tabular-nums; padding-left:4px; color:var(--accent); }
+
+    /* ===== 抽號班級選擇器 ===== */
+    .draw-class-selector{
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+    .draw-class-select{
+      appearance: none;
+      -webkit-appearance: none;
+      background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(34,211,238,.08));
+      color: var(--fg);
+      border: 1px solid rgba(124,58,237,.3);
+      border-radius: 999px;
+      padding: 4px 28px 4px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      transition: all .15s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237c3aed'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px 6px;
+    }
+    .draw-class-select:hover{
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(124,58,237,.2);
+    }
+    .draw-class-select:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.15);
+    }
+    :root[data-theme="light"] .draw-class-select{
+      background-color: rgba(124,58,237,.08);
+      border-color: rgba(124,58,237,.2);
+    }
+
+    /* ===== 🎰 抽籤動畫舞台 ===== */
+    .draw-stage{
+      position: relative;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(34,211,238,.06));
+      border: 2px solid rgba(124,58,237,.15);
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .draw-confetti{
+      position: absolute; inset:0;
+      width:100%; height:100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .draw-drum{
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 120px;
+    }
+    .drum-placeholder{
+      color: var(--muted);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      opacity: .7;
+      user-select: none;
+    }
+    /* 滾輪格子：overflow hidden 只顯示一格 */
+    .drum-slot{
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+      border: 2px solid rgba(124,58,237,.15);
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    /* 長條捲軸（裡面有很多 item，靠 translateY 滾動） */
+    .drum-slot .slot-reel{
+      display: flex;
+      flex-direction: column;
+      will-change: transform;
+    }
+    /* 每一格的大小剛好填滿 drum-slot */
+    .drum-slot .slot-item{
+      width: 120px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .drum-slot .slot-item .slot-seat{
+      font-size: 28px;
+      color: var(--accent);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .drum-slot .slot-item .slot-name{
+      font-size: 14px;
+      color: var(--fg);
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100px;
+      margin-top: 4px;
+    }
+    /* 快速滾動時上下邊緣動態模糊遮罩 */
+    .drum-slot.spinning::before,
+    .drum-slot.spinning::after{
+      content: '';
+      position: absolute; left:0; right:0;
+      height: 28px; z-index: 2; pointer-events: none;
+    }
+    .drum-slot.spinning::before{
+      top: 0;
+      background: linear-gradient(to bottom, var(--card) 0%, transparent 100%);
+    }
+    .drum-slot.spinning::after{
+      bottom: 0;
+      background: linear-gradient(to top, var(--card) 0%, transparent 100%);
+    }
+    /* 揭曉狀態 */
+    .drum-slot.revealed{
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(34,211,238,.1));
+      box-shadow: 0 0 24px rgba(124,58,237,.3), 0 0 48px rgba(124,58,237,.15);
+      animation: slotRevealGlow 1.2s ease-out;
+    }
+    @keyframes slotRevealGlow{
+      0%  { box-shadow: 0 0 0 rgba(124,58,237,0); transform: scale(1); }
+      30% { box-shadow: 0 0 40px rgba(124,58,237,.5), 0 0 80px rgba(124,58,237,.2); transform: scale(1.08); }
+      100%{ box-shadow: 0 0 24px rgba(124,58,237,.3), 0 0 48px rgba(124,58,237,.15); transform: scale(1); }
+    }
+    /* 舞台脈衝光暈（抽籤進行中） */
+    .draw-stage.spinning{
+      border-color: var(--accent);
+      animation: stagePulse .8s ease-in-out infinite alternate;
+    }
+    @keyframes stagePulse{
+      from{ box-shadow: 0 0 20px rgba(124,58,237,.15); }
+      to  { box-shadow: 0 0 40px rgba(124,58,237,.35), 0 0 80px rgba(124,58,237,.1); }
+    }
+    /* 完成後慶祝閃爍 */
+    .draw-stage.celebrate{
+      animation: stageCelebrate .6s ease-out;
+    }
+    @keyframes stageCelebrate{
+      0%  { border-color: var(--accent); }
+      50% { border-color: var(--gold); box-shadow: 0 0 50px rgba(245,158,11,.3); }
+      100%{ border-color: var(--accent); box-shadow: 0 0 24px rgba(124,58,237,.2); }
+    }
+
+    :root[data-theme="light"] .draw-stage{
+      background: linear-gradient(135deg, rgba(124,58,237,.06), rgba(6,182,212,.04));
+      border-color: rgba(124,58,237,.12);
+    }
+    :root[data-theme="light"] .drum-slot{
+      background: rgba(255,255,255,.6);
+      border-color: rgba(124,58,237,.12);
+    }
+    :root[data-theme="light"] .drum-slot.revealed{
+      background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(6,182,212,.06));
+      box-shadow: 0 0 20px rgba(124,58,237,.2), 0 0 40px rgba(124,58,237,.1);
+    }
+    :root[data-theme="light"] .draw-stats .badge{
+      background: rgba(124,58,237,.06);
+      border-color: rgba(124,58,237,.12);
+    }
 
     .draw-result-wrap,.draw-history-wrap{
-      border:1px solid var(--line); border-radius:12px;
+      border:1px solid var(--line); border-radius:14px;
       background:var(--card); padding:12px;
-      min-height:0; /* 讓右側可以彈性伸縮 */
+      min-height:0;
     }
-    .draw-subtitle{ font-weight:900; letter-spacing:.04em; color:var(--muted); margin-bottom:8px; }
+    .draw-subtitle{ font-weight:900; letter-spacing:.04em; color:var(--muted); margin-bottom:8px; font-size:13px; }
 
     .draw-result{
-      display:flex; flex-wrap:wrap; gap:10px; min-height:48px; align-items:center;
+      display:flex; flex-wrap:wrap; gap:10px; min-height:42px; align-items:center;
     }
     .chip{
       display:inline-flex; align-items:center; gap:8px;
@@ -960,12 +1167,17 @@
     }
     .chip .seat-badge{ transform:scale(.95); }
     .chip.big{ font-size:var(--chip-fz); padding:var(--chip-py) var(--chip-px); }
-    .chip.pop{ animation: popIn .25s ease-out; }
-    @keyframes popIn{ from{ transform:scale(.88); opacity:0 } to{ transform:scale(1); opacity:1 } }
+    .chip.pop{ animation: chipReveal .5s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes chipReveal{
+      0%  { transform:scale(0) rotate(-10deg); opacity:0 }
+      60% { transform:scale(1.15) rotate(2deg); opacity:1 }
+      100%{ transform:scale(1) rotate(0); opacity:1 }
+    }
 
     .draw-history{ display:flex; flex-direction:column; gap:10px; }
     .draw-history.empty{ color:var(--muted); }
-    .draw-row{ border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--card); }
+    .draw-row{ border:1px solid var(--line); border-radius:12px; padding:10px; background:var(--card); transition: all .2s; }
+    .draw-row:hover{ border-color: rgba(124,58,237,.2); background: rgba(124,58,237,.03); }
     .draw-row .time{ font-size:12px; color:var(--muted); margin-bottom:6px; }
     .draw-row .chips{ display:flex; flex-wrap:wrap; gap:8px; }
 
@@ -1813,16 +2025,18 @@
       box-shadow: 0 4px 12px rgba(0,0,0,.15);
     }
     .chip.big{
-      border: 1px solid rgba(124,58,237,.2) !important;
-      background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(34,211,238,.06)) !important;
-      box-shadow: 0 4px 16px rgba(124,58,237,.12);
+      border: 1px solid rgba(124,58,237,.25) !important;
+      background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(34,211,238,.08)) !important;
+      box-shadow: 0 4px 20px rgba(124,58,237,.18);
+      font-size: 15px !important;
+      padding: 10px 16px !important;
     }
     :root[data-theme="light"] .chip{
       background: rgba(255,255,255,.8) !important;
       border: 1px solid rgba(0,0,0,.08) !important;
     }
     :root[data-theme="light"] .chip.big{
-      background: linear-gradient(135deg, rgba(124,58,237,.06), rgba(6,182,212,.04)) !important;
+      background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(6,182,212,.05)) !important;
     }
 
     .draw-result-wrap, .draw-history-wrap{
@@ -2448,9 +2662,13 @@
             <table class="hwtbl" id="hw-table" role="grid"></table>
           </div>
         </section>
-        <!-- 🎲 抽號模式（新版） -->
+        <!-- 🎲 抽號模式（新版：抽籤動畫） -->
         <section id="draw-pane" class="hidden" aria-label="抽號模式">
-          <h3 class="hw-title">🎲 抽號 <span class="pill" id="draw-class-pill">尚未載入</span></h3>
+          <h3 class="hw-title">🎲 抽號
+            <span class="draw-class-selector">
+              <select id="draw-class-select" class="draw-class-select"><option value="">尚未載入</option></select>
+            </span>
+          </h3>
 
           <div class="draw-wrap">
             <!-- 左：控制卡 -->
@@ -2482,14 +2700,14 @@
               </div>
 
               <div class="ops">
-                <button id="btn-draw" class="btn add">🎯 抽！</button>
+                <button id="btn-draw" class="btn add">🎰 開始抽籤！</button>
                 <button id="btn-draw-undo" class="btn" title="撤銷最近一次抽取">↩️ 撤銷</button>
-                <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">重置</button>
+                <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">🔄 重置</button>
               </div>
               <div class="hint" id="draw-hint">尚未載入名單</div>
             </aside>
 
-            <!-- 右：聚光區 -->
+            <!-- 右：聚光區（含抽籤動畫） -->
             <section class="spotlight-card">
               <div class="draw-stats">
                 <span class="badge">剩餘 <b id="draw-rem">--</b></span>
@@ -2497,13 +2715,21 @@
                 <span class="badge">下一次 <b id="draw-next">--</b> 人</span>
               </div>
 
+              <!-- 🎰 抽籤動畫舞台 -->
+              <div class="draw-stage">
+                <canvas id="draw-confetti" class="draw-confetti"></canvas>
+                <div class="draw-drum" id="draw-drum">
+                  <div class="drum-placeholder">🎲 點擊「開始抽籤」</div>
+                </div>
+              </div>
+
               <div class="draw-result-wrap">
-                <div class="draw-subtitle">本次結果</div>
+                <div class="draw-subtitle">✨ 本次結果</div>
                 <div id="draw-result" class="draw-result"></div>
               </div>
 
               <div class="draw-history-wrap">
-                <div class="draw-subtitle">歷史紀錄</div>
+                <div class="draw-subtitle">📋 歷史紀錄</div>
                 <div id="draw-history" class="draw-history empty">尚無紀錄</div>
               </div>
             </section>
@@ -3020,7 +3246,7 @@
     /* ★ 抽號 DOM */
     const elModeDraw = document.getElementById('mode-draw');
     const elDrawPane = document.getElementById('draw-pane');
-    const elDrawClassPill = document.getElementById('draw-class-pill');
+    const elDrawClassPill = document.getElementById('draw-class-select');
     const elDrawCount = document.getElementById('draw-count');
     const elDrawSeq = document.getElementById('draw-seq');
     const elDrawUnique = document.getElementById('draw-unique');
@@ -3029,6 +3255,9 @@
     const elDrawResult = document.getElementById('draw-result');
     const elDrawHistory = document.getElementById('draw-history');
     const elDrawHint = document.getElementById('draw-hint');
+    const elDrawDrum = document.getElementById('draw-drum');
+    const elDrawStage = document.querySelector('.draw-stage');
+    const elDrawConfetti = document.getElementById('draw-confetti');
 
     /* 說明彈窗 DOM */
     const helpBtn = document.getElementById('btn-help');
@@ -3945,8 +4174,8 @@ const helpMask = document.getElementById('help-mask');
         }
       }catch(_){}
 
-      // ★ 教學進度模式不顯示工具列
-      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress');
+      // ★ 教學進度/抽號模式不顯示工具列
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw');
 
       if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
       saveSession('toggle stage in list');
@@ -5285,7 +5514,7 @@ function onTimerDone(){
       document.body.dataset.mode = m;
       // ★ 只有「list（加扣分）」模式顯示 sidebar
       document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list');
-      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress');
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw');
 
       // 模式按鈕狀態
       elModeProgress?.classList.toggle('active', m==='progress');
@@ -6087,8 +6316,25 @@ elProgAdd?.addEventListener('click', ()=>{
       return `${y}/${m}/${dd} ${hh}:${mm}:${ss}`;
     }
 
+    function syncDrawClassSelect(selectedCls){
+      if(!elDrawClassPill) return;
+      elDrawClassPill.innerHTML = '';
+      if(!state.classOrder.length){
+        const o = document.createElement('option');
+        o.value = ''; o.textContent = '尚未載入名單';
+        elDrawClassPill.appendChild(o);
+      } else {
+        state.classOrder.forEach(c=>{
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          if(c === selectedCls) o.selected = true;
+          elDrawClassPill.appendChild(o);
+        });
+      }
+    }
+
     function renderDraw(cls){
-      elDrawClassPill.textContent = cls || '未選擇';
+      syncDrawClassSelect(cls);
 
       if(!cls){
         elDrawHint.textContent = '請先上傳學生名單';
@@ -6096,6 +6342,7 @@ elProgAdd?.addEventListener('click', ()=>{
         elDrawHistory.classList.add('empty');
         elDrawHistory.innerHTML = '尚無紀錄';
         elDrawRem.textContent='--'; elDrawTotal.textContent='--'; elDrawNext.textContent='--';
+        if(elDrawDrum) elDrawDrum.innerHTML = '<div class="drum-placeholder">🎲 點擊「開始抽籤」</div>';
         return;
       }
 
@@ -6143,8 +6390,187 @@ elProgAdd?.addEventListener('click', ()=>{
       }
     }
 
-    // === 事件：抽！ ===
+    /* ===== 🎰 抽籤動畫引擎 ===== */
+    let _drawAnimating = false;
+
+    /* 彩紙 (confetti) 粒子系統 */
+    function fireConfetti(canvas, duration){
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width = canvas.offsetWidth * (window.devicePixelRatio||1);
+      const H = canvas.height = canvas.offsetHeight * (window.devicePixelRatio||1);
+      ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+      const cW = canvas.offsetWidth, cH = canvas.offsetHeight;
+
+      const colors = ['#7c3aed','#a855f7','#22d3ee','#f59e0b','#ef4444','#10b981','#3b82f6','#ec4899'];
+      const particles = Array.from({length:80}, ()=>({
+        x: cW/2 + (Math.random()-.5)*60,
+        y: cH/2,
+        vx: (Math.random()-.5)*12,
+        vy: -Math.random()*10 - 4,
+        r: Math.random()*5+3,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        rot: Math.random()*360,
+        rotV: (Math.random()-.5)*12,
+        shape: Math.random() > .5 ? 'rect' : 'circle',
+        life: 1,
+      }));
+      const start = performance.now();
+      function frame(t){
+        const elapsed = t - start;
+        if(elapsed > duration){ ctx.clearRect(0,0,cW,cH); return; }
+        ctx.clearRect(0,0,cW,cH);
+        for(const p of particles){
+          p.x += p.vx;
+          p.vy += .25;
+          p.y += p.vy;
+          p.rot += p.rotV;
+          p.life = Math.max(0, 1 - elapsed/duration);
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI/180);
+          ctx.globalAlpha = p.life;
+          ctx.fillStyle = p.color;
+          if(p.shape==='rect'){
+            ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r);
+          }else{
+            ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.fill();
+          }
+          ctx.restore();
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    /* 建立 slot 滾輪（真正的垂直捲動長條） */
+    function buildSlots(count, allStudents){
+      if(!elDrawDrum) return [];
+      elDrawDrum.innerHTML = '';
+      const slots = [];
+      const ITEM_H = 120;
+
+      for(let i=0; i<count; i++){
+        const slot = document.createElement('div');
+        slot.className = 'drum-slot';
+
+        const reel = document.createElement('div');
+        reel.className = 'slot-reel';
+
+        // 填入 40~50 個隨機學生做滾動素材
+        const reelCount = 40 + Math.floor(Math.random()*10);
+        for(let j=0; j<reelCount; j++){
+          const s = allStudents[Math.floor(Math.random()*allStudents.length)];
+          reel.appendChild(_makeSlotItem(s));
+        }
+
+        slot.appendChild(reel);
+        elDrawDrum.appendChild(slot);
+        slots.push({ el: slot, reel, reelCount });
+      }
+      return slots;
+    }
+    function _makeSlotItem(s){
+      const item = document.createElement('div');
+      item.className = 'slot-item';
+      const seatNum = s.seat ? `#${padSeat(s.seat)}` : '--';
+      item.innerHTML = `<span class="slot-seat">${seatNum}</span><span class="slot-name">${escapeHTML(s.name||'')}</span>`;
+      return item;
+    }
+
+    /* 執行真正的垂直捲動動畫 */
+    function animateSlots(slots, picks, allStudents, onComplete){
+      const ITEM_H = 120;
+      const STAGGER = 400;
+      let completed = 0;
+
+      slots.forEach((slot, idx)=>{
+        const { el, reel, reelCount } = slot;
+        const pick = picks[idx];
+
+        // 在 reel 末端加上最終結果
+        reel.appendChild(_makeSlotItem(pick));
+        const totalItems = reelCount + 1; // 含最終結果
+
+        // 目標偏移：讓最後一格（pick）剛好顯示在 slot 視窗中
+        const targetY = -(totalItems - 1) * ITEM_H;
+
+        el.classList.add('spinning');
+        reel.style.transform = 'translateY(0)';
+
+        const delay = idx * STAGGER;
+
+        // 使用 requestAnimationFrame 做: 先加速 → 勻速 → 減速 停在目標位置
+        const ACCEL_TIME  = 300;           // 加速期 (ms)
+        const DECEL_TIME  = 800 + idx*120;  // 減速期，後面的 slot 更長
+        const totalDist   = Math.abs(targetY); // 要滾的總距離 (px)
+        // 計算勻速期: 讓大部分距離在勻速階段走完
+        const MAX_SPEED   = 5500;            // 最大速度 px/s
+        const accelDist   = MAX_SPEED * ACCEL_TIME / 2000;
+        const decelDist   = MAX_SPEED * DECEL_TIME / 2000;
+        const cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
+        const cruiseTime  = cruiseDist / MAX_SPEED * 1000;
+        const totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
+
+        let startTime = null;
+
+        function tick(now){
+          if(!startTime) startTime = now;
+          const elapsed = now - startTime;
+
+          // 延遲
+          if(elapsed < delay){
+            requestAnimationFrame(tick);
+            return;
+          }
+
+          const t = elapsed - delay; // 這個 slot 自己的運動時間
+          let dist;
+
+          if(t <= ACCEL_TIME){
+            // 加速階段: 二次加速 0 → MAX_SPEED
+            const p = t / ACCEL_TIME;
+            dist = accelDist * p * p;
+          } else if(t <= ACCEL_TIME + cruiseTime){
+            // 勻速階段
+            const ct = t - ACCEL_TIME;
+            dist = accelDist + (ct / 1000) * MAX_SPEED;
+          } else if(t <= totalTime){
+            // 減速階段: 二次減速 MAX_SPEED → 0
+            const dt = t - ACCEL_TIME - cruiseTime;
+            const p = dt / DECEL_TIME;
+            // 二次減速: v = MAX_SPEED*(1-p), dist = integral
+            dist = accelDist + cruiseDist + decelDist * (2*p - p*p);
+          } else {
+            dist = totalDist;
+          }
+
+          // 套用偏移
+          const y = -Math.min(dist, totalDist);
+          reel.style.transform = `translateY(${y}px)`;
+
+          if(t >= totalTime){
+            // === 停在最終位置 ===
+            reel.style.transform = `translateY(${targetY}px)`;
+            el.classList.remove('spinning');
+            el.classList.add('revealed');
+            completed++;
+            if(completed === slots.length){
+              setTimeout(onComplete, 150);
+            }
+            return;
+          }
+
+          requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+      });
+    }
+
+    // === 事件：抽！（含動畫） ===
     elBtnDraw?.addEventListener('click', ()=>{
+      if(_drawAnimating) return; // 防止連點
       const cls = elSelect.value;
       if(!cls) return alert('請先選擇班級');
       const d = ensureDrawState(cls);
@@ -6174,36 +6600,67 @@ elProgAdd?.addEventListener('click', ()=>{
 
       const picks = pickN(candidates, count);
 
-      // 視覺：本次結果（大籌碼）
-      elDrawResult.innerHTML = picks.map(s=>{
-        const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
-        return `<span class="chip big pop"><span class="seat-badge">${seat}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
-      }).join('');
+      // ===  開始動畫 ===
+      _drawAnimating = true;
+      elBtnDraw.disabled = true;
+      elBtnDraw.textContent = '🎰 抽籤中...';
+      elDrawResult.innerHTML = '';
 
-      // 歷史 + 已抽
-      const ids = picks.map(s=>s.id);
-      d.history.unshift({ ts: Date.now(), count, ids });
-      if(d.history.length > 200) d.history.length = 200;
+      // 舞台進入旋轉狀態
+      elDrawStage?.classList.add('spinning');
+      elDrawStage?.classList.remove('celebrate');
 
-      if(d.unique){
-        for(const id of ids) drawnSet.add(id);
-        d.drawn = Array.from(drawnSet);
-      }
+      // 建立滾輪
+      const slots = buildSlots(count, list);
 
-      // 抽到即 +1 分（可選）
-      if(d.autoScore && Array.isArray(last.ids)){
-        last.ids.forEach(id => setScore(cls, id, Math.max(0, getScore(cls, id) - 1)));  // ★
-        renderLeaderboard(cls);
-        if(state.mode==='list') renderStudents(cls);
-      }
+      // 播放滾動動畫
+      const totalDur = 1800 + (count-1)*350 + 200;
+      animateSlots(slots, picks, list, ()=>{
+        // === 動畫完成 → 揭曉 ===
+        _drawAnimating = false;
+        elBtnDraw.disabled = false;
+        elBtnDraw.textContent = '🎰 開始抽籤！';
 
+        elDrawStage?.classList.remove('spinning');
+        elDrawStage?.classList.add('celebrate');
 
-      saveDrawToLS(cls);
-      renderDraw(cls); // 更新統計/歷史
+        // 放彩紙
+        fireConfetti(elDrawConfetti, 2000);
+
+        // 顯示結果 chips
+        elDrawResult.innerHTML = picks.map((s, i)=>{
+          const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
+          return `<span class="chip big pop" style="animation-delay:${i*80}ms"><span class="seat-badge">${seat}</span><span class="student-name">${escapeHTML(s.name||'')}</span></span>`;
+        }).join('');
+
+        // 歷史 + 已抽
+        const ids = picks.map(s=>s.id);
+        d.history.unshift({ ts: Date.now(), count, ids });
+        if(d.history.length > 200) d.history.length = 200;
+
+        if(d.unique){
+          for(const id of ids) drawnSet.add(id);
+          d.drawn = Array.from(drawnSet);
+        }
+
+        // 抽到即 +1 分（可選）
+        if(d.autoScore && Array.isArray(ids)){
+          ids.forEach(id => {
+            const cur = typeof getScore === 'function' ? getScore(cls, id) : 0;
+            if(typeof setScore === 'function') setScore(cls, id, cur + 1);
+          });
+          if(typeof renderLeaderboard === 'function') renderLeaderboard(cls);
+          if(state.mode==='list' && typeof renderStudents === 'function') renderStudents(cls);
+        }
+
+        saveDrawToLS(cls);
+        renderDraw(cls);
+      });
     });
 
     // === 事件：撤銷最近一次 ===
     elBtnDrawUndo?.addEventListener('click', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
       const last = d.history.shift();
@@ -6224,20 +6681,35 @@ elProgAdd?.addEventListener('click', ()=>{
       }
       saveDrawToLS(cls);
       elDrawResult.innerHTML = '';
+      if(elDrawDrum) elDrawDrum.innerHTML = '<div class="drum-placeholder">🎲 點擊「開始抽籤」</div>';
+      elDrawStage?.classList.remove('spinning','celebrate');
       renderDraw(cls);
     });
 
     // === 事件：重置 ===
     elBtnDrawReset?.addEventListener('click', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
       d.drawn = []; d.history = []; d.seqPos = 0;
       saveDrawToLS(cls);
       elDrawResult.innerHTML = '';
+      if(elDrawDrum) elDrawDrum.innerHTML = '<div class="drum-placeholder">🎲 點擊「開始抽籤」</div>';
+      elDrawStage?.classList.remove('spinning','celebrate');
       renderDraw(cls);
     });
 
     // === 事件：控制變更（即存即用） ===
+
+    // ★ 抽號班級切換（draw-class-select）
+    elDrawClassPill?.addEventListener('change', ()=>{
+      const newCls = elDrawClassPill.value;
+      if(!newCls) return;
+      // 同步主選擇器
+      elSelect.value = newCls;
+      elSelect.dispatchEvent(new Event('change'));
+    });
+
     elDrawUnique?.addEventListener('change', ()=>{
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.unique = !!elDrawUnique.checked;
