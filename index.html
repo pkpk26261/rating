@@ -3922,20 +3922,14 @@ const helpMask = document.getElementById('help-mask');
       const floater=card.querySelector(`#float-${s.id}`);
       bindRipple(btnAdd); bindRipple(btnSub);
 
-      /* ★ 平板觸控即時回應：用 pointerdown 取代 click 可省掉 ~200ms 延遲 */
+      /* ★ 加扣分：只用 click，用時間戳防連擊重複 */
       function attachScoreBtn(btn, delta){
-        let handled = false;
-        btn.addEventListener('pointerdown', (e)=>{
-          if(e.button && e.button !== 0) return;   // 只處理主鍵
-          e.preventDefault();
-          handled = true;
-          changeScore(cls, s.id, delta, scoreEl, floater);
-          requestAnimationFrame(()=>{ handled = false; });
-        }, { passive: false });
-        // fallback：桌面無 pointer 事件時仍靠 click
+        let lastT = 0;
         btn.addEventListener('click', (e)=>{
-          if(handled){ handled = false; return; }  // 已由 pointerdown 處理
-          changeScore(cls, s.id, delta, scoreEl, floater);
+          const now = Date.now();
+          if(now - lastT < 80) return;  // 80ms 內視為同一次點擊
+          lastT = now;
+          changeScore(cls, s.id, delta, scoreEl);
         });
       }
       attachScoreBtn(btnAdd, +1);
@@ -3947,17 +3941,11 @@ const helpMask = document.getElementById('help-mask');
       card.innerHTML=`<div class="seat-ind">座位 #${seatIdx}</div><div class="empty-text">空位</div>`;
       return card;
     }
-    function changeScore(cls, id, delta, scoreEl, floater){
+    function changeScore(cls, id, delta, scoreEl){
       const old  = getScore(cls, id);        // ★
       const next = old + delta;
       setScore(cls, id, next);               // ★
-
-      // ★ 直接更新數字（避免 requestAnimationFrame 過多開銷）
       scoreEl.textContent = next;
-      // ★ 用 requestAnimationFrame 重啟動畫（避免同步 reflow）
-      scoreEl.classList.remove('bump');
-      requestAnimationFrame(()=>{ scoreEl.classList.add('bump'); });
-      showFloater(floater, delta);
       debouncedRenderLeaderboard(cls);       // ★ 節流版
     }
 
