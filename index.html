@@ -811,6 +811,15 @@
     .pill{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--muted); }
 
     .hw-col{ position:relative; white-space:nowrap; }
+    .hw-col .hw-col-name{
+      cursor:pointer; border-bottom:1px dashed rgba(255,255,255,.25); padding-bottom:1px;
+    }
+    .hw-col .hw-col-name:hover{ border-bottom-color: var(--accent); color: var(--accent-2); }
+    .hw-col .hw-col-edit{
+      width:72px; background:var(--card); color:var(--fg); border:1px solid var(--accent);
+      border-radius:6px; padding:2px 6px; font-size:13px; font-weight:700; text-align:center; outline:none;
+      box-shadow: 0 0 0 3px rgba(124,58,237,.18);
+    }
     .hw-col .mini-btn{
       margin-left:6px; padding:2px 6px; font-size:12px; line-height:1.2;
       border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg);
@@ -5553,7 +5562,7 @@ elProgAdd?.addEventListener('click', ()=>{
           <tr>
             <th style="min-width:64px">座號</th>
             <th style="min-width:120px">姓名</th>
-            ${hw.cols.map((c,i)=>`<th class="num hw-col"><span class="hw-col-name">${escapeHTML(c)}</span> <button class="mini-btn" data-col="${i}" title="批次輸入這一欄">⚡</button></th>`).join('')}
+            ${hw.cols.map((c,i)=>`<th class="num hw-col"><span class="hw-col-name" data-col="${i}" title="點擊修改名稱">${escapeHTML(c)}</span> <button class="mini-btn" data-col="${i}" title="批次輸入這一欄">⚡</button></th>`).join('')}
             <th class="num">小計</th>
             <th class="num">平均</th>
           </tr>
@@ -5612,6 +5621,34 @@ elProgAdd?.addEventListener('click', ()=>{
         });
       });
 
+
+      // ★ 綁定作業名稱點擊編輯
+      elHWTable.querySelectorAll('.hw-col-name[data-col]').forEach(span=>{
+        span.addEventListener('click', ()=>{
+          const ci = Number(span.getAttribute('data-col'));
+          const oldName = hw.cols[ci] || '';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'hw-col-edit';
+          input.value = oldName;
+          input.maxLength = 20;
+          span.replaceWith(input);
+          input.focus();
+          input.select();
+          const commit = ()=>{
+            const newName = input.value.trim() || oldName;
+            hw.cols[ci] = newName;
+            saveHWToLS(cls);
+            saveSession('hw col rename');
+            renderHW(cls);
+          };
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter'){ e.preventDefault(); input.blur(); }
+            if(e.key === 'Escape'){ input.value = oldName; input.blur(); }
+          });
+        });
+      });
 
       // 綁定每個作業欄的⚡批次輸入
       elHWTable.querySelectorAll('.mini-btn[data-col]').forEach(btn=>{
