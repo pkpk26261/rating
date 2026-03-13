@@ -329,6 +329,14 @@
       min-height: 0;      /* 關鍵：允許縮到可用高度 */
       overflow: hidden;   /* 裡面自己滾動 */
     }
+    /* 倒數計時頁面也要填滿 main 可用高度 */
+    .main > #timer-pane{
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+    }
 
     /* 讓內層 grid 填滿父層高度；需要時在它裡面捲動 */
     #draw-pane .draw-wrap{
@@ -542,6 +550,7 @@
     /* ==== 座位表 UI ==== */
     .hidden{ display:none !important; }
     body[data-mode="progress"] .controls-row{ display:none !important; }
+    body[data-mode="timer"] .controls-row{ display:none !important; }
     .seat-controls{ display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
     .seat-controls .input{ min-width:auto; width:70px; text-align:center; padding:8px 10px; }
 
@@ -1137,23 +1146,192 @@
     :root[data-theme="light"] .prog-input{ background: rgba(2,6,23,.03); }
     .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
 
-    /* ===== ⏳ 倒數計時 ===== */
-    #timer-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden; }
-    .timer-wrap{ display:flex; flex-direction:column; gap:14px; flex:1 1 auto; min-height:0; }
+    /* ===== ⏳ 倒數計時（重新設計） ===== */
+    #timer-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:auto; align-items:center; justify-content:center; }
+    .timer-wrap{ display:flex; flex-direction:column; gap:18px; align-items:center; width:100%; max-width:480px; padding:20px 0; flex-shrink:0; }
+
+    /* 圓形進度環容器 */
+    .timer-ring-box{
+      position:relative;
+      width: clamp(220px, 42vw, 340px);
+      height: clamp(220px, 42vw, 340px);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .timer-ring-svg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      transform: rotate(-90deg);
+    }
+    .timer-ring-bg{
+      fill:none;
+      stroke: var(--line);
+      stroke-width: 6;
+      opacity: .35;
+    }
+    .timer-ring-fg{
+      fill:none;
+      stroke: url(#timer-gradient);
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset .3s ease;
+    }
+    :root[data-theme="light"] .timer-ring-bg{ opacity:.25; }
+
+    /* 中央時間顯示 */
     .timer-display{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      box-shadow: var(--shadow);
-      padding:18px 16px;
+      position:relative;
       text-align:center;
       font-weight: 900;
-      letter-spacing: .06em;
+      letter-spacing: .04em;
       font-variant-numeric: tabular-nums;
-      font-size: clamp(44px, 7vw, 88px);
+      font-size: clamp(42px, 8vw, 80px);
+      line-height:1;
+      color: var(--fg);
+      text-shadow: 0 0 32px rgba(124,58,237,.12);
+      z-index:1;
     }
-    .timer-set, .timer-actions, .timer-presets{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .timer-presets .btn{ padding:8px 10px; font-weight:900; }
+    .timer-status{
+      font-size:14px;
+      color: var(--muted);
+      margin-top:6px;
+      text-align:center;
+      font-weight:600;
+      letter-spacing:.04em;
+      min-height:20px;
+    }
+    .timer-status.running{ color: var(--ok); }
+    .timer-status.done{ color: var(--bad); font-weight:700; }
+
+    /* 設定區 */
+    .timer-set{
+      display:flex; gap:8px; align-items:center; flex-wrap:nowrap; justify-content:center;
+      background: rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      width:100%;
+      box-sizing:border-box;
+    }
+    :root[data-theme="light"] .timer-set{ background: rgba(0,0,0,.02); }
+    .timer-set label{ display:flex; align-items:center; gap:3px; font-size:13px; font-weight:600; white-space:nowrap; flex:1 1 0; }
+    .timer-set .input{ width:100% !important; min-width:0; text-align:center; font-weight:700; font-size:14px; padding:6px 4px !important; }
+    .timer-set .btn{ flex:0 0 auto; padding:0 14px !important; white-space:nowrap; }
+
+    /* 按鈕列 */
+    .timer-actions{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .timer-actions .btn{ min-width:80px; font-weight:700; }
+    .timer-actions .btn.add{ min-width:100px; }
+
+    /* 快速預設 */
+    .timer-presets{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center;
+    }
+    .timer-presets .btn{
+      padding:6px 14px; font-weight:700; font-size:13px;
+      border-radius:20px;
+      background: rgba(124,58,237,.08);
+      border-color: rgba(124,58,237,.18);
+      transition: all .15s;
+    }
+    .timer-presets .btn:hover{
+      background: rgba(124,58,237,.18);
+      border-color: rgba(124,58,237,.35);
+    }
+    :root[data-theme="light"] .timer-presets .btn{
+      background: rgba(124,58,237,.06);
+      border-color: rgba(124,58,237,.12);
+    }
+
+    /* 脈搏動畫（倒數中） */
+    @keyframes timer-pulse{
+      0%, 100%{ transform: scale(1); opacity:1; }
+      50%{ transform: scale(1.02); opacity:.92; }
+    }
+    .timer-ring-box.running{ animation: timer-pulse 2s ease-in-out infinite; }
+
+    /* 時間到震動動畫 */
+    @keyframes timer-shake{
+      0%, 100%{ transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90%{ transform: translateX(-4px); }
+      20%, 40%, 60%, 80%{ transform: translateX(4px); }
+    }
+    .timer-ring-box.done{ animation: timer-shake .6s ease-in-out; }
+    .timer-ring-box.done .timer-display{ color: var(--bad); }
+
+    /* ===== 計時結束專用彈窗 ===== */
+    .timer-done-mask{
+      position:fixed; inset:0; z-index:10000;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none;
+      transition: opacity .25s;
+    }
+    .timer-done-mask.show{ opacity:1; pointer-events:auto; }
+    .timer-done-panel{
+      background: var(--card);
+      border: 1px solid rgba(124,58,237,.2);
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45), 0 0 60px rgba(124,58,237,.1);
+      padding: 36px 32px 28px;
+      text-align:center;
+      max-width: 380px;
+      width: calc(100% - 40px);
+      animation: timer-done-pop .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes timer-done-pop{
+      0%{ transform: scale(.8) translateY(20px); opacity:0; }
+      100%{ transform: scale(1) translateY(0); opacity:1; }
+    }
+    .timer-done-icon{
+      font-size: 56px;
+      line-height:1;
+      margin-bottom:12px;
+      animation: timer-bell-ring 1.5s ease-in-out infinite;
+    }
+    @keyframes timer-bell-ring{
+      0%, 100%{ transform: rotate(0); }
+      8%{ transform: rotate(14deg); }
+      16%{ transform: rotate(-14deg); }
+      24%{ transform: rotate(10deg); }
+      32%{ transform: rotate(-10deg); }
+      40%{ transform: rotate(4deg); }
+      48%, 100%{ transform: rotate(0); }
+    }
+    .timer-done-title{
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .timer-done-sub{
+      font-size:14px;
+      color: var(--muted);
+      margin-bottom:24px;
+    }
+    .timer-done-actions{
+      display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    }
+    .timer-done-actions .btn{
+      min-width:110px; font-weight:700; font-size:15px;
+      height:42px; border-radius:14px;
+    }
+    .timer-done-actions .btn.primary{
+      background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent-2) 60%, var(--accent)));
+      color: #fff;
+      border-color: transparent;
+    }
+    .timer-done-actions .btn.primary:hover{
+      filter: brightness(1.1);
+    }
+    :root[data-theme="light"] .timer-done-panel{
+      border-color: rgba(124,58,237,.12);
+      box-shadow: 0 24px 80px rgba(0,0,0,.15), 0 0 40px rgba(124,58,237,.06);
+    }
 
 
     /* ===== In-app Modal ===== */
@@ -1611,29 +1789,7 @@
       box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
     }
 
-    /* ===== 倒數計時顯示增強 ===== */
-    .timer-display{
-      font-size: clamp(56px, 10vw, 120px) !important;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)) !important;
-      border: 1px solid rgba(124,58,237,.15) !important;
-      border-radius: 20px !important;
-      padding: 28px 20px !important;
-      position: relative;
-      overflow: hidden;
-      text-shadow: 0 0 40px rgba(124,58,237,.15);
-    }
-    .timer-display::before{
-      content: "";
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(124,58,237,.06), rgba(34,211,238,.04));
-      border-radius: inherit;
-      pointer-events: none;
-    }
-    :root[data-theme="light"] .timer-display{
-      border-color: rgba(124,58,237,.1) !important;
-      background: rgba(255,255,255,.6) !important;
-      text-shadow: none;
-    }
+    /* （倒數計時樣式已整合至上方 timer 區塊） */
 
     /* ===== 抽號模式增強 ===== */
     .controls-card, .spotlight-card{
@@ -1953,7 +2109,10 @@
       .title{ font-size: 14px !important; }
       .seg-btn{ padding: 5px 8px !important; font-size: 11px !important; }
       .btn{ font-size: 12px !important; padding: 0 8px !important; height: 34px !important; }
-      .timer-display{ font-size: clamp(40px, 12vw, 72px) !important; padding: 20px 12px !important; }
+      .timer-ring-box{ width: clamp(180px, 50vw, 260px) !important; height: clamp(180px, 50vw, 260px) !important; }
+      .timer-display{ font-size: clamp(36px, 10vw, 60px) !important; }
+      .timer-done-panel{ padding: 28px 20px 22px !important; }
+      .timer-done-title{ font-size: 22px !important; }
       .chip.big{ font-size: 13px !important; }
     }
 
@@ -2217,33 +2376,66 @@
 
         <!-- ⏳ 倒數計時 -->
         <section id="timer-pane" class="hidden" aria-label="倒數計時">
-          <h3 class="hw-title">⏳ 倒數計時</h3>
           <div class="timer-wrap">
-            <div class="timer-display" id="timer-display">00:00</div>
+            <!-- 圓形進度環 -->
+            <div class="timer-ring-box" id="timer-ring-box">
+              <svg class="timer-ring-svg" viewBox="0 0 200 200">
+                <defs>
+                  <linearGradient id="timer-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="var(--accent)"/>
+                    <stop offset="100%" stop-color="var(--accent-2)"/>
+                  </linearGradient>
+                </defs>
+                <circle class="timer-ring-bg" cx="100" cy="100" r="90"/>
+                <circle class="timer-ring-fg" id="timer-ring-fg" cx="100" cy="100" r="90"
+                  stroke-dasharray="565.49" stroke-dashoffset="0"/>
+              </svg>
+              <div class="timer-display" id="timer-display">05:00</div>
+            </div>
+            <div class="timer-status" id="timer-status">就緒</div>
+
+            <!-- 快速預設 -->
+            <div class="timer-presets">
+              <button class="btn" data-preset="60">1 分鐘</button>
+              <button class="btn" data-preset="120">2 分鐘</button>
+              <button class="btn" data-preset="180">3 分鐘</button>
+              <button class="btn" data-preset="300">5 分鐘</button>
+              <button class="btn" data-preset="600">10 分鐘</button>
+              <button class="btn" data-preset="900">15 分鐘</button>
+            </div>
+
+            <!-- 自訂時間 -->
             <div class="timer-set">
-              <label>分鐘
-                <input id="timer-min" type="number" class="input" min="0" value="5" style="width:90px;">
+              <label>
+                <input id="timer-min" type="number" class="input" min="0" value="5">分
               </label>
-              <label>秒
-                <input id="timer-sec" type="number" class="input" min="0" max="59" value="0" style="width:90px;">
+              <label>
+                <input id="timer-sec" type="number" class="input" min="0" max="59" value="0">秒
               </label>
               <button id="btn-timer-set" class="btn">設定</button>
             </div>
+
+            <!-- 控制按鈕 -->
             <div class="timer-actions">
-              <button id="btn-timer-start" class="btn add">開始</button>
-              <button id="btn-timer-pause" class="btn">暫停</button>
-              <button id="btn-timer-reset" class="btn">重置</button>
+              <button id="btn-timer-start" class="btn add">▶ 開始</button>
+              <button id="btn-timer-pause" class="btn">⏸ 暫停</button>
+              <button id="btn-timer-reset" class="btn">↺ 重置</button>
             </div>
-            <div class="timer-presets">
-              <span class="hint">快速：</span>
-              <button class="btn" data-preset="60">1分</button>
-              <button class="btn" data-preset="180">3分</button>
-              <button class="btn" data-preset="300">5分</button>
-              <button class="btn" data-preset="600">10分</button>
-            </div>
-            <div class="hint" id="timer-hint"></div>
           </div>
         </section>
+
+        <!-- 倒數計時結束彈窗 -->
+        <div class="timer-done-mask" id="timer-done-mask">
+          <div class="timer-done-panel">
+            <div class="timer-done-icon">🔔</div>
+            <div class="timer-done-title">時間到！</div>
+            <div class="timer-done-sub" id="timer-done-sub">倒數計時已結束</div>
+            <div class="timer-done-actions">
+              <button class="btn" id="timer-done-restart">↺ 重新計時</button>
+              <button class="btn primary" id="timer-done-dismiss">停止提醒</button>
+            </div>
+          </div>
+        </div>
 
 <section id="hw-pane" class="hidden" aria-label="作業成績頁">
           <h3 class="hw-title">📝 作業成績 <span class="pill" id="hw-class-pill">尚未載入</span></h3>
@@ -2810,7 +3002,14 @@
     const elTimerStart=document.getElementById('btn-timer-start');
     const elTimerPause=document.getElementById('btn-timer-pause');
     const elTimerReset=document.getElementById('btn-timer-reset');
-    const elTimerHint=document.getElementById('timer-hint');
+    const elTimerRingBox=document.getElementById('timer-ring-box');
+    const elTimerRingFg=document.getElementById('timer-ring-fg');
+    const elTimerStatus=document.getElementById('timer-status');
+    const elTimerDoneMask=document.getElementById('timer-done-mask');
+    const elTimerDoneSub=document.getElementById('timer-done-sub');
+    const elTimerDoneDismiss=document.getElementById('timer-done-dismiss');
+    const elTimerDoneRestart=document.getElementById('timer-done-restart');
+    const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 90; // r=90
 
     const elHWPane=document.getElementById('hw-pane');
     const elHWClassPill=document.getElementById('hw-class-pill');
@@ -3595,10 +3794,13 @@ const helpMask = document.getElementById('help-mask');
 
       // 教學進度 / 倒數計時
       if(elProgTable) elProgTable.innerHTML = '';
-      if(elTimerDisplay) elTimerDisplay.textContent = '00:00';
-      if(elTimerHint) elTimerHint.textContent = '';
+      if(elTimerDisplay) elTimerDisplay.textContent = '05:00';
+      if(elTimerStatus) elTimerStatus.textContent = '就緒';
+      if(elTimerRingBox){ elTimerRingBox.classList.remove('running','done'); }
+      if(elTimerRingFg) elTimerRingFg.style.strokeDashoffset = '0';
       if(elTimerMin) elTimerMin.value = 5;
       if(elTimerSec) elTimerSec.value = 0;
+      hideTimerDoneModal?.();
 
 
       // 顯示模式回列表、狀態提示
@@ -4772,10 +4974,35 @@ classes.forEach((cls, idx)=>{
       const t = ensureTimerState();
       syncTimerFromEndAt();
       if(elTimerDisplay) elTimerDisplay.textContent = fmtTime(t.remainingSec);
-      if(elTimerHint){
-        if(t.running) elTimerHint.textContent = '倒數中…';
-        else if(t.remainingSec===0) elTimerHint.textContent = '時間到！';
-        else elTimerHint.textContent = '已暫停';
+
+      // 更新圓形進度環
+      if(elTimerRingFg){
+        const total = t.setSec || 1;
+        const ratio = t.setSec > 0 ? t.remainingSec / total : 0;
+        const offset = TIMER_RING_CIRCUMFERENCE * (1 - ratio);
+        elTimerRingFg.style.strokeDashoffset = offset;
+      }
+
+      // 更新狀態文字
+      if(elTimerStatus){
+        elTimerStatus.className = 'timer-status';
+        if(t.running){
+          elTimerStatus.textContent = '⏱ 倒數中…';
+          elTimerStatus.classList.add('running');
+        }else if(t.remainingSec === 0 && t.doneNotified){
+          elTimerStatus.textContent = '🔔 時間到！';
+          elTimerStatus.classList.add('done');
+        }else if(t.remainingSec === 0){
+          elTimerStatus.textContent = '就緒';
+        }else{
+          elTimerStatus.textContent = '⏸ 已暫停';
+        }
+      }
+
+      // 更新環容器動畫狀態
+      if(elTimerRingBox){
+        elTimerRingBox.classList.toggle('running', t.running);
+        elTimerRingBox.classList.toggle('done', !t.running && t.remainingSec === 0 && !!t.doneNotified);
       }
     }
 
@@ -4816,8 +5043,8 @@ classes.forEach((cls, idx)=>{
       if(!elTimerMin || !elTimerSec) return;
       const t = ensureTimerState();
       const sec = Math.max(0, Math.floor(t.remainingSec));
-      elTimerMin.value = Math.floor(sec/60);
-      elTimerSec.value = sec%60;
+      elTimerMin.value = Math.floor(sec / 60);
+      elTimerSec.value = sec % 60;
     }
 
     function startTimer(){
@@ -4994,14 +5221,54 @@ function onTimerDone(){
       const t = ensureTimerState();
       if(t.doneNotified) return;
       t.doneNotified = true;
-      try{ navigator.vibrate?.(250); }catch(_){ }
+      try{ navigator.vibrate?.([200, 100, 200, 100, 200]); }catch(_){ }
       stopTimerInterval();
       updateTimerDisplay();
-      // 跳出提示 + 音效
-      showInAppModal('計時結束','倒數計時');
+
+      // 顯示設定時長資訊
+      const totalSet = t.setSec || 0;
+      if(elTimerDoneSub){
+        elTimerDoneSub.textContent = `已完成 ${fmtTime(totalSet)} 倒數計時`;
+      }
+
+      // 跳出專用計時結束彈窗 + 音效
+      showTimerDoneModal();
       playAlarmSound();
       saveSession('timer done');
     }
+
+    function showTimerDoneModal(){
+      if(elTimerDoneMask) elTimerDoneMask.classList.add('show');
+    }
+    function hideTimerDoneModal(){
+      if(elTimerDoneMask) elTimerDoneMask.classList.remove('show');
+    }
+
+    // 彈窗按鈕事件
+    elTimerDoneDismiss?.addEventListener('click', ()=>{
+      try{ stopAlarmSound?.(); }catch(_){}
+      hideTimerDoneModal();
+    });
+    elTimerDoneRestart?.addEventListener('click', ()=>{
+      try{ stopAlarmSound?.(); }catch(_){}
+      hideTimerDoneModal();
+      resetTimer();
+      startTimer();
+    });
+    // 點背景也可關閉
+    elTimerDoneMask?.addEventListener('click', (e)=>{
+      if(e.target === elTimerDoneMask){
+        try{ stopAlarmSound?.(); }catch(_){}
+        hideTimerDoneModal();
+      }
+    });
+    // ESC 關閉
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape' && elTimerDoneMask?.classList.contains('show')){
+        try{ stopAlarmSound?.(); }catch(_){}
+        hideTimerDoneModal();
+      }
+    });
 
     function renderTimerUI(){
       ensureTimerState();
