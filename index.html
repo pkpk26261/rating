@@ -20,23 +20,22 @@
       --accent:#7c3aed; --accent-2:#22d3ee; --ok:#16a34a; --bad:#dc2626;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --chip-fz:14px;
-      --chip-py:8
+      --chip-py:8px;
+      --chip-px:12px;
+      --page-x: 10px;
+      --list-cols: 6;
+      --sidebar-w: 320px; /* ★ 新增：側欄展開寬度 */
+    }
 
     /* ★ 刪除學生清單：座號/姓名對齊（等寬字＋表格數字） */
     #del-stu-select{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-variant-numeric: tabular-nums;
-      white-space: pre; /* 讓 padStart/padEnd 用的空白能顯示 */
+      white-space: pre;
     }
     #del-stu-select option{
       font-family: inherit;
       white-space: pre;
-    }
-px;
-      --chip-px:12px;
-      --page-x: 10px;
-      --list-cols: 6;
-      --sidebar-w: 320px; /* ★ 新增：側欄展開寬度 */
     }
 
     /* ★ 淺色主題覆寫：當 <html data-theme="light"> 時套用 */
@@ -162,24 +161,14 @@ px;
       }
     }
 
-}
-        @keyframes auroraBreathe{
+    @keyframes auroraBreathe{
       0%  { background-size: 175% 175%, 165% 165%, 185% 185%, 150% 150%, 100% 100%; }
       100%{ background-size: 205% 205%, 185% 185%, 215% 215%, 170% 170%, 100% 100%; }
-    }
-
-100%{ background-size: 190% 190%, 170% 170%, 100% 100%; }
     }
 
     /* 動態減弱偏好時停用動畫 */
     @media (prefers-reduced-motion: reduce){
       body::before{ animation:none; transform:none; }
-    }
-
-
-    /* 減少動態偏好時，停用動畫 */
-    @media (prefers-reduced-motion: reduce){
-      body::before{ animation:none; }
     }
     /* ===== 頂部列 ===== */
     .topbar{
@@ -440,14 +429,86 @@ px;
     .card.placeholder{ border:1px dashed var(--line); background: repeating-linear-gradient(45deg, rgba(255,255,255,.015), rgba(255,255,255,.015) 8px, rgba(255,255,255,.02) 8px, rgba(255,255,255,.02) 16px); color: var(--muted); align-items:center; justify-content:center; gap:6px; min-height:72px; }
     .placeholder .seat-ind{ font-size:12px; opacity:.85; }
     .placeholder .empty-text{ font-weight:800; letter-spacing:.04em; }
-    .actions{ display:flex; gap:6px; margin-top:auto; }
-    .actions .btn{ flex:1; font-weight:900; font-size:12px; padding:6px 8px; border-width:1.5px; letter-spacing:.02em; border-radius:10px; }
-    .actions .btn.add{ background: linear-gradient(180deg, #22c55e, #16a34a); border-color:#15803d; color:white; box-shadow: 0 8px 18px rgba(34,197,94,.28), 0 0 0 1px rgba(255,255,255,.06) inset; }
-    .actions .btn.sub{ background: linear-gradient(180deg, #ef4444, #dc2626); border-color:#b91c1c; color:white; box-shadow: 0 8px 18px rgba(220,38,38,.28), 0 0 0 1px rgba(255,255,255,.06) inset; }
+    .actions{ display:flex; gap:4px; margin-top:auto; }
+    .actions .btn{ flex:1; font-weight:800; font-size:11px; padding:3px 0; height:26px; border-width:1px; letter-spacing:.01em; border-radius:8px; }
+    .actions .btn.add{ background: linear-gradient(180deg, #22c55e, #16a34a); border-color:#15803d; color:white; box-shadow: 0 3px 8px rgba(34,197,94,.2), 0 0 0 1px rgba(255,255,255,.06) inset; }
+    .actions .btn.sub{ background: linear-gradient(180deg, #ef4444, #dc2626); border-color:#b91c1c; color:white; box-shadow: 0 3px 8px rgba(220,38,38,.2), 0 0 0 1px rgba(255,255,255,.06) inset; }
     .score-chip{ position:absolute; top:4px; right:4px; padding:2px 6px; background:var(--scorechip); border:1px solid var(--line); border-radius:10px; font-weight:800; font-variant-numeric: tabular-nums; min-width:25px; text-align:center; font-size:12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
     .score-chip.bump{ animation: bump .35s ease; }
     @keyframes bump{ 0%{ transform:scale(1)} 30%{ transform:scale(1.18)} 60%{ transform:scale(0.96)} 100%{ transform:scale(1)} }
     .float-mark{ position:absolute; right:10px; bottom:30px; font-weight:900; pointer-events:none; opacity:0; transform: translateY(8px); filter: drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+
+    /* ★ 備註提示標記 */
+    /* ★ 備註浮窗：hover 姓名才顯示 */
+    .name{ position:relative; }
+    .name[data-note]::after{
+      content: attr(data-note);
+      position:absolute;
+      left:0; top:calc(100% + 6px);
+      z-index:30;
+      max-width:260px;
+      padding:8px 12px;
+      border-radius:10px;
+      font-size:12px;
+      font-weight:600;
+      line-height:1.5;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:#fef3c7;
+      background:rgba(30,30,30,.92);
+      border:1px solid rgba(245,158,11,.4);
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+      backdrop-filter:blur(8px);
+      pointer-events:none;
+      opacity:0;
+      transform:translateY(4px);
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    .name[data-note]::before{
+      content:'';
+      position:absolute;
+      left:12px; top:calc(100% - 1px);
+      z-index:31;
+      width:0; height:0;
+      border:6px solid transparent;
+      border-bottom-color:rgba(30,30,30,.92);
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .18s ease;
+    }
+    .name[data-note]:hover::after{ opacity:1; transform:translateY(0); }
+    .name[data-note]:hover::before{ opacity:1; }
+    :root[data-theme="light"] .name[data-note]::after{
+      color:#92400e;
+      background:rgba(255,255,255,.95);
+      border-color:rgba(217,119,6,.35);
+      box-shadow:0 8px 24px rgba(0,0,0,.12);
+    }
+    :root[data-theme="light"] .name[data-note]::before{
+      border-bottom-color:rgba(255,255,255,.95);
+    }
+    /* 備註小圓點（卡片上只顯示一個小指示點） */
+    .note-dot{
+      display:inline-block;
+      width:7px; height:7px;
+      border-radius:50%;
+      background:#f59e0b;
+      margin-left:4px;
+      flex-shrink:0;
+      box-shadow:0 0 6px rgba(245,158,11,.4);
+      vertical-align:middle;
+    }
+    :root[data-theme="light"] .note-dot{
+      background:#d97706;
+      box-shadow:0 0 4px rgba(217,119,6,.3);
+    }
+    /* 保留舊 class 以免作業表那邊壞掉 */
+    .note-indicator{ display:inline-flex; align-items:center; gap:0; padding:2px 5px; border-radius:8px; font-size:11px; font-weight:700; line-height:1.3; background:rgba(245,158,11,.18); border:1px solid rgba(245,158,11,.45); color:#f59e0b; margin-top:2px; cursor:default; white-space:nowrap; overflow:hidden; max-width:100%; transition: gap .2s, max-width .3s; }
+    .note-indicator .note-icon{ flex-shrink:0; }
+    .note-indicator .note-text{ max-width:0; overflow:hidden; opacity:0; transition: max-width .3s ease, opacity .2s ease; }
+    .note-indicator:hover .note-text{ max-width:200px; opacity:1; }
+    .note-indicator:hover{ gap:4px; padding:2px 7px; }
+    :root[data-theme="light"] .note-indicator{ background:rgba(245,158,11,.12); border-color:rgba(217,119,6,.4); color:#b45309; }
     .float-mark.show{ animation: floatUp .6s ease-out forwards; }
     @keyframes floatUp{ to{ opacity:1; transform: translateY(-24px); opacity:0; } }
 
@@ -542,6 +603,124 @@ px;
     @media (pointer: coarse){
       .seatboard{ gap:10px; }
       .seat-cell .tile{ padding:10px 12px; }
+    }
+
+    /* ===== 平板觸控：浮動選取列 ===== */
+    .pick-bar{
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 55;
+      display: none;  /* JS 控制 */
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(15,23,42,.94);
+      backdrop-filter: blur(14px) saturate(1.2);
+      border-top: 1px solid rgba(124,58,237,.35);
+      box-shadow: 0 -8px 30px rgba(0,0,0,.35);
+      animation: pickBarSlideUp .2s ease;
+    }
+    :root[data-theme="light"] .pick-bar{
+      background: rgba(255,255,255,.94);
+      border-top-color: rgba(124,58,237,.25);
+      box-shadow: 0 -8px 24px rgba(0,0,0,.1);
+    }
+    .pick-bar.show{ display:flex; }
+    @keyframes pickBarSlideUp{ from{ transform:translateY(100%); } to{ transform:translateY(0); } }
+
+    .pick-bar__label{
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pick-bar__label .seat-badge{
+      font-size: 13px;
+    }
+    .pick-bar__name{
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pick-bar__quick{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .pick-bar__quick label{
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .pick-bar__quick .input{
+      width: 60px;
+      text-align: center;
+      padding: 6px 8px;
+      font-size: 15px;
+      min-width: auto;
+    }
+    .pick-bar__quick .btn{
+      padding: 6px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .pick-bar__cancel{
+      padding: 8px 14px;
+      font-size: 13px;
+      border: 1px solid rgba(255,90,90,.4);
+      border-radius: 10px;
+      background: rgba(255,90,90,.12);
+      color: #ff6b6b;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+    :root[data-theme="light"] .pick-bar__cancel{
+      border-color: rgba(220,38,38,.3);
+      background: rgba(220,38,38,.08);
+      color: #dc2626;
+    }
+
+    /* ===== 平板觸控：選取狀態時空位高亮 ===== */
+    .seatboard.has-picked .seat-cell:not(.filled){
+      background: rgba(124,58,237,.08);
+      border-color: rgba(124,58,237,.35);
+      border-style: solid;
+      animation: seatPulse 1.6s ease-in-out infinite;
+    }
+    :root[data-theme="light"] .seatboard.has-picked .seat-cell:not(.filled){
+      background: rgba(124,58,237,.06);
+    }
+    @keyframes seatPulse{
+      0%, 100%{ box-shadow: 0 0 0 0 rgba(124,58,237,.15); }
+      50%{ box-shadow: 0 0 0 4px rgba(124,58,237,.2); }
+    }
+    .seatboard.has-picked .seat-cell:not(.filled) .seat-no{
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      opacity: 1;
+    }
+
+    /* 選取狀態：已佔位的格子顯示交換指示 */
+    .seatboard.has-picked .seat-cell.filled{
+      opacity: .75;
+    }
+    .seatboard.has-picked .seat-cell.filled:active{
+      opacity: 1;
+    }
+
+    /* 浮動列出現時，main 底部留 padding 避免遮擋 */
+    body.pick-active .main{
+      padding-bottom: 72px;
     }
 
 
@@ -1047,6 +1226,779 @@ px;
       box-shadow: none !important;
     }
 
+    /* ================================================================
+       介面優化 — 全面視覺提升
+       ================================================================ */
+
+    /* ===== 全域平滑捲動 & 文字渲染 ===== */
+    html{ scroll-behavior: smooth; }
+    body{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+
+    /* ===== 全域捲軸美化 ===== */
+    ::-webkit-scrollbar{ width:8px; height:8px; }
+    ::-webkit-scrollbar-track{ background: rgba(255,255,255,.03); border-radius:8px; }
+    ::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius:8px; border:2px solid transparent; background-clip:padding-box; transition: background .2s; }
+    ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.22); }
+    :root[data-theme="light"] ::-webkit-scrollbar-track{ background: rgba(0,0,0,.03); }
+    :root[data-theme="light"] ::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); }
+    :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover{ background: rgba(0,0,0,.22); }
+
+    /* Firefox 捲軸 */
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+    :root[data-theme="light"] * { scrollbar-color: rgba(0,0,0,.12) transparent; }
+
+    /* ===== 選取文字色 ===== */
+    ::selection{ background: color-mix(in oklab, var(--accent) 35%, transparent); color: var(--fg); }
+
+    /* ===== Topbar 增強 ===== */
+    .topbar{
+      background: rgba(15,23,42,.7) !important;
+      backdrop-filter: blur(16px) saturate(1.4) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+      border-bottom: 1px solid rgba(255,255,255,.06) !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15), 0 8px 32px rgba(0,0,0,.08);
+    }
+    :root[data-theme="light"] .topbar{
+      background: rgba(255,255,255,.78) !important;
+      backdrop-filter: blur(16px) saturate(1.3) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(1.3) !important;
+      border-bottom-color: rgba(0,0,0,.08) !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.04);
+    }
+
+    /* 標題漸層文字 */
+    .title{
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    :root[data-theme="light"] .title{
+      background: linear-gradient(135deg, #6d28d9, #0891b2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title::after{
+      opacity: .8 !important;
+      width: 72px !important;
+      height: 2.5px !important;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent)) !important;
+    }
+
+    /* ===== 日期時間顯示強化 ===== */
+    .dt-display{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .03em;
+      opacity: 1 !important;
+    }
+    #dt-time{
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+    :root[data-theme="light"] #dt-time{ color: #0891b2; }
+
+    /* ===== Segmented 控制器強化 ===== */
+    .seg{
+      background: rgba(255,255,255,.04) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      backdrop-filter: blur(6px);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+    }
+    :root[data-theme="light"] .seg{
+      background: rgba(0,0,0,.04) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
+    }
+    .seg-btn{
+      transition: all .2s ease;
+      border-radius: 8px;
+      position: relative;
+    }
+    .seg-btn:hover:not(.active){
+      background: rgba(255,255,255,.06);
+    }
+    :root[data-theme="light"] .seg-btn:hover:not(.active){
+      background: rgba(0,0,0,.05);
+    }
+    .seg-btn.active{
+      background: linear-gradient(135deg, rgba(124,58,237,.3), rgba(34,211,238,.15)) !important;
+      box-shadow: inset 0 0 0 1px rgba(124,58,237,.3), 0 2px 8px rgba(124,58,237,.15);
+      color: #fff;
+    }
+    :root[data-theme="light"] .seg-btn.active{
+      background: linear-gradient(135deg, rgba(124,58,237,.2), rgba(34,211,238,.1)) !important;
+      color: #4c1d95;
+      box-shadow: inset 0 0 0 1px rgba(124,58,237,.25), 0 2px 6px rgba(124,58,237,.1);
+    }
+
+    /* ===== 側欄 & Main 面板玻璃效果 ===== */
+    .sidebar, .main{
+      background: rgba(15,23,42,.5) !important;
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      border: 1px solid rgba(255,255,255,.06) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.04);
+      transition: box-shadow .3s ease;
+    }
+    :root[data-theme="light"] .sidebar,
+    :root[data-theme="light"] .main{
+      background: rgba(255,255,255,.65) !important;
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      border: 1px solid rgba(0,0,0,.06) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+
+    /* ===== 學生卡片增強 ===== */
+    .card{
+      background: rgba(255,255,255,.03) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-radius: 16px !important;
+      padding: 10px !important;
+      transition: all .25s cubic-bezier(.2,.8,.2,1) !important;
+      backdrop-filter: blur(4px);
+    }
+    .card:hover{
+      transform: translateY(-2px) !important;
+      border-color: rgba(124,58,237,.3) !important;
+      box-shadow: 0 12px 32px rgba(124,58,237,.12), 0 4px 12px rgba(0,0,0,.15) !important;
+      background: rgba(255,255,255,.05) !important;
+    }
+    :root[data-theme="light"] .card{
+      background: rgba(255,255,255,.75) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    :root[data-theme="light"] .card:hover{
+      background: rgba(255,255,255,.9) !important;
+      border-color: rgba(124,58,237,.25) !important;
+      box-shadow: 0 8px 24px rgba(124,58,237,.08), 0 2px 8px rgba(0,0,0,.06) !important;
+    }
+    .card.placeholder{
+      opacity: .5;
+      border: 1px dashed rgba(255,255,255,.08) !important;
+      transition: opacity .3s ease;
+    }
+    .card.placeholder:hover{
+      opacity: .7;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* 分數角標增強 */
+    .score-chip{
+      background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(34,211,238,.1)) !important;
+      border: 1px solid rgba(124,58,237,.2) !important;
+      color: var(--accent-2);
+      font-size: 13px !important;
+      font-weight: 900;
+      padding: 2px 8px !important;
+      border-radius: 12px !important;
+      backdrop-filter: blur(4px);
+    }
+    :root[data-theme="light"] .score-chip{
+      background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(6,182,212,.06)) !important;
+      border: 1px solid rgba(124,58,237,.15) !important;
+      color: #6d28d9;
+    }
+
+    /* 座號徽章增強 */
+    .seat-badge{
+      background: linear-gradient(135deg, color-mix(in oklab, var(--seat) 28%, black), color-mix(in oklab, var(--seat) 22%, black)) !important;
+      border: 1px solid color-mix(in oklab, var(--seat) 50%, transparent) !important;
+      font-size: 11px !important;
+      padding: 2px 7px !important;
+      letter-spacing: .02em;
+    }
+
+    /* +1 / -1 按鈕增強 */
+    .actions .btn{
+      border-radius: 8px !important;
+      font-weight: 800 !important;
+      font-size: 11px !important;
+      height: 26px !important;
+      padding: 3px 0 !important;
+      transition: all .15s ease !important;
+    }
+    .actions .btn.add{
+      background: linear-gradient(180deg, #22c55e, #16a34a) !important;
+      border-color: rgba(21,128,61,.6) !important;
+      box-shadow: 0 2px 6px rgba(34,197,94,.18), inset 0 1px 0 rgba(255,255,255,.12) !important;
+    }
+    .actions .btn.add:hover{
+      box-shadow: 0 3px 10px rgba(34,197,94,.3), inset 0 1px 0 rgba(255,255,255,.15) !important;
+      transform: translateY(-1px);
+    }
+    .actions .btn.sub{
+      background: linear-gradient(180deg, #ef4444, #dc2626) !important;
+      border-color: rgba(185,28,28,.6) !important;
+      box-shadow: 0 2px 6px rgba(220,38,38,.18), inset 0 1px 0 rgba(255,255,255,.12) !important;
+    }
+    .actions .btn.sub:hover{
+      box-shadow: 0 3px 10px rgba(220,38,38,.3), inset 0 1px 0 rgba(255,255,255,.15) !important;
+      transform: translateY(-1px);
+    }
+
+    /* ===== 通用按鈕增強 ===== */
+    .btn{
+      transition: all .2s cubic-bezier(.2,.8,.2,1) !important;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.06) !important;
+    }
+    .btn:active{
+      transform: translateY(0) scale(.98) !important;
+    }
+    :root[data-theme="light"] .btn:hover{
+      box-shadow: 0 4px 16px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.5) !important;
+    }
+
+    /* ===== 排行榜增強 ===== */
+    .board{
+      background: rgba(255,255,255,.02) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      backdrop-filter: blur(4px);
+    }
+    :root[data-theme="light"] .board{
+      background: rgba(255,255,255,.5) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+    }
+    .board .row{
+      transition: all .2s ease;
+      border-radius: 12px !important;
+      margin-bottom: 2px;
+    }
+    .board .row:hover{
+      background: rgba(124,58,237,.08) !important;
+      transform: translateX(2px);
+    }
+    :root[data-theme="light"] .board .row:hover{
+      background: rgba(124,58,237,.05) !important;
+    }
+    .medal{
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      transition: transform .2s ease;
+    }
+    .board .row:hover .medal{
+      transform: scale(1.1);
+    }
+
+    /* ===== Modal 彈窗動畫增強 ===== */
+    .modal-mask{
+      backdrop-filter: blur(12px) saturate(1.2) !important;
+      -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
+      transition: opacity .2s ease;
+    }
+    .modal-mask.show{
+      animation: modalFadeIn .2s ease !important;
+    }
+    @keyframes modalFadeIn{
+      from{ opacity:0; }
+      to{ opacity:1; }
+    }
+    .modal{
+      background: var(--card) !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 24px 80px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.2) !important;
+      animation: modalSlideUp .25s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes modalSlideUp{
+      from{ opacity:0; transform: translateY(20px) scale(.96); }
+      to{ opacity:1; transform: translateY(0) scale(1); }
+    }
+    :root[data-theme="light"] .modal{
+      border: 1px solid rgba(0,0,0,.08) !important;
+      box-shadow: 0 24px 80px rgba(0,0,0,.15), 0 8px 24px rgba(0,0,0,.08) !important;
+    }
+    .modal header{
+      border-bottom: 1px solid rgba(255,255,255,.06) !important;
+      background: rgba(255,255,255,.02) !important;
+      border-radius: 20px 20px 0 0 !important;
+    }
+    :root[data-theme="light"] .modal header{
+      background: rgba(0,0,0,.02) !important;
+      border-bottom: 1px solid rgba(0,0,0,.06) !important;
+    }
+    .modal .close{
+      transition: all .2s ease;
+      border-radius: 10px !important;
+    }
+    .modal .close:hover{
+      background: rgba(255,90,90,.15);
+      border-color: rgba(255,90,90,.3);
+      color: #ff5a5a;
+      transform: scale(1.05);
+    }
+
+    /* ===== 表格樣式增強（作業成績 + 教學進度） ===== */
+    .hwtbl-wrap, .progtbl-wrap{
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-radius: 14px !important;
+      background: rgba(255,255,255,.02) !important;
+    }
+    :root[data-theme="light"] .hwtbl-wrap,
+    :root[data-theme="light"] .progtbl-wrap{
+      border: 1px solid rgba(0,0,0,.06) !important;
+      background: rgba(255,255,255,.5) !important;
+    }
+    .hwtbl th{
+      background: rgba(15,23,42,.92) !important;
+      backdrop-filter: blur(8px) !important;
+      border-bottom: 2px solid rgba(124,58,237,.2) !important;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    :root[data-theme="light"] .hwtbl th{
+      background: rgba(255,255,255,.95) !important;
+      border-bottom: 2px solid rgba(124,58,237,.12) !important;
+    }
+    .hwtbl tbody tr{
+      transition: background .15s ease;
+    }
+    .hwtbl tbody tr:hover{
+      background: rgba(124,58,237,.06) !important;
+    }
+    :root[data-theme="light"] .hwtbl tbody tr:hover{
+      background: rgba(124,58,237,.04) !important;
+    }
+    .hwtbl tbody tr:nth-child(even){
+      background: rgba(255,255,255,.015);
+    }
+    :root[data-theme="light"] .hwtbl tbody tr:nth-child(even){
+      background: rgba(0,0,0,.015);
+    }
+
+    .progtbl th{
+      border-bottom: 2px solid rgba(124,58,237,.15) !important;
+      font-weight: 800;
+    }
+    .progtbl tbody tr{
+      transition: background .15s ease;
+    }
+    .progtbl tbody tr:hover{
+      background: rgba(124,58,237,.05);
+    }
+
+    /* 表格輸入框增強 */
+    .hwtbl input[type="number"]{
+      border-radius: 10px !important;
+      transition: all .2s ease;
+    }
+    .hwtbl input[type="number"]:hover{
+      border-color: rgba(124,58,237,.3);
+    }
+    .prog-input{
+      transition: all .2s ease !important;
+    }
+    .prog-input:focus{
+      border-color: color-mix(in oklab, var(--accent) 55%, transparent) !important;
+      box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+    }
+
+    /* ===== 倒數計時顯示增強 ===== */
+    .timer-display{
+      font-size: clamp(56px, 10vw, 120px) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)) !important;
+      border: 1px solid rgba(124,58,237,.15) !important;
+      border-radius: 20px !important;
+      padding: 28px 20px !important;
+      position: relative;
+      overflow: hidden;
+      text-shadow: 0 0 40px rgba(124,58,237,.15);
+    }
+    .timer-display::before{
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(124,58,237,.06), rgba(34,211,238,.04));
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    :root[data-theme="light"] .timer-display{
+      border-color: rgba(124,58,237,.1) !important;
+      background: rgba(255,255,255,.6) !important;
+      text-shadow: none;
+    }
+
+    /* ===== 抽號模式增強 ===== */
+    .controls-card, .spotlight-card{
+      border: 1px solid rgba(255,255,255,.06) !important;
+      background: rgba(255,255,255,.03) !important;
+      border-radius: 16px !important;
+      backdrop-filter: blur(4px);
+    }
+    :root[data-theme="light"] .controls-card,
+    :root[data-theme="light"] .spotlight-card{
+      background: rgba(255,255,255,.5) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+    }
+    .chip{
+      transition: all .2s ease;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      background: rgba(255,255,255,.03) !important;
+    }
+    .chip:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .chip.big{
+      border: 1px solid rgba(124,58,237,.2) !important;
+      background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(34,211,238,.06)) !important;
+      box-shadow: 0 4px 16px rgba(124,58,237,.12);
+    }
+    :root[data-theme="light"] .chip{
+      background: rgba(255,255,255,.8) !important;
+      border: 1px solid rgba(0,0,0,.08) !important;
+    }
+    :root[data-theme="light"] .chip.big{
+      background: linear-gradient(135deg, rgba(124,58,237,.06), rgba(6,182,212,.04)) !important;
+    }
+
+    .draw-result-wrap, .draw-history-wrap{
+      border: 1px solid rgba(255,255,255,.04) !important;
+      border-radius: 14px !important;
+      background: rgba(255,255,255,.02) !important;
+    }
+    :root[data-theme="light"] .draw-result-wrap,
+    :root[data-theme="light"] .draw-history-wrap{
+      border: 1px solid rgba(0,0,0,.04) !important;
+      background: rgba(255,255,255,.4) !important;
+    }
+    .draw-row{
+      transition: all .2s ease;
+      border: 1px solid rgba(255,255,255,.04) !important;
+      border-radius: 12px !important;
+    }
+    .draw-row:hover{
+      background: rgba(124,58,237,.04) !important;
+      border-color: rgba(124,58,237,.15) !important;
+    }
+
+    /* ===== 座位表增強 ===== */
+    .seatboard{
+      border: 1px solid rgba(255,255,255,.06) !important;
+      background: rgba(255,255,255,.02) !important;
+      border-radius: 16px !important;
+    }
+    :root[data-theme="light"] .seatboard{
+      background: rgba(255,255,255,.4) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+    }
+    .seat-cell{
+      border-radius: 14px !important;
+      transition: all .2s ease;
+    }
+    .seat-cell:hover{
+      background: rgba(124,58,237,.04);
+    }
+    .seat-cell .tile{
+      border-radius: 14px !important;
+      transition: all .15s cubic-bezier(.2,.8,.2,1) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+    }
+    .seat-cell .tile:hover{
+      transform: scale(1.03) !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,.2) !important;
+    }
+    :root[data-theme="light"] .seat-cell .tile{
+      border: 1px solid rgba(0,0,0,.06) !important;
+    }
+
+    /* 講台增強 */
+    .stage{
+      border-radius: 12px !important;
+      background: linear-gradient(135deg, rgba(124,58,237,.2), rgba(34,211,238,.1)) !important;
+      border: 1px solid rgba(124,58,237,.2) !important;
+      font-weight: 900;
+      letter-spacing: .1em;
+    }
+    :root[data-theme="light"] .stage{
+      background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(6,182,212,.06)) !important;
+      border: 1px solid rgba(124,58,237,.15) !important;
+    }
+
+    /* ===== 未安排名單增強 ===== */
+    .unassigned{
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-radius: 14px !important;
+      background: rgba(255,255,255,.02) !important;
+    }
+    :root[data-theme="light"] .unassigned{
+      background: rgba(255,255,255,.4) !important;
+      border: 1px solid rgba(0,0,0,.06) !important;
+    }
+
+    /* ===== 下拉選單增強 ===== */
+    .select{
+      transition: all .2s ease;
+      border-radius: 12px !important;
+    }
+    .select:hover{
+      border-color: rgba(124,58,237,.3);
+    }
+    .select:focus{
+      border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+      outline: none;
+    }
+
+    /* ===== 輸入框焦點增強 ===== */
+    .input{
+      transition: all .2s ease;
+    }
+    .input:hover{
+      border-color: rgba(124,58,237,.25);
+    }
+
+    /* ===== 狀態列文字 ===== */
+    .status-inline{
+      font-size: 12px;
+      opacity: .75;
+      transition: opacity .3s ease;
+    }
+    .status-inline:hover{
+      opacity: 1;
+    }
+
+    /* ===== 側欄切換按鈕增強 ===== */
+    .side-toggle{
+      border: 1px solid rgba(255,255,255,.06) !important;
+      background: rgba(15,23,42,.8) !important;
+      backdrop-filter: blur(8px);
+      border-radius: 14px !important;
+      transition: all .25s ease !important;
+    }
+    .side-toggle:hover{
+      background: rgba(124,58,237,.15) !important;
+      border-color: rgba(124,58,237,.25) !important;
+      box-shadow: 0 8px 24px rgba(124,58,237,.15) !important;
+    }
+    :root[data-theme="light"] .side-toggle{
+      background: rgba(255,255,255,.85) !important;
+      border: 1px solid rgba(0,0,0,.08) !important;
+    }
+    :root[data-theme="light"] .side-toggle:hover{
+      background: rgba(124,58,237,.08) !important;
+    }
+
+    /* ===== 拖放遮罩增強 ===== */
+    .dropmask{
+      backdrop-filter: blur(12px) !important;
+      background: rgba(2,6,23,.65) !important;
+    }
+    .dropmask .msg{
+      background: var(--card) !important;
+      border: 1px solid rgba(124,58,237,.3) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 16px 50px rgba(124,58,237,.15) !important;
+      font-size: 16px;
+    }
+
+    /* ===== 清除設定彈窗項目增強 ===== */
+    .clear-opt{
+      transition: all .15s ease;
+      border-radius: 12px !important;
+    }
+    .clear-opt:hover{
+      background: rgba(124,58,237,.05);
+      border-color: rgba(124,58,237,.2) !important;
+    }
+
+    /* ===== Pill 標籤增強 ===== */
+    .pill{
+      background: rgba(124,58,237,.08);
+      border: 1px solid rgba(124,58,237,.2) !important;
+      color: var(--accent-2);
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    :root[data-theme="light"] .pill{
+      background: rgba(124,58,237,.06);
+      color: #6d28d9;
+    }
+
+    /* ===== Badge 標籤增強 ===== */
+    .badge{
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08) !important;
+      font-weight: 600;
+      padding: 3px 8px !important;
+      transition: all .2s ease;
+    }
+    :root[data-theme="light"] .badge{
+      background: rgba(0,0,0,.03);
+      border: 1px solid rgba(0,0,0,.08) !important;
+    }
+
+    /* ===== 作業標題增強 ===== */
+    .hw-title{
+      font-size: 17px;
+      letter-spacing: .05em;
+    }
+
+    /* ===== 備註浮窗 & 小圓點增強 ===== */
+    .note-dot{
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .name[data-note]:hover .note-dot{
+      transform: scale(1.3);
+      box-shadow: 0 0 10px rgba(245,158,11,.5);
+    }
+
+    /* ===== In-app Modal 增強 ===== */
+    .ui-modal__panel{
+      border-radius: 20px !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      box-shadow: 0 24px 60px rgba(0,0,0,.4) !important;
+      animation: modalSlideUp .25s cubic-bezier(.2,.8,.2,1);
+    }
+    :root[data-theme="light"] .ui-modal__panel{
+      border: 1px solid rgba(0,0,0,.08) !important;
+      box-shadow: 0 24px 60px rgba(0,0,0,.12) !important;
+    }
+    .ui-modal__backdrop{
+      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,.4) !important;
+    }
+
+    /* ===== 教學進度勾選框增強 ===== */
+    .prog-check{
+      width: 22px !important;
+      height: 22px !important;
+      accent-color: var(--accent) !important;
+      cursor: pointer;
+      transition: transform .15s ease;
+    }
+    .prog-check:hover{
+      transform: scale(1.15);
+    }
+
+    /* ===== 分頁選單增強 ===== */
+    .menu{
+      border-radius: 16px !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      backdrop-filter: blur(16px) saturate(1.3) !important;
+      box-shadow: 0 16px 48px rgba(0,0,0,.25) !important;
+      animation: modalSlideUp .15s ease;
+    }
+    :root[data-theme="light"] .menu{
+      border: 1px solid rgba(0,0,0,.08) !important;
+      box-shadow: 0 16px 48px rgba(0,0,0,.1) !important;
+    }
+    .menu-item{
+      transition: all .15s ease !important;
+      border-radius: 12px !important;
+      font-weight: 600;
+    }
+    .menu-item:hover{
+      background: rgba(124,58,237,.1) !important;
+    }
+    :root[data-theme="light"] .menu-item:hover{
+      background: rgba(124,58,237,.06) !important;
+    }
+
+    /* ===== 響應式增強 ===== */
+    @media (max-width: 880px){
+      .topbar{
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto auto auto;
+        gap: 6px;
+        text-align: center;
+        padding: 8px var(--page-x) !important;
+      }
+      .topbar__left, .topbar__right{
+        justify-content: center !important;
+        flex-wrap: wrap;
+      }
+      .title-stack{ grid-column: 1 !important; }
+      .title{ font-size: 16px !important; }
+
+      .card{ padding: 8px !important; }
+      .actions .btn{ padding: 5px 6px !important; font-size: 11px !important; }
+
+      .controls-row{
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px;
+      }
+      .select{ min-width: 100% !important; }
+      .input{ min-width: 100% !important; }
+
+      .draw-wrap{ gap: 12px !important; }
+
+      .modal{
+        width: min(95vw, 720px) !important;
+        max-height: 88vh !important;
+        border-radius: 16px !important;
+      }
+    }
+
+    @media (max-width: 520px){
+      .topbar{ padding: 6px 8px !important; min-height: 48px !important; }
+      .title{ font-size: 14px !important; }
+      .seg-btn{ padding: 5px 8px !important; font-size: 11px !important; }
+      .btn{ font-size: 12px !important; padding: 0 8px !important; height: 34px !important; }
+      .timer-display{ font-size: clamp(40px, 12vw, 72px) !important; padding: 20px 12px !important; }
+      .chip.big{ font-size: 13px !important; }
+    }
+
+    /* ===== 焦點可見性（鍵盤導航） ===== */
+    :focus-visible{
+      outline: 2px solid var(--accent) !important;
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+    .btn:focus-visible{
+      box-shadow: 0 0 0 3px rgba(124,58,237,.25) !important;
+    }
+
+    /* ===== 載入漸現動畫 ===== */
+    .card.show{
+      animation: cardReveal .4s cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes cardReveal{
+      from{ opacity: 0; transform: translateY(12px) scale(.97); }
+      to{ opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===== 模式切換的頁面過渡 ===== */
+    #students, #seatwrap, #hw-pane, #draw-pane, #progress-pane, #timer-pane{
+      animation: pageFadeIn .3s ease;
+    }
+    @keyframes pageFadeIn{
+      from{ opacity: 0; }
+      to{ opacity: 1; }
+    }
+
+    /* ===== 倒數計時按鈕預設與快捷按鈕間距 ===== */
+    .timer-presets{
+      gap: 8px !important;
+    }
+    .timer-presets .btn{
+      min-width: 48px;
+      font-weight: 800 !important;
+    }
+
+    /* ===== 搜尋命中動畫增強 ===== */
+    .card.match{
+      border-color: rgba(124,58,237,.4) !important;
+      box-shadow: 0 4px 20px rgba(124,58,237,.2), 0 0 0 1px rgba(124,58,237,.2) !important;
+    }
+
+    /* ===== 匯出設定彈窗中的班級標籤增強 ===== */
+    #export-class-list label{
+      transition: all .15s ease;
+    }
+    #export-class-list label:hover{
+      border-color: rgba(124,58,237,.3) !important;
+      background: rgba(124,58,237,.04) !important;
+    }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -1055,8 +2007,8 @@ px;
     <header class="topbar">
       <div class="topbar__left">
         <div class="import-block">
-          <label class="btn" for="file-input" title="上傳 Excel">📂 匯入</label>
-          <input id="file-input" type="file" accept=".xlsx,.xls" hidden />
+          <label class="btn" for="file-input" title="上傳一或多個 Excel 檔案">📂 匯入</label>
+          <input id="file-input" type="file" accept=".xlsx,.xls" hidden multiple />
         </div>
         <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
         <div id="status" class="status-inline">尚未載入名單。</div>
@@ -1107,7 +2059,7 @@ px;
           <div class="divider"></div>
 
           <ol>
-            <li><b>匯入成績</b>：支援匯入 Excel（每個工作表＝一個班級）。建議先用下方的「下載 Excel 範例檔」建立資料。</li>
+            <li><b>匯入成績</b>：支援一次匯入多個 Excel 檔案（每個檔案＝一個班級）。可匯入後再用「✏️ 改班級名」重新命名班級。也支援單檔多工作表（每表＝一班）。</li>
             <li><b>左側欄</b>：顯示「🏆 加分排行榜」，用來查看目前班級的加分排名（在加扣分/成績相關模式會更新）。</li>
             <li><b>模式切換</b>：在頁面上方可切換 <b>座位區</b>／<b>安排座位</b>／<b>作業成績</b>／<b>抽號</b>／<b>倒數計時</b> 等功能。</li>
             <li><b>新增/刪除學生</b>：在學生名單/作業成績等頁面可新增轉學生，也可開啟刪除介面批次選取移除。</li>
@@ -1132,6 +2084,7 @@ px;
           <select id="class-select" class="select" disabled>
             <option value="" selected>請先上傳學生名單</option>
           </select>
+          <button id="btn-rename-class" class="btn" disabled title="重新命名目前班級">✏️ 改班級名</button>
           <button id="btn-add-student" class="btn" disabled>＋ 新增學生</button>
           <button id="btn-del-student" class="btn" disabled>－ 刪除學生</button>
           <input id="search-input" class="input" type="search" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
@@ -1391,6 +2344,103 @@ px;
 
 
   <!-- ★ 作業成績：學生備註彈窗 -->
+  <!-- ★ 清除設定彈窗 -->
+  <div id="clear-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="clear-title">
+    <div class="modal" role="document" style="width:min(480px, 92vw);">
+      <header>
+        <h3 id="clear-title">🧹 清除資料</h3>
+        <button id="clear-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">請勾選要清除的資料類別：</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="classMap"> 📋 學生名單（班級、座號、姓名）
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="scores"> ⭐ 平時分數（加扣分）
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="hw"> 📝 作業成績
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="seating"> 🪑 座位表（格數與配位）
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="notes"> 📌 學生備註
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="progress"> 📖 教學進度
+          </label>
+
+        </div>
+        <div style="height:1px; background:var(--line); margin:12px 0;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:8px;">
+            <button id="clear-sel-all" class="btn" style="font-size:12px; padding:3px 10px;">全選</button>
+            <button id="clear-sel-none" class="btn" style="font-size:12px; padding:3px 10px;">全不選</button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="clear-cancel" class="btn">取消</button>
+            <button id="clear-go" class="btn sub">清除選取項目</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 匯出設定彈窗 -->
+  <div id="export-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <div class="modal" role="document" style="width:min(520px, 92vw);">
+      <header>
+        <h3 id="export-title">💾 匯出設定</h3>
+        <button id="export-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <!-- 檔案格式 -->
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:700; font-size:15px;">檔案格式</label>
+          <div id="export-format-group" style="display:flex; gap:12px; margin-top:8px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="radio" name="export-format" value="xlsx" checked> Excel (.xlsx)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="radio" name="export-format" value="csv"> CSV (.csv)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="radio" name="export-format" value="ods"> ODS (.ods)
+            </label>
+          </div>
+          <div id="export-csv-hint" style="font-size:12px; color:var(--muted); margin-top:4px; display:none;">
+            ⚠ CSV 格式每個班級會各產生一個檔案。
+          </div>
+        </div>
+        <div style="height:1px; background:var(--line); margin:10px 0;"></div>
+        <!-- 班級選擇 -->
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <label style="font-weight:700; font-size:15px;">匯出班級</label>
+            <div style="display:flex; gap:8px;">
+              <button id="export-sel-all" class="btn" style="font-size:12px; padding:3px 10px;">全選</button>
+              <button id="export-sel-none" class="btn" style="font-size:12px; padding:3px 10px;">全不選</button>
+            </div>
+          </div>
+          <div id="export-class-list" style="display:flex; flex-wrap:wrap; gap:8px; max-height:200px; overflow-y:auto; padding:4px 0;"></div>
+        </div>
+        <div style="height:1px; background:var(--line); margin:14px 0 10px;"></div>
+        <!-- 教學進度 -->
+        <label id="export-prog-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;">
+          <input type="checkbox" id="export-prog" checked> 另外匯出教學進度（獨立檔案）
+        </label>
+        <!-- 動作列 -->
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+          <button id="export-cancel" class="btn">取消</button>
+          <button id="export-go" class="btn add">匯出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="note-title">
     <div class="modal" role="document">
       <header>
@@ -1420,6 +2470,21 @@ px;
 
 </div>
 
+  <!-- 平板觸控：浮動選取列 -->
+  <div id="pick-bar" class="pick-bar" aria-live="polite">
+    <div class="pick-bar__label">
+      <span>✋ 已選取</span>
+      <span id="pick-bar-seat" class="seat-badge"></span>
+      <span id="pick-bar-name" class="pick-bar__name"></span>
+    </div>
+    <div class="pick-bar__quick">
+      <label for="pick-bar-num">→ 座位#</label>
+      <input id="pick-bar-num" type="number" class="input" min="1" placeholder="號" inputmode="numeric">
+      <button id="pick-bar-go" class="btn">放入</button>
+    </div>
+    <button id="pick-bar-cancel" class="pick-bar__cancel">✕ 取消</button>
+  </div>
+
   <script>
     /* ====== 全域狀態 ====== */
     const state={
@@ -1438,6 +2503,13 @@ px;
 
     let pickedId = null;
 
+    /* ===== 浮動選取列元素 ===== */
+    const elPickBar      = document.getElementById('pick-bar');
+    const elPickBarSeat   = document.getElementById('pick-bar-seat');
+    const elPickBarName   = document.getElementById('pick-bar-name');
+    const elPickBarNum    = document.getElementById('pick-bar-num');
+    const elPickBarGo     = document.getElementById('pick-bar-go');
+    const elPickBarCancel = document.getElementById('pick-bar-cancel');
 
     function pickTileById(id){
       if(!id) return;
@@ -1449,6 +2521,22 @@ px;
       // 視覺提示（在座位模式才顯示）
       const hint = document.getElementById('seat-hint');
       if (hint) hint.textContent = '已選取：點任一座位格放置；點右側空白區可放回未安排。';
+
+      // ★ 浮動選取列 & 空位高亮
+      const seatboard = document.getElementById('seatboard');
+      seatboard?.classList.add('has-picked');
+      document.body.classList.add('pick-active');
+
+      // 找出學生資訊顯示在浮動列
+      const cls = document.getElementById('class-select')?.value || '';
+      const list = state.classMap[cls] || [];
+      const stu = list.find(s => s.id === id);
+      if(elPickBar){
+        elPickBarSeat.textContent = stu?.seat ? `#${stu.seat}` : '';
+        elPickBarName.textContent = stu?.name || id;
+        elPickBarNum.value = '';
+        elPickBar.classList.add('show');
+      }
     }
 
     function clearPicked(){
@@ -1460,7 +2548,40 @@ px;
           ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
           : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
       }
+
+      // ★ 清除浮動列 & 空位高亮
+      const seatboard = document.getElementById('seatboard');
+      seatboard?.classList.remove('has-picked');
+      document.body.classList.remove('pick-active');
+      elPickBar?.classList.remove('show');
     }
+
+    /* ===== 浮動列：快速座號放入 ===== */
+    function pickBarPlaceBySeatNum(){
+      if(!pickedId) return;
+      const cls = document.getElementById('class-select')?.value;
+      if(!cls) return;
+      const st = ensureSeatState(cls);
+      const num = parseInt(elPickBarNum?.value, 10);
+      if(!num || num < 1) return;
+
+      const {rows, cols} = getCurrentRowsCols(cls);
+      // 將座位號轉成 (r,c) — 跟 seatIndexLabel 反推
+      let targetR = null, targetC = null;
+      for(let r=1; r<=rows; r++){
+        for(let c=1; c<=cols; c++){
+          if(seatIndexLabel(r, c, rows, cols) === num){
+            targetR = r; targetC = c; break;
+          }
+        }
+        if(targetR !== null) break;
+      }
+      if(targetR === null){ elPickBarNum.value=''; elPickBarNum.placeholder='無此號'; setTimeout(()=>{ elPickBarNum.placeholder='號'; },1200); return; }
+      placeStudent(cls, targetR, targetC, pickedId);
+    }
+    elPickBarGo?.addEventListener('click', pickBarPlaceBySeatNum);
+    elPickBarNum?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); pickBarPlaceBySeatNum(); } });
+    elPickBarCancel?.addEventListener('click', ()=>{ clearPicked(); });
 
 
     // ===== 本機暫存（整份狀態） =====
@@ -1528,6 +2649,7 @@ px;
           elSearch.disabled=false; state.filter='';
           if(elAddStudent) elAddStudent.disabled=false;
           if(elDelStudent) elDelStudent.disabled=false;
+          if(elRenameClass) elRenameClass.disabled=false;
 
           // 依照上次模式恢復畫面
           if(state.mode==='seat') setMode('seat');
@@ -1562,6 +2684,7 @@ px;
     const elSearch=document.getElementById('search-input');
     const elAddStudent=document.getElementById('btn-add-student');
     const elDelStudent=document.getElementById('btn-del-student');
+    const elRenameClass=document.getElementById('btn-rename-class');
     const elModeList=document.getElementById('mode-list');
     const elModeSeat=document.getElementById('mode-seat');
     const elModeHW=document.getElementById('mode-hw');
@@ -1721,114 +2844,169 @@ const helpMask = document.getElementById('help-mask');
     function saveHWToLS(cls){ try{ localStorage.setItem('hw_v1__'+cls, JSON.stringify(state.hw[cls]||{}));saveSession('hw change'); }catch{} }
 
     /* ====== 檔案上傳 (點選/拖放) ====== */
-    elFile.addEventListener('change', async (e)=>{ const file=e.target.files?.[0]; if(file) await handleFile(file); e.target.value=''; });
+    elFile.addEventListener('change', async (e)=>{ const files=e.target.files; if(files && files.length) await handleFiles(files); e.target.value=''; });
     const dropmask=document.getElementById('dropmask'); let dragCounter=0;
     function isFileDrag(e){ const dt=e.dataTransfer; if(!dt) return false; const types=Array.from(dt.types||[]); return types.includes('Files')||types.includes('application/x-moz-file'); }
     ['dragenter','dragover'].forEach(evt=>{ window.addEventListener(evt, e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter++; dropmask.classList.add('show'); }); });
     window.addEventListener('dragleave', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter=Math.max(0,dragCounter-1); if(dragCounter===0) dropmask.classList.remove('show'); });
-    window.addEventListener('drop', async (e)=>{ const f=e.dataTransfer?.files?.[0]; dragCounter=0; dropmask.classList.remove('show'); if(f){ e.preventDefault(); await handleFile(f); } });
+    window.addEventListener('drop', async (e)=>{ const files=e.dataTransfer?.files; dragCounter=0; dropmask.classList.remove('show'); if(files && files.length){ e.preventDefault(); await handleFiles(files); } });
 
-    /* ====== 解析 Excel ====== */
-    async function handleFile(file){
+    /* ====== 解析 Excel（支援多檔匯入） ====== */
+
+    /* ★ 智慧標頭偵測：自動跳過標題列，找到真正的欄位標頭 */
+    function detectHeaderRow(rows){
+      for(let h=0; h<Math.min(rows.length, 5); h++){
+        if(!rows[h]) continue;
+        const tryHeader = rows[h].map(v=>String(v||'').trim());
+        // 至少要找到「姓名」欄
+        if(findNameColumnIndex(tryHeader) >= 0 &&
+           (findIdColumnIndex(tryHeader) >= 0 || findSeatColumnIndex(tryHeader) >= 0)){
+          return h;
+        }
+      }
+      return 0; // 找不到就退回第一列
+    }
+
+    /* ★ 多檔匯入入口 */
+    async function handleFiles(fileList){
+      const files = Array.from(fileList);
+      if(files.length === 0) return;
+      // 只有一個檔案且其中有多個工作表→沿用原本「每個工作表＝一個班級」邏輯
+      // 多個檔案→每個檔案的第一個資料工作表＝一個班級，用檔名命名
       try{
-        setStatus(`正在解析：${file.name} ...`);
-        const data=await file.arrayBuffer();
-        const wb=XLSX.read(data,{type:'array'});
-        // ★ 匯入 XLSX 時：教學進度分頁「整批取代」，不沿用舊檔/暫存
         state.progress = { pages:{}, order:[], active:'' };
         const map={}; const order=[];
         let importedProgress = false;
-        wb.SheetNames.forEach((sheetName)=>{
-          // ★ 教學進度分頁（用 A1=教學進度 判定，不依賴工作表名稱）
-          const ws=wb.Sheets[sheetName]; if(!ws) return;
 
-          const a1 = String((ws['A1'] && (ws['A1'].v ?? ws['A1'].w)) || '').trim();
-          if(a1.replace(/\s+/g,'') === '教學進度'){
-            try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
-            return;
-          }
+        for(let fi=0; fi<files.length; fi++){
+          const file = files[fi];
+          setStatus(`正在解析 (${fi+1}/${files.length})：${file.name} ...`);
+          const data = await file.arrayBuffer();
+          const wb = XLSX.read(data, {type:'array'});
+          const isMultiFile = files.length > 1;
+          const baseName = file.name.replace(/\.(xlsx?|xls)$/i, '');
 
-          const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
-          if(!rows||rows.length===0) return;
-          const header=rows[0].map(v=>String(v||'').trim());
+          // 計算此檔案有幾個「資料」工作表（排除教學進度表）
+          const dataSheetNames = wb.SheetNames.filter(sn=>{
+            const w=wb.Sheets[sn]; if(!w) return false;
+            const a=String((w['A1']&&(w['A1'].v??w['A1'].w))||'').trim();
+            return a.replace(/\s+/g,'')!=='教學進度';
+          });
 
-          const idIdx=findIdColumnIndex(header);
-          const seatIdx=findSeatColumnIndex(header);
-          const nameIdx=findNameColumnIndex(header);
-          const scoreIdx=findScoreColumnIndex(header);
-          const noteIdx=findNoteColumnIndex(header);
+          wb.SheetNames.forEach((sheetName)=>{
+            const ws=wb.Sheets[sheetName]; if(!ws) return;
 
-          const seatRIdx = header.findIndex(h => h === COL.R);
-          const seatCIdx = header.findIndex(h => h === COL.C);
-
-          const hwCols=[]; header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
-
-          const pendingCoords=[]; let maxR=0, maxC=0;
-          const list=[];
-          if(!state.hw[sheetName]) state.hw[sheetName]={ cols: hwCols.map(c=>c.name), data:{} };
-
-          for(let r=1;r<rows.length;r++){
-            const row=rows[r]; if(!row||row.length===0) continue;
-            const name=String(row[nameIdx]??'').trim(); if(!name) continue;
-            const seat=seatIdx>=0?String(row[seatIdx]??'').trim():'';
-            const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
-            const id = sid ? `SID__${sid}` : makeFallbackId(sheetName, seat, name);
-            list.push({id,sid,name, seat, row:r+1, sheet:sheetName});
-
-            // 備註（可選）
-            if(noteIdx>=0){
-              const note = String(row[noteIdx]??'').trim();
-              if(note){
-                if(!state.notes) state.notes = {};
-                if(!state.notes[sheetName]) state.notes[sheetName] = {};
-                state.notes[sheetName][id] = note;
-              }
+            // ★ 教學進度分頁
+            const a1 = String((ws['A1'] && (ws['A1'].v ?? ws['A1'].w)) || '').trim();
+            if(a1.replace(/\s+/g,'') === '教學進度'){
+              try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
+              return;
             }
 
-            if(seatRIdx>=0 && seatCIdx>=0){
-              const rr=Number(row[seatRIdx]); const cc=Number(row[seatCIdx]);
-              if(Number.isFinite(rr)&&Number.isFinite(cc)&&rr>=1&&rr<=9&&cc>=1&&cc<=9){
-                pendingCoords.push({rr,cc,id}); maxR=Math.max(maxR,rr); maxC=Math.max(maxC,cc);
-              }
-            }
+            const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+            if(!rows||rows.length===0) return;
 
-            // —— 原本找到 scoreIdx 之後的處理，改成：
-            if (scoreIdx >= 0){
-              const sc = Number(row[scoreIdx]);
-              if (Number.isFinite(sc)){
-                setScore(sheetName, id, sc);                // ★ 班級命名空間
-              }else if (!hasScore(sheetName, id)){
-                const legacy = Number(state.legacyScores?.[id]);
-                if (Number.isFinite(legacy)) setScore(sheetName, id, legacy); // 兼容舊資料
-                else setScore(sheetName, id, 0);
+            // ★ 智慧標頭偵測（自動跳過標題列）
+            const headerRowIdx = detectHeaderRow(rows);
+            const header=rows[headerRowIdx].map(v=>String(v||'').trim());
+
+            // ★ 決定班級名稱
+            let className;
+            if(isMultiFile){
+              // 多檔匯入：用檔名命名班級
+              if(dataSheetNames.length > 1 && dataSheetNames.includes(sheetName)){
+                className = `${baseName}_${sheetName}`;
+              }else{
+                className = baseName;
               }
             }else{
-              if (!hasScore(sheetName, id)){
-                const legacy = Number(state.legacyScores?.[id]);
-                if (Number.isFinite(legacy)) setScore(sheetName, id, legacy);
-                else setScore(sheetName, id, 0);
+              // 單檔匯入：工作表名稱即班級名稱（原始行為）
+              className = sheetName;
+            }
+            // 避免班級名稱重複
+            if(map[className]){
+              let suffix=2;
+              while(map[className+'_'+suffix]) suffix++;
+              className = className+'_'+suffix;
+            }
+
+            const idIdx=findIdColumnIndex(header);
+            const seatIdx=findSeatColumnIndex(header);
+            const nameIdx=findNameColumnIndex(header);
+            const scoreIdx=findScoreColumnIndex(header);
+            const noteIdx=findNoteColumnIndex(header);
+
+            const seatRIdx = header.findIndex(h => h === COL.R);
+            const seatCIdx = header.findIndex(h => h === COL.C);
+
+            const hwCols=[]; header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
+
+            const pendingCoords=[]; let maxR=0, maxC=0;
+            const list=[];
+            if(!state.hw[className]) state.hw[className]={ cols: hwCols.map(c=>c.name), data:{} };
+
+            for(let r=headerRowIdx+1; r<rows.length; r++){
+              const row=rows[r]; if(!row||row.length===0) continue;
+              const name=String(row[nameIdx]??'').trim(); if(!name) continue;
+              const seat=seatIdx>=0?String(row[seatIdx]??'').trim():'';
+              const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
+              const id = sid ? `SID__${sid}` : makeFallbackId(className, seat, name);
+              list.push({id,sid,name, seat, row:r+1, sheet:className});
+
+              // 備註（可選）
+              if(noteIdx>=0){
+                const note = String(row[noteIdx]??'').trim();
+                if(note){
+                  if(!state.notes) state.notes = {};
+                  if(!state.notes[className]) state.notes[className] = {};
+                  state.notes[className][id] = note;
+                }
+              }
+
+              if(seatRIdx>=0 && seatCIdx>=0){
+                const rr=Number(row[seatRIdx]); const cc=Number(row[seatCIdx]);
+                if(Number.isFinite(rr)&&Number.isFinite(cc)&&rr>=1&&rr<=9&&cc>=1&&cc<=9){
+                  pendingCoords.push({rr,cc,id}); maxR=Math.max(maxR,rr); maxC=Math.max(maxC,cc);
+                }
+              }
+
+              if (scoreIdx >= 0){
+                const sc = Number(row[scoreIdx]);
+                if (Number.isFinite(sc)){
+                  setScore(className, id, sc);
+                }else if (!hasScore(className, id)){
+                  const legacy = Number(state.legacyScores?.[id]);
+                  if (Number.isFinite(legacy)) setScore(className, id, legacy);
+                  else setScore(className, id, 0);
+                }
+              }else{
+                if (!hasScore(className, id)){
+                  const legacy = Number(state.legacyScores?.[id]);
+                  if (Number.isFinite(legacy)) setScore(className, id, legacy);
+                  else setScore(className, id, 0);
+                }
+              }
+
+              if(sid) state.sidMap[id]={sid, sheet:className, seat, name};
+
+              if(hwCols.length){
+                const arr=[]; hwCols.forEach((c,ci)=>{ const v=row[c.idx]; const n=(v===''||v==null)?'':Number(v); arr[ci]=(Number.isFinite(n)?n:''); });
+                state.hw[className].data[id]=arr;
               }
             }
 
-            if(sid) state.sidMap[id]={sid, sheet:sheetName, seat, name};
+            if(!hwCols.length){ loadHWFromLS(className); }
 
-            if(hwCols.length){
-              const arr=[]; hwCols.forEach((c,ci)=>{ const v=row[c.idx]; const n=(v===''||v==null)?'':Number(v); arr[ci]=(Number.isFinite(n)?n:''); });
-              state.hw[sheetName].data[id]=arr;
+            const rowsCnt=clampSize(maxR||6); const colsCnt=clampSize(maxC||6);
+            const seatMapForSheet={};
+            for(const {rr,cc,id} of pendingCoords){
+              const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1; seatMapForSheet[rTop+'-'+cLeft]=id;
             }
-          }
+            if(Object.keys(seatMapForSheet).length){ state.seating[className]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet}; }
 
-          if(!hwCols.length){ loadHWFromLS(sheetName); }
-
-          const rowsCnt=clampSize(maxR||6); const colsCnt=clampSize(maxC||6);
-          const seatMapForSheet={};
-          for(const {rr,cc,id} of pendingCoords){
-            const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1; seatMapForSheet[rTop+'-'+cLeft]=id;
-          }
-          if(Object.keys(seatMapForSheet).length){ state.seating[sheetName]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet}; }
-
-          if(list.length){ map[sheetName]=list; order.push(sheetName); }
-        });
+            if(list.length){ map[className]=list; order.push(className); }
+          });
+        }
         // 解析完後：若檔案沒有教學進度分頁，會建立乾淨的預設分頁
         ensureProgressState(true);
 
@@ -1840,14 +3018,18 @@ const helpMask = document.getElementById('help-mask');
         elSearch.disabled=false; elSearch.value=""; state.filter="";
         if(elAddStudent) elAddStudent.disabled=false;
         if(elDelStudent) elDelStudent.disabled=false;
+        if(elRenameClass) elRenameClass.disabled=false;
         renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
         // ★ 若目前就在教學進度模式，匯入後立即刷新
         if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
         saveNotes();
-        setStatus(`已載入 ${order.length} 個班級。`);
-        saveSession('after import');   // ★ 新增：匯入後即暫存整份狀態
+        setStatus(`已載入 ${order.length} 個班級（來自 ${files.length} 個檔案）。`);
+        saveSession('after import');
       }catch(err){ alert('解析失敗：'+err.message); setStatus('解析失敗'); }
     }
+
+    /* ★ 保留單檔相容入口 */
+    async function handleFile(file){ return handleFiles([file]); }
 
     elSelect.addEventListener('change',(e)=>{
       const cls=e.target.value; if(!cls) return;
@@ -1856,6 +3038,66 @@ const helpMask = document.getElementById('help-mask');
       if(state.mode==='hw') renderHW(cls);
       if(state.mode==='draw') renderDraw(cls);
       saveSession('class change');   // ★ 新增
+    });
+
+    // ★ 班級重新命名
+    elRenameClass?.addEventListener('click', ()=>{
+      const oldName = elSelect.value;
+      if(!oldName){ alert('請先選擇班級'); return; }
+      const newName = (prompt(`請輸入「${oldName}」的新班級名稱：`, oldName) || '').trim();
+      if(!newName || newName === oldName) return;
+      if(state.classOrder.includes(newName)){ alert('此班級名稱已存在！'); return; }
+
+      // 更新 classOrder
+      const idx = state.classOrder.indexOf(oldName);
+      if(idx >= 0) state.classOrder[idx] = newName;
+
+      // 更新 classMap
+      if(state.classMap[oldName]){
+        state.classMap[newName] = state.classMap[oldName];
+        // 更新每個學生的 sheet 欄位
+        state.classMap[newName].forEach(s => { if(s.sheet === oldName) s.sheet = newName; });
+        delete state.classMap[oldName];
+      }
+
+      // 更新 scores（複合鍵包含班級名）
+      const oldPrefix = scoreKey(oldName, '');
+      const newPrefix = scoreKey(newName, '');
+      const scoreKeys = Object.keys(state.scores);
+      for(const k of scoreKeys){
+        if(k.startsWith(oldPrefix)){ 
+          const newKey = newPrefix + k.slice(oldPrefix.length);
+          state.scores[newKey] = state.scores[k];
+          delete state.scores[k];
+        }
+      }
+
+      // 更新 seating
+      if(state.seating[oldName]){ state.seating[newName] = state.seating[oldName]; delete state.seating[oldName]; }
+
+      // 更新 hw
+      if(state.hw[oldName]){ state.hw[newName] = state.hw[oldName]; delete state.hw[oldName]; }
+
+      // 更新 notes
+      if(state.notes && state.notes[oldName]){ state.notes[newName] = state.notes[oldName]; delete state.notes[oldName]; }
+
+      // 更新 sidMap
+      for(const id of Object.keys(state.sidMap)){
+        if(state.sidMap[id].sheet === oldName) state.sidMap[id].sheet = newName;
+      }
+
+      // 重新繪製 UI
+      renderClassOptions(state.classOrder);
+      elSelect.value = newName;
+      renderStudents(newName);
+      renderLeaderboard(newName);
+      if(state.mode==='seat') renderSeatUI(newName);
+      if(state.mode==='hw') renderHW(newName);
+      if(state.mode==='draw') renderDraw(newName);
+      if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
+      saveSession('rename class');
+      saveNotes();
+      setStatus(`班級已重新命名：${oldName} → ${newName}`);
     });
 
     // ➕ 新增轉學生
@@ -1927,9 +3169,15 @@ const helpMask = document.getElementById('help-mask');
       }
     });
 
-    /* ===== 匯出 Excel（可選資料夾＋可改檔名；不支援則退回下載） ===== */
-    async function exportWorkbookWithPicker(wb, suggestedName){
-      const mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    /* ===== 匯出（可選資料夾＋可改檔名；不支援則退回下載） ===== */
+    async function exportWorkbookWithPicker(wb, suggestedName, bookType='xlsx'){
+      const mimeMap = {
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        csv:  'text/csv',
+        ods:  'application/vnd.oasis.opendocument.spreadsheet'
+      };
+      const mime = mimeMap[bookType] || mimeMap.xlsx;
+      const descMap = { xlsx:'Excel 活頁簿 (.xlsx)', csv:'CSV (.csv)', ods:'ODS 試算表 (.ods)' };
 
       // 走原生另存對話框（Chrome / Edge 等；需 https 或 localhost）
       if (window.showSaveFilePicker && isSecureContext) {
@@ -1937,14 +3185,13 @@ const helpMask = document.getElementById('help-mask');
           const handle = await window.showSaveFilePicker({
             suggestedName,
             types: [{
-              description: 'Excel 活頁簿 (.xlsx)',
-              accept: { [mime]: ['.xlsx'] }
+              description: descMap[bookType] || descMap.xlsx,
+              accept: { [mime]: ['.'+bookType] }
             }],
             excludeAcceptAllOption: false
           });
 
-          // 由 xlsx 產出位元組陣列 → blob → 寫入使用者選的路徑
-          const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          const data = XLSX.write(wb, { bookType, type: 'array' });
           const blob = new Blob([data], { type: mime });
           const writable = await handle.createWritable();
           await writable.write(blob);
@@ -1958,73 +3205,157 @@ const helpMask = document.getElementById('help-mask');
             return;
           }
           console.warn('showSaveFilePicker 失敗，改用下載：', err);
-          // 失敗就落回下載
         }
       }
 
       // 退回原本下載方式
-      XLSX.writeFile(wb, suggestedName);
+      XLSX.writeFile(wb, suggestedName, { bookType });
       setStatus(`已開始下載：${suggestedName}`);
     }
 
-    /* ===== 匯出 Excel ===== */
-    document.getElementById('btn-export').addEventListener('click', async ()=>{
+    /* ===== 建立班級成績工作表（共用邏輯） ===== */
+    function buildClassSheet(cls){
+      const list = state.classMap[cls] || [];
+      const seatSt = ensureSeatState(cls);
+      const hwSt = ensureHWState(cls);
+
+      const header = ['學號','座號','姓名','備註','分數', ...hwSt.cols, '小計', '平均', COL.R, COL.C];
+      const aoa = [header];
+
+      for (const s of list){
+        const id = s.id, sc = getScore(cls, id);
+        const sid = s.sid || (state.sidMap[id]?.sid) || '';
+
+        const pos = findSeatPos(cls, id);
+        let rr='', cc='';
+        if (pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
+
+        const arr = (hwSt.data[id] || []).slice(0, hwSt.cols.length);
+        while (arr.length < hwSt.cols.length) arr.push('');
+
+        const sum = arr.reduce((t,v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
+        const cnt = arr.filter(v => v!=='' && v!=null && Number.isFinite(Number(v))).length;
+        const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;
+
+        aoa.push([sid, s.seat ?? '', s.name ?? '', getNote(cls, id), sc, ...arr, sum, avg, rr, cc]);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:8}];
+      const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
+      ws['!cols'] = [
+        ...baseCols,
+        ...hwColsW,
+        {wch:8}, {wch:8},
+        {wch:8}, {wch:8}
+      ];
+      return ws;
+    }
+
+    /* ===== 匯出設定彈窗邏輯 ===== */
+    const exportMask     = document.getElementById('export-mask');
+    const exportClose    = document.getElementById('export-close');
+    const exportCancel   = document.getElementById('export-cancel');
+    const exportGo       = document.getElementById('export-go');
+    const exportClassBox = document.getElementById('export-class-list');
+    const exportSelAll   = document.getElementById('export-sel-all');
+    const exportSelNone  = document.getElementById('export-sel-none');
+    const exportCsvHint  = document.getElementById('export-csv-hint');
+    const exportProgCb   = document.getElementById('export-prog');
+    const exportProgLabel= document.getElementById('export-prog-label');
+
+    function openExportModal(){
+      // 填入班級複選框
+      exportClassBox.innerHTML = '';
+      for(const cls of state.classOrder){
+        const lbl = document.createElement('label');
+        lbl.style.cssText = 'display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:14px; user-select:none; transition:border-color .15s;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = true; cb.value = cls;
+        cb.className = 'export-cls-cb';
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(cls));
+        exportClassBox.appendChild(lbl);
+      }
+      // 格式提示
+      updateExportFormatHint();
+      exportMask.classList.add('show');
+    }
+
+    function closeExportModal(){ exportMask.classList.remove('show'); }
+
+    function updateExportFormatHint(){
+      const fmt = document.querySelector('input[name="export-format"]:checked')?.value || 'xlsx';
+      exportCsvHint.style.display = (fmt==='csv') ? 'block' : 'none';
+      exportProgCb.disabled = false;
+      exportProgLabel.style.opacity = '1';
+    }
+
+    // 格式切換
+    document.getElementById('export-format-group').addEventListener('change', updateExportFormatHint);
+
+    // 全選／全不選
+    exportSelAll.addEventListener('click', ()=>{
+      exportClassBox.querySelectorAll('.export-cls-cb').forEach(cb=> cb.checked=true);
+    });
+    exportSelNone.addEventListener('click', ()=>{
+      exportClassBox.querySelectorAll('.export-cls-cb').forEach(cb=> cb.checked=false);
+    });
+
+    // 關閉
+    exportClose.addEventListener('click', closeExportModal);
+    exportCancel.addEventListener('click', closeExportModal);
+    exportMask.addEventListener('click', e=>{ if(e.target===exportMask) closeExportModal(); });
+    window.addEventListener('keydown', e=>{ if(e.key==='Escape' && exportMask.classList.contains('show')) closeExportModal(); });
+
+    // 點選匯出按鈕 → 打開模態框
+    document.getElementById('btn-export').addEventListener('click', ()=>{
+      if(state.classOrder.length===0){ alert('尚未載入任何班級資料'); return; }
+      openExportModal();
+    });
+
+    // 執行匯出
+    exportGo.addEventListener('click', async ()=>{
       try{
-        const wb = XLSX.utils.book_new();
+        const fmt = document.querySelector('input[name="export-format"]:checked')?.value || 'xlsx';
+        const selectedClasses = [...exportClassBox.querySelectorAll('.export-cls-cb:checked')].map(cb=>cb.value);
+        const includeProgress = exportProgCb.checked;
 
-        for(const cls of state.classOrder){
-          const list = state.classMap[cls] || [];
-          const seatSt = ensureSeatState(cls);
-          const hwSt = ensureHWState(cls);
+        if(selectedClasses.length===0){ alert('請至少選擇一個班級'); return; }
 
-          // === 建表頭（在 for(const cls of state.classOrder) 內）===
-          const header = ['學號','座號','姓名','備註','分數', ...hwSt.cols, '小計', '平均', COL.R, COL.C];
-          const aoa = [header];
+        closeExportModal();
 
-          for (const s of list){
-            const id = s.id, sc = getScore(cls, id);
-            const sid = s.sid || (state.sidMap[id]?.sid) || '';
+        const ts=new Date(), pad=n=>String(n).padStart(2,'0');
+        const stamp = `${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}`;
 
-            // 目前座標（照你原邏輯轉回右下角為 1 的座標）
-            const pos = findSeatPos(cls, id);
-            let rr='', cc='';
-            if (pos){ rr = seatSt.rows - pos.r + 1; cc = seatSt.cols - pos.c + 1; }
-
-            // 作業分數陣列
-            const arr = (hwSt.data[id] || []).slice(0, hwSt.cols.length);
-            while (arr.length < hwSt.cols.length) arr.push('');
-
-            // ★ 小計 / 平均（平均僅計入有填寫的格）
-            const sum = arr.reduce((t,v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
-            const cnt = arr.filter(v => v!=='' && v!=null && Number.isFinite(Number(v))).length;
-            const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;  // 保留兩位
-
-            // ★ 一起匯出（小計、平均 接在各作業後面）
-            aoa.push([sid, s.seat ?? '', s.name ?? '', getNote(cls, id), sc, ...arr, sum, avg, rr, cc]);
+        if(fmt==='csv'){
+          // CSV：每個班級各產一個檔案
+          for(const cls of selectedClasses){
+            const wb = XLSX.utils.book_new();
+            const ws = buildClassSheet(cls);
+            XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
+            const fname = `成績匯出_${cls}_${stamp}.csv`;
+            await exportWorkbookWithPicker(wb, fname, 'csv');
           }
-
-          // 欄寬（多了「小計」「平均」各一欄）
-          const ws = XLSX.utils.aoa_to_sheet(aoa);
-          const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:8}];       // 學號/座號/姓名/備註/分數
-          const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
-          ws['!cols'] = [
-            ...baseCols,
-            ...hwColsW,
-            {wch:8},                 // 小計
-            {wch:8},                 // 平均
-            {wch:8}, {wch:8}         // 座位列 / 座位欄
-          ];
-          XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
+        }else{
+          // xlsx / ods：合併到同一個活頁簿
+          const wb = XLSX.utils.book_new();
+          for(const cls of selectedClasses){
+            const ws = buildClassSheet(cls);
+            XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
+          }
+          const fname = `成績匯出_${stamp}.${fmt}`;
+          await exportWorkbookWithPicker(wb, fname, fmt);
         }
 
-                // ★ 另外匯出：教學進度（新表單）
-        appendProgressSheet(wb);
-
-// 預設檔名：與原本一致
-        const ts=new Date(), pad=n=>String(n).padStart(2,'0');
-        const fname=`成績匯出_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}.xlsx`;
-
-        await exportWorkbookWithPicker(wb, fname);
+        // ★ 教學進度獨立匯出為另一個檔案
+        if(includeProgress){
+          const wbProg = XLSX.utils.book_new();
+          appendProgressSheet(wbProg);
+          const progFmt = (fmt==='csv') ? 'xlsx' : fmt;
+          const progFname = `教學進度_${stamp}.${progFmt}`;
+          await exportWorkbookWithPicker(wbProg, progFname, progFmt);
+        }
       }catch(err){
         alert('匯出失敗：'+err.message);
       }
@@ -2081,6 +3412,7 @@ const helpMask = document.getElementById('help-mask');
 
       if(elAddStudent) elAddStudent.disabled = true;
       if(elDelStudent) elDelStudent.disabled = true;
+      if(elRenameClass) elRenameClass.disabled = true;
 
       // 列表 / 排行榜
       document.getElementById('students').innerHTML = '';
@@ -2111,19 +3443,109 @@ const helpMask = document.getElementById('help-mask');
       setStatus('已清除所有本機暫存與名單。');
     }
 
-    // ✅ 清除 → 完全回到未上傳檔案的狀態
-    elReset?.addEventListener('click', ()=>{
-      if(!confirm('確定清除所有本機資料嗎？\n將移除：學生名單、分數、作業、座位（含格數與配位）與快速還原。'))
-        return;
+    // ★ 清除設定彈窗邏輯
+    const clearMask   = document.getElementById('clear-mask');
+    const clearClose   = document.getElementById('clear-close');
+    const clearCancel  = document.getElementById('clear-cancel');
+    const clearGo      = document.getElementById('clear-go');
+    const clearSelAll  = document.getElementById('clear-sel-all');
+    const clearSelNone = document.getElementById('clear-sel-none');
+
+    function openClearModal(){ clearMask.classList.add('show'); }
+    function closeClearModal(){ clearMask.classList.remove('show'); }
+
+    clearClose.addEventListener('click', closeClearModal);
+    clearCancel.addEventListener('click', closeClearModal);
+    clearMask.addEventListener('click', e=>{ if(e.target===clearMask) closeClearModal(); });
+    window.addEventListener('keydown', e=>{ if(e.key==='Escape' && clearMask.classList.contains('show')) closeClearModal(); });
+
+    clearSelAll.addEventListener('click', ()=>{
+      clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=true);
+    });
+    clearSelNone.addEventListener('click', ()=>{
+      clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=false);
+    });
+
+    elReset?.addEventListener('click', openClearModal);
+
+    clearGo.addEventListener('click', ()=>{
+      const picked = [...clearMask.querySelectorAll('.clear-cb:checked')].map(cb=>cb.value);
+      if(!picked.length){ alert('請至少勾選一個要清除的項目'); return; }
+
+      const labels = {
+        classMap: '學生名單', scores: '平時分數', hw: '作業成績',
+        seating: '座位表', notes: '學生備註', progress: '教學進度', timer: '倒數計時'
+      };
+      const desc = picked.map(k=>labels[k]||k).join('、');
+      if(!confirm(`確定要清除以下資料嗎？\n→ ${desc}`)){ return; }
+
+      closeClearModal();
+
+      const clearAll = picked.length===6; // 全部勾選
+
+      // 清除學生名單（連帶清全部）
+      if(picked.includes('classMap')){
+        state.classMap = {};
+        state.classOrder = [];
+        state.sidMap = {};
+        // 名單清了，分數/作業/座位/備註也沒意義
+        state.scores = {}; state.savedScores = {}; state.legacyScores = {};
+        state.hw = {}; state.savedHW = {};
+        state.seating = {};
+        state.notes = {};
+      }else{
+        if(picked.includes('scores')){ state.scores = {}; state.savedScores = {}; state.legacyScores = {}; }
+        if(picked.includes('hw')){ state.hw = {}; state.savedHW = {}; }
+        if(picked.includes('seating')){ state.seating = {}; }
+        if(picked.includes('notes')){ state.notes = {}; }
+      }
+      if(picked.includes('progress')){ state.progress = { pages:{}, order:[], active:'' }; }
+
+      // 清除 localStorage
       clearAllAppStorage();
-      hardResetApp();
+
+      // 如果名單被清→完整重置 UI
+      if(picked.includes('classMap')){
+        hardResetApp();
+      }else{
+        // 部分清除：刷新目前頁面
+        const cls = elSelect.value;
+        if(cls){
+          if(state.mode==='list') renderStudents(cls);
+          else if(state.mode==='seat') renderSeatUI(cls);
+          else if(state.mode==='hw') renderHW(cls);
+          else if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
+          renderLeaderboard(cls);
+        }
+        saveSession('partial clear');
+        setStatus(`已清除：${desc}。`);
+      }
+
+      // 清除勾選狀態
+      clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=false);
     });
 
     // 讓清除按鈕也有 ripple 效果（可選）
     if (typeof bindRipple === 'function' && elReset) bindRipple(elReset);
 
 
-    function renderClassOptions(order){ elSelect.innerHTML=''; for(const cls of order){ const opt=document.createElement('option'); opt.value=cls; opt.textContent=cls; elSelect.appendChild(opt); } }
+    function renderClassOptions(order){
+      // ★ 依班級名稱中的數字由小到大排序（低年級優先）
+      const extractNums = s => (s.match(/\d+/g)||[]).map(Number);
+      const sorted = [...order].sort((a,b)=>{
+        const na=extractNums(a), nb=extractNums(b);
+        const len=Math.max(na.length, nb.length);
+        for(let i=0;i<len;i++){
+          const va=na[i]??0, vb=nb[i]??0;
+          if(va!==vb) return va-vb;
+        }
+        return a.localeCompare(b,'zh-Hant');
+      });
+      // 同步更新 state.classOrder 的順序
+      order.length=0; order.push(...sorted);
+      elSelect.innerHTML='';
+      for(const cls of sorted){ const opt=document.createElement('option'); opt.value=cls; opt.textContent=cls; elSelect.appendChild(opt); }
+    }
 
     const io = new IntersectionObserver((entries)=>{ entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } }); }, { threshold:.2 });
 
@@ -2409,11 +3831,13 @@ const helpMask = document.getElementById('help-mask');
 
       const nameHTML = isHighlight ? highlightHTML(s.name, qForHighlight) : escapeHTML(s.name);
       const score = getScore(cls, s.id);   // ★
-
+      const note = getNote(cls, s.id);
+      const noteAttr = note ? ` data-note="${escapeHTML(note)}"` : '';
+      const noteDot = note ? '<span class="note-dot" title="有備註"></span>' : '';
 
       card.innerHTML=`
         <div class="score-chip" id="score-${s.id}">${score}</div>
-        <div class="name">${seatText}<span class="student-name">${nameHTML}</span></div>
+        <div class="name"${noteAttr}>${seatText}<span class="student-name">${nameHTML}</span>${noteDot}</div>
         <div class="actions">
           <button class="btn add">+1分</button>
           <button class="btn sub">-1分</button>
@@ -2667,11 +4091,24 @@ const helpMask = document.getElementById('help-mask');
       const stage=document.createElement('div'); stage.className='stage'; stage.setAttribute('role','presentation'); stage.innerHTML=`講台`; stage.style.gridColumn=`1 / span ${cols}`; frag.appendChild(stage);
       elSeatboard.innerHTML=''; elSeatboard.appendChild(frag);
 
+      // ★ 還原選取狀態（renderSeatUI 重建 DOM 後）
+      if(pickedId){
+        const pickedTile = elSeatboard.querySelector(`.tile[data-id="${CSS.escape(pickedId)}"]`);
+        if(pickedTile) pickedTile.classList.add('picked');
+        elSeatboard.classList.add('has-picked');
+      }
+
       // 未安排名單
       elUnassignedList.innerHTML='';
       const assignedIds=new Set(Object.values(st.map||{}));
       const unassigned=list.filter(s=> !assignedIds.has(s.id));
       unassigned.forEach(s=>{ elUnassignedList.appendChild(createTile(cls, s, q)); });
+
+      // ★ 還原未安排名單中的選取狀態
+      if(pickedId){
+        const pickedTile2 = elUnassignedList.querySelector(`.tile[data-id="${CSS.escape(pickedId)}"]`);
+        if(pickedTile2) pickedTile2.classList.add('picked');
+      }
 
       const onUnDragOver=(e)=>{ e.preventDefault(); elUnassigned.classList.add('dragover'); };
       const onUnDragLeave=()=> elUnassigned.classList.remove('dragover');
@@ -2773,13 +4210,7 @@ const helpMask = document.getElementById('help-mask');
       if(!Array.isArray(state.progress.order)) state.progress.order = [];
       if(typeof state.progress.active!=='string') state.progress.active = '';
 
-      // 確保至少有一個分頁
-      if(createDefault && !state.progress.order.length){
-        const def = '進度1';
-        state.progress.order = [def];
-        state.progress.active = def;
-        state.progress.pages[def] = { items: [], classes: (state.classOrder||[]).slice() };
-      }
+      // ★ 預設不自動建立分頁，保持空白讓使用者自行新增
 
       // 修正 active
       if(!state.progress.active || !state.progress.pages[state.progress.active]){
@@ -2907,9 +4338,27 @@ const helpMask = document.getElementById('help-mask');
 
     function renderProgress(){
       const prog = ensureProgressState();
+      if(!elProgTable) return;
+
+      // ★ 沒有任何分頁時：顯示空白提示
+      if(!prog.order.length || !prog.active){
+        elProgTable.innerHTML = '';
+        if(elProgPageSel) elProgPageSel.innerHTML = '';
+        if(elProgPill) elProgPill.textContent = '尚未建立分頁';
+        const emptyRow = document.createElement('tr');
+        const emptyTd = document.createElement('td');
+        emptyTd.setAttribute('colspan','999');
+        emptyTd.style.cssText = 'text-align:center; padding:48px 20px; font-size:15px; color:var(--muted);';
+        emptyTd.innerHTML = '📋 尚未建立教學進度分頁<br><span style="font-size:13px; opacity:.75; margin-top:8px; display:inline-block;">請點擊上方選單「新增分頁」來開始建立。</span>';
+        emptyRow.appendChild(emptyTd);
+        const tbody = document.createElement('tbody');
+        tbody.appendChild(emptyRow);
+        elProgTable.appendChild(tbody);
+        return;
+      }
+
       const pageName = prog.active;
       const pg = prog.pages[pageName] || (prog.pages[pageName] = { items:[], classes:(state.classOrder||[]).slice() });
-      if(!elProgTable) return;
 
       // 分頁下拉選單
       if(elProgPageSel){
@@ -3599,25 +5048,96 @@ function openDelProgressClass(){
 }
     function openAddProgressPage(){
       const prog = ensureProgressState();
+      const allClasses = (state.classOrder||[]).slice();
+
+      // ★ 依年級分組（取班級名第一組數字的首位）
+      const gradeMap = {};
+      for(const cls of allClasses){
+        const m = cls.match(/(\d+)/);
+        const grade = m ? String(m[1])[0] : '?';
+        if(!gradeMap[grade]) gradeMap[grade] = [];
+        gradeMap[grade].push(cls);
+      }
+      const grades = Object.keys(gradeMap).sort((a,b)=>{
+        if(a==='?') return 1; if(b==='?') return -1;
+        return Number(a)-Number(b);
+      });
+
+      // 年級快選按鈕
+      const gradeBtnsHtml = grades
+        .filter(g=>g!=='?')
+        .map(g=>`<button type="button" class="btn progpage-grade-btn" data-grade="${g}" style="height:32px; padding:0 12px; font-size:13px;">${g}年級</button>`)
+        .join('');
+
+      // 班級列表
+      const classListHtml = allClasses.map(c=>`
+        <label style="display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line); cursor:pointer;">
+          <input type="checkbox" class="progpage-cls-cb" value="${escapeHTML(c)}" checked>
+          <span>${escapeHTML(c)}</span>
+        </label>
+      `).join('');
+
       showProgClassModal({
         title: '新增分頁',
         okText: '新增',
         html: `
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div style="font-size:13px; opacity:.85;">請輸入分頁名稱（會用這個名稱建立新的工作表）。</div>
-            <input id="progpage-name" class="input" type="text" placeholder="例如：第1單元 / 12月進度" style="height:38px;">
-            <div class="hint" style="font-size:12px; opacity:.75;">提醒：避免與班級工作表同名，可減少匯入時誤判。</div>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+              <label style="font-weight:700; font-size:14px;">分頁名稱</label>
+              <input id="progpage-name" class="input" type="text" placeholder="例如：第1單元 / 12月進度" style="height:38px; margin-top:6px; width:100%;">
+            </div>
+            <div style="height:1px; background:var(--line);"></div>
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                <label style="font-weight:700; font-size:14px;">加入班級</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  ${gradeBtnsHtml}
+                  <button type="button" id="progpage-selall" class="btn" style="height:32px; padding:0 10px; font-size:13px;">全選</button>
+                  <button type="button" id="progpage-selnone" class="btn" style="height:32px; padding:0 10px; font-size:13px;">全不選</button>
+                </div>
+              </div>
+              <div style="max-height:36vh; overflow:auto; border:1px solid var(--line); border-radius:10px; padding:8px 10px;">
+                ${classListHtml}
+              </div>
+            </div>
           </div>
         `,
         onOpen:(mask)=>{
           const ip = mask.querySelector('#progpage-name');
           setTimeout(()=> ip?.focus(), 0);
           ip?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ mask.querySelector('#progclass-ok')?.click(); } });
+
+          // 全選 / 全不選
+          mask.querySelector('#progpage-selall')?.addEventListener('click', ()=>{
+            mask.querySelectorAll('.progpage-cls-cb').forEach(cb=> cb.checked=true);
+          });
+          mask.querySelector('#progpage-selnone')?.addEventListener('click', ()=>{
+            mask.querySelectorAll('.progpage-cls-cb').forEach(cb=> cb.checked=false);
+          });
+
+          // 年級快選按鈕
+          mask.querySelectorAll('.progpage-grade-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              const g = btn.dataset.grade;
+              const gradeClasses = gradeMap[g] || [];
+              // 先全部取消，再勾選該年級
+              mask.querySelectorAll('.progpage-cls-cb').forEach(cb=> cb.checked=false);
+              gradeClasses.forEach(cls=>{
+                const cb = mask.querySelector(`.progpage-cls-cb[value="${CSS.escape(cls)}"]`);
+                if(cb) cb.checked = true;
+              });
+              // 自動填入分頁名稱
+              if(ip && !ip.value.trim()) ip.value = `${g}年級`;
+            });
+          });
         },
         onOk:(mask)=>{
           const ip = mask.querySelector('#progpage-name');
           const name = String(ip?.value||'').trim();
           if(!name){ showInAppModal('新增分頁', '請先輸入分頁名稱。'); return false; }
+
+          const selectedClasses = [...mask.querySelectorAll('.progpage-cls-cb:checked')].map(cb=>cb.value);
+          if(!selectedClasses.length){ showInAppModal('新增分頁', '請至少選擇一個班級。'); return false; }
 
           // 去重（同名就自動加尾碼）
           let finalName = name;
@@ -3628,7 +5148,7 @@ function openDelProgressClass(){
           }
 
           prog.order.push(finalName);
-          prog.pages[finalName] = { items: [], classes: (state.classOrder||[]).slice() };
+          prog.pages[finalName] = { items: [], classes: selectedClasses };
           prog.active = finalName;
           hideProgClassModal();
           renderProgress();
@@ -3640,8 +5160,8 @@ function openDelProgressClass(){
     function openDelProgressPage(){
       const prog = ensureProgressState();
       const name = prog.active;
-      if((prog.order||[]).length<=1){
-        showInAppModal('刪除分頁', '至少需要保留一個分頁。');
+      if(!name || !(prog.order||[]).length){
+        showInAppModal('刪除分頁', '目前沒有任何分頁可刪除。');
         return;
       }
 
@@ -3658,7 +5178,7 @@ function openDelProgressClass(){
           // 移除
           delete prog.pages[name];
           prog.order = (prog.order||[]).filter(n=>n!==name);
-          prog.active = prog.order[0];
+          prog.active = prog.order.length ? prog.order[0] : '';
           hideProgClassModal();
           renderProgress();
           saveSession('progress del page');
@@ -3925,10 +5445,14 @@ elProgAdd?.addEventListener('click', ()=>{
         const cnt=arr.filter(v=> v!=='' && v!=null).length;
         const avg=cnt? (sum/cnt) : 0;
         const isHit = q && matchFilter(s, q);
+        const noteVal = getNote(cls, s.id);
+        const noteTag = noteVal
+          ? `<span class="note-indicator" style="font-size:10px; margin-left:4px; vertical-align:middle;" title="${escapeHTML(noteVal)}"><span class="note-icon">⚠️</span><span class="note-text">${escapeHTML(noteVal.length>8 ? noteVal.slice(0,8)+'…' : noteVal)}</span></span>`
+          : '';
         return `
           <tr data-id="${s.id}" class="${isHit?'match':''}">
-            <td><div class="hw-seatcell"><button class="note-btn" data-note-id="${s.id}" title="備註">${getNote(cls, s.id)?'🗒️':'📝'}</button><span class="hw-seattext">${highlightSeat(s.seat||'', isHit ? q : '')}</span></div></td>
-            <td>${isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'')}</td>
+            <td><div class="hw-seatcell"><button class="note-btn" data-note-id="${s.id}" title="備註">${noteVal?'🗒️':'📝'}</button><span class="hw-seattext">${highlightSeat(s.seat||'', isHit ? q : '')}</span></div></td>
+            <td>${isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'')}${noteTag}</td>
             ${arr.map((v,ci)=>`<td class="num"><input type="number" step="1" inputmode="numeric" value="${v!==''?String(v):''}" data-col="${ci}" /></td>`).join('')}
             <td class="num" data-sum>${sum}</td>
             <td class="num" data-avg>${avg.toFixed(2)}</td>
