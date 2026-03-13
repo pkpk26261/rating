@@ -419,9 +419,9 @@
     @keyframes ripple{ to{ opacity:0; width:240px; height:240px; } }
 
     /* ===== 列表模式卡片 ===== */
-    .grid{ display:grid; grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr)); gap:8px; margin-top:12px; align-items:stretch; justify-items:stretch; }
+    .grid{ display:grid; grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr)); gap:8px; margin-top:12px; align-items:stretch; justify-items:stretch; contain: layout style; }
     .card{ position:relative; border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:72px; box-shadow: var(--shadow); transform: translateY(6px); opacity:0; width:auto; }
-    .card.show{ opacity:1; transform: translateY(0); transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease; }
+    .card.show{ opacity:1; transform: translateY(0); transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .25s ease; }
     .card:hover{ outline:1px solid rgba(124,58,237,.35); box-shadow: 0 12px 30px rgba(124,58,237,.12); }
     .name{ display:flex; align-items:center; gap:6px; font-weight:800; letter-spacing:.02em; line-height:1.05; min-width:0; }
     .name .student-name{ display:inline-block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
@@ -437,10 +437,10 @@
     /* ★ 平板觸控：消除所有按鈕 300ms 延遲 */
     .btn{ touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .card{ touch-action: manipulation; }
-    .score-chip{ position:absolute; top:4px; right:4px; padding:2px 6px; background:var(--scorechip); border:1px solid var(--line); border-radius:10px; font-weight:800; font-variant-numeric: tabular-nums; min-width:25px; text-align:center; font-size:12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
-    .score-chip.bump{ animation: bump .35s ease; }
-    @keyframes bump{ 0%{ transform:scale(1)} 30%{ transform:scale(1.18)} 60%{ transform:scale(0.96)} 100%{ transform:scale(1)} }
-    .float-mark{ position:absolute; right:10px; bottom:30px; font-weight:900; pointer-events:none; opacity:0; transform: translateY(8px); filter: drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+    .score-chip{ position:absolute; top:4px; right:4px; padding:2px 6px; background:var(--scorechip); border:1px solid var(--line); border-radius:10px; font-weight:800; font-variant-numeric: tabular-nums; min-width:25px; text-align:center; font-size:12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); will-change: transform; contain: layout style; }
+    .score-chip.bump{ animation: bump .25s ease; }
+    @keyframes bump{ 0%{ transform:scale(1)} 40%{ transform:scale(1.15)} 100%{ transform:scale(1)} }
+    .float-mark{ position:absolute; right:10px; bottom:30px; font-weight:900; pointer-events:none; opacity:0; transform: translateY(8px) translateZ(0); will-change: transform, opacity; }
 
     /* ★ 備註提示標記 */
     /* ★ 備註浮窗：hover 姓名才顯示 */
@@ -513,15 +513,15 @@
     .note-indicator:hover .note-text{ max-width:200px; opacity:1; }
     .note-indicator:hover{ gap:4px; padding:2px 7px; }
     :root[data-theme="light"] .note-indicator{ background:rgba(245,158,11,.12); border-color:rgba(217,119,6,.4); color:#b45309; }
-    .float-mark.show{ animation: floatUp .6s ease-out forwards; }
-    @keyframes floatUp{ to{ opacity:1; transform: translateY(-24px); opacity:0; } }
+    .float-mark.show{ animation: floatUp .4s ease-out forwards; }
+    @keyframes floatUp{ 0%{ opacity:1; transform: translateY(0) translateZ(0); } 100%{ opacity:0; transform: translateY(-24px) translateZ(0); } }
 
     /* ===== 排行榜 ===== */
     .board{ border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow: var(--shadow); flex:1 1 auto; min-height:0; overflow:hidden; }
     .board h3{ margin:0; font-size:16px; display:flex; align-items:center; gap:8px; }
     .badge{ display:inline-block; padding:2px 6px; border-radius:999px; border:1px solid var(--line); font-size:12px; color:var(--muted); }
-    #leaderboard{ flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; }
-    .board .row{ display:grid; grid-template-columns: 38px 1fr 64px; gap:8px; padding:8px 8px; border-radius:10px; align-items:center; transition: background .3s ease; }
+    #leaderboard{ flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; contain: layout style; }
+    .board .row{ display:grid; grid-template-columns: 38px 1fr 64px; gap:8px; padding:8px 8px; border-radius:10px; align-items:center; transition: background .15s ease; contain: layout style; }
     .board .row:nth-child(odd){ background:rgba(255,255,255,0.02); }
     .board .rank{ display:flex; align-items:center; justify-content:center; }
     .board .score{ text-align:right; font-variant-numeric: tabular-nums; font-weight:800; }
@@ -1361,14 +1361,13 @@
       border: 1px solid rgba(255,255,255,.06) !important;
       border-radius: 16px !important;
       padding: 10px !important;
-      transition: all .25s cubic-bezier(.2,.8,.2,1) !important;
-      backdrop-filter: blur(4px);
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease !important;
+      contain: layout style;
     }
     .card:hover{
       transform: translateY(-2px) !important;
       border-color: rgba(124,58,237,.3) !important;
       box-shadow: 0 12px 32px rgba(124,58,237,.12), 0 4px 12px rgba(0,0,0,.15) !important;
-      background: rgba(255,255,255,.05) !important;
     }
     :root[data-theme="light"] .card{
       background: rgba(255,255,255,.75) !important;
@@ -1376,7 +1375,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,.04);
     }
     :root[data-theme="light"] .card:hover{
-      background: rgba(255,255,255,.9) !important;
       border-color: rgba(124,58,237,.25) !important;
       box-shadow: 0 8px 24px rgba(124,58,237,.08), 0 2px 8px rgba(0,0,0,.06) !important;
     }
@@ -1400,7 +1398,6 @@
       font-weight: 900;
       padding: 2px 8px !important;
       border-radius: 12px !important;
-      backdrop-filter: blur(4px);
     }
     :root[data-theme="light"] .score-chip{
       background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(6,182,212,.06)) !important;
@@ -1424,7 +1421,7 @@
       font-size: 11px !important;
       height: 26px !important;
       padding: 3px 0 !important;
-      transition: all .15s ease !important;
+      transition: transform .08s ease, box-shadow .12s ease !important;
     }
     .actions .btn.add{
       background: linear-gradient(180deg, #22c55e, #16a34a) !important;
@@ -1447,7 +1444,7 @@
 
     /* ===== 通用按鈕增強 ===== */
     .btn{
-      transition: all .2s cubic-bezier(.2,.8,.2,1) !important;
+      transition: transform .08s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease !important;
       font-weight: 700;
       letter-spacing: .01em;
     }
@@ -1695,7 +1692,7 @@
     }
     .seat-cell{
       border-radius: 14px !important;
-      transition: all .2s ease;
+      transition: background .15s ease;
     }
     .seat-cell:hover{
       background: rgba(124,58,237,.04);
@@ -2001,6 +1998,59 @@
     #export-class-list label:hover{
       border-color: rgba(124,58,237,.3) !important;
       background: rgba(124,58,237,.04) !important;
+    }
+
+    /* ===== ★ 平板/觸控裝置效能優化 ===== */
+    @media (pointer: coarse) {
+      /* 停用背景極光動畫（最大 GPU 節省） */
+      body::before{
+        animation: none !important;
+        will-change: auto !important;
+      }
+      /* 停用噪點紋理層 */
+      body::after{
+        display: none !important;
+      }
+      /* 卡片去除 hover 效果（觸控不需要） */
+      .card:hover{
+        transform: none !important;
+        box-shadow: none !important;
+      }
+      .board .row:hover{
+        transform: none !important;
+      }
+      .chip:hover{
+        transform: none !important;
+      }
+      /* 降低 backdrop-filter 複雜度 */
+      .sidebar, .main{
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .topbar{
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+      }
+      .hwtbl th, .progtbl th{
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      /* 加分按鈕：active 提供觸覺回饋 */
+      .actions .btn:active{
+        transform: scale(.92) !important;
+        transition-duration: .04s !important;
+      }
+      /* 分數變動動畫更快 */
+      .score-chip.bump{ animation-duration: .2s !important; }
+      .float-mark.show{ animation-duration: .3s !important; }
+      /* Ripple 更快完成 */
+      .ripple{ animation-duration: .3s !important; }
+      /* 排行榜行不做 transition */
+      .board .row{ transition: none !important; }
+      /* 座位 tile 不做 transform transition */
+      .seat-cell .tile{ transition: none !important; }
+      /* 表格行不做 transition */
+      .hwtbl tbody tr, .progtbl tbody tr{ transition: none !important; }
     }
 
 </style>
@@ -2622,7 +2672,7 @@
         }catch(e){
           console.warn('暫存失敗（可能超過容量）', e);
         }
-      }, 400);                            // 400ms 內合併
+      }, 800);                            // 800ms 內合併（平板效能友善）
     }
     /* 頁面離開時強制同步存檔 */
     function saveSessionNow(){
@@ -3630,14 +3680,14 @@ const helpMask = document.getElementById('help-mask');
         _scoreTimer = setTimeout(()=>{
           _scoreTimer = null;
           try{ localStorage.setItem('scores_v2', JSON.stringify(state.scores)); }catch{}
-        }, 300);
+        }, 500);
       }
       saveSession('score change');
     }
 
 
     function animateNumber(el, from, to, dur){ const start=performance.now(); const fmt=n=>Math.round(n); function frame(t){ const p=Math.min(1,(t-start)/dur); const v=from+(to-from)*(1-Math.pow(1-p,3)); el.textContent=fmt(v); if(p<1) requestAnimationFrame(frame); } requestAnimationFrame(frame); }
-    function bindRipple(btn){ btn.addEventListener('click', (e)=>{ const r=document.createElement('span'); r.className='ripple'; const rect=btn.getBoundingClientRect(); r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px'; btn.appendChild(r); setTimeout(()=>r.remove(), 480); }); }
+    function bindRipple(btn){ btn.addEventListener('pointerdown', (e)=>{ if(e.button && e.button !== 0) return; const r=document.createElement('span'); r.className='ripple'; const rect=btn.getBoundingClientRect(); r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px'; btn.appendChild(r); setTimeout(()=>r.remove(), 350); }); }
 
     // ✅ 座號補零 & 搜尋相容
     function padSeat(seat){
@@ -3872,19 +3922,19 @@ const helpMask = document.getElementById('help-mask');
       const floater=card.querySelector(`#float-${s.id}`);
       bindRipple(btnAdd); bindRipple(btnSub);
 
-      /* ★ 平板觸控即時回應：用 pointerup 取代 click 可省掉 ~120ms 延遲 */
+      /* ★ 平板觸控即時回應：用 pointerdown 取代 click 可省掉 ~200ms 延遲 */
       function attachScoreBtn(btn, delta){
         let handled = false;
-        btn.addEventListener('pointerup', (e)=>{
+        btn.addEventListener('pointerdown', (e)=>{
           if(e.button && e.button !== 0) return;   // 只處理主鍵
           e.preventDefault();
           handled = true;
           changeScore(cls, s.id, delta, scoreEl, floater);
-          setTimeout(()=>{ handled = false; }, 300);
-        });
+          requestAnimationFrame(()=>{ handled = false; });
+        }, { passive: false });
         // fallback：桌面無 pointer 事件時仍靠 click
         btn.addEventListener('click', (e)=>{
-          if(handled){ handled = false; return; }  // 已由 pointerup 處理
+          if(handled){ handled = false; return; }  // 已由 pointerdown 處理
           changeScore(cls, s.id, delta, scoreEl, floater);
         });
       }
@@ -3902,8 +3952,11 @@ const helpMask = document.getElementById('help-mask');
       const next = old + delta;
       setScore(cls, id, next);               // ★
 
-      animateNumber(scoreEl, old, next, 260);
-      scoreEl.classList.add('bump'); setTimeout(()=>scoreEl.classList.remove('bump'), 360);
+      // ★ 直接更新數字（避免 requestAnimationFrame 過多開銷）
+      scoreEl.textContent = next;
+      // ★ 用 requestAnimationFrame 重啟動畫（避免同步 reflow）
+      scoreEl.classList.remove('bump');
+      requestAnimationFrame(()=>{ scoreEl.classList.add('bump'); });
       showFloater(floater, delta);
       debouncedRenderLeaderboard(cls);       // ★ 節流版
     }
@@ -3911,11 +3964,11 @@ const helpMask = document.getElementById('help-mask');
     /* ★ 節流版 renderLeaderboard：快速連按時不逐次重繪排行榜 */
     let _lbTimer = null;
     function debouncedRenderLeaderboard(cls){
-      if(_lbTimer) clearTimeout(_lbTimer);
-      _lbTimer = setTimeout(()=>{ _lbTimer = null; renderLeaderboard(cls); }, 200);
+      if(_lbTimer) cancelAnimationFrame(_lbTimer);
+      _lbTimer = requestAnimationFrame(()=>{ _lbTimer = null; renderLeaderboard(cls); });
     }
 
-    function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+    function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); requestAnimationFrame(()=>{ el.classList.add('show'); }); }
 
     function renderLeaderboard(cls){
       elBoardClass.textContent=cls||'未選擇';
@@ -3928,17 +3981,51 @@ const helpMask = document.getElementById('help-mask');
 
       if(list.length===0){ elBoard.innerHTML='<div class="empty">此班級尚無成員</div>'; return; }
       list.sort((a,b)=>{ if(b.score!==a.score) return b.score-a.score; const na=Number(a.seat), nb=Number(b.seat); if(!Number.isNaN(na)&&!Number.isNaN(nb)&&na!==nb) return na-nb; return a.name.localeCompare(b.name,'zh-Hant'); });
-      const rows = list.map((s,idx)=>{
-        const rank = idx+1; const clsRank = rank<=5 ? `rank-${rank}` : ''; const medalText = rank<=5 ? rank : '';
+
+      // ★ 增量更新：如果行數相同，只更新分數和排名（避免完整 innerHTML 重繪）
+      const existingRows = elBoard.querySelectorAll('.row');
+      if(existingRows.length === list.length){
+        let canPatch = true;
+        for(let i=0; i<list.length; i++){
+          const s = list[i];
+          const row = existingRows[i];
+          const rank = i+1;
+          const scoreEl = row.querySelector('.score');
+          const whoEl = row.querySelector('.who');
+          const seatDisp = padSeat(s.seat);
+          const expectedWho = (s.seat ? `#${seatDisp} ` : '') + s.name;
+          // 如果姓名順序變了，需要完整重繪
+          if(whoEl && whoEl.textContent.trim() !== expectedWho.trim()){ canPatch = false; break; }
+        }
+        if(canPatch){
+          for(let i=0; i<list.length; i++){
+            const s = list[i]; const rank = i+1;
+            const row = existingRows[i];
+            const scoreEl = row.querySelector('.score');
+            if(scoreEl) scoreEl.textContent = s.score;
+            // 更新排名 class
+            const newCls = 'row' + (rank<=5 ? ` rank-${rank}` : '');
+            if(row.className !== newCls) row.className = newCls;
+          }
+          return;
+        }
+      }
+
+      const frag = document.createDocumentFragment();
+      for(let i=0; i<list.length; i++){
+        const s = list[i];
+        const rank = i+1; const clsRank = rank<=5 ? `rank-${rank}` : ''; const medalText = rank<=5 ? rank : '';
         const seatDisp = padSeat(s.seat);
-        return `
-          <div class="row ${clsRank}">
+        const row = document.createElement('div');
+        row.className = `row ${clsRank}`;
+        row.innerHTML = `
             <div class="rank">${rank<=5 ? `<span class="medal">${medalText}</span>` : rank}</div>
             <div class="who">${s.seat?`<span class="seat-badge">#${escapeHTML(seatDisp)}</span> `:''}${escapeHTML(s.name)}</div>
-            <div class="score">${s.score}</div>
-          </div>`;
-      }).join('');
-      elBoard.innerHTML = rows;
+            <div class="score">${s.score}</div>`;
+        frag.appendChild(row);
+      }
+      elBoard.innerHTML = '';
+      elBoard.appendChild(frag);
     }
 
     /* ====== ★ 主題切換（深/淺） ====== */
