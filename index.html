@@ -3017,24 +3017,25 @@ const helpMask = document.getElementById('help-mask');
             const seatCIdx = header.findIndex(h => h === COL.C);
 
             /* ★ 作業欄偵測：
-               1) 先找傳統格式「作業 N」/「HW N」
-               2) 若找不到，則把「分數」與「小計」之間的欄位都當作作業欄（支援自訂名稱）
+               找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
+               這樣不管欄名是「作業 1」還是使用者自訂名稱都能正確匯入
             */
             const hwCols=[];
-            header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
-            if(hwCols.length === 0 && scoreIdx >= 0){
-              // 找出「分數」欄之後、「小計/平均/座位列/座位欄/學號/座號/姓名/備註」之前的所有欄位
-              const reserved = new Set([idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx]);
+            if(scoreIdx >= 0){
+              const reserved = new Set([idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx].filter(x=>x>=0));
               const endCols = new Set();
               header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
-              // 「分數」之後到第一個結尾欄之間的非保留欄位
-              const firstEnd = Math.min(...([...endCols].length ? [...endCols] : [header.length]));
+              const firstEnd = endCols.size ? Math.min(...endCols) : header.length;
               for(let i = scoreIdx + 1; i < firstEnd; i++){
                 if(reserved.has(i)) continue;
                 const h = String(header[i] ?? '').trim();
                 if(!h) continue;
                 hwCols.push({name: h, idx: i});
               }
+            }
+            // 若位置偵測沒結果，再用傳統格式「作業 N / HW N」做全域掃描
+            if(hwCols.length === 0){
+              header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
             }
 
             const pendingCoords=[]; let maxR=0, maxC=0;
