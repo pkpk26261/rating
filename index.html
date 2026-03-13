@@ -430,9 +430,13 @@
     .placeholder .seat-ind{ font-size:12px; opacity:.85; }
     .placeholder .empty-text{ font-weight:800; letter-spacing:.04em; }
     .actions{ display:flex; gap:4px; margin-top:auto; }
-    .actions .btn{ flex:1; font-weight:800; font-size:11px; padding:3px 0; height:26px; border-width:1px; letter-spacing:.01em; border-radius:8px; }
+    .actions .btn{ flex:1; font-weight:800; font-size:11px; padding:3px 0; height:26px; border-width:1px; letter-spacing:.01em; border-radius:8px; touch-action:manipulation; -webkit-tap-highlight-color: transparent; }
     .actions .btn.add{ background: linear-gradient(180deg, #22c55e, #16a34a); border-color:#15803d; color:white; box-shadow: 0 3px 8px rgba(34,197,94,.2), 0 0 0 1px rgba(255,255,255,.06) inset; }
     .actions .btn.sub{ background: linear-gradient(180deg, #ef4444, #dc2626); border-color:#b91c1c; color:white; box-shadow: 0 3px 8px rgba(220,38,38,.2), 0 0 0 1px rgba(255,255,255,.06) inset; }
+
+    /* ★ 平板觸控：消除所有按鈕 300ms 延遲 */
+    .btn{ touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .card{ touch-action: manipulation; }
     .score-chip{ position:absolute; top:4px; right:4px; padding:2px 6px; background:var(--scorechip); border:1px solid var(--line); border-radius:10px; font-weight:800; font-variant-numeric: tabular-nums; min-width:25px; text-align:center; font-size:12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
     .score-chip.bump{ animation: bump .35s ease; }
     @keyframes bump{ 0%{ transform:scale(1)} 30%{ transform:scale(1.18)} 60%{ transform:scale(0.96)} 100%{ transform:scale(1)} }
@@ -2605,13 +2609,25 @@
         ts: Date.now()
       };
     }
+    /* ★ 節流版 saveSession：避免高頻加分時 JSON.stringify 造成平板卡頓 */
+    let _saveTimer = null;
     function saveSession(reason=''){
-      try{
-        localStorage.setItem(SESSION_KEY, JSON.stringify(buildSession()));
-        // console.debug('[autosave]', reason);
-      }catch(e){
-        console.warn('暫存失敗（可能超過容量）', e);
-      }
+      if(_saveTimer) return;              // 已排程，跳過
+      _saveTimer = setTimeout(()=>{
+        _saveTimer = null;
+        try{
+          localStorage.setItem(SESSION_KEY, JSON.stringify(buildSession()));
+        }catch(e){
+          console.warn('暫存失敗（可能超過容量）', e);
+        }
+      }, 400);                            // 400ms 內合併
+    }
+    /* 頁面離開時強制同步存檔 */
+    function saveSessionNow(){
+      if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
+      if(_scoreTimer){ clearTimeout(_scoreTimer); _scoreTimer = null; }
+      try{ localStorage.setItem('scores_v2', JSON.stringify(state.scores)); }catch{}
+      try{ localStorage.setItem(SESSION_KEY, JSON.stringify(buildSession())); }catch{}
     }
     function tryRestoreSession(){
       try{
@@ -3604,13 +3620,17 @@ const helpMask = document.getElementById('help-mask');
       return Number.isFinite(n) ? n : 0;
     }
 
-    // 儲存到新版 localStorage（scores_v2）並快照
+    // ★ 節流版：分數寫入 localStorage（避免每次 tap 都做完整序列化）
+    let _scoreTimer = null;
     function setScore(cls, id, val){
       state.scores[scoreKey(cls, id)] = Number(val) || 0;
-      try{
-        localStorage.setItem('scores_v2', JSON.stringify(state.scores));
-        saveSession('score change');
-      }catch{}
+      if(!_scoreTimer){
+        _scoreTimer = setTimeout(()=>{
+          _scoreTimer = null;
+          try{ localStorage.setItem('scores_v2', JSON.stringify(state.scores)); }catch{}
+        }, 300);
+      }
+      saveSession('score change');
     }
 
 
@@ -3849,8 +3869,25 @@ const helpMask = document.getElementById('help-mask');
       const scoreEl=card.querySelector(`#score-${s.id}`);
       const floater=card.querySelector(`#float-${s.id}`);
       bindRipple(btnAdd); bindRipple(btnSub);
-      btnAdd.addEventListener('click',()=>{ changeScore(cls, s.id, +1, scoreEl, floater); });
-      btnSub.addEventListener('click',()=>{ changeScore(cls, s.id, -1, scoreEl, floater); });
+
+      /* ★ 平板觸控即時回應：用 pointerup 取代 click 可省掉 ~120ms 延遲 */
+      function attachScoreBtn(btn, delta){
+        let handled = false;
+        btn.addEventListener('pointerup', (e)=>{
+          if(e.button && e.button !== 0) return;   // 只處理主鍵
+          e.preventDefault();
+          handled = true;
+          changeScore(cls, s.id, delta, scoreEl, floater);
+          setTimeout(()=>{ handled = false; }, 300);
+        });
+        // fallback：桌面無 pointer 事件時仍靠 click
+        btn.addEventListener('click', (e)=>{
+          if(handled){ handled = false; return; }  // 已由 pointerup 處理
+          changeScore(cls, s.id, delta, scoreEl, floater);
+        });
+      }
+      attachScoreBtn(btnAdd, +1);
+      attachScoreBtn(btnSub, -1);
       return card;
     }
     function buildPlaceholderCard(seatIdx){
@@ -3866,7 +3903,14 @@ const helpMask = document.getElementById('help-mask');
       animateNumber(scoreEl, old, next, 260);
       scoreEl.classList.add('bump'); setTimeout(()=>scoreEl.classList.remove('bump'), 360);
       showFloater(floater, delta);
-      renderLeaderboard(cls);
+      debouncedRenderLeaderboard(cls);       // ★ 節流版
+    }
+
+    /* ★ 節流版 renderLeaderboard：快速連按時不逐次重繪排行榜 */
+    let _lbTimer = null;
+    function debouncedRenderLeaderboard(cls){
+      if(_lbTimer) clearTimeout(_lbTimer);
+      _lbTimer = setTimeout(()=>{ _lbTimer = null; renderLeaderboard(cls); }, 200);
     }
 
     function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
@@ -6115,10 +6159,10 @@ noteSave?.addEventListener('click', ()=>{
 
     /* ===== ★ 離開前自動暫存狀態 ===== */
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') saveSession('visibilitychange');
+      if (document.visibilityState === 'hidden') saveSessionNow();
     });
-    window.addEventListener('pagehide', () => saveSession('pagehide'));
-    window.addEventListener('beforeunload', ()=> saveSession('beforeunload'));
+    window.addEventListener('pagehide', () => saveSessionNow());
+    window.addEventListener('beforeunload', ()=> saveSessionNow());
   </script>
 
   <!-- In-app Modal (避免瀏覽器 alert「這個網站」視窗) -->
