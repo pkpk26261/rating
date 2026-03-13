@@ -179,7 +179,9 @@
       padding-inline: var(--page-x);
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
-    .dt-display{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:12px; line-height:1.1; opacity:.92; user-select:none; }
+    .topbar__right{ flex-direction:column; align-items:flex-end; gap:4px; }
+    .topbar__right-actions{ display:flex; gap:8px; align-items:center; }
+    .dt-display{ display:flex; flex-direction:row; align-items:center; justify-content:flex-end; gap:8px; font-size:12px; line-height:1.1; opacity:.92; user-select:none; white-space:nowrap; }
     
     /* ===== 匯入區：狀態顯示在匯入按鈕下方（高度不宜過高） ===== */
     .import-block{ display:flex; flex-direction:column; gap:4px; }
@@ -311,7 +313,8 @@
     }
     /* 讓三個模式的內容區塊填滿剩餘高度，並在區塊內捲動 */
     .main > .grid,
-    .main > .seatwrap{
+    .main > .seatwrap,
+    .main > .welcome-guide{
       flex:1 1 auto; min-height:0; overflow:auto;
     }
     .main > #hw-pane{
@@ -353,7 +356,7 @@
     }
 
 
-    .sidebar{ display:flex; flex-direction:column; gap:16px; padding-bottom:0; }
+    .sidebar{ display:flex; flex-direction:column; gap:16px; padding-bottom:16px; }
     .statusbar{ margin-top:auto; }
     .statusbar .hint{ display:block; margin:0; padding:12px 0; border-top:1px solid var(--line); }
 
@@ -361,6 +364,9 @@
     .controls-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding-inline: 0px; padding-top: 0px; }
     .controls-row .seg{ margin-left:auto; }
     .select,.input{ appearance:none; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
+    .select option, select option{ background:var(--card); color:var(--fg); }
+    :root[data-theme="light"] .select option,
+    :root[data-theme="light"] select option{ background:#fff; color:#0f172a; }
     .select{ min-width:220px; } .input{ min-width:240px; outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.03); }
     .input:focus{ border-color: color-mix(in oklab, var(--accent) 60%, #000); box-shadow: 0 0 0 4px rgba(124,58,237,.15); }
 
@@ -565,6 +571,196 @@
     .rank-1{ background: linear-gradient(180deg, rgba(245,158,11,0.12), rgba(245,158,11,0.08)) !important; }
     .rank-2{ background: linear-gradient(180deg, rgba(156,163,175,0.12), rgba(156,163,175,0.06)) !important; }
     .rank-3{ background: linear-gradient(180deg, rgba(217,119,6,0.12), rgba(217,119,6,0.08)) !important; }
+
+    /* ===== ★ 無資料狀態（尚未匯入）全域樣式 ===== */
+    /* 模式切換按鈕：禁用態 */
+    body.no-data .seg-btn:not([data-mode="list"]):not([data-mode="timer"]){
+      opacity:.35;
+      cursor:not-allowed;
+      pointer-events:none;
+      filter:grayscale(.6);
+    }
+    body.no-data .seg-btn[data-mode="list"]{ opacity:1; }
+    body.no-data .seg-btn[data-mode="timer"]{ opacity:.85; }
+
+    /* 匯出按鈕禁用 */
+    body.no-data #btn-export{
+      opacity:.35;
+      cursor:not-allowed;
+      pointer-events:none;
+    }
+    /* 清除按鈕禁用 */
+    body.no-data #btn-reset{
+      opacity:.35;
+      cursor:not-allowed;
+      pointer-events:none;
+    }
+
+    /* 控制列（班級選擇、搜尋、新增/刪除學生）整條隱藏 */
+    body.no-data .controls-row{
+      display:none !important;
+    }
+
+    /* 側欄排行榜淡化 */
+    body.no-data .sidebar{
+      opacity:.25;
+      pointer-events:none;
+      filter:grayscale(.5);
+    }
+    body.no-data .side-toggle{
+      display:none !important;
+    }
+
+    /* 主區上方 modebar 加個提示脈衝 */
+    body.no-data .modebar .seg{
+      position:relative;
+    }
+    body.no-data .modebar .seg::after{
+      content:'匯入名單後解鎖所有功能';
+      position:absolute;
+      top:calc(100% + 6px);
+      left:50%;
+      transform:translateX(-50%);
+      font-size:11px;
+      color:var(--muted);
+      opacity:.7;
+      white-space:nowrap;
+      pointer-events:none;
+      animation:noDataHint 2.5s ease-in-out infinite;
+    }
+    @keyframes noDataHint{
+      0%,100%{ opacity:.5; }
+      50%{ opacity:.9; }
+    }
+
+    /* 匯入按鈕脈衝高亮提示 */
+    body.no-data .topbar__left .import-block label.btn{
+      animation:importPulse 2s ease-in-out infinite;
+      box-shadow:0 0 0 0 rgba(124,58,237,.4);
+    }
+    @keyframes importPulse{
+      0%{ box-shadow:0 0 0 0 rgba(124,58,237,.45); }
+      70%{ box-shadow:0 0 0 10px rgba(124,58,237,0); }
+      100%{ box-shadow:0 0 0 0 rgba(124,58,237,0); }
+    }
+
+    /* 日期時間在空狀態時降低視覺權重 */
+    body.no-data .dt-display{
+      opacity:.5;
+    }
+
+    /* ===== 空狀態歡迎引導 ===== */
+    .welcome-guide{
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:28px; padding:48px 32px; text-align:center;
+      flex:1; min-height:0;
+      animation: welcomeFadeIn .5s ease both;
+    }
+    @keyframes welcomeFadeIn{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:translateY(0); } }
+    .welcome-icon{ font-size:64px; line-height:1; filter:drop-shadow(0 6px 18px rgba(124,58,237,.25)); animation: welcomeBounce 2.5s ease-in-out infinite; }
+    @keyframes welcomeBounce{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+    .welcome-title{ font-size:26px; font-weight:900; letter-spacing:.04em; background:linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin:0; }
+    .welcome-sub{ font-size:15px; color:var(--muted); line-height:1.6; max-width:480px; margin:0; }
+    .welcome-steps{
+      display:flex; gap:20px; flex-wrap:wrap; justify-content:center;
+      margin-top:4px;
+    }
+    .welcome-step{
+      display:flex; flex-direction:column; align-items:center; gap:10px;
+      padding:20px 18px; border-radius:16px;
+      border:1px solid var(--line); background:rgba(255,255,255,.03);
+      width:170px; transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .welcome-step:hover{ transform:translateY(-4px); box-shadow:0 12px 32px rgba(124,58,237,.15); border-color:rgba(124,58,237,.35); }
+    :root[data-theme="light"] .welcome-step{ background:rgba(0,0,0,.02); }
+    :root[data-theme="light"] .welcome-step:hover{ box-shadow:0 12px 32px rgba(124,58,237,.1); }
+    .welcome-step-num{ display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; font-weight:900; font-size:15px; }
+    .welcome-step-icon{ font-size:28px; }
+    .welcome-step-text{ font-size:13px; font-weight:700; line-height:1.4; color:var(--fg); }
+    .welcome-actions{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:6px; }
+    .welcome-actions .btn{ font-size:15px; padding:12px 24px; border-radius:14px; font-weight:800; }
+    .welcome-actions .btn.primary{
+      background:linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent-2) 60%, var(--accent)));
+      border-color:rgba(124,58,237,.5); color:#fff;
+      box-shadow:0 6px 24px rgba(124,58,237,.3);
+    }
+    .welcome-actions .btn.primary:hover{ box-shadow:0 8px 32px rgba(124,58,237,.4); filter:brightness(1.08); }
+    .welcome-divider{ width:80px; height:2px; border-radius:2px; background:linear-gradient(90deg, var(--accent), var(--accent-2)); opacity:.4; }
+    .welcome-hint{ font-size:12px; color:var(--muted); opacity:.8; }
+    .welcome-formats{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:-8px; }
+    .welcome-fmt{ padding:3px 10px; border-radius:8px; font-size:11px; font-weight:700; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--muted); }
+    :root[data-theme="light"] .welcome-fmt{ background:rgba(0,0,0,.03); }
+
+    /* ===== 新手引導 Tour ===== */
+    .tour-overlay{
+      position:fixed; inset:0; z-index:9998;
+      background:rgba(2,6,23,.55);
+      backdrop-filter:blur(2px);
+      transition:opacity .25s ease;
+      cursor:pointer;
+    }
+    .tour-highlight{
+      position:fixed; z-index:9999;
+      border-radius:14px;
+      box-shadow: 0 0 0 4px rgba(124,58,237,.7), 0 0 0 9999px rgba(2,6,23,.55);
+      transition: all .35s cubic-bezier(.4,0,.2,1);
+      pointer-events:none;
+    }
+    :root[data-theme="light"] .tour-highlight{
+      box-shadow: 0 0 0 4px rgba(124,58,237,.55), 0 0 0 9999px rgba(15,23,42,.35);
+    }
+    .tour-tooltip{
+      position:fixed; z-index:10000;
+      max-width:340px; padding:20px 22px 16px;
+      border-radius:16px;
+      background:var(--card); border:1px solid var(--line);
+      box-shadow:0 20px 60px rgba(0,0,0,.4);
+      color:var(--fg);
+      animation: tourPopIn .3s cubic-bezier(.2,.8,.2,1) both;
+    }
+    :root[data-theme="light"] .tour-tooltip{
+      box-shadow:0 16px 48px rgba(0,0,0,.15);
+    }
+    @keyframes tourPopIn{ from{ opacity:0; transform:translateY(10px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
+    .tour-tooltip-arrow{
+      position:absolute; width:14px; height:14px;
+      background:var(--card); border:1px solid var(--line);
+      transform:rotate(45deg);
+    }
+    .tour-tooltip-arrow.top{ top:-8px; left:28px; border-right:0; border-bottom:0; }
+    .tour-tooltip-arrow.bottom{ bottom:-8px; left:28px; border-left:0; border-top:0; }
+    .tour-tooltip-arrow.left{ left:-8px; top:20px; border-top:0; border-right:0; }
+    .tour-tooltip-arrow.right{ right:-8px; top:20px; border-bottom:0; border-left:0; }
+    .tour-step-badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:26px; height:26px; border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      color:#fff; font-weight:900; font-size:13px; margin-right:8px; flex-shrink:0;
+    }
+    .tour-title{ display:flex; align-items:center; font-size:16px; font-weight:800; margin-bottom:8px; }
+    .tour-desc{ font-size:13px; line-height:1.65; color:var(--muted); margin-bottom:14px; }
+    .tour-footer{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tour-dots{ display:flex; gap:5px; }
+    .tour-dot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--line); transition:background .2s, transform .2s;
+    }
+    .tour-dot.active{ background:var(--accent); transform:scale(1.3); }
+    .tour-btns{ display:flex; gap:8px; }
+    .tour-btns .btn{ font-size:13px; padding:7px 16px; border-radius:10px; }
+    .tour-btns .btn.tour-next{
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color:rgba(124,58,237,.5); color:#fff;
+    }
+    .tour-skip{ font-size:12px; color:var(--muted); cursor:pointer; opacity:.7; transition:opacity .2s; border:0; background:none; padding:4px 8px; }
+    .tour-skip:hover{ opacity:1; }
+    .tour-pulse{
+      animation: tourPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes tourPulse{
+      0%,100%{ box-shadow: 0 0 0 4px rgba(124,58,237,.7), 0 0 0 9999px rgba(2,6,23,.55); }
+      50%{ box-shadow: 0 0 0 8px rgba(124,58,237,.4), 0 0 0 9999px rgba(2,6,23,.55); }
+    }
 
     /* ===== 拖放上傳提示 ===== */
     .dropmask{ position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,.6); backdrop-filter: blur(4px); outline:2px dashed rgba(124,58,237,.6); outline-offset:-2px; box-sizing:border-box; pointer-events:none; }
@@ -1180,6 +1376,14 @@
     :root[data-theme="light"] .draw-class-select{
       background-color: rgba(124,58,237,.08);
       border-color: rgba(124,58,237,.2);
+    }
+    .draw-class-select option{
+      background: var(--card);
+      color: var(--fg);
+    }
+    :root[data-theme="light"] .draw-class-select option{
+      background: #fff;
+      color: #0f172a;
     }
 
     /* ===== 🎰 抽籤動畫舞台 ===== */
@@ -2101,11 +2305,12 @@
       opacity: 1 !important;
     }
     #dt-time{
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--accent-2);
+      font-size: inherit;
+      font-weight: inherit;
+      font-family: inherit;
+      color: inherit;
+      letter-spacing: inherit;
     }
-    :root[data-theme="light"] #dt-time{ color: #0891b2; }
 
     /* ===== Segmented 控制器強化 ===== */
     .seg{
@@ -2423,6 +2628,12 @@
     :root[data-theme="light"] .dc-num-btn{
       background: #fff;
       border-color: rgba(0,0,0,.1);
+      color: #0f172a;
+    }
+    :root[data-theme="light"] .dc-num-btn.active{
+      background:linear-gradient(135deg, var(--accent), #a855f7);
+      color:#fff;
+      border-color:transparent;
     }
     :root[data-theme="light"] .dc-input{
       background: #fff;
@@ -2726,6 +2937,8 @@
         justify-content: center !important;
         flex-wrap: wrap;
       }
+      .topbar__right{ align-items: center !important; }
+      .topbar__right-actions{ justify-content:center; flex-wrap:wrap; }
       .title-stack{ grid-column: 1 !important; }
       .title{ font-size: 16px !important; }
 
@@ -2886,7 +3099,7 @@
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="no-data">
   <!-- ===== 手機封鎖遮罩 ===== -->
   <div id="mobile-block-overlay">
     <div class="block-icon">🚫</div>
@@ -2930,6 +3143,7 @@
             <label class="btn" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 匯入</label>
             <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
             <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
+            <button id="btn-help" class="btn" title="開啟操作說明">❔ 操作</button>
           </div>
           <div id="status" class="status-inline">尚未載入名單。</div>
         </div>
@@ -2954,13 +3168,14 @@
       <div class="topbar__right">
         <!-- ★ 新增主題切換按鈕 -->
         <!-- ★ 日期時間（民國年 + 24 小時） -->
-        <div id="dt-display" class="dt-display" aria-label="日期時間">
+        <div class="topbar__right-actions">
+          <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
+          <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
+        </div>
+        <div id="dt-display" class="dt-display" aria-label="日期與時間">
           <div id="dt-date">114年12月16日</div>
           <div id="dt-time">00:00:00</div>
         </div>
-        <button id="btn-help" class="btn" title="開啟操作說明">❔ 操作</button>
-        <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
-        <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
       </div>
     </header>
 
@@ -3035,6 +3250,44 @@
             <h4>未安排名單</h4>
             <div id="unassigned-list" class="list"></div>
           </aside>
+        </div>
+
+        <!-- ★ 空狀態歡迎引導 -->
+        <div id="welcome-guide" class="welcome-guide">
+          <div class="welcome-icon">📊</div>
+          <h2 class="welcome-title">歡迎使用成績管理系統</h2>
+          <p class="welcome-sub">匯入學生名單即可開始管理平時分數、作業成績、座位安排等。<br>支援拖放檔案到頁面任意位置快速匯入。</p>
+          <div class="welcome-steps">
+            <div class="welcome-step">
+              <div class="welcome-step-num">1</div>
+              <div class="welcome-step-icon">📂</div>
+              <div class="welcome-step-text">匯入 Excel 檔案<br><small style="font-weight:400;opacity:.7">或直接拖放到頁面</small></div>
+            </div>
+            <div class="welcome-step">
+              <div class="welcome-step-num">2</div>
+              <div class="welcome-step-icon">✏️</div>
+              <div class="welcome-step-text">加扣分、安排座位<br><small style="font-weight:400;opacity:.7">即時記錄平時成績</small></div>
+            </div>
+            <div class="welcome-step">
+              <div class="welcome-step-num">3</div>
+              <div class="welcome-step-icon">💾</div>
+              <div class="welcome-step-text">匯出成績檔案<br><small style="font-weight:400;opacity:.7">Excel / CSV / ODS</small></div>
+            </div>
+          </div>
+          <div class="welcome-actions">
+            <label class="btn primary" for="file-input" style="cursor:pointer;">📂 匯入學生名單</label>
+            <button class="btn" id="btn-welcome-sample">📥 下載範例檔</button>
+            <button class="btn" id="btn-welcome-help">❔ 操作說明</button>
+            <button class="btn" id="btn-welcome-tour" style="border-color:rgba(34,211,238,.4);color:var(--accent-2);">🎯 新手導覽</button>
+          </div>
+          <div class="welcome-divider"></div>
+          <div class="welcome-formats">
+            <span class="welcome-fmt">.xlsx</span>
+            <span class="welcome-fmt">.xls</span>
+            <span class="welcome-fmt">.ods</span>
+            <span class="welcome-fmt">.csv</span>
+          </div>
+          <div class="welcome-hint">💡 所有資料皆儲存於本機瀏覽器，不會上傳至任何伺服器</div>
         </div>
 
         <!-- 列表（座位鏡像） -->
@@ -3141,7 +3394,7 @@
             <div class="grp-toolbar-left">
               <div class="grp-class-select-wrap">
                 <span class="grp-class-icon">👥</span>
-                <select id="group-class-pill" class="grp-class-select" title="選擇班級"></select>
+                <select id="group-class-pill" class="grp-class-select" title="選擇班級"><option value="" disabled selected>尚未載入名單</option></select>
               </div>
               <span class="grp-toolbar-sep"></span>
               <label class="grp-label">分成
@@ -3673,6 +3926,8 @@
           if(elAddStudent) elAddStudent.disabled=false;
           if(elDelStudent) elDelStudent.disabled=false;
           if(elRenameClass) elRenameClass.disabled=false;
+          // ★ 有資料→移除空狀態標記
+          document.body.classList.remove('no-data');
 
           // 依照上次模式恢復畫面
           if(state.mode==='seat') setMode('seat');
@@ -4135,6 +4390,8 @@ const helpMask = document.getElementById('help-mask');
           if(elAddStudent) elAddStudent.disabled=false;
           if(elDelStudent) elDelStudent.disabled=false;
           if(elRenameClass) elRenameClass.disabled=false;
+          // ★ 移除無資料狀態
+          document.body.classList.remove('no-data');
           renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
           // ★ 若目前就在教學進度模式，匯入後立即刷新
           if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
@@ -4562,6 +4819,9 @@ const helpMask = document.getElementById('help-mask');
       state.timer = { setSec: 300, remainingSec: 300, running:false, endAt: 0, doneNotified:false };
       stopTimerInterval();
 
+      // ★ 標記為無資料狀態
+      document.body.classList.add('no-data');
+
       // 2) 還原 UI 控制
       elSelect.innerHTML = '<option value="" selected>請先上傳學生名單</option>';
       elSelect.disabled = true;
@@ -4602,6 +4862,7 @@ const helpMask = document.getElementById('help-mask');
 
       // 顯示模式回列表、狀態提示
       setMode('list');
+      showWelcomeGuide();
       setStatus('已清除所有本機暫存與名單。');
     }
 
@@ -4912,43 +5173,15 @@ const helpMask = document.getElementById('help-mask');
     function renderStudents(cls){
       const elStudents = document.getElementById('students');
 
-      // ✅ 沒選班級/剛清除暫存：也畫出一盤空格（並把卡片顯示出來）
+      // ✅ 沒選班級/剛清除暫存：顯示歡迎引導畫面
       if(!cls){
-        const defaultRows = clampSize((elRows && elRows.value) || 6);
-        const defaultCols = clampSize((elCols && elCols.value) || 6);
-
-        elStudents.style.setProperty('--list-cols', defaultCols);
-
-        const frag = document.createDocumentFragment();
-        for(let r=1; r<=defaultRows; r++){
-          for(let c=1; c<=defaultCols; c++){
-            frag.appendChild(
-              buildPlaceholderCard(seatIndexLabel(r, c, defaultRows, defaultCols))
-            );
-          }
-        }
-        // 講台
-        // 講台（僅當需要顯示時）
-        if(state.showStageInList){
-          const stage = document.createElement('div');
-          stage.className = 'stage';
-          stage.setAttribute('role','presentation');
-          stage.textContent = '講台';
-          frag.appendChild(stage);
-        }
-
-
+        showWelcomeGuide();
         elStudents.innerHTML = '';
-        elStudents.appendChild(frag);
-
-        // 🔧 關鍵：讓卡片顯示（原本沒綁 observer 會保持 opacity:0）
-        elStudents.querySelectorAll('.card').forEach(c=>{
-          io.observe(c);         // 和原本一致
-          c.classList.add('show'); // 立刻顯示，避免 observer 沒即時觸發
-        });
-        requestAnimationFrame(()=> setupAutoFitForNames(elStudents));
         return;
       }
+
+      // ✅ 有班級資料→隱藏歡迎引導
+      hideWelcomeGuide();
 
       // ✅ 原本已有班級時的既有邏輯
       const st = ensureSeatState(cls);
@@ -6175,11 +6408,17 @@ function onTimerDone(){
       // 同步班級下拉
       if(elPill){
         elPill.innerHTML = '';
-        state.classOrder.forEach(c=>{
-          const o = document.createElement('option'); o.value = c; o.textContent = c;
-          if(c===cls) o.selected = true;
+        if(state.classOrder.length === 0){
+          const o = document.createElement('option');
+          o.value = ''; o.textContent = '尚未載入名單'; o.disabled = true; o.selected = true;
           elPill.appendChild(o);
-        });
+        } else {
+          state.classOrder.forEach(c=>{
+            const o = document.createElement('option'); o.value = c; o.textContent = c;
+            if(c===cls) o.selected = true;
+            elPill.appendChild(o);
+          });
+        }
       }
 
       if(!cls || !state.classMap[cls]){
@@ -6426,6 +6665,14 @@ function onTimerDone(){
 
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
+      // ★ 無資料時，只允許切到 list 和 timer
+      const hasData = state.classOrder && state.classOrder.length > 0;
+      if(!hasData && m!=='list' && m!=='timer'){
+        m = 'list'; // 強制回到列表(歡迎引導)
+      }
+      // ★ 同步 body.no-data 狀態
+      document.body.classList.toggle('no-data', !hasData);
+
       state.mode=m;
       document.body.dataset.mode = m;
       // ★ 只有「list（加扣分）」模式顯示 sidebar
@@ -6447,6 +6694,11 @@ function onTimerDone(){
 
       // 各頁顯示/隱藏
       document.getElementById('students').classList.toggle('hidden', m!=='list');
+      // 歡迎引導：僅在 list 模式且無資料時顯示
+      const _wg = document.getElementById('welcome-guide');
+      if(_wg){
+        _wg.style.display = (m==='list' && !hasData) ? '' : 'none';
+      }
       document.getElementById('seat-controls').classList.toggle('hidden', m!=='seat');
       document.getElementById('seatwrap').classList.toggle('hidden', m!=='seat');
       elProgressPane?.classList.toggle('hidden', m!=='progress');
@@ -6995,6 +7247,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
     // 啟動：先嘗試從本機暫存還原；失敗才顯示空畫面
     if (!tryRestoreSession()) {
+      document.body.classList.add('no-data');
       setMode('list');
     }
 
@@ -7003,6 +7256,180 @@ elProgAdd?.addEventListener('click', ()=>{
     function openHelp(){ if(helpSrc&&helpContent){ helpContent.innerHTML=helpSrc.innerHTML; const dlBtn = helpContent.querySelector('#btn-dl-sample'); dlBtn?.addEventListener('click', (e)=>{ e.preventDefault(); downloadSampleWorkbook(); });} helpMask.classList.add('show'); helpClose?.focus(); const onKey=(e)=>{ if(e.key==='Escape'){ closeHelp(); } }; window.addEventListener('keydown', onKey, { once:true }); helpMask.addEventListener('click', (e)=>{ if(e.target===helpMask){ closeHelp(); } }, { once:true }); }
     function closeHelp(){ helpMask.classList.remove('show'); }
     helpBtn?.addEventListener('click', ()=>{ bindRipple(helpBtn); openHelp(); });
+
+    /* ★ 歡迎引導按鈕 */
+    document.getElementById('btn-welcome-sample')?.addEventListener('click', ()=>{ downloadSampleWorkbook(); });
+    document.getElementById('btn-welcome-help')?.addEventListener('click', ()=>{ openHelp(); });
+    function hideWelcomeGuide(){
+      const g = document.getElementById('welcome-guide');
+      if(g) g.style.display = 'none';
+    }
+    function showWelcomeGuide(){
+      const g = document.getElementById('welcome-guide');
+      if(g) g.style.display = '';
+    }
+
+    /* ===== 新手引導 Tour ===== */
+    (function initTour(){
+      const TOUR_STEPS = [
+        {
+          target: '.topbar__left .import-block',
+          title: '匯入學生名單',
+          desc: '點擊「📂 匯入」按鈕上傳 Excel / ODS / CSV 檔案，也可以<b>直接將檔案拖放</b>到頁面任意位置。支援一次匯入多個檔案，每個檔案代表一個班級。',
+          pos: 'bottom'
+        },
+        {
+          target: '.modebar .seg',
+          title: '功能模式切換',
+          desc: '切換不同功能：<b>加扣分</b>管理平時成績、<b>座位</b>安排座位表、<b>作業成績</b>記錄作業、<b>抽號</b>隨機抽人、<b>分組</b>分組管理、<b>倒數計時</b>教學用計時器。',
+          pos: 'bottom'
+        },
+        {
+          target: '#class-select',
+          title: '班級選擇',
+          desc: '匯入名單後在此切換班級。每個班級的成績、座位等資料各自獨立儲存。也可以點擊旁邊的「✏️ 改班級名」修改名稱。',
+          pos: 'bottom'
+        },
+        {
+          target: '#sidebar .board',
+          title: '加分排行榜',
+          desc: '左側欄即時顯示目前班級的<b>加分排名</b>，方便掌握學生表現。僅在「加扣分」模式中顯示。',
+          pos: 'right'
+        },
+        {
+          target: '.topbar__right-actions',
+          title: '匯出與主題',
+          desc: '點擊「💾 匯出」將所有班級成績輸出為 Excel 檔案，可隨時再匯入繼續使用。點擊「☀️ 淺色」切換深色/淺色主題。',
+          pos: 'bottom'
+        },
+        {
+          target: '.topbar__left .import-block div:first-child',
+          title: '清除與操作說明',
+          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「❔ 操作」開啟完整操作說明。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
+          pos: 'bottom'
+        }
+      ];
+
+      let currentStep = -1;
+      let overlayEl = null, highlightEl = null, tooltipEl = null;
+
+      function startTour(){
+        if(overlayEl) return; // already running
+        currentStep = -1;
+        // create overlay
+        overlayEl = document.createElement('div');
+        overlayEl.className = 'tour-overlay';
+        overlayEl.style.background = 'transparent'; // shadow comes from highlight
+        overlayEl.addEventListener('click', e => { if(e.target === overlayEl) endTour(); });
+        document.body.appendChild(overlayEl);
+        // create highlight
+        highlightEl = document.createElement('div');
+        highlightEl.className = 'tour-highlight tour-pulse';
+        document.body.appendChild(highlightEl);
+        // create tooltip
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tour-tooltip';
+        document.body.appendChild(tooltipEl);
+        nextStep();
+      }
+
+      function endTour(){
+        overlayEl?.remove(); highlightEl?.remove(); tooltipEl?.remove();
+        overlayEl = highlightEl = tooltipEl = null;
+        currentStep = -1;
+      }
+
+      function nextStep(){
+        currentStep++;
+        if(currentStep >= TOUR_STEPS.length){ endTour(); return; }
+        showStep(currentStep);
+      }
+
+      function prevStep(){
+        if(currentStep <= 0) return;
+        currentStep--;
+        showStep(currentStep);
+      }
+
+      function showStep(idx){
+        const step = TOUR_STEPS[idx];
+        const el = document.querySelector(step.target);
+        if(!el){ nextStep(); return; }
+
+        // ensure target is visible
+        el.scrollIntoView?.({ behavior:'smooth', block:'nearest' });
+
+        requestAnimationFrame(()=>{
+          const r = el.getBoundingClientRect();
+          const pad = 8;
+
+          // position highlight
+          highlightEl.style.left   = (r.left - pad) + 'px';
+          highlightEl.style.top    = (r.top - pad) + 'px';
+          highlightEl.style.width  = (r.width + pad*2) + 'px';
+          highlightEl.style.height = (r.height + pad*2) + 'px';
+
+          // build tooltip content
+          const dots = TOUR_STEPS.map((_,i)=> `<div class="tour-dot${i===idx?' active':''}"></div>`).join('');
+          tooltipEl.innerHTML = `
+            <div class="tour-tooltip-arrow ${step.pos==='bottom'?'top':step.pos==='top'?'bottom':step.pos==='right'?'left':'right'}"></div>
+            <div class="tour-title"><span class="tour-step-badge">${idx+1}</span>${step.title}</div>
+            <div class="tour-desc">${step.desc}</div>
+            <div class="tour-footer">
+              <div class="tour-dots">${dots}</div>
+              <div class="tour-btns">
+                ${idx > 0 ? '<button class="btn tour-prev">← 上一步</button>' : '<button class="tour-skip" id="tour-skip-btn">跳過導覽</button>'}
+                <button class="btn tour-next">${idx < TOUR_STEPS.length - 1 ? '下一步 →' : '✓ 完成'}</button>
+              </div>
+            </div>
+          `;
+
+          // position tooltip
+          const tw = 340, th = tooltipEl.offsetHeight;
+          let tx, ty;
+          if(step.pos === 'bottom'){
+            tx = r.left; ty = r.bottom + pad + 14;
+            if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
+            if(tx < 8) tx = 8;
+          } else if(step.pos === 'top'){
+            tx = r.left; ty = r.top - pad - th - 14;
+            if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
+            if(tx < 8) tx = 8;
+          } else if(step.pos === 'right'){
+            tx = r.right + pad + 14; ty = r.top;
+            if(tx + tw > window.innerWidth - 16) { tx = r.left - tw - pad - 14; }
+          } else {
+            tx = r.left - tw - pad - 14; ty = r.top;
+          }
+          if(ty < 8) ty = 8;
+          if(ty + th > window.innerHeight - 8) ty = window.innerHeight - th - 8;
+          tooltipEl.style.left = tx + 'px';
+          tooltipEl.style.top  = ty + 'px';
+          tooltipEl.style.width = tw + 'px';
+          // re-trigger animation
+          tooltipEl.style.animation = 'none';
+          tooltipEl.offsetHeight;
+          tooltipEl.style.animation = '';
+
+          // bind buttons
+          tooltipEl.querySelector('.tour-next')?.addEventListener('click', nextStep);
+          tooltipEl.querySelector('.tour-prev')?.addEventListener('click', prevStep);
+          tooltipEl.querySelector('#tour-skip-btn')?.addEventListener('click', endTour);
+        });
+      }
+
+      // expose
+      window._startTour = startTour;
+
+      // bind welcome tour button
+      document.getElementById('btn-welcome-tour')?.addEventListener('click', startTour);
+
+      // reposition on resize
+      window.addEventListener('resize', ()=>{
+        if(overlayEl && currentStep >= 0) showStep(currentStep);
+      });
+    })();
+
     document.getElementById('help-close')?.addEventListener('click', closeHelp);
 
     /* ===== ★ 產生範例 Excel：2 個班級 × 各 30 位 ===== */
