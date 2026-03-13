@@ -932,33 +932,158 @@
       box-shadow: var(--shadow);
     }
 
-    .controls-card{ padding:14px; display:flex; flex-direction:column; gap:12px; }
-    .controls-card .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .controls-card .presets{ display:flex; gap:8px; flex-wrap:wrap; }
-    .controls-card .presets .btn{ padding:8px 10px; font-weight:900; }
-    .controls-card .ops{ display:flex; gap:8px; flex-wrap:wrap; }
-    .controls-card .ops .btn.add{
-      flex: 1 1 auto; font-size:17px; padding:14px 18px;
-      background: linear-gradient(135deg, var(--accent), #a855f7);
-      color: #fff; border:none; border-radius:14px;
-      font-weight:900; letter-spacing:.06em;
-      box-shadow: 0 4px 20px rgba(124,58,237,.35);
-      transition: transform .15s, box-shadow .15s;
-      position: relative; overflow:hidden;
+    .controls-card{ padding:16px; display:flex; flex-direction:column; gap:14px; }
+
+    /* --- 區塊標籤 --- */
+    .dc-section{ display:flex; flex-direction:column; gap:6px; }
+    .dc-label{
+      font-size:12px; font-weight:700; color:var(--muted);
+      letter-spacing:.06em; text-transform:uppercase;
     }
-    .controls-card .ops .btn.add::after{
+    .dc-label-hint{ font-weight:400; text-transform:none; opacity:.7; font-size:11px; }
+
+    /* --- 人數按鈕群 --- */
+    .dc-num-group{
+      display:flex; gap:6px; align-items:center; flex-wrap:wrap;
+    }
+    .dc-num-btn{
+      width:40px; height:40px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:var(--card);
+      color:var(--fg);
+      font-weight:900; font-size:15px;
+      cursor:pointer;
+      transition: all .15s;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .dc-num-btn:hover{
+      border-color:var(--accent);
+      background:rgba(124,58,237,.08);
+      transform:translateY(-1px);
+    }
+    .dc-num-btn.active{
+      background:linear-gradient(135deg, var(--accent), #a855f7);
+      color:#fff;
+      border-color:transparent;
+      box-shadow:0 3px 12px rgba(124,58,237,.35);
+    }
+    .dc-num-input::-webkit-inner-spin-button{ opacity:1; }
+
+    /* --- 序列輸入 --- */
+    .dc-input{
+      width:100%;
+      padding:8px 12px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:var(--card);
+      color:var(--fg);
+      font-size:13px;
+      outline:none;
+      transition:border-color .15s;
+    }
+    .dc-input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(124,58,237,.1);
+    }
+    .dc-input::placeholder{ color:var(--muted); opacity:.6; }
+
+    /* --- Toggle 開關 --- */
+    .dc-toggles{ gap:8px; }
+    .dc-toggle{
+      display:flex; align-items:center; gap:8px;
+      cursor:pointer; padding:6px 10px;
+      border-radius:10px;
+      transition:background .12s;
+    }
+    .dc-toggle:hover{ background:rgba(124,58,237,.05); }
+    .dc-toggle input[type="checkbox"]{
+      appearance:none; -webkit-appearance:none;
+      width:36px; height:20px;
+      border-radius:999px;
+      background:var(--line);
+      position:relative;
+      cursor:pointer;
+      transition:background .2s;
+      flex-shrink:0;
+    }
+    .dc-toggle input[type="checkbox"]::after{
+      content:'';
+      position:absolute; top:2px; left:2px;
+      width:16px; height:16px;
+      border-radius:50%;
+      background:#fff;
+      transition:transform .2s;
+      box-shadow:0 1px 3px rgba(0,0,0,.2);
+    }
+    .dc-toggle input[type="checkbox"]:checked{
+      background:var(--accent);
+    }
+    .dc-toggle input[type="checkbox"]:checked::after{
+      transform:translateX(16px);
+    }
+    .dc-toggle-label{
+      font-size:13px; font-weight:600; color:var(--fg);
+      user-select:none;
+    }
+
+    /* --- 主抽籤按鈕 --- */
+    .dc-draw-btn{
+      width:100%;
+      padding:14px 18px;
+      font-size:17px; font-weight:900;
+      letter-spacing:.06em;
+      border:none; border-radius:14px;
+      background:linear-gradient(135deg, var(--accent), #a855f7);
+      color:#fff; cursor:pointer;
+      box-shadow:0 4px 20px rgba(124,58,237,.35);
+      transition:transform .15s, box-shadow .15s;
+      position:relative; overflow:hidden;
+    }
+    .dc-draw-btn::after{
       content:''; position:absolute; inset:0;
-      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
-      transform: translateX(-100%);
-      transition: transform .4s;
+      background:linear-gradient(135deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
+      transform:translateX(-100%);
+      transition:transform .4s;
     }
-    .controls-card .ops .btn.add:hover::after{ transform: translateX(100%); }
-    .controls-card .ops .btn.add:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 6px 28px rgba(124,58,237,.45);
+    .dc-draw-btn:hover::after{ transform:translateX(100%); }
+    .dc-draw-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 28px rgba(124,58,237,.45);
     }
-    .controls-card .ops .btn.add:active{ transform: scale(.97); }
-    .controls-card .hint{ margin-top:2px; }
+    .dc-draw-btn:active{ transform:scale(.97); }
+    .dc-draw-btn:disabled{
+      opacity:.6; cursor:not-allowed;
+      transform:none !important;
+    }
+
+    /* --- 底部小按鈕 --- */
+    .dc-bottom{
+      display:flex; gap:8px;
+    }
+    .dc-action-btn{
+      flex:1;
+      padding:8px 0;
+      font-size:13px; font-weight:600;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:var(--card);
+      color:var(--fg);
+      cursor:pointer;
+      transition:all .15s;
+    }
+    .dc-action-btn:hover{
+      border-color:var(--accent);
+      background:rgba(124,58,237,.06);
+    }
+    .dc-action-btn:active{ transform:scale(.97); }
+
+    /* --- 提示文字 --- */
+    .dc-hint{
+      font-size:12px; color:var(--muted);
+      text-align:center;
+      margin-top:-4px;
+    }
 
     .spotlight-card{ padding:16px; display:flex; flex-direction:column; gap:14px; min-height:0; }
     .draw-stats{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -2015,6 +2140,21 @@
       background: rgba(255,255,255,.5) !important;
       border: 1px solid rgba(0,0,0,.06) !important;
     }
+    :root[data-theme="light"] .dc-num-btn{
+      background: #fff;
+      border-color: rgba(0,0,0,.1);
+    }
+    :root[data-theme="light"] .dc-input{
+      background: #fff;
+      border-color: rgba(0,0,0,.1);
+    }
+    :root[data-theme="light"] .dc-action-btn{
+      background: #fff;
+      border-color: rgba(0,0,0,.1);
+    }
+    :root[data-theme="light"] .dc-toggle:hover{
+      background: rgba(124,58,237,.04);
+    }
     .chip{
       transition: all .2s ease;
       border: 1px solid rgba(255,255,255,.08) !important;
@@ -2673,38 +2813,46 @@
           <div class="draw-wrap">
             <!-- 左：控制卡 -->
             <aside class="controls-card">
-              <div class="row">
-                <label>本次抽幾人
-                  <input id="draw-count" type="number" class="input" min="1" value="1" style="width:90px;">
+              <!-- 人數選擇 -->
+              <div class="dc-section">
+                <div class="dc-label">抽選人數</div>
+                <input id="draw-count" type="hidden" value="1">
+                <div class="dc-num-group">
+                  <button class="dc-num-btn" data-preset="1">1</button>
+                  <button class="dc-num-btn" data-preset="2">2</button>
+                  <button class="dc-num-btn" data-preset="3">3</button>
+                  <button class="dc-num-btn" data-preset="4">4</button>
+                  <button class="dc-num-btn" data-preset="5">5</button>
+                </div>
+              </div>
+
+              <!-- 序列 -->
+              <div class="dc-section">
+                <div class="dc-label">序列模式 <span class="dc-label-hint">（選填）</span></div>
+                <input id="draw-seq" class="dc-input" type="text" placeholder="例：2,3,2,4">
+              </div>
+
+              <!-- 選項開關 -->
+              <div class="dc-section dc-toggles">
+                <label class="dc-toggle">
+                  <input id="draw-unique" type="checkbox" checked>
+                  <span class="dc-toggle-label">不重覆抽取</span>
                 </label>
-                <label style="display:flex;gap:6px;align-items:center;">
-                  <input id="draw-unique" type="checkbox" checked> 不重覆抽取
-                </label>
-                <label style="display:flex;gap:6px;align-items:center;">
-                  <input id="draw-auto" type="checkbox"> 抽到即 +1 分
+                <label class="dc-toggle">
+                  <input id="draw-auto" type="checkbox">
+                  <span class="dc-toggle-label">抽到即 +1 分</span>
                 </label>
               </div>
 
-              <label class="row" style="flex-direction:column; align-items:flex-start;">
-                <span>每次不同（序列）</span>
-                <input id="draw-seq" class="input" type="text" placeholder="例：2,3,2,4（留白則不用序列）" style="min-width:260px; width:100%;">
-              </label>
+              <!-- 主按鈕 -->
+              <button id="btn-draw" class="dc-draw-btn">🎰 開始抽籤！</button>
 
-              <div class="presets">
-                <span class="hint">快速： </span>
-                <button class="btn" data-preset="1">1人</button>
-                <button class="btn" data-preset="2">2人</button>
-                <button class="btn" data-preset="3">3人</button>
-                <button class="btn" data-preset="4">4人</button>
-                <button class="btn" data-preset="5">5人</button>
+              <!-- 底部操作 -->
+              <div class="dc-bottom">
+                <button id="btn-draw-undo" class="dc-action-btn" title="撤銷最近一次抽取">↩️ 撤銷</button>
+                <button id="btn-draw-reset" class="dc-action-btn" title="清空已抽紀錄與歷史">🔄 重置</button>
               </div>
-
-              <div class="ops">
-                <button id="btn-draw" class="btn add">🎰 開始抽籤！</button>
-                <button id="btn-draw-undo" class="btn" title="撤銷最近一次抽取">↩️ 撤銷</button>
-                <button id="btn-draw-reset" class="btn" title="清空已抽紀錄與歷史">🔄 重置</button>
-              </div>
-              <div class="hint" id="draw-hint">尚未載入名單</div>
+              <div class="dc-hint" id="draw-hint">尚未載入名單</div>
             </aside>
 
             <!-- 右：聚光區（含抽籤動畫） -->
@@ -6352,6 +6500,7 @@ elProgAdd?.addEventListener('click', ()=>{
       elDrawSeq.value   = d.seqText;
       elDrawUnique.checked = d.unique;
       elDrawAuto.checked   = d.autoScore;
+      if(typeof _syncNumBtnActive === 'function') _syncNumBtnActive(d.lastCount);
 
       // 名單 & 候選
       const list = (state.classMap[cls]||[]).slice();
@@ -6581,11 +6730,18 @@ elProgAdd?.addEventListener('click', ()=>{
       // 決定本次人數
       const seq = parseSeq(elDrawSeq.value);
       let count;
+      // 人數上限：非序列最多 5 人
       if(seq.length){
         count = seq[d.seqPos % seq.length];
+        // 序列模式：不能超過班級人數的一半
+        const halfClass = Math.max(1, Math.floor(list.length / 2));
+        if(count > halfClass){
+          alert(`序列值 ${count} 超過班級人數的一半（${halfClass}），已自動調整。`);
+          count = halfClass;
+        }
         d.seqPos++;
       }else{
-        count = Math.max(1, Number(elDrawCount.value)||1);
+        count = Math.max(1, Math.min(5, Number(elDrawCount.value)||1));
       }
       d.lastCount = count;
 
@@ -6728,19 +6884,27 @@ elProgAdd?.addEventListener('click', ()=>{
     elDrawCount?.addEventListener('change', ()=>{
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
-      const n = Math.max(1, Number(elDrawCount.value)||1);
+      const n = Math.max(1, Math.min(5, Number(elDrawCount.value)||1));
       d.lastCount = n; elDrawCount.value = n;
       saveDrawToLS(cls); renderDraw(cls);
     });
 
     // === 事件：快速預設人數 ===
-    document.querySelectorAll('.presets .btn[data-preset]').forEach(btn=>{
+    function _syncNumBtnActive(val){
+      document.querySelectorAll('.dc-num-btn[data-preset]').forEach(b=>{
+        b.classList.toggle('active', Number(b.dataset.preset) === val);
+      });
+    }
+    document.querySelectorAll('.dc-num-btn[data-preset]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const n = Number(btn.getAttribute('data-preset'))||1;
         elDrawCount.value = n;
+        _syncNumBtnActive(n);
         const evt = new Event('change'); elDrawCount.dispatchEvent(evt);
       });
     });
+    // 初始高亮
+    _syncNumBtnActive(1);
 
 
     /* ===== ★ 批次輸入彈窗邏輯 ===== */
