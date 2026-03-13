@@ -3016,11 +3016,37 @@ const helpMask = document.getElementById('help-mask');
             const seatRIdx = header.findIndex(h => h === COL.R);
             const seatCIdx = header.findIndex(h => h === COL.C);
 
-            const hwCols=[]; header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
+            /* ★ 作業欄偵測：
+               1) 先找傳統格式「作業 N」/「HW N」
+               2) 若找不到，則把「分數」與「小計」之間的欄位都當作作業欄（支援自訂名稱）
+            */
+            const hwCols=[];
+            header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
+            if(hwCols.length === 0 && scoreIdx >= 0){
+              // 找出「分數」欄之後、「小計/平均/座位列/座位欄/學號/座號/姓名/備註」之前的所有欄位
+              const reserved = new Set([idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx]);
+              const endCols = new Set();
+              header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
+              // 「分數」之後到第一個結尾欄之間的非保留欄位
+              const firstEnd = Math.min(...([...endCols].length ? [...endCols] : [header.length]));
+              for(let i = scoreIdx + 1; i < firstEnd; i++){
+                if(reserved.has(i)) continue;
+                const h = String(header[i] ?? '').trim();
+                if(!h) continue;
+                hwCols.push({name: h, idx: i});
+              }
+            }
 
             const pendingCoords=[]; let maxR=0, maxC=0;
             const list=[];
             if(!state.hw[className]) state.hw[className]={ cols: hwCols.map(c=>c.name), data:{} };
+            // ★ 若匯入的作業欄數 > 現有欄數，則同步更新欄位名稱
+            if(hwCols.length > 0){
+              const existing = state.hw[className];
+              if(hwCols.length >= existing.cols.length){
+                existing.cols = hwCols.map(c=>c.name);
+              }
+            }
 
             for(let r=headerRowIdx+1; r<rows.length; r++){
               const row=rows[r]; if(!row||row.length===0) continue;
