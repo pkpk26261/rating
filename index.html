@@ -2071,8 +2071,8 @@
       <div class="topbar__left">
         <div class="import-block">
           <div style="display:flex; gap:8px; align-items:center;">
-            <label class="btn" for="file-input" title="上傳一或多個 Excel 檔案">📂 匯入</label>
-            <input id="file-input" type="file" accept=".xlsx,.xls" hidden multiple />
+            <label class="btn" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 匯入</label>
+            <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
             <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
           </div>
           <div id="status" class="status-inline">尚未載入名單。</div>
@@ -2124,12 +2124,12 @@
           <div class="divider"></div>
 
           <ol>
-            <li><b>匯入成績</b>：支援一次匯入多個 Excel 檔案（每個檔案＝一個班級）。可匯入後再用「✏️ 改班級名」重新命名班級。也支援單檔多工作表（每表＝一班）。</li>
+            <li><b>匯入成績</b>：支援一次匯入多個 Excel / ODS / CSV 檔案（每個檔案＝一個班級）。可匯入後再用「✏️ 改班級名」重新命名班級。也支援單檔多工作表（每表＝一班）。匯出的檔案皆可直接匯入回來。</li>
             <li><b>左側欄</b>：顯示「🏆 加分排行榜」，用來查看目前班級的加分排名（在加扣分/成績相關模式會更新）。</li>
             <li><b>模式切換</b>：在頁面上方可切換 <b>座位區</b>／<b>安排座位</b>／<b>作業成績</b>／<b>抽號</b>／<b>倒數計時</b> 等功能。</li>
             <li><b>新增/刪除學生</b>：在學生名單/作業成績等頁面可新增轉學生，也可開啟刪除介面批次選取移除。</li>
             <li><b>作業成績</b>：可「＋新增作業」動態增加欄位；需要大量輸入時可用批次輸入功能加快填寫。</li>
-            <li><b>匯出成績</b>：右上角「💾 匯出成績」會把目前所有班級的資料輸出成 Excel，之後可再匯入續用。</li>
+            <li><b>匯出成績</b>：右上角「💾 匯出」可將班級成績輸出為 Excel / CSV / ODS，之後可直接匯入回來續用。教學進度也可一併匯出。</li>
             <li><b>深色/淺色</b>：右上角可切換主題；所有資料會保留，不影響匯入/匯出。</li>
           </ol>
 
@@ -2497,6 +2497,9 @@
         <label id="export-prog-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;">
           <input type="checkbox" id="export-prog" checked> 另外匯出教學進度（獨立檔案）
         </label>
+        <div id="export-prog-hint" style="font-size:12px; color:var(--muted); margin-top:2px; padding-left:22px;">
+          勾選：教學進度另存為獨立檔案；不勾選：教學進度放在匯出檔案的第一個工作表。
+        </div>
         <!-- 動作列 -->
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
           <button id="export-cancel" class="btn">取消</button>
@@ -2951,7 +2954,8 @@ const helpMask = document.getElementById('help-mask');
       // 只有一個檔案且其中有多個工作表→沿用原本「每個工作表＝一個班級」邏輯
       // 多個檔案→每個檔案的第一個資料工作表＝一個班級，用檔名命名
       try{
-        state.progress = { pages:{}, order:[], active:'' };
+        // ★ 延遲清空進度：等確認有班級資料時才重設，避免純進度檔匯入時清掉原有班級
+        let pendingProgressSheets = [];   // 暫存進度工作表，稍後統一解析
         const map={}; const order=[];
         let importedProgress = false;
 
@@ -2961,7 +2965,7 @@ const helpMask = document.getElementById('help-mask');
           const data = await file.arrayBuffer();
           const wb = XLSX.read(data, {type:'array'});
           const isMultiFile = files.length > 1;
-          const baseName = file.name.replace(/\.(xlsx?|xls)$/i, '');
+          const baseName = file.name.replace(/\.(xlsx?|xls|ods|csv)$/i, '');
 
           // 計算此檔案有幾個「資料」工作表（排除教學進度表）
           const dataSheetNames = wb.SheetNames.filter(sn=>{
@@ -2973,10 +2977,10 @@ const helpMask = document.getElementById('help-mask');
           wb.SheetNames.forEach((sheetName)=>{
             const ws=wb.Sheets[sheetName]; if(!ws) return;
 
-            // ★ 教學進度分頁
+            // ★ 教學進度分頁：先暫存，等班級資料判定完再統一解析
             const a1 = String((ws['A1'] && (ws['A1'].v ?? ws['A1'].w)) || '').trim();
             if(a1.replace(/\s+/g,'') === '教學進度'){
-              try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
+              pendingProgressSheets.push({ ws, sheetName });
               return;
             }
 
@@ -2989,6 +2993,7 @@ const helpMask = document.getElementById('help-mask');
 
             // ★ 決定班級名稱
             let className;
+            const isCSV = /\.csv$/i.test(file.name);
             if(isMultiFile){
               // 多檔匯入：用檔名命名班級
               if(dataSheetNames.length > 1 && dataSheetNames.includes(sheetName)){
@@ -2996,6 +3001,9 @@ const helpMask = document.getElementById('help-mask');
               }else{
                 className = baseName;
               }
+            }else if(isCSV || (dataSheetNames.length === 1 && /^Sheet\d*$/i.test(sheetName))){
+              // CSV 匯入或單工作表且名稱為預設值時：用檔名命名班級
+              className = baseName;
             }else{
               // 單檔匯入：工作表名稱即班級名稱（原始行為）
               className = sheetName;
@@ -3111,24 +3119,53 @@ const helpMask = document.getElementById('help-mask');
             if(list.length){ map[className]=list; order.push(className); }
           });
         }
-        // 解析完後：若檔案沒有教學進度分頁，會建立乾淨的預設分頁
+        const hasClassData = order.length > 0;
+        const hasProgressData = pendingProgressSheets.length > 0;
+
+        // ★ 統一解析教學進度工作表
+        if(hasProgressData){
+          // 有班級資料時重設進度；純進度檔則保留現有進度再合併
+          if(hasClassData){
+            state.progress = { pages:{}, order:[], active:'' };
+          }
+          for(const { ws, sheetName } of pendingProgressSheets){
+            try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
+          }
+        }else if(hasClassData){
+          // 有班級但沒進度：重設進度
+          state.progress = { pages:{}, order:[], active:'' };
+        }
+
+        // 解析完後：確保進度物件結構正確
         ensureProgressState(true);
 
+        if(!hasClassData && !importedProgress){
+          throw new Error('沒有偵測到任何班級或教學進度資料');
+        }
 
-        if(order.length===0) throw new Error('沒有偵測到任何班級或姓名資料');
-        state.classMap=map; state.classOrder=order;
-        renderClassOptions(order);
-        elSelect.disabled=true; elSelect.disabled=false; elSelect.value=order[0];
-        elSearch.disabled=false; elSearch.value=""; state.filter="";
-        if(elAddStudent) elAddStudent.disabled=false;
-        if(elDelStudent) elDelStudent.disabled=false;
-        if(elRenameClass) elRenameClass.disabled=false;
-        renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
-        // ★ 若目前就在教學進度模式，匯入後立即刷新
-        if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
-        saveNotes();
-        setStatus(`已載入 ${order.length} 個班級（來自 ${files.length} 個檔案）。`);
-        saveSession('after import');
+        // ★ 純進度檔匯入：不動原有班級資料，只更新進度
+        if(!hasClassData && importedProgress){
+          if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
+          const pgCount = state.progress.order.length;
+          setStatus(`已匯入 ${pgCount} 個教學進度分頁。`);
+          saveSession('after import progress only');
+        }else{
+          // 有班級資料：正常流程
+          state.classMap=map; state.classOrder=order;
+          renderClassOptions(order);
+          elSelect.disabled=true; elSelect.disabled=false; elSelect.value=order[0];
+          elSearch.disabled=false; elSearch.value=""; state.filter="";
+          if(elAddStudent) elAddStudent.disabled=false;
+          if(elDelStudent) elDelStudent.disabled=false;
+          if(elRenameClass) elRenameClass.disabled=false;
+          renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
+          // ★ 若目前就在教學進度模式，匯入後立即刷新
+          if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
+          saveNotes();
+          const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
+          setStatus(`已載入 ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案）。`);
+          saveSession('after import');
+        }
       }catch(err){ alert('解析失敗：'+err.message); setStatus('解析失敗'); }
     }
 
@@ -3432,6 +3469,12 @@ const helpMask = document.getElementById('help-mask');
         const ts=new Date(), pad=n=>String(n).padStart(2,'0');
         const stamp = `${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}`;
 
+        // ★ 檢查是否有教學進度資料
+        const hasProgressData = (()=>{
+          const prog = ensureProgressState(false);
+          return prog && prog.order && prog.order.length > 0;
+        })();
+
         if(fmt==='csv'){
           // CSV：每個班級各產一個檔案
           for(const cls of selectedClasses){
@@ -3441,24 +3484,40 @@ const helpMask = document.getElementById('help-mask');
             const fname = `成績匯出_${cls}_${stamp}.csv`;
             await exportWorkbookWithPicker(wb, fname, 'csv');
           }
+          // CSV 不支援多工作表，教學進度一律獨立匯出（有資料時）
+          if(hasProgressData){
+            const wbProg = XLSX.utils.book_new();
+            appendProgressSheet(wbProg);
+            if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
+              const progFname = `教學進度_${stamp}.xlsx`;
+              await exportWorkbookWithPicker(wbProg, progFname, 'xlsx');
+            }
+          }
         }else{
           // xlsx / ods：合併到同一個活頁簿
           const wb = XLSX.utils.book_new();
+
+          if(!includeProgress && hasProgressData){
+            // ★ 不勾選「獨立檔案」→ 教學進度放在主檔的第一個工作表
+            appendProgressSheet(wb);
+          }
+
           for(const cls of selectedClasses){
             const ws = buildClassSheet(cls);
             XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
           }
           const fname = `成績匯出_${stamp}.${fmt}`;
           await exportWorkbookWithPicker(wb, fname, fmt);
-        }
 
-        // ★ 教學進度獨立匯出為另一個檔案
-        if(includeProgress){
-          const wbProg = XLSX.utils.book_new();
-          appendProgressSheet(wbProg);
-          const progFmt = (fmt==='csv') ? 'xlsx' : fmt;
-          const progFname = `教學進度_${stamp}.${progFmt}`;
-          await exportWorkbookWithPicker(wbProg, progFname, progFmt);
+          // ★ 勾選「獨立檔案」→ 教學進度另存為獨立檔案
+          if(includeProgress && hasProgressData){
+            const wbProg = XLSX.utils.book_new();
+            appendProgressSheet(wbProg);
+            if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
+              const progFname = `教學進度_${stamp}.${fmt}`;
+              await exportWorkbookWithPicker(wbProg, progFname, fmt);
+            }
+          }
         }
       }catch(err){
         alert('匯出失敗：'+err.message);
