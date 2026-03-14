@@ -1827,6 +1827,15 @@
       letter-spacing:.02em;
     }
 
+    /* ★ 班級表頭科目名稱（換行顯示） */
+    .prog-th-subject{
+      display:block;
+      font-size:11px;
+      font-weight:400;
+      opacity:.7;
+      margin-top:1px;
+    }
+
     /* ★ 管理班級彈窗：列表樣式 */
     .prog-cls-list{
       display:flex; flex-direction:column; gap:4px;
@@ -1869,7 +1878,7 @@
     .prog-empty-icon{ font-size:48px; opacity:.7; }
     .prog-empty-title{ font-size:17px; font-weight:800; color:var(--fg); }
     .prog-empty-sub{ font-size:13px; color:var(--muted); text-align:center; line-height:1.6; }
-    .prog-inputwrap{ display:flex; align-items:center; gap:8px; }
+    .prog-inputwrap{ display:flex; align-items:center; gap:6px; }
     .prog-row-del{
       width:22px; height:22px;
       display:inline-flex; align-items:center; justify-content:center;
@@ -1898,6 +1907,141 @@
     .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none;  min-width:20em; max-width:100%; }
     :root[data-theme="light"] .prog-input{ background: rgba(2,6,23,.03); }
     .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
+
+    /* ★ 主題列樣式 */
+    .prog-topic-row td{
+      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 12%, transparent), transparent 80%);
+      border-bottom: 2px solid color-mix(in oklab, var(--accent) 30%, transparent);
+      padding: 6px 10px;
+    }
+    :root[data-theme="light"] .prog-topic-row td{
+      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 8%, white), transparent 80%);
+    }
+    .prog-topic-wrap{
+      display:flex; align-items:center; gap:8px;
+    }
+    .prog-topic-icon{
+      font-size:15px; opacity:.8; cursor:pointer; user-select:none;
+      transition: transform .2s ease;
+    }
+    .prog-topic-row.collapsed .prog-topic-icon{
+      transform: rotate(-90deg);
+    }
+    /* ★ 右側收合箭頭 */
+    .prog-topic-arrow{
+      margin-left:auto;
+      font-size:18px; line-height:1;
+      opacity:.55; cursor:pointer; user-select:none;
+      transition: transform .25s ease, opacity .2s;
+      flex-shrink:0;
+    }
+    .prog-topic-arrow:hover{ opacity:.9; }
+    .prog-topic-row.collapsed .prog-topic-arrow{
+      transform: rotate(-90deg);
+    }
+    /* ★ 主題摺疊時隱藏子列 */
+    .prog-child-row.prog-collapsed{ display:none; }
+    /* ★ 子項目縮排 */
+    .prog-child-row td:first-child .prog-inputwrap{
+      padding-left: 22px;
+    }
+    .prog-child-row td:first-child{
+      border-left: 3px solid color-mix(in oklab, var(--accent) 25%, transparent);
+    }
+    :root[data-theme="light"] .prog-child-row td:first-child{
+      border-left: 3px solid color-mix(in oklab, var(--accent) 18%, transparent);
+    }
+    /* ★ 主題子項目數量 badge */
+    .prog-topic-count{
+      font-size:11px; color:var(--muted); opacity:.7;
+      margin-left:2px; white-space:nowrap;
+    }
+    .prog-topic-input{
+      border:none; background:transparent; color:var(--fg);
+      font-size:14px; font-weight:800; letter-spacing:.03em;
+      outline:none; padding:4px 6px; border-radius:6px;
+      min-width:12em; max-width:100%;
+    }
+    .prog-topic-input:focus{
+      background: rgba(255,255,255,.06);
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 40%, transparent);
+    }
+    :root[data-theme="light"] .prog-topic-input:focus{
+      background: rgba(0,0,0,.04);
+    }
+    .prog-topic-del{
+      width:22px; height:22px;
+      display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid var(--line); border-radius:8px;
+      background:transparent; color:var(--muted);
+      cursor:pointer; user-select:none;
+      opacity:0; pointer-events:none;
+      transition: opacity .15s ease;
+      font-size:13px;
+    }
+    .prog-topic-wrap:hover .prog-topic-del{
+      opacity:1; pointer-events:auto;
+    }
+    .prog-topic-del:hover{ color:var(--bad); }
+
+    /* ★ 拖移把手 & 移動按鈕 */
+    .prog-drag-handle{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; cursor:grab;
+      color:var(--muted); opacity:.4; font-size:14px;
+      user-select:none; flex-shrink:0;
+      transition: opacity .15s ease;
+    }
+    .prog-drag-handle:hover{ opacity:1; }
+    .prog-drag-handle:active{ cursor:grabbing; }
+    /* 平板：隱藏拖移把手，顯示上下按鈕 */
+    @media (pointer:coarse){
+      .prog-drag-handle{ display:none; }
+    }
+    @media (pointer:fine){
+      .prog-move-btns{ display:none !important; }
+    }
+    .prog-move-btns{
+      display:inline-flex; flex-direction:column; gap:1px;
+      flex-shrink:0;
+    }
+    .prog-move-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:24px; height:18px;
+      border:1px solid var(--line); border-radius:5px;
+      background:transparent; color:var(--muted);
+      font-size:10px; cursor:pointer; user-select:none;
+      transition: background .12s, color .12s;
+      padding:0; line-height:1;
+    }
+    .prog-move-btn:active{ background:var(--accent); color:#fff; }
+    :root[data-theme="light"] .prog-move-btn:active{ background:var(--accent); color:#fff; }
+
+    /* 拖移中的視覺回饋 */
+    .prog-dragging{ opacity:.45; }
+    .prog-drag-over-above td{ box-shadow: inset 0 3px 0 0 var(--accent); }
+    .prog-drag-over-below td{ box-shadow: inset 0 -3px 0 0 var(--accent); }
+    .prog-topic-row.prog-drag-over-above td{ box-shadow: inset 0 3px 0 0 var(--accent); }
+    .prog-topic-row.prog-drag-over-below td{ box-shadow: inset 0 -3px 0 0 var(--accent); }
+    /* ★ 拖移到主題內（成為子項目）的指示 */
+    .prog-drag-over-into td{
+      background: color-mix(in oklab, var(--accent) 15%, transparent) !important;
+      box-shadow: inset 3px 0 0 0 var(--accent), inset -3px 0 0 0 var(--accent),
+                  inset 0 3px 0 0 var(--accent), inset 0 -3px 0 0 var(--accent) !important;
+    }
+    :root[data-theme="light"] .prog-drag-over-into td{
+      background: color-mix(in oklab, var(--accent) 10%, white) !important;
+    }
+    /* ★ 拖移到外層的文字指示 */
+    .prog-drag-hint{
+      position:fixed; pointer-events:none; z-index:9999;
+      font-size:12px; font-weight:700; padding:4px 10px;
+      border-radius:8px; white-space:nowrap;
+      background: var(--accent); color:#fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      opacity:0; transition: opacity .12s;
+    }
+    .prog-drag-hint.show{ opacity:1; }
 
     /* ===== ⏳ 倒數計時（重新設計） ===== */
     #timer-pane{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:auto; align-items:center; justify-content:center; }
@@ -2236,16 +2380,35 @@
     }
 
     .grp-label{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; color:var(--muted); }
+    .grp-stepper{
+      display:inline-flex; align-items:center; gap:0;
+      border:1.5px solid var(--line); border-radius:10px;
+      overflow:hidden; background:var(--bg);
+      transition: border-color .2s;
+    }
+    .grp-stepper:focus-within{ border-color:var(--accent); }
+    .grp-step-btn{
+      display:flex; align-items:center; justify-content:center;
+      width:32px; height:32px;
+      border:none; background:transparent; color:var(--fg);
+      font-size:16px; font-weight:800; cursor:pointer;
+      transition: background .15s, color .15s;
+      user-select:none; -webkit-user-select:none;
+      padding:0; line-height:1;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .grp-step-btn:hover{ background:color-mix(in oklab, var(--accent) 12%, var(--bg)); color:var(--accent); }
+    .grp-step-btn:active{ background:color-mix(in oklab, var(--accent) 22%, var(--bg)); transform:scale(.92); }
     .grp-input{
       width:32px; min-width:32px; text-align:center; font-weight:800; font-size:14px;
-      border-radius:8px; border:1.5px solid var(--line); background:var(--bg);
+      border:none; border-left:1px solid var(--line); border-right:1px solid var(--line);
+      border-radius:0; background:transparent;
       padding:4px 0 !important; color:var(--fg);
-      transition: border-color .2s;
       -moz-appearance:textfield;
     }
     .grp-input::-webkit-inner-spin-button,
     .grp-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
-    .grp-input:focus{ border-color:var(--accent); outline:none; }
+    .grp-input:focus{ outline:none; }
     .grp-toolbar .btn{ font-size:13px; padding:7px 14px; border-radius:10px; font-weight:700; }
     .grp-toolbar .btn.grp-primary{
       background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #ec4899));
@@ -2259,16 +2422,24 @@
     /* -- 群組看板 -- */
     .grp-board{
       display:grid;
-      grid-template-columns: repeat(var(--grp-cols, 4), 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      align-items:start;
       gap:14px;
       margin-bottom:22px;
-      overflow-x:auto;
+      overflow-x:hidden;
       min-width:0;
+      flex-shrink:0;
     }
-    .grp-board > .grp-card{ min-width:160px; }
+    .grp-board > .grp-card{
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
 
     /* -- 群組卡片 -- */
     .grp-card{
+      align-self:start;
+      height:auto;
       border:1px solid color-mix(in oklab, var(--gc) 20%, var(--line));
       border-radius:18px;
       background: var(--card);
@@ -2279,6 +2450,10 @@
     .grp-card:hover{
       box-shadow: 0 8px 28px color-mix(in oklab, var(--gc) 18%, transparent);
       transform: translateY(-2px);
+    }
+    .grp-card.dragover{
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--gc) 55%, transparent), 0 10px 30px color-mix(in oklab, var(--gc) 16%, transparent);
+      background: color-mix(in oklab, var(--gc) 5%, var(--card));
     }
 
     /* 卡片頭 */
@@ -2318,8 +2493,6 @@
     }
     .grp-card-body.dragover{
       background: color-mix(in oklab, var(--gc) 6%, var(--card));
-      outline: 2px dashed var(--gc);
-      outline-offset: -2px;
       border-radius: 0 0 18px 18px;
     }
     .grp-card-body:empty::after{
@@ -2384,8 +2557,6 @@
     .grp-unassigned .grp-member{ cursor:grab; }
     .grp-unassigned.dragover{
       background: color-mix(in oklab, var(--accent) 5%, var(--card));
-      outline: 2px dashed var(--accent);
-      outline-offset: -4px;
       border-radius:14px;
       min-height:52px;
       padding:8px;
@@ -2393,6 +2564,40 @@
     .grp-unassigned:empty::after{
       content:'✨ 所有學生已分組完成';
       font-size:13px; color:var(--muted); opacity:.6; padding:8px;
+    }
+
+    /* ★ Touch 拖曳幽靈元件 */
+    .grp-touch-ghost{
+      position:fixed;
+      z-index:9999;
+      pointer-events:none;
+      padding:6px 14px;
+      border-radius:12px;
+      background: color-mix(in oklab, var(--accent) 18%, var(--card));
+      border:2px solid var(--accent);
+      color:var(--fg);
+      font-size:13px; font-weight:700;
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+      opacity:.92;
+      transform: translate(-50%, -110%);
+      white-space:nowrap;
+      display:flex; align-items:center; gap:6px;
+    }
+    :root[data-theme="light"] .grp-touch-ghost{
+      background: color-mix(in oklab, var(--accent) 12%, #fff);
+      box-shadow: 0 8px 28px rgba(0,0,0,.15);
+    }
+    .grp-member.touch-dragging{
+      opacity:.35;
+      transform:scale(.92);
+    }
+    .grp-card-body.touch-over{
+      background: color-mix(in oklab, var(--gc) 10%, var(--card));
+      border-radius: 0 0 18px 18px;
+    }
+    .grp-unassigned.touch-over{
+      background: color-mix(in oklab, var(--accent) 8%, var(--card));
+      border-radius:14px;
     }
 
     /* -- 分組空狀態 -- */
@@ -3614,13 +3819,15 @@
                 <div id="prog-page-menu" class="menu hidden" role="menu">
                   <button type="button" class="menu-item" data-action="add" role="menuitem">新增分頁</button>
                   <button type="button" class="menu-item" data-action="ren" role="menuitem">重新命名分頁</button>
-                  <button type="button" class="menu-item" data-action="cls" role="menuitem">🏫 管理班級</button>
+                  <button type="button" class="menu-item" data-action="cls" role="menuitem">管理班級</button>
                   <button type="button" class="menu-item danger" data-action="del" role="menuitem">刪除分頁</button>
                 </div>
               </div>
             </div>
             <span id="prog-stats" class="prog-stats"></span>
             <span class="spacer"></span>
+            <button id="btn-prog-subject" class="btn" title="切換是否在表頭顯示科目名稱">📛 顯示科目</button>
+            <button id="btn-prog-add-topic" class="btn" style="border-color:var(--accent);color:var(--accent);">📁 新增主題</button>
             <button id="btn-prog-add" class="btn add">＋新增進度</button>
             <button id="btn-prog-del" class="btn">刪除最後一列</button>
           </div>
@@ -3734,7 +3941,11 @@
               </div>
               <span class="grp-toolbar-sep"></span>
               <label class="grp-label">分成
-                <input id="grp-count" type="number" class="input grp-input" min="2" max="20" value="4">
+                <span class="grp-stepper">
+                  <button type="button" class="grp-step-btn" id="grp-count-minus" title="減少">−</button>
+                  <input id="grp-count" type="number" class="input grp-input" min="2" max="20" value="6">
+                  <button type="button" class="grp-step-btn" id="grp-count-plus" title="增加">＋</button>
+                </span>
                 組
               </label>
             </div>
@@ -3803,6 +4014,10 @@
                 <label class="dc-toggle">
                   <input id="draw-auto" type="checkbox">
                   <span class="dc-toggle-label">抽到即 +1 分</span>
+                </label>
+                <label class="dc-toggle">
+                  <input id="draw-slowdown" type="checkbox" checked>
+                  <span class="dc-toggle-label">緩停效果</span>
                 </label>
               </div>
 
@@ -4294,13 +4509,9 @@
           // ★ 有資料→移除空狀態標記
           document.body.classList.remove('no-data');
 
-          // 依照上次模式恢復畫面
-          if(state.mode==='seat') setMode('seat');
-          else if(state.mode==='hw') setMode('hw');
-          else if(state.mode==='draw') setMode('draw');
-          else if(state.mode==='group') setMode('group');
-          else if(state.mode==='manage') setMode('manage');
-          else setMode('list');
+          // ★ 重整後一律回到「加扣分」模式
+          state.mode = 'list';
+          setMode('list');
 
 
           renderStudents(elSelect.value);
@@ -4378,6 +4589,7 @@
     const elProgPageMenu=document.getElementById('prog-page-menu');
     const elProgAdd=document.getElementById('btn-prog-add');
     const elProgDel=document.getElementById('btn-prog-del');
+    const elProgSubjectBtn=document.getElementById('btn-prog-subject');
     const elProgAddClass=document.getElementById('btn-prog-addclass');
     const elProgDelClass=document.getElementById('btn-prog-delclass');
 
@@ -4411,6 +4623,7 @@
     const elDrawCount = document.getElementById('draw-count');
     const elDrawSeq = document.getElementById('draw-seq');
     const elDrawUnique = document.getElementById('draw-unique');
+    const elDrawSlowdown = document.getElementById('draw-slowdown');
     const elBtnDraw = document.getElementById('btn-draw');
     const elBtnDrawReset = document.getElementById('btn-draw-reset');
     const elDrawResult = document.getElementById('draw-result');
@@ -4977,6 +5190,48 @@ const helpMask = document.getElementById('help-mask');
       setStatus(`已開始下載：${suggestedName}`);
     }
 
+    /* ★ 多檔匯出：選一次資料夾，所有檔案自動儲存到同一目錄 */
+    async function exportMultipleToDir(files){
+      // files = [{ wb, name, bookType }, ...]
+      const mimeMap = {
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        csv:  'text/csv',
+        ods:  'application/vnd.oasis.opendocument.spreadsheet'
+      };
+
+      // 嘗試使用 showDirectoryPicker（選一次資料夾）
+      if(window.showDirectoryPicker && isSecureContext){
+        try{
+          const dirHandle = await window.showDirectoryPicker({ mode:'readwrite' });
+          const saved = [];
+          for(const f of files){
+            const mime = mimeMap[f.bookType] || mimeMap.xlsx;
+            const data = XLSX.write(f.wb, { bookType: f.bookType, type:'array' });
+            const blob = new Blob([data], { type: mime });
+            const fileHandle = await dirHandle.getFileHandle(f.name, { create:true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            saved.push(f.name);
+          }
+          setStatus(`已儲存 ${saved.length} 個檔案：${saved.join('、')}`);
+          return;
+        }catch(err){
+          if(err && err.name === 'AbortError'){
+            setStatus('已取消匯出。');
+            return;
+          }
+          console.warn('showDirectoryPicker 失敗，改用逐檔下載：', err);
+        }
+      }
+
+      // 退回：逐檔下載
+      for(const f of files){
+        XLSX.writeFile(f.wb, f.name, { bookType: f.bookType });
+      }
+      setStatus(`已開始下載 ${files.length} 個檔案`);
+    }
+
     /* ===== 建立班級成績工作表（共用邏輯） ===== */
     function buildClassSheet(cls){
       const list = state.classMap[cls] || [];
@@ -5113,21 +5368,26 @@ const helpMask = document.getElementById('help-mask');
 
         if(fmt==='csv'){
           // CSV：每個班級各產一個檔案
+          const csvFiles = [];
           for(const cls of selectedClasses){
             const wb = XLSX.utils.book_new();
             const ws = buildClassSheet(cls);
             XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
-            const fname = `成績匯出_${cls}_${stamp}.csv`;
-            await exportWorkbookWithPicker(wb, fname, 'csv');
+            csvFiles.push({ wb, name: `成績匯出_${cls}_${stamp}.csv`, bookType: 'csv' });
           }
           // CSV 不支援多工作表，教學進度一律獨立匯出（有資料時）
           if(hasProgressData){
             const wbProg = XLSX.utils.book_new();
             appendProgressSheet(wbProg);
             if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
-              const progFname = `教學進度_${stamp}.xlsx`;
-              await exportWorkbookWithPicker(wbProg, progFname, 'xlsx');
+              csvFiles.push({ wb: wbProg, name: `教學進度_${stamp}.xlsx`, bookType: 'xlsx' });
             }
+          }
+          // 多檔一次選路徑
+          if(csvFiles.length > 1){
+            await exportMultipleToDir(csvFiles);
+          } else if(csvFiles.length === 1){
+            await exportWorkbookWithPicker(csvFiles[0].wb, csvFiles[0].name, csvFiles[0].bookType);
           }
         }else{
           // xlsx / ods：合併到同一個活頁簿
@@ -5143,16 +5403,22 @@ const helpMask = document.getElementById('help-mask');
             XLSX.utils.book_append_sheet(wb, ws, safeSheetName(cls));
           }
           const fname = `成績匯出_${stamp}.${fmt}`;
-          await exportWorkbookWithPicker(wb, fname, fmt);
 
-          // ★ 勾選「獨立檔案」→ 教學進度另存為獨立檔案
+          // ★ 勾選「獨立檔案」且有進度資料 → 兩個檔案存到同一資料夾
           if(includeProgress && hasProgressData){
             const wbProg = XLSX.utils.book_new();
             appendProgressSheet(wbProg);
             if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
               const progFname = `教學進度_${stamp}.${fmt}`;
-              await exportWorkbookWithPicker(wbProg, progFname, fmt);
+              await exportMultipleToDir([
+                { wb, name: fname, bookType: fmt },
+                { wb: wbProg, name: progFname, bookType: fmt }
+              ]);
+            } else {
+              await exportWorkbookWithPicker(wb, fname, fmt);
             }
+          } else {
+            await exportWorkbookWithPicker(wb, fname, fmt);
           }
         }
       }catch(err){
@@ -6178,6 +6444,9 @@ const helpMask = document.getElementById('help-mask');
           return it;
         });
       }
+      // ★ 預設隱藏科目名稱
+      if(typeof state.progress.showSubject === 'undefined') state.progress.showSubject = false;
+
       return state.progress;
     }
 
@@ -6201,6 +6470,14 @@ const helpMask = document.getElementById('help-mask');
       for(let r=1;r<rows.length;r++){
         const row = rows[r] || [];
         const title = String(row[0]||'').trim();
+
+        // ★ 匯入主題列
+        const topicMatch = title.match(/^\[主題\]\s*(.*)/);
+        if(topicMatch){
+          items.push({ type:'topic', title: topicMatch[1] || '' });
+          continue;
+        }
+
         const tail = row.slice(1).map(v=>String(v||'').trim());
         const hasAny = title || tail.some(v=>v);
         if(!hasAny) continue;
@@ -6239,6 +6516,13 @@ const helpMask = document.getElementById('help-mask');
 
       for(const it of pg.items){
         const title = String(it.title||'').trim();
+        if(it.type === 'topic'){
+          // 主題列：第一欄標記 [主題]，其餘空白
+          const row = [`[主題] ${title}`];
+          for(let i=0;i<classes.length;i++) row.push('');
+          aoa.push(row);
+          continue;
+        }
         const checked = it.checked || {};
         const row = [title];
         for(const cls of classes){
@@ -6274,9 +6558,286 @@ const helpMask = document.getElementById('help-mask');
       }
     }
 
+    // ★ 教學進度表頭：依設定決定是否顯示科目
+    //   關閉時："712資訊科技" → "712"、"721國文" → "721"、"社會831" → "831"
+    //   開啟時：班級代號 + 換行 + 科目名稱
+    function progDisplayName(cls, asHTML){
+      const prog = state.progress;
+      const s = String(cls||'');
+      const m = s.match(/\d+/);
+      if(prog && prog.showSubject){
+        // 拆成班級代號與科目兩部分，換行顯示
+        if(m){
+          const num = m[0];
+          const subject = s.replace(num, '').trim();
+          if(subject){
+            if(asHTML) return `${escapeHTML(num)}<br><span class="prog-th-subject">${escapeHTML(subject)}</span>`;
+            return `${num}\n${subject}`;
+          }
+        }
+        return asHTML ? escapeHTML(cls) : cls;
+      }
+      return m ? m[0] : cls;
+    }
+
+    /* ★ 教學進度：移動項目的工具函式 */
+    // 取得主題從 idx 開始，其下所有子項目的結束索引（不含下一個主題）
+    function progTopicRange(items, topicIdx){
+      let end = topicIdx + 1;
+      while(end < items.length && items[end].type !== 'topic') end++;
+      return end; // 回傳的是 exclusive end
+    }
+
+    // 移動單一進度列（非主題）
+    function progMoveItem(pg, fromIdx, dir){
+      const items = pg.items;
+      const toIdx = fromIdx + dir;
+      if(toIdx < 0 || toIdx >= items.length) return false;
+      // 不可跨越到主題的前方（主題要用主題移動）
+      const [removed] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, removed);
+      return true;
+    }
+
+    // 移動主題列（連同底下所有子項目）
+    function progMoveTopic(pg, topicIdx, dir){
+      const items = pg.items;
+      const end = progTopicRange(items, topicIdx);
+      const count = end - topicIdx;
+      const chunk = items.splice(topicIdx, count);
+
+      let insertAt;
+      if(dir < 0){
+        // 往上：找前一個位置（跳過前一個主題的整個區塊）
+        insertAt = topicIdx - 1;
+        // 如果前面也是主題，要跳過整個主題區塊
+        if(insertAt >= 0 && items[insertAt]?.type !== 'topic'){
+          // 往上找到前一個主題
+          while(insertAt > 0 && items[insertAt - 1]?.type !== 'topic') insertAt--;
+          // 如果再上面是主題，跳到主題之前
+          if(insertAt > 0 && items[insertAt - 1]?.type === 'topic') insertAt--;
+        }
+        if(insertAt < 0) insertAt = 0;
+      } else {
+        // 往下：跳過下面的項目（在 splice 後索引已偏移）
+        insertAt = topicIdx;
+        // 跳過下一個區塊（可能是獨立進度或下一個主題+子項目）
+        if(insertAt < items.length){
+          if(items[insertAt]?.type === 'topic'){
+            insertAt = progTopicRange(items, insertAt);
+          } else {
+            insertAt++;
+          }
+        }
+        if(insertAt > items.length) insertAt = items.length;
+      }
+      items.splice(insertAt, 0, ...chunk);
+      return true;
+    }
+
+    // 建立拖移把手元素
+    function createDragHandle(){
+      const handle = document.createElement('span');
+      handle.className = 'prog-drag-handle';
+      handle.textContent = '⠿';
+      handle.title = '拖移排序';
+      return handle;
+    }
+
+    // 建立平板端上下移動按鈕
+    function createMoveButtons(pg, idx, isTopic){
+      const box = document.createElement('span');
+      box.className = 'prog-move-btns';
+      const up = document.createElement('button');
+      up.className = 'prog-move-btn';
+      up.textContent = '▲';
+      up.title = '上移';
+      up.type = 'button';
+      const down = document.createElement('button');
+      down.className = 'prog-move-btn';
+      down.textContent = '▼';
+      down.title = '下移';
+      down.type = 'button';
+
+      up.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        if(isTopic) progMoveTopic(pg, idx, -1);
+        else progMoveItem(pg, idx, -1);
+        saveSession('progress move');
+        renderProgress();
+      });
+      down.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        if(isTopic) progMoveTopic(pg, idx, 1);
+        else progMoveItem(pg, idx, 1);
+        saveSession('progress move');
+        renderProgress();
+      });
+      box.appendChild(up);
+      box.appendChild(down);
+      return box;
+    }
+
+    // ★ 拖移狀態
+    let __progDragIdx = null;
+    let __progDragIsTopic = false;
+    let __progDragHint = null;
+
+    function getProgDragHint(){
+      if(!__progDragHint){
+        __progDragHint = document.createElement('div');
+        __progDragHint.className = 'prog-drag-hint';
+        document.body.appendChild(__progDragHint);
+      }
+      return __progDragHint;
+    }
+    function showProgDragHint(text, x, y){
+      const h = getProgDragHint();
+      h.textContent = text;
+      h.style.left = (x+14) + 'px';
+      h.style.top  = (y-10) + 'px';
+      h.classList.add('show');
+    }
+    function hideProgDragHint(){
+      if(__progDragHint) __progDragHint.classList.remove('show');
+    }
+
+    // 判斷 drop 區域：上方(above)、放入主題(into)、下方(below)
+    function getProgDropZone(e, tr){
+      const rect = tr.getBoundingClientRect();
+      const isTopic = tr.dataset.type === 'topic';
+      const y = e.clientY - rect.top;
+      const h = rect.height;
+      if(isTopic){
+        // 主題列三段：上1/4=above, 中間=into, 下1/4=below
+        if(y < h * 0.25) return 'above';
+        if(y > h * 0.75) return 'below';
+        return 'into';
+      }
+      // 一般列：上半=above, 下半=below
+      return y < h * 0.5 ? 'above' : 'below';
+    }
+
+    // ★ 為列綁定拖移事件
+    function bindProgRowDrag(tr, idx, isTopic, pg){
+      tr.addEventListener('dragstart', (e)=>{
+        if(e.target.tagName === 'INPUT') { e.preventDefault(); return; }
+        __progDragIdx = idx;
+        __progDragIsTopic = isTopic;
+        tr.classList.add('prog-dragging');
+        try{ e.dataTransfer.setData('text/plain', String(idx)); }catch(_){}
+        try{ e.dataTransfer.effectAllowed = 'move'; }catch(_){}
+      });
+      tr.addEventListener('dragend', ()=>{
+        __progDragIdx = null;
+        __progDragIsTopic = false;
+        tr.classList.remove('prog-dragging');
+        clearProgDragOver();
+        hideProgDragHint();
+      });
+      tr.addEventListener('dragover', (e)=>{
+        if(__progDragIdx === null) return;
+        e.preventDefault();
+        try{ e.dataTransfer.dropEffect = 'move'; }catch(_){}
+        clearProgDragOver();
+        const zone = getProgDropZone(e, tr);
+        if(zone === 'above') tr.classList.add('prog-drag-over-above');
+        else if(zone === 'into')  tr.classList.add('prog-drag-over-into');
+        else tr.classList.add('prog-drag-over-below');
+        // 顯示文字提示
+        if(zone === 'into') showProgDragHint('放入主題內', e.clientX, e.clientY);
+        else if(zone === 'above') showProgDragHint('移到此列上方', e.clientX, e.clientY);
+        else showProgDragHint('移到此列下方', e.clientX, e.clientY);
+      });
+      tr.addEventListener('dragleave', ()=>{
+        tr.classList.remove('prog-drag-over-above', 'prog-drag-over-below', 'prog-drag-over-into');
+        hideProgDragHint();
+      });
+      tr.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        clearProgDragOver();
+        hideProgDragHint();
+        if(__progDragIdx === null) return;
+        const fromIdx = __progDragIdx;
+        const fromIsTopic = __progDragIsTopic;
+        const toIdx = Number(tr.dataset.idx);
+        __progDragIdx = null;
+        __progDragIsTopic = false;
+        if(fromIdx === toIdx) return;
+
+        const zone = getProgDropZone(e, tr);
+
+        if(fromIsTopic){
+          // 主題不能放入另一個主題內 → 退回 above/below
+          const effectiveZone = zone === 'into' ? 'below' : zone;
+          progDropTopic(pg, fromIdx, toIdx, effectiveZone === 'above');
+        } else {
+          if(zone === 'into' && tr.dataset.type === 'topic'){
+            // 把進度放入主題末尾
+            progDropItemIntoTopic(pg, fromIdx, toIdx);
+          } else {
+            progDropItem(pg, fromIdx, toIdx, zone === 'above');
+          }
+        }
+        saveSession('progress drag');
+        renderProgress();
+      });
+    }
+
+    function clearProgDragOver(){
+      elProgTable?.querySelectorAll('.prog-drag-over-above, .prog-drag-over-below, .prog-drag-over-into').forEach(el=>{
+        el.classList.remove('prog-drag-over-above', 'prog-drag-over-below', 'prog-drag-over-into');
+      });
+    }
+
+    // 拖放：單一進度列
+    function progDropItem(pg, fromIdx, toIdx, above){
+      const items = pg.items;
+      const [removed] = items.splice(fromIdx, 1);
+      let insertAt = fromIdx < toIdx ? toIdx - 1 : toIdx;
+      if(!above) insertAt++;
+      if(insertAt < 0) insertAt = 0;
+      if(insertAt > items.length) insertAt = items.length;
+      items.splice(insertAt, 0, removed);
+    }
+
+    // 拖放：進度放入主題（插到主題子項目的末尾）
+    function progDropItemIntoTopic(pg, fromIdx, topicIdx){
+      const items = pg.items;
+      const [removed] = items.splice(fromIdx, 1);
+      // 主題索引可能因 splice 偏移
+      const adj = fromIdx < topicIdx ? topicIdx - 1 : topicIdx;
+      const end = progTopicRange(items, adj);
+      items.splice(end, 0, removed);
+    }
+
+    // 拖放：主題列（帶子項目）
+    function progDropTopic(pg, fromIdx, toIdx, above){
+      const items = pg.items;
+      const end = progTopicRange(items, fromIdx);
+      const count = end - fromIdx;
+      const chunk = items.splice(fromIdx, count);
+      let insertAt = fromIdx < toIdx ? toIdx - count : toIdx;
+      if(!above) insertAt++;
+      if(insertAt < 0) insertAt = 0;
+      if(insertAt > items.length) insertAt = items.length;
+      items.splice(insertAt, 0, ...chunk);
+    }
+
     function renderProgress(){
       const prog = ensureProgressState();
       if(!elProgTable) return;
+
+      // ★ 更新「顯示科目」按鈕狀態
+      if(elProgSubjectBtn){
+        if(prog.showSubject){
+          elProgSubjectBtn.textContent = '\uD83D\uDCDB 隱藏全名';
+          elProgSubjectBtn.style.opacity = '1';
+        } else {
+          elProgSubjectBtn.textContent = '\uD83D\uDCDB 顯示全名';
+          elProgSubjectBtn.style.opacity = '.6';
+        }
+      }
 
       const elStats = document.getElementById('prog-stats');
 
@@ -6318,10 +6879,11 @@ const helpMask = document.getElementById('help-mask');
       if(!pg.classes || !pg.classes.length){ pg.classes = (state.classOrder || []).slice(); }
       const classes = pg.classes;
 
-      // ★ 計算整體完成統計
-      const totalCells = (pg.items.length || 0) * classes.length;
+      // ★ 計算整體完成統計（排除主題列）
+      const progItems = (pg.items || []).filter(it => it.type !== 'topic');
+      const totalCells = (progItems.length || 0) * classes.length;
       let checkedCells = 0;
-      (pg.items || []).forEach(it => {
+      progItems.forEach(it => {
         classes.forEach(cls => { if(it.checked && it.checked[cls]) checkedCells++; });
       });
       const pctAll = totalCells > 0 ? Math.round(checkedCells / totalCells * 100) : 0;
@@ -6335,11 +6897,11 @@ const helpMask = document.getElementById('help-mask');
         elStats.innerHTML = '';
       }
 
-      // ★ 計算每個班級的完成數（用於表頭）
+      // ★ 計算每個班級的完成數（用於表頭，排除主題列）
       const classCheckedCount = {};
       classes.forEach(cls => {
         classCheckedCount[cls] = 0;
-        (pg.items || []).forEach(it => { if(it.checked && it.checked[cls]) classCheckedCount[cls]++; });
+        progItems.forEach(it => { if(it.checked && it.checked[cls]) classCheckedCount[cls]++; });
       });
 
       // 表頭
@@ -6353,7 +6915,8 @@ const helpMask = document.getElementById('help-mask');
 let __dragClsIndex = null;
 classes.forEach((cls, idx)=>{
   const th = document.createElement('th');
-  th.innerHTML = `${escapeHTML(cls)}<span class="prog-th-count">${classCheckedCount[cls]}/${pg.items.length}</span>`;
+  th.innerHTML = `${progDisplayName(cls, true)}<span class="prog-th-count">${classCheckedCount[cls]}/${progItems.length}</span>`;
+  th.title = cls;  // 完整名稱顯示在 tooltip
   th.classList.add('prog-th-class');
   th.draggable = true;
   th.dataset.cls = cls;
@@ -6409,8 +6972,126 @@ classes.forEach((cls, idx)=>{
         pg.items.push({ title:'', checked:{} });
       }
 
+      const colCount = 1 + classes.length;
+
       pg.items.forEach((it, idx)=>{
+
+        // ★ 判斷此項目是否為主題的子項目（前面有 topic 且中間沒有另一個 topic）
+        function isChildOfTopic(items, idx){
+          for(let i = idx - 1; i >= 0; i--){
+            if(items[i].type === 'topic') return i;
+            // 不是 topic 就繼續往上找
+          }
+          return -1;
+        }
+
+        // ★ 主題列（分類標頭）
+        if(it.type === 'topic'){
+          // 計算子項目數量
+          const childEnd = progTopicRange(pg.items, idx);
+          const childCount = childEnd - idx - 1;
+          const isCollapsed = !!it.collapsed;
+
+          const tr = document.createElement('tr');
+          tr.className = 'prog-topic-row' + (isCollapsed ? ' collapsed' : '');
+          tr.dataset.idx = String(idx);
+          tr.dataset.type = 'topic';
+          tr.draggable = true;
+          const td = document.createElement('td');
+          td.setAttribute('colspan', String(colCount));
+
+          const wrap = document.createElement('div');
+          wrap.className = 'prog-topic-wrap';
+
+          // 拖移把手（桌面端）
+          const handle = createDragHandle();
+          // 平板端上下按鈕
+          const moveBtns = createMoveButtons(pg, idx, true);
+
+          const icon = document.createElement('span');
+          icon.className = 'prog-topic-icon';
+          icon.textContent = '📁';
+          icon.title = isCollapsed ? '展開主題' : '收合主題';
+          icon.addEventListener('click', (e)=>{
+            e.preventDefault(); e.stopPropagation();
+            it.collapsed = !it.collapsed;
+            saveSession('progress toggle collapse');
+            renderProgress();
+          });
+
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'prog-topic-input';
+          inp.placeholder = '輸入主題名稱...';
+          inp.value = it.title || '';
+          inp.addEventListener('input', ()=>{
+            it.title = inp.value;
+            saveSession('progress topic title');
+          });
+
+          const del = document.createElement('span');
+          del.className = 'prog-topic-del';
+          del.title = '刪除此主題（僅刪除標題列，進度項目會保留）';
+          del.setAttribute('role','button');
+          del.textContent = '×';
+          del.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            const progNow = ensureProgressState();
+            const pNow = progNow.pages[progNow.active];
+            if(pNow && Array.isArray(pNow.items)){
+              pNow.items.splice(idx, 1);
+            }
+            saveSession('progress del topic');
+            renderProgress();
+          });
+
+          // 子項目數量 badge
+          const countBadge = document.createElement('span');
+          countBadge.className = 'prog-topic-count';
+          countBadge.textContent = childCount > 0 ? `(${childCount})` : '';
+
+          wrap.appendChild(handle);
+          wrap.appendChild(moveBtns);
+          wrap.appendChild(icon);
+          wrap.appendChild(inp);
+          wrap.appendChild(countBadge);
+          wrap.appendChild(del);
+
+          // ★ 右側收合/展開箭頭
+          const arrow = document.createElement('span');
+          arrow.className = 'prog-topic-arrow';
+          arrow.textContent = '▼';
+          arrow.title = isCollapsed ? '展開主題' : '收合主題';
+          arrow.addEventListener('click', (e)=>{
+            e.preventDefault(); e.stopPropagation();
+            it.collapsed = !it.collapsed;
+            saveSession('progress toggle collapse');
+            renderProgress();
+          });
+          wrap.appendChild(arrow);
+
+          td.appendChild(wrap);
+          tr.appendChild(td);
+
+          // ★ 拖移事件（桌面端）
+          bindProgRowDrag(tr, idx, true, pg);
+
+          tbody.appendChild(tr);
+          return; // 主題列不需要勾選框
+        }
+
+        // 一般進度列
+        const parentTopicIdx = isChildOfTopic(pg.items, idx);
+        const isChild = parentTopicIdx >= 0;
+        const parentCollapsed = isChild && !!pg.items[parentTopicIdx].collapsed;
+
         const tr = document.createElement('tr');
+        if(isChild) tr.classList.add('prog-child-row');
+        if(parentCollapsed) tr.classList.add('prog-collapsed');
+        tr.dataset.idx = String(idx);
+        tr.dataset.type = 'item';
+        tr.draggable = true;
 
         // 第一欄：進度名稱
         const td0 = document.createElement('td');
@@ -6418,6 +7099,11 @@ classes.forEach((cls, idx)=>{
         // 左側：刪除本列（碰到輸入匡時才顯示）
         const wrap = document.createElement('div');
         wrap.className = 'prog-inputwrap';
+
+        // 拖移把手（桌面端）
+        const handle = createDragHandle();
+        // 平板端上下按鈕
+        const moveBtns = createMoveButtons(pg, idx, false);
 
         const del = document.createElement('span');
         del.className = 'prog-row-del';
@@ -6451,10 +7137,15 @@ classes.forEach((cls, idx)=>{
           saveSession('progress title');
         });
 
+        wrap.appendChild(handle);
+        wrap.appendChild(moveBtns);
         wrap.appendChild(del);
         wrap.appendChild(inp);
         td0.appendChild(wrap);
         tr.appendChild(td0);
+
+        // ★ 拖移事件（桌面端）
+        bindProgRowDrag(tr, idx, false, pg);
 
         // 各班級：自訂勾選框
         classes.forEach(cls=>{
@@ -6529,15 +7220,16 @@ classes.forEach((cls, idx)=>{
       }
     }
 
-    // ★ 即時更新統計 badge（不重繪整張表）
+    // ★ 即時更新統計 badge（不重繪整張表，排除主題列）
     function renderProgressStats(){
       const prog = ensureProgressState();
       if(!prog.active) return;
       const pg = prog.pages[prog.active]; if(!pg) return;
       const classes = pg.classes || [];
-      const totalCells = (pg.items.length || 0) * classes.length;
+      const progItems = (pg.items || []).filter(it => it.type !== 'topic');
+      const totalCells = (progItems.length || 0) * classes.length;
       let checkedCells = 0;
-      (pg.items || []).forEach(it => {
+      progItems.forEach(it => {
         classes.forEach(cls => { if(it.checked && it.checked[cls]) checkedCells++; });
       });
       const pctAll = totalCells > 0 ? Math.round(checkedCells / totalCells * 100) : 0;
@@ -6554,9 +7246,9 @@ classes.forEach((cls, idx)=>{
         const cls = th.dataset.cls;
         if(!cls) return;
         let cnt = 0;
-        (pg.items || []).forEach(it => { if(it.checked && it.checked[cls]) cnt++; });
+        progItems.forEach(it => { if(it.checked && it.checked[cls]) cnt++; });
         const span = th.querySelector('.prog-th-count');
-        if(span) span.textContent = `${cnt}/${pg.items.length}`;
+        if(span) span.textContent = `${cnt}/${progItems.length}`;
       });
     }
 
@@ -6922,7 +7614,7 @@ function onTimerDone(){
 
     const GRP_COLORS = 6; // 色盤數量，對應 CSS [data-color="0"]~[data-color="5"]
 
-    function renderGroup(cls){
+    function renderGroup(cls, useInputCount){
       const elBoard = document.getElementById('grp-board');
       const elUnWrap = document.getElementById('grp-unassigned-wrap');
       const elPill = document.getElementById('group-class-pill');
@@ -6957,9 +7649,15 @@ function onTimerDone(){
       // 清理已不存在的學生
       g.groups = g.groups.map(arr=> arr.filter(id=> allIds.has(id)));
 
-      // ★ 讀取 grp-count，確保組別數量始終與輸入框同步
+      // ★ 組數同步：若已有儲存的分組資料，以實際組數為準（避免刷新後被 HTML 預設值 4 覆蓋）
       const elGrpCount = document.getElementById('grp-count');
-      const desiredCount = Math.max(2, Math.min(20, Number(elGrpCount?.value) || 4));
+      let desiredCount;
+      if(useInputCount || g.groups.length === 0){
+        desiredCount = Math.max(2, Math.min(20, Number(elGrpCount?.value) || 6));
+      } else {
+        desiredCount = g.groups.length;
+      }
+      if(elGrpCount) elGrpCount.value = desiredCount;
 
       // ★ 如果目前組數不足 → 補空組；超出 → 把多出組的成員退回未分組
       while(g.groups.length < desiredCount){
@@ -6979,10 +7677,6 @@ function onTimerDone(){
 
       // 渲染組別
       elBoard.innerHTML = '';
-
-      // 設定欄數 CSS 變數
-      const numGroups = g.groups.length;
-      elBoard.style.setProperty('--grp-cols', Math.min(numGroups, 6));
 
       g.groups.forEach((members, gi)=>{
         const colorIdx = gi % GRP_COLORS;
@@ -7013,17 +7707,44 @@ function onTimerDone(){
         const body = document.createElement('div');
         body.className = 'grp-card-body';
 
+        const moveMemberToGroup = (id)=>{
+          if(!id) return;
+          g.groups.forEach(arr=>{ const idx=arr.indexOf(id); if(idx>=0) arr.splice(idx,1); });
+          if(!g.groups[gi].includes(id)) g.groups[gi].push(id);
+          saveGroupState(cls); renderGroup(cls);
+        };
+
+        const clearCardDragState = ()=>{
+          card.classList.remove('dragover');
+          body.classList.remove('dragover');
+        };
+
+        // 整張卡片都可接收拖放（桌機）
+        card.addEventListener('dragover', e=>{
+          e.preventDefault();
+          card.classList.add('dragover');
+          body.classList.add('dragover');
+        });
+        card.addEventListener('dragleave', e=>{
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          if(el && card.contains(el)) return;
+          clearCardDragState();
+        });
+        card.addEventListener('drop', e=>{
+          e.preventDefault();
+          clearCardDragState();
+          const id = e.dataTransfer.getData('text/plain');
+          moveMemberToGroup(id);
+        });
+
         // 拖放接收
         body.addEventListener('dragover', e=>{ e.preventDefault(); body.classList.add('dragover'); });
         body.addEventListener('dragleave', ()=> body.classList.remove('dragover'));
         body.addEventListener('drop', e=>{
           e.preventDefault(); body.classList.remove('dragover');
-          const id = e.dataTransfer.getData('text/plain'); if(!id) return;
-          // 從其他組移除
-          g.groups.forEach(arr=>{ const idx=arr.indexOf(id); if(idx>=0) arr.splice(idx,1); });
-          // 加入此組
-          if(!g.groups[gi].includes(id)) g.groups[gi].push(id);
-          saveGroupState(cls); renderGroup(cls);
+          card.classList.remove('dragover');
+          const id = e.dataTransfer.getData('text/plain');
+          moveMemberToGroup(id);
         });
 
         members.forEach((id, mi)=>{
@@ -7075,6 +7796,10 @@ function onTimerDone(){
 
       mem.innerHTML = `<span class="grp-avatar" ${avatarStyle}>${escapeHTML(seatLabel)}</span><span class="grp-member-name">${escapeHTML(s.name)}</span>${groupIdx >= 0 ? '<button class="grp-member-remove" title="移出此組">✕</button>' : ''}`;
       mem.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s.id); });
+
+      // ★ 平板 Touch 拖曳支援
+      mem.addEventListener('touchstart', _grpTouchStart.bind(null, cls, s, g, mem), {passive:false});
+
       if(groupIdx >= 0){
         mem.querySelector('.grp-member-remove')?.addEventListener('click', ()=>{
           const arr = g.groups[groupIdx];
@@ -7086,11 +7811,98 @@ function onTimerDone(){
       return mem;
     }
 
+    // ★ 分組模式：Touch 拖曳實作
+    let _grpTouchState = null;
+
+    function _grpTouchStart(cls, student, groupData, srcElem, e){
+      // 只處理單指
+      if(e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const startX = touch.clientX, startY = touch.clientY;
+      let moved = false;
+      let ghost = null;
+      let lastTarget = null;
+      const DRAG_THRESHOLD = 8; // px — 超過才算拖曳，避免干擾點擊
+
+      function onMove(ev){
+        if(ev.touches.length !== 1) return;
+        const t = ev.touches[0];
+        const dx = t.clientX - startX, dy = t.clientY - startY;
+
+        if(!moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+
+        ev.preventDefault(); // 阻止捲動
+        if(!moved){
+          moved = true;
+          srcElem.classList.add('touch-dragging');
+          ghost = document.createElement('div');
+          ghost.className = 'grp-touch-ghost';
+          const seat = student.seat ? String(student.seat) : '?';
+          ghost.textContent = `${seat} ${student.name}`;
+          document.body.appendChild(ghost);
+        }
+
+        // 跟隨手指
+        ghost.style.left = t.clientX + 'px';
+        ghost.style.top = t.clientY + 'px';
+
+        // 偵測手指下方的放置區域
+        ghost.style.display = 'none'; // 暫時隱藏，以免 elementFromPoint 抓到自己
+        const elUnder = document.elementFromPoint(t.clientX, t.clientY);
+        ghost.style.display = '';
+
+        // 找到最近的 grp-card-body 或 grp-unassigned
+        const dropTarget = elUnder?.closest?.('.grp-card-body, .grp-unassigned') || null;
+
+        if(dropTarget !== lastTarget){
+          if(lastTarget) lastTarget.classList.remove('touch-over');
+          if(dropTarget) dropTarget.classList.add('touch-over');
+          lastTarget = dropTarget;
+        }
+      }
+
+      function onEnd(ev){
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        srcElem.classList.remove('touch-dragging');
+
+        if(ghost){ ghost.remove(); ghost = null; }
+        if(lastTarget) lastTarget.classList.remove('touch-over');
+
+        if(!moved || !lastTarget) return;
+
+        const id = student.id;
+        const g = ensureGroupState(cls);
+
+        // 判斷放到哪
+        if(lastTarget.classList.contains('grp-card-body')){
+          const card = lastTarget.closest('.grp-card');
+          const gi = card ? Number(card.dataset.gi) : -1;
+          if(gi >= 0 && gi < g.groups.length){
+            // 從所有組移除
+            g.groups.forEach(arr=>{ const idx=arr.indexOf(id); if(idx>=0) arr.splice(idx,1); });
+            // 加入目標組
+            if(!g.groups[gi].includes(id)) g.groups[gi].push(id);
+            saveGroupState(cls); renderGroup(cls);
+          }
+        } else if(lastTarget.classList.contains('grp-unassigned')){
+          // 退回未分組
+          g.groups.forEach(arr=>{ const idx=arr.indexOf(id); if(idx>=0) arr.splice(idx,1); });
+          saveGroupState(cls); renderGroup(cls);
+        }
+      }
+
+      document.addEventListener('touchmove', onMove, {passive:false});
+      document.addEventListener('touchend', onEnd);
+      document.addEventListener('touchcancel', onEnd);
+    }
+
     function randomGroupAssign(cls){
       if(!cls) return;
       const g = ensureGroupState(cls);
       const list = (state.classMap[cls]||[]).slice();
-      const numGroups = Math.max(2, Math.min(20, Number(document.getElementById('grp-count')?.value)||4));
+      const numGroups = Math.max(2, Math.min(20, Number(document.getElementById('grp-count')?.value)||6));
 
       // 洗牌
       for(let i=list.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [list[i],list[j]]=[list[j],list[i]]; }
@@ -7203,14 +8015,27 @@ function onTimerDone(){
       saveGroupState(cls); renderGroup(cls);
     });
 
-    // ★ grp-count 即時調整組別數量
-    document.getElementById('grp-count')?.addEventListener('input', ()=>{
+    // ★ grp-count 調整組別數量（change = 失焦或按 Enter 才觸發，避免輸入中被覆蓋）
+    document.getElementById('grp-count')?.addEventListener('change', ()=>{
       const cls = elSelect.value;
       if(!cls || !state.classMap[cls]) return;
       const g = ensureGroupState(cls);
       saveGroupState(cls);
-      renderGroup(cls);
+      renderGroup(cls, true);
     });
+
+    // ★ +/- 步進按鈕
+    function _grpStep(delta){
+      const el = document.getElementById('grp-count');
+      if(!el) return;
+      const cur = Number(el.value) || 6;
+      const next = Math.max(2, Math.min(20, cur + delta));
+      if(next === cur) return;
+      el.value = next;
+      el.dispatchEvent(new Event('change'));
+    }
+    document.getElementById('grp-count-minus')?.addEventListener('click', ()=> _grpStep(-1));
+    document.getElementById('grp-count-plus')?.addEventListener('click', ()=> _grpStep(1));
 
     /* ====== 👤 學生管理模式 ====== */
     function renderManage(){
@@ -8085,6 +8910,18 @@ function bindProgressPageUI(){
       // 進度模式上的學生按鈕：直接呼叫原本 sidebar 的行為
     }
 
+// ★ 新增主題
+document.getElementById('btn-prog-add-topic')?.addEventListener('click', ()=>{
+  const prog = ensureProgressState();
+  if(!prog.active) return;
+  const pg = prog.pages[prog.active];
+  if(!pg) return;
+  pg.items.push({ type:'topic', title:'' });
+  renderProgress();
+  saveSession('progress add topic');
+  setTimeout(()=>{ elProgTable?.querySelector('tbody tr:last-child .prog-topic-input')?.focus(); }, 0);
+});
+
 elProgAdd?.addEventListener('click', ()=>{
       const prog = ensureProgressState();
       const pg = prog.pages[prog.active];
@@ -8093,6 +8930,15 @@ elProgAdd?.addEventListener('click', ()=>{
       saveSession('progress add');
       setTimeout(()=>{ elProgTable?.querySelector('tbody tr:last-child .prog-input')?.focus(); }, 0);
     });
+
+    // ★ 顯示科目開關
+    elProgSubjectBtn?.addEventListener('click', ()=>{
+      const prog = ensureProgressState();
+      prog.showSubject = !prog.showSubject;
+      renderProgress();
+      saveSession('progress toggle subject');
+    });
+
     elProgDel?.addEventListener('click', ()=>{
       const prog = ensureProgressState();
       const pg = prog.pages[prog.active];
@@ -8561,6 +9407,7 @@ elProgAdd?.addEventListener('click', ()=>{
       d.seqPos    = Number(d.seqPos ?? 0) || 0;
       d.lastCount = Math.max(1, Number(d.lastCount ?? 1) || 1);
       d.autoScore = !!d.autoScore;
+      d.slowdown  = d.slowdown !== undefined ? !!d.slowdown : true;
       d.history   = Array.isArray(d.history) ? d.history : [];
       d.drawn     = Array.isArray(d.drawn) ? d.drawn : [];
       return d;
@@ -8636,6 +9483,7 @@ elProgAdd?.addEventListener('click', ()=>{
       elDrawSeq.value   = d.seqText;
       elDrawUnique.checked = d.unique;
       elDrawAuto.checked   = d.autoScore;
+      if(elDrawSlowdown) elDrawSlowdown.checked = d.slowdown;
       if(typeof _syncNumBtnActive === 'function') _syncNumBtnActive(d.lastCount);
 
       // 名單 & 候選
@@ -8735,6 +9583,11 @@ elProgAdd?.addEventListener('click', ()=>{
       const slots = [];
       const ITEM_H = 120;
 
+      // 讀取緩停設定
+      const cls = elSelect.value;
+      const drawState = cls ? ensureDrawState(cls) : null;
+      const slowdown = drawState ? drawState.slowdown : true;
+
       for(let i=0; i<count; i++){
         const slot = document.createElement('div');
         slot.className = 'drum-slot';
@@ -8742,8 +9595,10 @@ elProgAdd?.addEventListener('click', ()=>{
         const reel = document.createElement('div');
         reel.className = 'slot-reel';
 
-        // 填入 40~50 個隨機學生做滾動素材
-        const reelCount = 40 + Math.floor(Math.random()*10);
+        // 緩停模式多放素材，讓減速時有足夠的名字慢慢滾過
+        const reelCount = slowdown
+          ? 70 + Math.floor(Math.random()*15)
+          : 40 + Math.floor(Math.random()*10);
         for(let j=0; j<reelCount; j++){
           const s = allStudents[Math.floor(Math.random()*allStudents.length)];
           reel.appendChild(_makeSlotItem(s));
@@ -8769,6 +9624,11 @@ elProgAdd?.addEventListener('click', ()=>{
       const STAGGER = 400;
       let completed = 0;
 
+      // 讀取緩停設定
+      const cls = elSelect.value;
+      const drawState = cls ? ensureDrawState(cls) : null;
+      const slowdown = drawState ? drawState.slowdown : true;
+
       slots.forEach((slot, idx)=>{
         const { el, reel, reelCount } = slot;
         const pick = picks[idx];
@@ -8787,15 +9647,28 @@ elProgAdd?.addEventListener('click', ()=>{
 
         // 使用 requestAnimationFrame 做: 先加速 → 勻速 → 減速 停在目標位置
         const ACCEL_TIME  = 300;           // 加速期 (ms)
-        const DECEL_TIME  = 800 + idx*120;  // 減速期，後面的 slot 更長
         const totalDist   = Math.abs(targetY); // 要滾的總距離 (px)
-        // 計算勻速期: 讓大部分距離在勻速階段走完
         const MAX_SPEED   = 5500;            // 最大速度 px/s
         const accelDist   = MAX_SPEED * ACCEL_TIME / 2000;
-        const decelDist   = MAX_SPEED * DECEL_TIME / 2000;
-        const cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
-        const cruiseTime  = cruiseDist / MAX_SPEED * 1000;
-        const totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
+
+        let DECEL_TIME, decelDist, cruiseDist, cruiseTime, totalTime;
+
+        if(slowdown){
+          // === 緩停模式 ===
+          // 拉長減速期，讓最後 8~12 個學生名字一個一個慢慢滾過
+          DECEL_TIME  = 2800 + idx*300;
+          decelDist   = MAX_SPEED * DECEL_TIME / 2000;
+          cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
+          cruiseTime  = cruiseDist / MAX_SPEED * 1000;
+          totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
+        } else {
+          // === 標準模式 ===
+          DECEL_TIME  = 800 + idx*120;
+          decelDist   = MAX_SPEED * DECEL_TIME / 2000;
+          cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
+          cruiseTime  = cruiseDist / MAX_SPEED * 1000;
+          totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
+        }
 
         let startTime = null;
 
@@ -8821,11 +9694,18 @@ elProgAdd?.addEventListener('click', ()=>{
             const ct = t - ACCEL_TIME;
             dist = accelDist + (ct / 1000) * MAX_SPEED;
           } else if(t <= totalTime){
-            // 減速階段: 二次減速 MAX_SPEED → 0
+            // 減速階段
             const dt = t - ACCEL_TIME - cruiseTime;
             const p = dt / DECEL_TIME;
-            // 二次減速: v = MAX_SPEED*(1-p), dist = integral
-            dist = accelDist + cruiseDist + decelDist * (2*p - p*p);
+            if(slowdown){
+              // 緩停：使用五次方緩出 (quintic ease-out)
+              // 最後約 30% 時間只移動不到 5% 距離 → 名字一格一格慢慢滾
+              const eased = 1 - Math.pow(1 - p, 5);
+              dist = accelDist + cruiseDist + decelDist * eased;
+            } else {
+              // 標準：二次減速
+              dist = accelDist + cruiseDist + decelDist * (2*p - p*p);
+            }
           } else {
             dist = totalDist;
           }
@@ -9010,6 +9890,11 @@ elProgAdd?.addEventListener('click', ()=>{
     elDrawAuto?.addEventListener('change', ()=>{
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.autoScore = !!elDrawAuto.checked;
+      saveDrawToLS(cls); renderDraw(cls);
+    });
+    elDrawSlowdown?.addEventListener('change', ()=>{
+      const cls = elSelect.value; if(!cls) return;
+      const d = ensureDrawState(cls); d.slowdown = !!elDrawSlowdown.checked;
       saveDrawToLS(cls); renderDraw(cls);
     });
     elDrawSeq?.addEventListener('input', ()=>{
