@@ -2293,27 +2293,33 @@
     .manage-right-actions .btn{ font-size:12px; padding:4px 10px; }
     .manage-tbl-wrap{
       flex:1 1 auto; min-height:0; overflow:auto;
+      background:#141e33;
     }
     .manage-tbl{
       min-width:100%; width:max-content; border-collapse:separate; border-spacing:0; font-size:13px;
+      background:#141e33;
     }
     .manage-tbl th{
       position:sticky; top:0; z-index:2;
-      background:var(--card); border-bottom:2px solid var(--line);
+      background:var(--card); box-shadow: inset 0 -2px 0 var(--line);
       padding:10px 14px; text-align:left; font-weight:800; font-size:12px;
       color:var(--muted); letter-spacing:.04em; white-space:nowrap;
       user-select:none;
     }
     .manage-tbl td{
-      padding:9px 14px; border-bottom:1px solid var(--line);
+      padding:9px 14px; box-shadow: inset 0 -1px 0 var(--line);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       max-width:200px;
+      background:var(--card);
     }
-    .manage-tbl tr:last-child td{ border-bottom:none; }
+    .manage-tbl tr:last-child td{ box-shadow:none; }
     .manage-tbl tbody tr{ transition: background .15s ease; }
-    .manage-tbl tbody tr:hover{ background:rgba(124,58,237,.06); }
-    :root[data-theme="light"] .manage-tbl tbody tr:hover{ background:rgba(124,58,237,.04); }
+    .manage-tbl tbody tr:hover td{ background:rgba(124,58,237,.06); }
+    :root[data-theme="light"] .manage-tbl tbody tr:hover td{ background:rgba(124,58,237,.04); }
     :root[data-theme="light"] .manage-tbl th{ background:rgba(255,255,255,.95); }
+    :root[data-theme="light"] .manage-tbl td{ background:#fff; }
+    :root[data-theme="light"] .manage-tbl-wrap,
+    :root[data-theme="light"] .manage-tbl{ background:#e8ecf4; }
 
     /* ── 左側凍結欄：座號、姓名、學號 ── */
     .manage-tbl .col-seat,
@@ -2325,12 +2331,16 @@
     .manage-tbl .col-seat{ width:70px; left:0; text-align:center; }
     .manage-tbl .col-name{ width:120px; left:70px; font-weight:700; }
     .manage-tbl .col-sid{ width:110px; left:190px; color:var(--muted); font-size:12px;
-      border-right:2px solid var(--line);
+      box-shadow: inset -2px 0 0 var(--line), inset 0 -1px 0 var(--line);
     }
     /* 左凍結表頭 z-index 要比一般表頭高 */
     .manage-tbl th.col-seat,
     .manage-tbl th.col-name,
     .manage-tbl th.col-sid{ z-index:4; }
+
+    .manage-tbl th.col-sid{
+      box-shadow: inset -2px 0 0 var(--line), inset 0 -2px 0 var(--line);
+    }
 
     /* ── 右側凍結欄：分數、作業平均 ── */
     .manage-tbl .col-score,
@@ -2339,11 +2349,18 @@
       background:#141e33; box-sizing:border-box;
     }
     .manage-tbl .col-score{ width:85px; right:105px; text-align:center; font-variant-numeric:tabular-nums; font-weight:700;
-      border-left:2px solid var(--line);
+      box-shadow: inset 2px 0 0 var(--line), inset 0 -1px 0 var(--line);
     }
     .manage-tbl .col-hwavg{ width:105px; right:0; text-align:center; font-variant-numeric:tabular-nums; font-weight:700; }
     .manage-tbl th.col-score,
     .manage-tbl th.col-hwavg{ z-index:4; }
+
+    .manage-tbl th.col-score{
+      box-shadow: inset 2px 0 0 var(--line), inset 0 -2px 0 var(--line);
+    }
+    .manage-tbl th.col-hwavg{
+      box-shadow: inset 0 -2px 0 var(--line);
+    }
 
     /* ── 中間作業欄（可捲動） ── */
     .manage-tbl .col-hw{ min-width:92px; text-align:center; font-variant-numeric:tabular-nums; }
@@ -8132,7 +8149,7 @@ function onTimerDone(){
               <th class="col-seat">座號</th>
               <th class="col-name">姓名</th>
               <th class="col-sid">學號</th>
-              ${hwCols.length ? hwCols.map(name=>`<th class="col-hw">${escapeHTML(name)}</th>`).join('') : '<th class="col-hw-spacer"></th>'}
+              ${hwCols.map(name=>`<th class="col-hw">${escapeHTML(name)}</th>`).join('')}
               <th class="col-score">分數</th>
               <th class="col-hwavg">作業平均</th>
             </tr>
@@ -8168,7 +8185,7 @@ function onTimerDone(){
               <td class="col-seat">${seat ? escapeHTML(String(seat)) : '-'}</td>
               <td class="col-name">${escapeHTML(s.name)}</td>
               <td class="col-sid">${escapeHTML(sid)}</td>
-              ${hwCols.length ? hwCols.map((_, i)=>`<td class="col-hw">${hwArr[i] !== '' && hwArr[i] != null && String(hwArr[i]).trim() !== '' ? escapeHTML(String(hwArr[i])) : '—'}</td>`).join('') : '<td class="col-hw-spacer"></td>'}
+              ${hwCols.map((_, i)=>`<td class="col-hw">${hwArr[i] !== '' && hwArr[i] != null && String(hwArr[i]).trim() !== '' ? escapeHTML(String(hwArr[i])) : '—'}</td>`).join('')}
               <td class="col-score">${score}</td>
               <td class="col-hwavg">${hwAvg}</td>
             </tr>`;
@@ -9295,9 +9312,11 @@ elProgAdd?.addEventListener('click', ()=>{
     });
 
     function ensureHWState(cls){
-      if(!cls) return { cols:[], data:{} };
-      if(!state.hw[cls]){ loadHWFromLS(cls); if(!state.hw[cls]) state.hw[cls]={ cols:[], data:{} }; }
-      return state.hw[cls];
+      if(!cls) return { cols:['作業1'], data:{} };
+      if(!state.hw[cls]){ loadHWFromLS(cls); if(!state.hw[cls]) state.hw[cls]={ cols:['作業1'], data:{} }; }
+      const hw = state.hw[cls];
+      if(!hw.cols || hw.cols.length === 0){ hw.cols = ['作業1']; }
+      return hw;
     }
     function nextHWName(cols){
       const nums=cols.map(n=>{ const m=n.match(/(\d+)/); return m?Number(m[1]):0; }).filter(Number.isFinite);
@@ -9428,7 +9447,7 @@ elProgAdd?.addEventListener('click', ()=>{
         saveSession('hw cols change'); // ★ 新增
       };
       elHWDel.onclick = ()=>{
-        if(hw.cols.length===0) return; hw.cols.pop();
+        if(hw.cols.length<=1) return; hw.cols.pop();
         Object.keys(hw.data).forEach(id=>{ const arr=hw.data[id]; if(Array.isArray(arr) && arr.length>hw.cols.length) arr.length=hw.cols.length; });
         saveHWToLS(cls); renderHW(cls);
         saveSession('hw cols change'); // ★ 新增
