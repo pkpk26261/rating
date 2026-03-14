@@ -9022,9 +9022,26 @@ elProgAdd?.addEventListener('click', ()=>{
     bindProgressPageUI();
 
     /* ===== 倒數計時：按鈕 ===== */
+    elTimerMin?.addEventListener('input', ()=>{
+      let v = Number(elTimerMin.value) || 0;
+      if(v >= 60){
+        elTimerMin.value = 60;
+        if(elTimerSec) elTimerSec.value = 0;
+        if(v > 60) setStatus('⚠️ 分鐘上限為 60 分鐘，秒數已歸零');
+      }
+      if(v < 0){ elTimerMin.value = 0; }
+    });
+    elTimerSec?.addEventListener('input', ()=>{
+      let mm = Number(elTimerMin?.value) || 0;
+      let v = Number(elTimerSec.value) || 0;
+      if(mm >= 60){ elTimerSec.value = 0; setStatus('⚠️ 已達 60 分鐘上限，秒數須為 0'); return; }
+      if(v > 59){ elTimerSec.value = 59; setStatus('⚠️ 秒數上限為 59 秒'); }
+      if(v < 0){ elTimerSec.value = 0; }
+    });
     elTimerSet?.addEventListener('click', ()=>{
-      const mm = Math.min(60, Math.max(0, Number(elTimerMin?.value||0) || 0));
-      const ss = Math.min(59, Math.max(0, Number(elTimerSec?.value||0) || 0));
+      let mm = Math.min(60, Math.max(0, Number(elTimerMin?.value||0) || 0));
+      let ss = Math.min(59, Math.max(0, Number(elTimerSec?.value||0) || 0));
+      if(mm >= 60) ss = 0;
       setTimerSeconds(mm*60 + ss);
     });
     elTimerStart?.addEventListener('click', startTimer);
