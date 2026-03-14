@@ -57,23 +57,22 @@
     /* ===== 動態背景（淺色）覆寫 ===== */
     :root[data-theme="light"] body::before{
       background:
-        radial-gradient(circle 45vw at 15% 20%, rgba(99,102,241,.14), transparent 70%),
-        radial-gradient(circle 40vw at 80% 15%, rgba(16,185,129,.10), transparent 65%),
-        radial-gradient(circle 50vw at 55% 85%, rgba(99,102,241,.08), transparent 72%),
-        radial-gradient(circle 35vw at 40% 50%, rgba(251,191,36,.06), transparent 60%),
+        radial-gradient(circle 50vw at 15% 20%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(circle 45vw at 80% 15%, rgba(16,185,129,.16), transparent 55%),
+        radial-gradient(circle 50vw at 55% 85%, rgba(99,102,241,.14), transparent 65%),
+        radial-gradient(circle 40vw at 40% 50%, rgba(251,191,36,.10), transparent 55%),
+        radial-gradient(circle 50vw at 65% 45%, rgba(16,185,129,.10), transparent 60%),
         linear-gradient(160deg, #f4f5f9 0%, #eef0fb 40%, #e8f5f0 100%);
       background-repeat:no-repeat;
-      background-size: 180% 180%, 160% 160%, 190% 190%, 140% 140%, 100% 100%;
-      background-position: 15% 20%, 80% 15%, 55% 85%, 40% 50%, 0% 0%;
-      filter: blur(50px) saturate(1.1);
+      background-size: 180% 180%, 170% 170%, 195% 195%, 150% 150%, 175% 175%, 100% 100%;
+      background-position: 15% 20%, 80% 15%, 55% 85%, 40% 50%, 65% 45%, 0% 0%;
+      filter: blur(55px) saturate(1.15);
       opacity:1;
-      animation:
-        meshDrift 30s ease-in-out infinite alternate,
-        meshScale 50s ease-in-out infinite alternate;
+      animation: meshMove 14s ease-in-out infinite alternate;
     }
 
     :root[data-theme="light"] body::after{
-      opacity:.35;
+      opacity:.25;
       mix-blend-mode: multiply;
     }
 
@@ -117,22 +116,20 @@
       z-index:-2;
       pointer-events:none;
       background:
-        radial-gradient(circle 50vw at 20% 25%, rgba(129,140,248,.22), transparent 65%),
-        radial-gradient(circle 45vw at 78% 18%, rgba(52,211,153,.16), transparent 60%),
-        radial-gradient(circle 55vw at 55% 80%, rgba(129,140,248,.12), transparent 70%),
-        radial-gradient(circle 40vw at 35% 60%, rgba(251,191,36,.06), transparent 55%),
-        radial-gradient(circle 60vw at 65% 45%, rgba(52,211,153,.08), transparent 65%),
+        radial-gradient(circle 55vw at 20% 25%, rgba(129,140,248,.38), transparent 60%),
+        radial-gradient(circle 50vw at 78% 15%, rgba(52,211,153,.30), transparent 55%),
+        radial-gradient(circle 50vw at 50% 80%, rgba(99,102,241,.22), transparent 65%),
+        radial-gradient(circle 45vw at 30% 60%, rgba(251,191,36,.10), transparent 50%),
+        radial-gradient(circle 55vw at 70% 50%, rgba(52,211,153,.16), transparent 60%),
         linear-gradient(150deg, #0a0e1a 0%, #0d1225 40%, #0a1018 100%);
       background-repeat:no-repeat;
       background-size: 180% 180%, 170% 170%, 195% 195%, 150% 150%, 175% 175%, 100% 100%;
       background-position: 20% 25%, 78% 18%, 55% 80%, 35% 60%, 65% 45%, 0% 0%;
-      filter: blur(55px) saturate(1.2);
-      opacity:.88;
+      filter: blur(60px) saturate(1.4);
+      opacity:1;
       transform: translate3d(0,0,0) scale(1.06);
-      animation:
-        meshDrift 32s ease-in-out infinite alternate,
-        meshScale 60s ease-in-out infinite alternate;
-      will-change: transform, background-size, background-position;
+      animation: meshMove 14s ease-in-out infinite alternate;
+      will-change: transform, background-position;
       backface-visibility: hidden;
     }
 
@@ -149,25 +146,27 @@
     }
 
 
-        @keyframes meshDrift{
+        @keyframes meshMove{
       0%{
-        transform: translate3d(-1.5%, -1%, 0) scale(1.05);
-        background-position: 20% 25%, 78% 18%, 55% 80%, 35% 60%, 65% 45%, 0% 0%;
+        transform: translate3d(-3%, -2%, 0) scale(1.05) rotate(-1deg);
+        background-position: 15% 20%, 85% 12%, 50% 85%, 28% 55%, 72% 42%, 0% 0%;
+        background-size: 180% 180%, 170% 170%, 195% 195%, 150% 150%, 175% 175%, 100% 100%;
       }
-      50%{
-        transform: translate3d(1%, 0.5%, 0) scale(1.08);
-        background-position: 28% 30%, 70% 12%, 48% 75%, 42% 55%, 58% 50%, 0% 0%;
+      33%{
+        transform: translate3d(2%, 1%, 0) scale(1.1) rotate(0.5deg);
+        background-position: 30% 30%, 68% 22%, 42% 72%, 45% 48%, 55% 55%, 0% 0%;
+        background-size: 200% 200%, 185% 185%, 210% 210%, 165% 165%, 190% 190%, 100% 100%;
+      }
+      66%{
+        transform: translate3d(-1%, 2.5%, 0) scale(1.07) rotate(-0.5deg);
+        background-position: 22% 35%, 75% 15%, 60% 70%, 35% 62%, 68% 38%, 0% 0%;
+        background-size: 190% 190%, 175% 175%, 200% 200%, 155% 155%, 182% 182%, 100% 100%;
       }
       100%{
-        transform: translate3d(1.5%, 1%, 0) scale(1.06);
-        background-position: 24% 22%, 74% 24%, 60% 76%, 30% 65%, 70% 40%, 0% 0%;
+        transform: translate3d(3%, -1%, 0) scale(1.08) rotate(0.8deg);
+        background-position: 28% 18%, 72% 28%, 55% 78%, 40% 50%, 62% 48%, 0% 0%;
+        background-size: 195% 195%, 180% 180%, 205% 205%, 160% 160%, 185% 185%, 100% 100%;
       }
-    }
-
-    @keyframes meshScale{
-      0%  { background-size: 170% 170%, 160% 160%, 180% 180%, 140% 140%, 165% 165%, 100% 100%; }
-      50% { background-size: 195% 195%, 180% 180%, 210% 210%, 160% 160%, 185% 185%, 100% 100%; }
-      100%{ background-size: 185% 185%, 175% 175%, 200% 200%, 155% 155%, 178% 178%, 100% 100%; }
     }
 
     /* 動態減弱偏好時停用動畫 */
@@ -179,7 +178,7 @@
       position:sticky; top:0; z-index:20;
       display:grid; grid-template-columns: 1fr auto 1fr; align-items:center;
       min-height:78px; height:auto; padding-block:10px; border-bottom:1px solid var(--line);
-      background:rgba(10,14,26,.78); backdrop-filter: blur(12px) saturate(1.3);
+      background:rgba(10,14,26,.55); backdrop-filter: blur(16px) saturate(1.4);
       padding-inline: var(--page-x);
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
@@ -401,8 +400,7 @@
     /* 作業成績：學生備註彈窗（加大輸入欄位） */
     #note-mask .modal{ width:min(920px, 96vw); max-height: 88vh; }
 
-    /* 操作說明彈窗：寬度再加寬一點，字比較好排 */
-    #help-mask .modal{ width:min(980px, 96vw); max-height: 88vh; }
+
     #note-mask .content{ display:flex; flex-direction:column; gap:10px; }
     #note-mask .note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     #note-mask .note-help{ font-size:12px; opacity:.8; }
@@ -2798,16 +2796,16 @@
 
     /* ===== Topbar 增強 ===== */
     .topbar{
-      background: rgba(10,14,26,.72) !important;
-      backdrop-filter: blur(18px) saturate(1.5) !important;
-      -webkit-backdrop-filter: blur(18px) saturate(1.5) !important;
-      border-bottom: 1px solid rgba(255,255,255,.05) !important;
+      background: rgba(10,14,26,.60) !important;
+      backdrop-filter: blur(20px) saturate(1.5) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+      border-bottom: 1px solid rgba(255,255,255,.06) !important;
       box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 8px 32px rgba(0,0,0,.1);
     }
     :root[data-theme="light"] .topbar{
-      background: rgba(255,255,255,.8) !important;
-      backdrop-filter: blur(18px) saturate(1.4) !important;
-      -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+      background: rgba(255,255,255,.65) !important;
+      backdrop-filter: blur(20px) saturate(1.4) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
       border-bottom-color: rgba(0,0,0,.07) !important;
       box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 8px 32px rgba(0,0,0,.03);
     }
@@ -2950,19 +2948,19 @@
 
     /* ===== 側欄 & Main 面板玻璃效果 ===== */
     .sidebar, .main{
-      background: rgba(10,14,26,.55) !important;
-      backdrop-filter: blur(16px) saturate(1.3);
-      -webkit-backdrop-filter: blur(16px) saturate(1.3);
-      border: 1px solid rgba(255,255,255,.05) !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
+      background: rgba(10,14,26,.42) !important;
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border: 1px solid rgba(255,255,255,.07) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
       transition: box-shadow .3s ease;
     }
     :root[data-theme="light"] .sidebar,
     :root[data-theme="light"] .main{
-      background: rgba(255,255,255,.68) !important;
-      backdrop-filter: blur(16px) saturate(1.3);
-      -webkit-backdrop-filter: blur(16px) saturate(1.3);
-      border: 1px solid rgba(0,0,0,.05) !important;
+      background: rgba(255,255,255,.55) !important;
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border: 1px solid rgba(0,0,0,.06) !important;
       box-shadow: 0 8px 32px rgba(0,0,0,.05), inset 0 1px 0 rgba(255,255,255,.85);
     }
 
@@ -3630,10 +3628,10 @@
 
     /* ===== ★ 平板/觸控裝置效能優化 ===== */
     @media (pointer: coarse) {
-      /* 停用背景極光動畫（最大 GPU 節省） */
+      /* 觸控裝置保留動畫但降低複雜度 */
       body::before{
-        animation: none !important;
-        will-change: auto !important;
+        animation: meshMove 20s ease-in-out infinite alternate !important;
+        filter: blur(70px) saturate(1.2) !important;
       }
       /* 停用噪點紋理層 */
       body::after{
@@ -3745,7 +3743,7 @@
             <label class="btn" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 匯入</label>
             <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
             <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
-            <button id="btn-help" class="btn" title="開啟操作說明">❔ 操作</button>
+            <button id="btn-tour" class="btn" title="啟動新手導覽，逐步了解各項功能" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:rgba(129,140,248,.5);color:#fff;font-weight:800;">🚀 導覽</button>
           </div>
           <div id="status" class="status-inline">尚未載入名單。</div>
         </div>
@@ -3798,28 +3796,7 @@
           <div id="leaderboard"></div>
         </section>
 
-        <!-- 隱藏的說明內容：提供彈窗複製 -->
-        <section id="help-src" class="hint hidden" aria-hidden="true">
-          <strong>操作說明</strong>
-          <div class="divider"></div>
 
-          <ol>
-            <li><b>匯入成績</b>：支援一次匯入多個 Excel / ODS / CSV 檔案（每個檔案＝一個班級）。可匯入後再用「✏️ 改班級名」重新命名班級。也支援單檔多工作表（每表＝一班）。匯出的檔案皆可直接匯入回來。</li>
-            <li><b>左側欄</b>：顯示「🏆 加分排行榜」，用來查看目前班級的加分排名（在加扣分/成績相關模式會更新）。</li>
-            <li><b>模式切換</b>：在頁面上方可切換 <b>座位區</b>／<b>安排座位</b>／<b>作業成績</b>／<b>抽號</b>／<b>倒數計時</b> 等功能。</li>
-            <li><b>新增/刪除學生</b>：在學生名單/作業成績等頁面可新增轉學生，也可開啟刪除介面批次選取移除。</li>
-            <li><b>作業成績</b>：可「＋新增作業」動態增加欄位；需要大量輸入時可用批次輸入功能加快填寫。</li>
-            <li><b>匯出成績</b>：右上角「💾 匯出」可將班級成績輸出為 Excel / CSV / ODS，之後可直接匯入回來續用。教學進度也可一併匯出。</li>
-            <li><b>深色/淺色</b>：右上角可切換主題；所有資料會保留，不影響匯入/匯出。</li>
-          </ol>
-
-          <div class="divider"></div>
-
-          <div class="help-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <a href="#" id="btn-dl-sample" class="btn">📥 下載 Excel 範例檔</a>
-            <span class="note">範例包含「班級A / 班級B」，各 30 位，欄位含「學號／座號／姓名／分數／作業成績」。</span>
-          </div>
-        </section>
 </aside>
 
             <div class="main-col">
@@ -3865,6 +3842,7 @@
           <div class="welcome-actions">
             <label class="btn primary" for="file-input" style="cursor:pointer;">📂 匯入學生名單</label>
             <button class="btn" id="btn-welcome-sample">📥 下載範例檔</button>
+            <button class="btn" id="btn-welcome-tour" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:rgba(129,140,248,.5);color:#fff;font-weight:800;">🚀 新手導覽</button>
           </div>
           <div class="welcome-formats">
             <span class="welcome-fmt">.xlsx</span>
@@ -4141,16 +4119,7 @@
   <!-- 拖放上傳遮罩 -->
   <div class="dropmask" id="dropmask"><div class="msg">📥 放開以上傳 Excel</div></div>
 
-  <!-- 說明彈窗 -->
-  <div id="help-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="help-title">
-    <div class="modal" role="document">
-      <header>
-        <h3 id="help-title">❓ 操作說明</h3>
-        <button id="help-close" class="close" aria-label="關閉">✕</button>
-      </header>
-      <div id="help-content" class="content"></div>
-    </div>
-  </div>
+
 
   <!-- ★ 作業批次輸入彈窗 -->
   <div id="bulk-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="bulk-title">
@@ -4200,6 +4169,36 @@
     </div>
   </div>
 
+
+  <!-- ★ 新增學生彈窗 -->
+  <div id="add-stu-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="add-stu-title">
+    <div class="modal" role="document">
+      <header>
+        <h3 id="add-stu-title">➕ 新增學生</h3>
+        <button id="add-stu-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div class="hint">目前班級：<span id="add-stu-class" class="pill"></span></div>
+        <div style="margin:10px 0; display:flex; flex-direction:column; gap:8px;">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <span style="min-width:3em; text-align:right;">學號</span>
+            <input id="add-stu-sid" class="select" type="text" placeholder="例：A031" style="flex:1;" />
+          </label>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <span style="min-width:3em; text-align:right;">姓名</span>
+            <input id="add-stu-name" class="select" type="text" placeholder="請輸入姓名" style="flex:1;" />
+          </label>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <span style="min-width:3em; text-align:right;">座號</span>
+            <input id="add-stu-seat" class="select" type="text" placeholder="可留空" style="flex:1;" />
+          </label>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+          <button id="add-stu-confirm" class="btn add">新增學生</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ★ 刪除學生彈窗 -->
   <div id="del-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="del-title">
@@ -4705,8 +4704,7 @@
     const elDrawStage = document.querySelector('.draw-stage');
     const elDrawConfetti = document.getElementById('draw-confetti');
 
-    /* 說明彈窗 DOM */
-    const helpBtn = document.getElementById('btn-help');
+
     
     /* ★ 日期時間（民國年 + 24 小時） */
     const dtDateEl = document.getElementById('dt-date');
@@ -4727,10 +4725,7 @@
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-const helpMask = document.getElementById('help-mask');
-    const helpClose = document.getElementById('help-close');
-    const helpContent = document.getElementById('help-content');
-    const helpSrc = document.getElementById('help-src');
+
 
     /* ★ 批次輸入彈窗 DOM */
     const bulkMask = document.getElementById('bulk-mask');
@@ -4751,6 +4746,15 @@ const helpMask = document.getElementById('help-mask');
     const delClass = document.getElementById('del-class');
     const delSelect = document.getElementById('del-stu-select');
     const delConfirm = document.getElementById('del-confirm');
+
+    /* ★ 新增學生彈窗 DOM */
+    const addStuMask = document.getElementById('add-stu-mask');
+    const addStuClose = document.getElementById('add-stu-close');
+    const addStuClass = document.getElementById('add-stu-class');
+    const addStuSid = document.getElementById('add-stu-sid');
+    const addStuName = document.getElementById('add-stu-name');
+    const addStuSeat = document.getElementById('add-stu-seat');
+    const addStuConfirm = document.getElementById('add-stu-confirm');
 
     /* ★ 學生備註彈窗 DOM */
     const noteMask = document.getElementById('note-mask');
@@ -5061,8 +5065,14 @@ const helpMask = document.getElementById('help-mask');
           // ★ 移除無資料狀態
           document.body.classList.remove('no-data');
           renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
-          // ★ 若目前就在教學進度模式，匯入後立即刷新
-          if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
+          // ★ 匯入後立即刷新學生管理名單（不論目前模式）
+          try{ renderManage(); }catch(e){}
+          // ★ 匯入後立即依當前模式刷新所有資訊
+          if(state.mode==='seat')     { try{ renderSeatUI(order[0]); }catch(e){} }
+          if(state.mode==='draw')     { try{ renderDraw(order[0]); }catch(e){} }
+          if(state.mode==='group')    { try{ renderGroup(order[0]); }catch(e){} }
+          if(state.mode==='progress') { try{ renderProgress(); }catch(e){} }
+          if(state.mode==='timer')    { try{ renderTimerUI?.(); }catch(e){} }
           saveNotes();
           const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
           setStatus(`已載入 ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案）。`);
@@ -5156,38 +5166,7 @@ const helpMask = document.getElementById('help-mask');
         alert('請先選擇班級');
         return;
       }
-
-      const sid = (prompt('請輸入【學號】（例：A031）：') || '').trim();
-      if(!sid) return;
-
-      const id = `SID__${sid}`;
-      const list = state.classMap[cls] || [];
-
-      if(list.some(s => s.id === id)){
-        alert('這個學號在本班已經存在囉！');
-        return;
-      }
-
-      const name = (prompt('請輸入【姓名】：') || '').trim() || sid;
-      const seatRaw = (prompt('請輸入【座號】（可留空）：') || '').trim();
-      const seat = seatRaw || '';
-
-      const student = { id, sid, name, seat, row: null, sheet: cls };
-
-      list.push(student);
-      state.classMap[cls] = list;
-
-      state.sidMap[id] = { sid, sheet: cls, seat, name };
-
-      setScore(cls, id, 0);
-
-      renderStudents(cls);
-      renderLeaderboard(cls);
-      if(state.mode==='seat') renderSeatUI(cls);
-      if(state.mode==='hw') renderHW(cls);
-      if(state.mode==='draw') renderDraw(cls);
-
-      saveSession('add student');
+      openAddStuModal(cls, 'list');
     });
 
     // 🗑 刪除學生（轉學生）
@@ -8295,24 +8274,7 @@ function onTimerDone(){
     elManageAdd?.addEventListener('click', ()=>{
       const cls = manageSelectedClass;
       if(!cls){ alert('請先選擇班級'); return; }
-      const sid = (prompt('請輸入【學號】（例：A031）：') || '').trim();
-      if(!sid) return;
-      const id = `SID__${sid}`;
-      const list = state.classMap[cls] || [];
-      if(list.some(s => s.id === id)){
-        alert('這個學號在本班已經存在囉！');
-        return;
-      }
-      const name = (prompt('請輸入【姓名】：') || '').trim() || sid;
-      const seatRaw = (prompt('請輸入【座號】（可留空）：') || '').trim();
-      const seat = seatRaw || '';
-      const student = { id, sid, name, seat, row: null, sheet: cls };
-      list.push(student);
-      state.classMap[cls] = list;
-      state.sidMap[id] = { sid, sheet: cls, seat, name };
-      setScore(cls, id, 0);
-      renderManage();
-      saveSession('add student');
+      openAddStuModal(cls, 'manage');
     });
 
     // － 刪除學生（管理模式 → 開啟原有刪除彈窗）
@@ -9076,14 +9038,11 @@ elProgAdd?.addEventListener('click', ()=>{
     }
 
 
-    /* ===== 說明彈窗 ===== */
-    function openHelp(){ if(helpSrc&&helpContent){ helpContent.innerHTML=helpSrc.innerHTML; const dlBtn = helpContent.querySelector('#btn-dl-sample'); dlBtn?.addEventListener('click', (e)=>{ e.preventDefault(); downloadSampleWorkbook(); });} helpMask.classList.add('show'); helpClose?.focus(); const onKey=(e)=>{ if(e.key==='Escape'){ closeHelp(); } }; window.addEventListener('keydown', onKey, { once:true }); helpMask.addEventListener('click', (e)=>{ if(e.target===helpMask){ closeHelp(); } }, { once:true }); }
-    function closeHelp(){ helpMask.classList.remove('show'); }
-    helpBtn?.addEventListener('click', ()=>{ bindRipple(helpBtn); openHelp(); });
+
 
     /* ★ 歡迎引導按鈕 */
     document.getElementById('btn-welcome-sample')?.addEventListener('click', ()=>{ downloadSampleWorkbook(); });
-    document.getElementById('btn-welcome-help')?.addEventListener('click', ()=>{ openHelp(); });
+
     function hideWelcomeGuide(){
       const g = document.getElementById('welcome-guide');
       if(g) g.style.display = 'none';
@@ -9093,64 +9052,259 @@ elProgAdd?.addEventListener('click', ()=>{
       if(g) g.style.display = '';
     }
 
-    /* ===== 新手引導 Tour ===== */
+    /* ===== 新手引導 Tour（依當前模式動態產生步驟） ===== */
     (function initTour(){
-      const TOUR_STEPS = [
+
+      /* ── 通用步驟（頂部工具列，各模式共用） ── */
+      const COMMON_TOP = [
         {
           target: '.topbar__left .import-block',
           title: '匯入學生名單',
           desc: '點擊「📂 匯入」按鈕上傳 Excel / ODS / CSV 檔案，也可以<b>直接將檔案拖放</b>到頁面任意位置。支援一次匯入多個檔案，每個檔案代表一個班級。',
           pos: 'bottom'
+        }
+      ];
+
+      const COMMON_BOTTOM = [
+        {
+          target: '.topbar__right-actions',
+          title: '匯出與主題',
+          desc: '點擊「💾 匯出」將所有班級成績輸出為 Excel / CSV / ODS 檔案，可隨時再匯入繼續使用。點擊主題按鈕切換<b>深色 / 淺色</b>模式。',
+          pos: 'bottom'
         },
+        {
+          target: '.topbar__left .import-block div:first-child',
+          title: '工具列按鈕',
+          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「🚀 導覽」可隨時重新啟動此導覽。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
+          pos: 'bottom'
+        }
+      ];
+
+      /* ── 歡迎頁面（無資料） ── */
+      const STEPS_WELCOME = [
+        ...COMMON_TOP,
+        {
+          target: '#welcome-guide',
+          title: '歡迎畫面',
+          desc: '這是首次使用的歡迎畫面。你可以在這裡<b>匯入學生名單</b>或<b>下載範例檔</b>快速體驗。匯入後會自動進入加扣分模式。',
+          pos: 'top'
+        },
+        {
+          target: '#btn-welcome-sample',
+          title: '下載範例檔',
+          desc: '點擊下載一份包含「班級A / 班級B」各 30 位學生的 Excel 範例檔，<b>方便快速體驗</b>各項功能。',
+          pos: 'bottom'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 加扣分模式 ── */
+      const STEPS_LIST = [
+        ...COMMON_TOP,
         {
           target: '.modebar .seg',
           title: '功能模式切換',
-          desc: '切換不同功能：<b>加扣分</b>管理平時成績、<b>座位</b>安排座位表、<b>作業成績</b>記錄作業、<b>抽號</b>隨機抽人、<b>分組</b>分組管理、<b>倒數計時</b>教學用計時器。',
+          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
           pos: 'bottom'
         },
         {
           target: '#class-select',
           title: '班級選擇',
-          desc: '匯入名單後在此切換班級。每個班級的成績、座位等資料各自獨立儲存。也可以點擊旁邊的「✏️ 改班級名」修改名稱。',
+          desc: '匯入名單後在此切換班級。每個班級的成績、座位等資料<b>各自獨立儲存</b>。',
           pos: 'bottom'
+        },
+        {
+          target: '#students',
+          title: '學生卡片',
+          desc: '每位學生顯示為一張卡片，點擊 <b>＋ / −</b> 按鈕即可即時加扣分。分數變動會立即反映在左側排行榜中。',
+          pos: 'top'
         },
         {
           target: '#sidebar .board',
           title: '加分排行榜',
-          desc: '左側欄即時顯示目前班級的<b>加分排名</b>，方便掌握學生表現。僅在「加扣分」模式中顯示。',
+          desc: '左側欄即時顯示目前班級的<b>加分排名</b>，方便掌握學生表現。前五名會顯示獎牌圖示。',
+          pos: 'right'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 座位模式 ── */
+      const STEPS_SEAT = [
+        ...COMMON_TOP,
+        {
+          target: '#seat-controls',
+          title: '座位設定列',
+          desc: '設定教室的<b>列數 × 欄數</b>（最大 9×9）。可以按「自動排位」依座號自動填入、「隨機入座」打亂座位，或「清空」重新安排。',
+          pos: 'bottom'
+        },
+        {
+          target: '#seatboard',
+          title: '座位表',
+          desc: '將右側未安排名單中的學生<b>拖放</b>到格子中安排座位。也可以在格子之間互換位置。座位安排會自動儲存。',
+          pos: 'top'
+        },
+        {
+          target: '#unassigned',
+          title: '未安排名單',
+          desc: '尚未安排座位的學生會顯示在這裡。將學生<b>拖曳</b>到左側座位格即可完成安排。',
+          pos: 'left'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 作業成績模式 ── */
+      const STEPS_HW = [
+        ...COMMON_TOP,
+        {
+          target: '.hw-bar',
+          title: '作業工具列',
+          desc: '可以「＋新增作業」動態增加欄位，或「刪除最後作業」移除。也可在此切換班級。',
+          pos: 'bottom'
+        },
+        {
+          target: '#hw-table',
+          title: '作業成績表',
+          desc: '直接<b>點擊數字格</b>輸入成績。<b>雙擊欄位名稱</b>可重新命名作業欄。需要大量輸入時請按欄位標題旁的「⚡」使用<b>批次輸入</b>（整欄同分 或 貼上多筆）。',
+          pos: 'top'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 抽號模式 ── */
+      const STEPS_DRAW = [
+        ...COMMON_TOP,
+        {
+          target: '.controls-card',
+          title: '抽號控制面板',
+          desc: '設定<b>抽選人數</b>（1～6）、序列模式、是否不重覆抽取。可開啟「抽到即 +1 分」自動加分，以及「緩停效果」增加氣氛。',
           pos: 'right'
         },
         {
-          target: '.topbar__right-actions',
-          title: '匯出與主題',
-          desc: '點擊「💾 匯出」將所有班級成績輸出為 Excel 檔案，可隨時再匯入繼續使用。點擊「☀️ 淺色」切換深色/淺色主題。',
+          target: '#btn-draw',
+          title: '開始抽籤',
+          desc: '點擊此按鈕開始<b>滾動抽籤動畫</b>！結果會顯示在右側聚光區，歷史紀錄也會自動保留。',
           pos: 'bottom'
         },
         {
-          target: '.topbar__left .import-block div:first-child',
-          title: '清除與操作說明',
-          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「❔ 操作」開啟完整操作說明。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
-          pos: 'bottom'
-        }
+          target: '.spotlight-card',
+          title: '抽籤結果區',
+          desc: '顯示<b>本次結果</b>與<b>歷史紀錄</b>。上方的徽章顯示剩餘人數與全班人數。可使用「↩️ 撤銷」或「🔄 重置」管理紀錄。',
+          pos: 'left'
+        },
+        ...COMMON_BOTTOM
       ];
 
+      /* ── 分組模式 ── */
+      const STEPS_GROUP = [
+        ...COMMON_TOP,
+        {
+          target: '.grp-toolbar',
+          title: '分組工具列',
+          desc: '選擇班級、設定<b>分組數量</b>（2～20 組）。點擊「🎲 隨機分組」自動分配，或「🗑 清空」重來。',
+          pos: 'bottom'
+        },
+        {
+          target: '#grp-board',
+          title: '分組看板',
+          desc: '每個組別顯示為一張卡片，可以<b>拖放學生</b>在組別之間移動。分組名稱可自訂，組別資料會隨班級儲存。',
+          pos: 'top'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 倒數計時模式 ── */
+      const STEPS_TIMER = [
+        ...COMMON_TOP,
+        {
+          target: '.timer-ring-box',
+          title: '計時器',
+          desc: '圓形進度環顯示剩餘時間。可使用下方的<b>快速預設</b>（1 / 2 / 3 / 5 / 10 / 15 分鐘）或自訂分鐘與秒數。',
+          pos: 'bottom'
+        },
+        {
+          target: '.timer-presets',
+          title: '快速預設',
+          desc: '點擊任一預設按鈕即可<b>立即設定</b>倒數時間，省去手動輸入。',
+          pos: 'top'
+        },
+        {
+          target: '.timer-actions',
+          title: '計時控制',
+          desc: '按「▶ 開始」開始倒數、「⏸ 暫停」暫停、「↺ 重置」歸零。計時結束會<b>彈出提醒</b>。',
+          pos: 'top'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 教學進度模式 ── */
+      const STEPS_PROGRESS = [
+        ...COMMON_TOP,
+        {
+          target: '.prog-bar',
+          title: '進度工具列',
+          desc: '選擇分頁、管理分頁（新增、重新命名、刪除）、管理班級。可新增<b>主題</b>和<b>進度列</b>，進度統計即時更新。',
+          pos: 'bottom'
+        },
+        {
+          target: '#prog-table',
+          title: '進度表格',
+          desc: '各班級以欄位顯示，每列代表一個教學進度。<b>點擊勾選框</b>標記完成狀態，上方統計會即時更新各班的完成比率。',
+          pos: 'top'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 學生管理模式 ── */
+      const STEPS_MANAGE = [
+        ...COMMON_TOP,
+        {
+          target: '.manage-left',
+          title: '班級列表',
+          desc: '左側顯示所有班級。點擊切換班級，下方可<b>新增</b>、<b>命名</b>、<b>刪除</b>班級。',
+          pos: 'right'
+        },
+        {
+          target: '.manage-right',
+          title: '學生名單',
+          desc: '右側顯示所選班級的<b>完整名單</b>（座號、姓名、學號、各科作業、分數、作業平均）。可新增或刪除個別學生。',
+          pos: 'left'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 根據目前 state.mode 選取步驟 ── */
+      function getSteps(){
+        const hasData = state.classOrder && state.classOrder.length > 0;
+        if(!hasData) return STEPS_WELCOME;
+        switch(state.mode){
+          case 'list':     return STEPS_LIST;
+          case 'seat':     return STEPS_SEAT;
+          case 'hw':       return STEPS_HW;
+          case 'draw':     return STEPS_DRAW;
+          case 'group':    return STEPS_GROUP;
+          case 'timer':    return STEPS_TIMER;
+          case 'progress': return STEPS_PROGRESS;
+          case 'manage':   return STEPS_MANAGE;
+          default:         return STEPS_LIST;
+        }
+      }
+
       let currentStep = -1;
+      let steps = [];
       let overlayEl = null, highlightEl = null, tooltipEl = null;
 
       function startTour(){
-        if(overlayEl) return; // already running
+        if(overlayEl) return;
+        steps = getSteps();
         currentStep = -1;
-        // create overlay
         overlayEl = document.createElement('div');
         overlayEl.className = 'tour-overlay';
-        overlayEl.style.background = 'transparent'; // shadow comes from highlight
+        overlayEl.style.background = 'transparent';
         overlayEl.addEventListener('click', e => { if(e.target === overlayEl) endTour(); });
         document.body.appendChild(overlayEl);
-        // create highlight
         highlightEl = document.createElement('div');
         highlightEl.className = 'tour-highlight tour-pulse';
         document.body.appendChild(highlightEl);
-        // create tooltip
         tooltipEl = document.createElement('div');
         tooltipEl.className = 'tour-tooltip';
         document.body.appendChild(tooltipEl);
@@ -9160,12 +9314,12 @@ elProgAdd?.addEventListener('click', ()=>{
       function endTour(){
         overlayEl?.remove(); highlightEl?.remove(); tooltipEl?.remove();
         overlayEl = highlightEl = tooltipEl = null;
-        currentStep = -1;
+        currentStep = -1; steps = [];
       }
 
       function nextStep(){
         currentStep++;
-        if(currentStep >= TOUR_STEPS.length){ endTour(); return; }
+        if(currentStep >= steps.length){ endTour(); return; }
         showStep(currentStep);
       }
 
@@ -9176,40 +9330,42 @@ elProgAdd?.addEventListener('click', ()=>{
       }
 
       function showStep(idx){
-        const step = TOUR_STEPS[idx];
+        const step = steps[idx];
         const el = document.querySelector(step.target);
-        if(!el){ nextStep(); return; }
+        if(!el || el.offsetParent === null){ nextStep(); return; }
 
-        // ensure target is visible
         el.scrollIntoView?.({ behavior:'smooth', block:'nearest' });
 
         requestAnimationFrame(()=>{
           const r = el.getBoundingClientRect();
           const pad = 8;
 
-          // position highlight
           highlightEl.style.left   = (r.left - pad) + 'px';
           highlightEl.style.top    = (r.top - pad) + 'px';
           highlightEl.style.width  = (r.width + pad*2) + 'px';
           highlightEl.style.height = (r.height + pad*2) + 'px';
 
-          // build tooltip content
-          const dots = TOUR_STEPS.map((_,i)=> `<div class="tour-dot${i===idx?' active':''}"></div>`).join('');
+          // mode label for tooltip header
+          const modeLabels = { list:'加扣分', seat:'座位', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
+          const hasData = state.classOrder && state.classOrder.length > 0;
+          const modeLabel = hasData ? (modeLabels[state.mode] || '') : '歡迎';
+
+          const dots = steps.map((_,i)=> `<div class="tour-dot${i===idx?' active':''}"></div>`).join('');
           tooltipEl.innerHTML = `
             <div class="tour-tooltip-arrow ${step.pos==='bottom'?'top':step.pos==='top'?'bottom':step.pos==='right'?'left':'right'}"></div>
             <div class="tour-title"><span class="tour-step-badge">${idx+1}</span>${step.title}</div>
+            <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;opacity:.7;">📍 ${modeLabel}模式 • 步驟 ${idx+1} / ${steps.length}</div>
             <div class="tour-desc">${step.desc}</div>
             <div class="tour-footer">
               <div class="tour-dots">${dots}</div>
               <div class="tour-btns">
                 ${idx > 0 ? '<button class="btn tour-prev">← 上一步</button>' : '<button class="tour-skip" id="tour-skip-btn">跳過導覽</button>'}
-                <button class="btn tour-next">${idx < TOUR_STEPS.length - 1 ? '下一步 →' : '✓ 完成'}</button>
+                <button class="btn tour-next">${idx < steps.length - 1 ? '下一步 →' : '✓ 完成'}</button>
               </div>
             </div>
           `;
 
-          // position tooltip
-          const tw = 340, th = tooltipEl.offsetHeight;
+          const tw = 360, th = tooltipEl.offsetHeight;
           let tx, ty;
           if(step.pos === 'bottom'){
             tx = r.left; ty = r.bottom + pad + 14;
@@ -9230,31 +9386,27 @@ elProgAdd?.addEventListener('click', ()=>{
           tooltipEl.style.left = tx + 'px';
           tooltipEl.style.top  = ty + 'px';
           tooltipEl.style.width = tw + 'px';
-          // re-trigger animation
           tooltipEl.style.animation = 'none';
           tooltipEl.offsetHeight;
           tooltipEl.style.animation = '';
 
-          // bind buttons
           tooltipEl.querySelector('.tour-next')?.addEventListener('click', nextStep);
           tooltipEl.querySelector('.tour-prev')?.addEventListener('click', prevStep);
           tooltipEl.querySelector('#tour-skip-btn')?.addEventListener('click', endTour);
         });
       }
 
-      // expose
       window._startTour = startTour;
 
-      // bind welcome tour button
       document.getElementById('btn-welcome-tour')?.addEventListener('click', startTour);
+      document.getElementById('btn-tour')?.addEventListener('click', startTour);
 
-      // reposition on resize
       window.addEventListener('resize', ()=>{
         if(overlayEl && currentStep >= 0) showStep(currentStep);
       });
     })();
 
-    document.getElementById('help-close')?.addEventListener('click', closeHelp);
+
 
     /* ===== ★ 產生範例 Excel：2 個班級 × 各 30 位 ===== */
     function buildSampleSheet(classKey, sheetName){
@@ -10114,6 +10266,61 @@ noteSave?.addEventListener('click', ()=>{
       closeNoteModal();
     });
 
+    // ★ 新增學生彈窗
+    let _addStuSource = ''; // 'list' | 'manage'，用來判斷確認後要更新哪裡
+    function openAddStuModal(cls, source){
+      if(!addStuMask){ alert('介面尚未準備完成'); return; }
+      if(!cls){ alert('請先選擇班級'); return; }
+      _addStuSource = source || 'list';
+      addStuClass.textContent = cls;
+      addStuSid.value = '';
+      addStuName.value = '';
+      addStuSeat.value = '';
+      addStuMask.classList.add('show');
+      addStuSid.focus();
+      const onKey = (e) => { if(e.key==='Escape') closeAddStuModal(); };
+      window.addEventListener('keydown', onKey, { once:true });
+      addStuMask.addEventListener('click', (e) => { if(e.target===addStuMask) closeAddStuModal(); }, { once:true });
+    }
+    function closeAddStuModal(){ if(addStuMask) addStuMask.classList.remove('show'); }
+    addStuClose?.addEventListener('click', closeAddStuModal);
+    addStuConfirm?.addEventListener('click', ()=>{
+      const cls = addStuClass.textContent || '';
+      if(!cls){ alert('請先選擇班級'); return; }
+
+      const sid = (addStuSid.value || '').trim();
+      if(!sid){ alert('請輸入學號'); addStuSid.focus(); return; }
+
+      const id = `SID__${sid}`;
+      const list = state.classMap[cls] || [];
+      if(list.some(s => s.id === id)){
+        alert('這個學號在本班已經存在囉！');
+        addStuSid.focus();
+        return;
+      }
+
+      const name = (addStuName.value || '').trim() || sid;
+      const seat = (addStuSeat.value || '').trim();
+
+      const student = { id, sid, name, seat, row: null, sheet: cls };
+      list.push(student);
+      state.classMap[cls] = list;
+      state.sidMap[id] = { sid, sheet: cls, seat, name };
+      setScore(cls, id, 0);
+
+      // 更新畫面
+      renderStudents(cls);
+      renderLeaderboard(cls);
+      if(state.mode==='seat') renderSeatUI(cls);
+      if(state.mode==='hw') renderHW(cls);
+      if(state.mode==='draw') renderDraw(cls);
+      if(state.mode==='manage') renderManage();
+
+      saveSession('add student');
+      setStatus(`已新增學生「${name}」(${sid})`);
+      closeAddStuModal();
+    });
+
     // 刪除學生彈窗
     function openDelModal(cls){
       if(!delMask || !delSelect){
@@ -10179,7 +10386,7 @@ noteSave?.addEventListener('click', ()=>{
     function closeDelModal(){ if(delMask) delMask.classList.remove('show'); }
     delClose?.addEventListener('click', closeDelModal);
     delConfirm?.addEventListener('click', ()=>{
-      const cls = elSelect.value || delClass.textContent || '';
+      const cls = delClass.textContent || elSelect.value || '';
       if(!cls){
         alert('請先選擇班級');
         return;
