@@ -2295,7 +2295,7 @@
       flex:1 1 auto; min-height:0; overflow:auto;
     }
     .manage-tbl{
-      min-width:100%; width:max-content; border-collapse:collapse; font-size:13px;
+      min-width:100%; width:max-content; border-collapse:separate; border-spacing:0; font-size:13px;
     }
     .manage-tbl th{
       position:sticky; top:0; z-index:2;
@@ -2314,12 +2314,63 @@
     .manage-tbl tbody tr:hover{ background:rgba(124,58,237,.06); }
     :root[data-theme="light"] .manage-tbl tbody tr:hover{ background:rgba(124,58,237,.04); }
     :root[data-theme="light"] .manage-tbl th{ background:rgba(255,255,255,.95); }
-    .manage-tbl .col-seat{ width:60px; text-align:center; }
-    .manage-tbl .col-name{ min-width:100px; font-weight:700; }
-    .manage-tbl .col-sid{ color:var(--muted); font-size:12px; }
-    .manage-tbl .col-score{ width:80px; text-align:center; font-variant-numeric:tabular-nums; font-weight:700; }
+
+    /* ── 左側凍結欄：座號、姓名、學號 ── */
+    .manage-tbl .col-seat,
+    .manage-tbl .col-name,
+    .manage-tbl .col-sid{
+      position:sticky; z-index:1;
+      background:#141e33; box-sizing:border-box;
+    }
+    .manage-tbl .col-seat{ width:70px; left:0; text-align:center; }
+    .manage-tbl .col-name{ width:120px; left:70px; font-weight:700; }
+    .manage-tbl .col-sid{ width:110px; left:190px; color:var(--muted); font-size:12px;
+      border-right:2px solid var(--line);
+    }
+    /* 左凍結表頭 z-index 要比一般表頭高 */
+    .manage-tbl th.col-seat,
+    .manage-tbl th.col-name,
+    .manage-tbl th.col-sid{ z-index:4; }
+
+    /* ── 右側凍結欄：分數、作業平均 ── */
+    .manage-tbl .col-score,
+    .manage-tbl .col-hwavg{
+      position:sticky; z-index:1;
+      background:#141e33; box-sizing:border-box;
+    }
+    .manage-tbl .col-score{ width:85px; right:105px; text-align:center; font-variant-numeric:tabular-nums; font-weight:700;
+      border-left:2px solid var(--line);
+    }
+    .manage-tbl .col-hwavg{ width:105px; right:0; text-align:center; font-variant-numeric:tabular-nums; font-weight:700; }
+    .manage-tbl th.col-score,
+    .manage-tbl th.col-hwavg{ z-index:4; }
+
+    /* ── 中間作業欄（可捲動） ── */
     .manage-tbl .col-hw{ min-width:92px; text-align:center; font-variant-numeric:tabular-nums; }
-    .manage-tbl .col-hwavg{ width:92px; text-align:center; font-variant-numeric:tabular-nums; font-weight:700; }
+    /* 無作業時的佔位欄 */
+    .manage-tbl .col-hw-spacer{ min-width:120px; width:100%; }
+
+    /* ── hover 時凍結欄也要顯示 hover 底色 ── */
+    .manage-tbl tbody tr:hover .col-seat,
+    .manage-tbl tbody tr:hover .col-name,
+    .manage-tbl tbody tr:hover .col-sid,
+    .manage-tbl tbody tr:hover .col-score,
+    .manage-tbl tbody tr:hover .col-hwavg{
+      background: color-mix(in srgb, #141e33 90%, #7c3aed);
+    }
+    /* 淺色主題凍結欄背景 */
+    :root[data-theme="light"] .manage-tbl td.col-seat,
+    :root[data-theme="light"] .manage-tbl td.col-name,
+    :root[data-theme="light"] .manage-tbl td.col-sid,
+    :root[data-theme="light"] .manage-tbl td.col-score,
+    :root[data-theme="light"] .manage-tbl td.col-hwavg{ background:#e8ecf4; }
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-seat,
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-name,
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-sid,
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-score,
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-hwavg{
+      background: color-mix(in srgb, #e8ecf4 90%, #7c3aed);
+    }
     .manage-empty{ color:var(--muted); font-size:14px; padding:40px; text-align:center; opacity:.7; }
     /* 手機窄螢幕改為上下堆疊 */
     @media(max-width:600px){
@@ -8081,8 +8132,8 @@ function onTimerDone(){
               <th class="col-seat">座號</th>
               <th class="col-name">姓名</th>
               <th class="col-sid">學號</th>
+              ${hwCols.length ? hwCols.map(name=>`<th class="col-hw">${escapeHTML(name)}</th>`).join('') : '<th class="col-hw-spacer"></th>'}
               <th class="col-score">分數</th>
-              ${hwCols.map(name=>`<th class="col-hw">${escapeHTML(name)}</th>`).join('')}
               <th class="col-hwavg">作業平均</th>
             </tr>
           </thead>
@@ -8117,8 +8168,8 @@ function onTimerDone(){
               <td class="col-seat">${seat ? escapeHTML(String(seat)) : '-'}</td>
               <td class="col-name">${escapeHTML(s.name)}</td>
               <td class="col-sid">${escapeHTML(sid)}</td>
+              ${hwCols.length ? hwCols.map((_, i)=>`<td class="col-hw">${hwArr[i] !== '' && hwArr[i] != null && String(hwArr[i]).trim() !== '' ? escapeHTML(String(hwArr[i])) : '—'}</td>`).join('') : '<td class="col-hw-spacer"></td>'}
               <td class="col-score">${score}</td>
-              ${hwCols.map((_, i)=>`<td class="col-hw">${hwArr[i] !== '' && hwArr[i] != null && String(hwArr[i]).trim() !== '' ? escapeHTML(String(hwArr[i])) : '—'}</td>`).join('')}
               <td class="col-hwavg">${hwAvg}</td>
             </tr>`;
           }).join('');
