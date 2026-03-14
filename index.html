@@ -6435,6 +6435,22 @@ function onTimerDone(){
       // 清理已不存在的學生
       g.groups = g.groups.map(arr=> arr.filter(id=> allIds.has(id)));
 
+      // ★ 讀取 grp-count，確保組別數量始終與輸入框同步
+      const elGrpCount = document.getElementById('grp-count');
+      const desiredCount = Math.max(2, Math.min(20, Number(elGrpCount?.value) || 4));
+
+      // ★ 如果目前組數不足 → 補空組；超出 → 把多出組的成員退回未分組
+      while(g.groups.length < desiredCount){
+        g.groups.push([]);
+        if(!g.groupNames) g.groupNames = [];
+        while(g.groupNames.length < g.groups.length) g.groupNames.push('');
+      }
+      if(g.groups.length > desiredCount){
+        // 超出的組別，成員退回未分組
+        g.groups.splice(desiredCount);
+        if(g.groupNames) g.groupNames.splice(desiredCount);
+      }
+
       // 建立已分配集合
       const assignedIds = new Set();
       g.groups.forEach(arr=> arr.forEach(id=> assignedIds.add(id)));
@@ -6443,13 +6459,8 @@ function onTimerDone(){
       elBoard.innerHTML = '';
 
       // 設定欄數 CSS 變數
-      const numGroups = g.groups.length || 1;
-      elBoard.style.setProperty('--grp-cols', numGroups);
-
-      if(!g.groups.length){
-        elBoard.style.setProperty('--grp-cols', 1);
-        elBoard.innerHTML = '<div class="grp-empty"><div class="grp-empty-icon">🎲</div><div class="grp-empty-text">尚未建立分組<br>設定組數後點擊「隨機分組」開始</div></div>';
-      }
+      const numGroups = g.groups.length;
+      elBoard.style.setProperty('--grp-cols', Math.min(numGroups, 6));
 
       g.groups.forEach((members, gi)=>{
         const colorIdx = gi % GRP_COLORS;
@@ -6562,16 +6573,17 @@ function onTimerDone(){
       // 洗牌
       for(let i=list.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [list[i],list[j]]=[list[j],list[i]]; }
 
-      // 建立空組
+      // 建立空組（保留已有的組名）
+      const oldNames = (g.groupNames || []).slice();
       g.groups = [];
-      g.groupNames = g.groupNames || [];
-      for(let i=0;i<numGroups;i++) g.groups.push([]);
+      g.groupNames = [];
+      for(let i=0;i<numGroups;i++){
+        g.groups.push([]);
+        g.groupNames.push(oldNames[i] || '');
+      }
 
       // 輪流分配
       list.forEach((s, i)=>{ g.groups[i % numGroups].push(s.id); });
-
-      // 補齊組名
-      while(g.groupNames.length < numGroups) g.groupNames.push('');
 
       saveGroupState(cls); renderGroup(cls);
     }
@@ -6579,7 +6591,8 @@ function onTimerDone(){
     function clearGroups(cls){
       if(!cls) return;
       const g = ensureGroupState(cls);
-      g.groups = []; g.groupNames = [];
+      // ★ 保留組別結構，只清空成員
+      g.groups = g.groups.map(()=> []);
       saveGroupState(cls); renderGroup(cls);
     }
 
@@ -6659,8 +6672,22 @@ function onTimerDone(){
     });
     document.getElementById('btn-grp-random')?.addEventListener('click', ()=>{ randomGroupAssign(elSelect.value); });
     document.getElementById('btn-grp-clear')?.addEventListener('click', ()=>{
-      if(!confirm('確定要清空所有分組？')) return;
-      clearGroups(elSelect.value);
+      if(!confirm('確定要清空所有分組的成員？')) return;
+      // ★ 清空成員但保留組別卡片結構
+      const cls = elSelect.value;
+      if(!cls) return;
+      const g = ensureGroupState(cls);
+      g.groups = g.groups.map(()=> []);
+      saveGroupState(cls); renderGroup(cls);
+    });
+
+    // ★ grp-count 即時調整組別數量
+    document.getElementById('grp-count')?.addEventListener('input', ()=>{
+      const cls = elSelect.value;
+      if(!cls || !state.classMap[cls]) return;
+      const g = ensureGroupState(cls);
+      saveGroupState(cls);
+      renderGroup(cls);
     });
 
     /* ====== 顯示模式切換 ====== */
