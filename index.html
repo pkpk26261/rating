@@ -3937,7 +3937,7 @@
             <!-- 自訂時間 -->
             <div class="timer-set">
               <label>
-                <input id="timer-min" type="number" class="input" min="0" value="5">分
+                <input id="timer-min" type="number" class="input" min="0" max="60" value="5">分
               </label>
               <label>
                 <input id="timer-sec" type="number" class="input" min="0" max="59" value="0">秒
@@ -9023,7 +9023,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
     /* ===== 倒數計時：按鈕 ===== */
     elTimerSet?.addEventListener('click', ()=>{
-      const mm = Math.max(0, Number(elTimerMin?.value||0) || 0);
+      const mm = Math.min(60, Math.max(0, Number(elTimerMin?.value||0) || 0));
       const ss = Math.min(59, Math.max(0, Number(elTimerSec?.value||0) || 0));
       setTimerSeconds(mm*60 + ss);
     });
