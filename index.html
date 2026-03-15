@@ -9334,7 +9334,8 @@ elProgAdd?.addEventListener('click', ()=>{
         const el = document.querySelector(step.target);
         if(!el || el.offsetParent === null){ nextStep(); return; }
 
-        el.scrollIntoView?.({ behavior:'smooth', block:'nearest' });
+        // 先確保目標元素在可視範圍
+        el.scrollIntoView?.({ behavior:'smooth', block:'nearest', inline:'nearest' });
 
         requestAnimationFrame(()=>{
           const r = el.getBoundingClientRect();
@@ -9351,38 +9352,55 @@ elProgAdd?.addEventListener('click', ()=>{
           const modeLabel = hasData ? (modeLabels[state.mode] || '') : '歡迎';
 
           const dots = steps.map((_,i)=> `<div class="tour-dot${i===idx?' active':''}"></div>`).join('');
-          tooltipEl.innerHTML = `
-            <div class="tour-tooltip-arrow ${step.pos==='bottom'?'top':step.pos==='top'?'bottom':step.pos==='right'?'left':'right'}"></div>
-            <div class="tour-title"><span class="tour-step-badge">${idx+1}</span>${step.title}</div>
-            <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;opacity:.7;">📍 ${modeLabel}模式 • 步驟 ${idx+1} / ${steps.length}</div>
-            <div class="tour-desc">${step.desc}</div>
-            <div class="tour-footer">
-              <div class="tour-dots">${dots}</div>
-              <div class="tour-btns">
-                ${idx > 0 ? '<button class="btn tour-prev">← 上一步</button>' : '<button class="tour-skip" id="tour-skip-btn">跳過導覽</button>'}
-                <button class="btn tour-next">${idx < steps.length - 1 ? '下一步 →' : '✓ 完成'}</button>
-              </div>
-            </div>
-          `;
 
-          const tw = 360, th = tooltipEl.offsetHeight;
-          let tx, ty;
-          if(step.pos === 'bottom'){
-            tx = r.left; ty = r.bottom + pad + 14;
-            if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
-            if(tx < 8) tx = 8;
-          } else if(step.pos === 'top'){
-            tx = r.left; ty = r.top - pad - th - 14;
-            if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
-            if(tx < 8) tx = 8;
-          } else if(step.pos === 'right'){
-            tx = r.right + pad + 14; ty = r.top;
-            if(tx + tw > window.innerWidth - 16) { tx = r.left - tw - pad - 14; }
-          } else {
-            tx = r.left - tw - pad - 14; ty = r.top;
+          // 決定最佳顯示方向
+          const tw = 360;
+          let th;
+          let posOrder = [step.pos, 'bottom', 'top', 'right', 'left'];
+          posOrder = posOrder.filter((v,i,a)=>a.indexOf(v)===i); // 去重
+          let tx=0, ty=0, bestPos=step.pos;
+          for(const pos of posOrder){
+            // 先預設內容
+            tooltipEl.innerHTML = `
+              <div class="tour-tooltip-arrow ${pos==='bottom'?'top':pos==='top'?'bottom':pos==='right'?'left':'right'}"></div>
+              <div class="tour-title"><span class="tour-step-badge">${idx+1}</span>${step.title}</div>
+              <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;opacity:.7;">📍 ${modeLabel}模式 • 步驟 ${idx+1} / ${steps.length}</div>
+              <div class="tour-desc">${step.desc}</div>
+              <div class="tour-footer">
+                <div class="tour-dots">${dots}</div>
+                <div class="tour-btns">
+                  ${idx > 0 ? '<button class="btn tour-prev">← 上一步</button>' : '<button class="tour-skip" id="tour-skip-btn">跳過導覽</button>'}
+                  <button class="btn tour-next">${idx < steps.length - 1 ? '下一步 →' : '✓ 完成'}</button>
+                </div>
+              </div>
+            `;
+            th = tooltipEl.offsetHeight;
+            if(pos === 'bottom'){
+              tx = r.left; ty = r.bottom + pad + 14;
+              if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
+              if(tx < 8) tx = 8;
+              if(ty + th <= window.innerHeight - 8) { bestPos = pos; break; }
+            } else if(pos === 'top'){
+              tx = r.left; ty = r.top - pad - th - 14;
+              if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
+              if(tx < 8) tx = 8;
+              if(ty >= 8) { bestPos = pos; break; }
+            } else if(pos === 'right'){
+              tx = r.right + pad + 14; ty = r.top;
+              if(tx + tw > window.innerWidth - 16) { tx = r.left - tw - pad - 14; }
+              if(tx >= 8 && tx + tw <= window.innerWidth - 8) { bestPos = pos; break; }
+            } else if(pos === 'left'){
+              tx = r.left - tw - pad - 14; ty = r.top;
+              if(tx < 8) tx = 8;
+              if(tx + tw <= window.innerWidth - 8) { bestPos = pos; break; }
+            }
           }
+          // 若還是超出，強制貼齊螢幕
           if(ty < 8) ty = 8;
           if(ty + th > window.innerHeight - 8) ty = window.innerHeight - th - 8;
+          if(tx < 8) tx = 8;
+          if(tx + tw > window.innerWidth - 8) tx = window.innerWidth - tw - 8;
+
           tooltipEl.style.left = tx + 'px';
           tooltipEl.style.top  = ty + 'px';
           tooltipEl.style.width = tw + 'px';
