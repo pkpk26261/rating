@@ -820,6 +820,65 @@
     .tile{ touch-action: none; }              /* 減少「拖就捲頁」 */
     .seat-cell{ touch-action: manipulation; } /* 觸控點擊更靈敏 */
 
+    /* ===== 自訂拖曳幽靈（取代原生 HTML5 DnD） ===== */
+    .seat-drag-ghost{
+      position: fixed;
+      z-index: 10000;
+      pointer-events: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 2px solid var(--accent);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 4px rgba(129,140,248,.18);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--fg);
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      white-space: nowrap;
+      max-width: 180px;
+      overflow: hidden;
+    }
+    .seat-drag-ghost.visible{
+      opacity: 0.92;
+      transform: scale(1.04);
+    }
+    .seat-drag-ghost .seat-badge{
+      font-size: 11px;
+    }
+    /* 拖曳起點磁磚半透明 */
+    .tile.dragging-src{
+      opacity: 0.25 !important;
+      transform: scale(0.95) !important;
+    }
+    /* 拖曳中：drop 目標高亮 */
+    .seat-cell.drag-hover:not(.seat-disabled){
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      background: rgba(129,140,248,.14) !important;
+      border-color: transparent;
+      transition: background 0.1s, outline 0.1s;
+    }
+    .unassigned.drag-hover{
+      outline: 2px dashed var(--accent);
+      outline-offset: -4px;
+      background: rgba(129,140,248,.06);
+    }
+    :root[data-theme="light"] .seat-drag-ghost{
+      background: #fff;
+      box-shadow: 0 12px 40px rgba(0,0,0,.15), 0 0 0 4px rgba(99,102,241,.12);
+    }
+    :root[data-theme="light"] .seat-cell.drag-hover:not(.seat-disabled){
+      background: rgba(99,102,241,.10) !important;
+    }
+    :root[data-theme="light"] .unassigned.drag-hover{
+      background: rgba(99,102,241,.04);
+    }
+
     .tile.picked{
       outline:3px solid color-mix(in oklab, var(--accent) 75%, black);
       box-shadow: 0 0 0 3px rgba(129,140,248,.25) inset, 0 16px 36px rgba(129,140,248,.25);
@@ -4407,7 +4466,8 @@
     const IS_COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
     // 新增：只要裝置有觸控就啟用「點選移動」模式（iPad/部分平板會回報 fine）
     const HAS_TOUCH = (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
-    const ENABLE_TAP_PICK = IS_COARSE || HAS_TOUCH;
+    // ★ 所有裝置均啟用「點選放置」模式，桌機也能點選＋拖曳並行
+    const ENABLE_TAP_PICK = true;
 
     let pickedId = null;
 
@@ -4453,9 +4513,7 @@
       const hint = document.getElementById('seat-hint');
       const _seatBtn = document.getElementById('mode-seat-more');
       if (hint && _seatBtn && _seatBtn.classList.contains('active')){
-        hint.textContent = ENABLE_TAP_PICK
-          ? '點一下學生 → 點座位放置；右側空白區可放回未安排。'
-          : '拖曳學生到座位；右鍵座位可清空；也可拖回右側「未安排名單」。';
+        hint.textContent = '點選或拖曳學生到座位；點空位可關閉/開啟；右鍵座位可清空；拖回右側可取消安排。';
       }
 
       // ★ 清除浮動列 & 空位高亮
@@ -6244,9 +6302,7 @@
         elRows.min = 1; elCols.min = 1;
         elRows.title = ''; elCols.title = '';
       }
-      elSeatHint.textContent = ENABLE_TAP_PICK
-        ? '點一下學生 → 點座位放置；點空位可關閉/開啟座位；右側空白區可放回未安排。'
-        : '拖曳學生到座位；點空位可關閉/開啟；右鍵有人座位可清空；也可拖回右側「未安排名單」。';
+      elSeatHint.textContent = '點選或拖曳學生到座位；點空位可關閉/開啟；右鍵有人座位可清空；拖回右側可取消安排。';
 
       elSeatboard.style.setProperty('--cols', cols);
       elSeatboard.style.setProperty('--rows', rows);                // 把列數也傳進 CSS
@@ -6268,9 +6324,7 @@
           const isDisabled = (st.disabled||[]).includes(key);
           if(isDisabled) cell.classList.add('seat-disabled');
 
-          cell.addEventListener('dragover', e=>{ e.preventDefault(); if(!isDisabled) cell.classList.add('dragover'); });
-          cell.addEventListener('dragleave', ()=> cell.classList.remove('dragover'));
-          cell.addEventListener('drop', e=>{ e.preventDefault(); cell.classList.remove('dragover'); if(isDisabled) return; const id=e.dataTransfer.getData('text/plain'); placeStudent(cls, r, c, id); });
+          /* 原生 dragover/dragleave/drop 已由自訂 pointer 拖曳系統取代 */
           cell.addEventListener('contextmenu', e=>{
             e.preventDefault();
             if(st.map[key]){
@@ -6280,6 +6334,7 @@
           });
           const onTapPlace = (e) => {
             if (state.mode !== 'seat') return;
+            if (window._seatDragActive) return; // 自訂拖曳進行中，跳過
             e.preventDefault();
             e.stopPropagation();
             const key = r + '-' + c;
@@ -6342,16 +6397,12 @@
         if(pickedTile2) pickedTile2.classList.add('picked');
       }
 
-      const onUnDragOver=(e)=>{ e.preventDefault(); elUnassigned.classList.add('dragover'); };
-      const onUnDragLeave=()=> elUnassigned.classList.remove('dragover');
-      const onUnDrop=(e)=>{ e.preventDefault(); elUnassigned.classList.remove('dragover'); const id=e.dataTransfer.getData('text/plain'); if(!id) return; for(const k in st.map){ if(st.map[k]===id) delete st.map[k]; } saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls); };
-      elUnassigned.addEventListener('dragover', onUnDragOver);
-      elUnassigned.addEventListener('dragleave', onUnDragLeave);
-      elUnassigned.addEventListener('drop', onUnDrop);
+      /* 原生 dragover/dragleave/drop 已由自訂 pointer 拖曳系統取代 */
       // 觸控：點未安排名單的空白處 → 把選取的學生放回未安排
       // ✅ 觸控：點未安排名單的空白處 → 把選取的學生放回未安排（pointerup 版本）
       const onUnassignedTap = (e)=>{
           if(!ENABLE_TAP_PICK || !pickedId) return;
+          if(window._seatDragActive) return; // 自訂拖曳進行中，跳過
           if (e.target.closest('.tile')) return;
         const st2 = ensureSeatState(cls);
         for (const k in st2.map){ if (st2.map[k] === pickedId) delete st2.map[k]; }
@@ -6373,21 +6424,33 @@
       const isHit = qForHighlight && matchFilter(s, qForHighlight);
       const tile=document.createElement('div'); 
       tile.className='tile' + (isHit ? ' match' : '');
-      tile.draggable=true; tile.dataset.id=s.id;
+      tile.dataset.id=s.id;
       tile.dataset.hit = isHit ? '1' : '0';
       const seatNow=s.seat; 
       tile.innerHTML=`${seatNow?`<span class="seat-badge">${highlightSeat(seatNow, qForHighlight)}</span>`:''}<span class="student-name">${isHit?highlightHTML(s.name, qForHighlight):escapeHTML(s.name)}</span>`;
-      tile.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s.id); }); 
-      // 觸控：點一下選取，再點座位放置
+
+      // ★ 自訂 pointer 拖曳（取代原生 HTML5 DnD）
+      tile.addEventListener('pointerdown', (e)=>{
+        if(e.button !== 0 || state.mode !== 'seat') return;
+        const rect = tile.getBoundingClientRect();
+        window._seatDrag = {
+          id: s.id, tile, cls,
+          startX: e.clientX, startY: e.clientY,
+          offsetX: e.clientX - rect.left,
+          offsetY: e.clientY - rect.top,
+          w: rect.width, h: rect.height,
+          ghost: null, active: false
+        };
+      });
+
+      // 點一下選取，再點座位放置（所有裝置通用）
       tile.addEventListener('click', (e)=>{
-        if(!ENABLE_TAP_PICK || state.mode !== 'seat') return; // ← 這行取代原本的 IS_COARSE
+        if(state.mode !== 'seat') return;
+        if(window._seatDragJustEnded) return;   // 剛拖完不要觸發 click
         e.preventDefault();
         if (pickedId === s.id) clearPicked();
         else pickTileById(s.id);
       });
-
-      //（可選）避免滑動誤觸：指標捕捉
-      tile.addEventListener('pointerdown', (e)=>{ try{ tile.setPointerCapture(e.pointerId); }catch{} });
       return tile;
     }
 
@@ -6413,6 +6476,120 @@
       clearPicked();                 // 若是點選流程，放下後清除選取
       renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
     }
+
+    /* ===== ★ 全域自訂 Pointer 拖曳系統（取代原生 HTML5 DnD） ===== */
+    window._seatDrag = null;
+    window._seatDragActive = false;
+    window._seatDragJustEnded = false;
+    let _lastDragHL = null;
+
+    document.addEventListener('pointermove', (e) => {
+      const d = window._seatDrag;
+      if (!d) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+
+      // 未達拖曳門檻 → 不啟動
+      if (!d.active) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        // ── 開始拖曳 ──
+        d.active = true;
+        window._seatDragActive = true;
+        clearPicked();  // 清除選取狀態
+
+        // 建立浮動幽靈
+        const ghost = document.createElement('div');
+        ghost.className = 'seat-drag-ghost';
+        ghost.innerHTML = d.tile.innerHTML;
+        document.body.appendChild(ghost);
+        d.ghost = ghost;
+        requestAnimationFrame(() => ghost.classList.add('visible'));
+        d.tile.classList.add('dragging-src');
+      }
+
+      // 定位幽靈
+      if (d.ghost) {
+        d.ghost.style.left = (e.clientX - d.offsetX) + 'px';
+        d.ghost.style.top  = (e.clientY - d.offsetY) + 'px';
+      }
+
+      // 高亮 drop 目標
+      _updateSeatDragHL(e);
+    });
+
+    document.addEventListener('pointerup', (e) => {
+      const d = window._seatDrag;
+      if (!d) return;
+      window._seatDrag = null;
+
+      if (!d.active) return; // 不是拖曳（只是 click），交給 click handler
+
+      // ── 拖曳結束：執行 drop ──
+      _clearSeatDragHL();
+      if (d.ghost) { d.ghost.classList.remove('visible'); d.ghost.remove(); }
+      d.tile.classList.remove('dragging-src');
+
+      // 找出滑鼠下方的目標元素
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = target?.closest('.seat-cell');
+      const unArea = target?.closest('.unassigned');
+
+      if (cell && !cell.classList.contains('seat-disabled')) {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+        if (r && c) placeStudent(d.cls, r, c, d.id);
+      } else if (unArea) {
+        // 拖回未安排區 → 從座位移除
+        const st = ensureSeatState(d.cls);
+        for (const k in st.map) { if (st.map[k] === d.id) delete st.map[k]; }
+        saveSeatState(d.cls, st);
+        renderSeatUI(d.cls); renderStudents(d.cls); renderLeaderboard(d.cls);
+      }
+
+      window._seatDragActive = false;
+      window._seatDragJustEnded = true;
+      setTimeout(() => { window._seatDragJustEnded = false; }, 120);
+    });
+
+    // Esc 取消拖曳
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && window._seatDrag?.active) {
+        const d = window._seatDrag;
+        window._seatDrag = null;
+        _clearSeatDragHL();
+        if (d.ghost) d.ghost.remove();
+        d.tile.classList.remove('dragging-src');
+        window._seatDragActive = false;
+      }
+    });
+
+    function _updateSeatDragHL(e) {
+      _clearSeatDragHL();
+      const d = window._seatDrag;
+      if (!d || !d.ghost) return;
+      // 暫時隱藏幽靈以取得下方元素
+      d.ghost.style.display = 'none';
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      d.ghost.style.display = '';
+      if (!el) return;
+      const cell = el.closest('.seat-cell');
+      const unArea = el.closest('.unassigned');
+      if (cell && !cell.classList.contains('seat-disabled')) {
+        cell.classList.add('drag-hover');
+        _lastDragHL = cell;
+      } else if (unArea) {
+        unArea.classList.add('drag-hover');
+        _lastDragHL = unArea;
+      }
+    }
+
+    function _clearSeatDragHL() {
+      if (_lastDragHL) {
+        _lastDragHL.classList.remove('drag-hover');
+        _lastDragHL = null;
+      }
+    }
+    /* ===== 全域自訂 Pointer 拖曳系統 結束 ===== */
 
     function autoArrange(cls){
       const st=ensureSeatState(cls); const list=(state.classMap[cls]||[]).slice();
