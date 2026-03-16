@@ -945,12 +945,19 @@
       color: var(--muted);
       white-space: nowrap;
     }
-    .pick-bar__quick .input{
-      width: 60px;
+    .pick-bar__quick select.pick-bar-coord{
+      width: 52px;
       text-align: center;
-      padding: 6px 8px;
+      padding: 6px 4px;
       font-size: 15px;
       min-width: auto;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--fg);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
     }
     .pick-bar__quick .btn{
       padding: 6px 12px;
@@ -1807,11 +1814,39 @@
       background: rgba(255,90,90,.08);
     }
     .progtbl-wrap{ flex:1 1 auto; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
-    .progtbl{ width:100%; border-collapse:separate; border-spacing:0; min-width: 980px; }
+    .progtbl{ width:100%; min-width:max-content; border-collapse:separate; border-spacing:0; }
     .progtbl th, .progtbl td{ border-bottom:1px solid var(--line); padding:10px 10px; text-align:center; }
-    .progtbl th{ position:sticky; top:0; background:rgba(10,14,26,.92); backdrop-filter: blur(6px); z-index:1; font-size:13px; }
+    .progtbl th{ position:sticky; top:0; background:rgba(10,14,26,.92); backdrop-filter: blur(6px); z-index:2; font-size:13px; }
     :root[data-theme="light"] .progtbl th{ background: rgba(255,255,255,.92); }
-    .progtbl td:first-child, .progtbl th:first-child{ text-align:left; min-width: 220px; }
+    /* ★ 第一欄（進度名稱）固定 600px，左側面廣 sticky */
+    .progtbl td:first-child, .progtbl th:first-child{
+      text-align:left;
+      width: 600px;
+      min-width: 600px;
+      max-width: 600px;
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: rgba(10,14,26,.96);
+    }
+    .progtbl th:first-child{ z-index: 4; } /* 左上角同時 sticky top + left */
+    .progtbl td:first-child{ background: var(--card); }
+    :root[data-theme="light"] .progtbl th:first-child{ background: rgba(255,255,255,.96); }
+    :root[data-theme="light"] .progtbl td:first-child{ background: var(--card); }
+    /* 第一欄右側陰影分隔線 */
+    .progtbl th:first-child::after,
+    .progtbl td:first-child::after{
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0; right: -6px;
+      width: 6px;
+      background: linear-gradient(to right, rgba(0,0,0,.08), transparent);
+      pointer-events: none;
+    }
+    :root[data-theme="light"] .progtbl th:first-child::after,
+    :root[data-theme="light"] .progtbl td:first-child::after{
+      background: linear-gradient(to right, rgba(0,0,0,.04), transparent);
+    }
 
     /* ★ 自訂進度勾選框 */
     .prog-check-wrap{
@@ -1939,7 +1974,7 @@
     .prog-empty-icon{ font-size:48px; opacity:.7; }
     .prog-empty-title{ font-size:17px; font-weight:800; color:var(--fg); }
     .prog-empty-sub{ font-size:13px; color:var(--muted); text-align:center; line-height:1.6; }
-    .prog-inputwrap{ display:flex; align-items:center; gap:6px; }
+    .prog-inputwrap{ display:flex; align-items:center; gap:6px; width:100%; min-width:0; }
     .prog-row-del{
       width:22px; height:22px;
       display:inline-flex; align-items:center; justify-content:center;
@@ -1965,21 +2000,31 @@
     .prog-row-del:hover{ filter: brightness(1.15); color: var(--fg); }
     :root[data-theme="light"] .prog-row-del{ background: rgba(10,14,26,.03); }
 
-    .prog-input{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none;  min-width:20em; max-width:100%; }
+    .prog-input{ flex:1 1 auto; width:100%; min-width:0; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background: rgba(255,255,255,.03); color: var(--fg); outline:none; max-width:100%; }
     :root[data-theme="light"] .prog-input{ background: rgba(10,14,26,.03); }
     .prog-check{ width:20px; height:20px; accent-color: var(--accent); cursor:pointer; }
 
     /* ★ 主題列樣式 */
     .prog-topic-row td{
-      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 12%, transparent), transparent 80%);
-      border-bottom: 2px solid color-mix(in oklab, var(--accent) 30%, transparent);
+      border-bottom: 2px solid color-mix(in oklab, var(--accent) 30%, transparent) !important;
       padding: 6px 10px;
+      background: color-mix(in oklab, var(--accent) 10%, var(--card)) !important;
+    }
+    .prog-topic-row td:first-child{
+      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 14%, var(--card)), color-mix(in oklab, var(--accent) 10%, var(--card)) 100%) !important;
+    }
+    /* 隱藏主題列右側陰影分隔線，讓全行看起來連續 */
+    .prog-topic-row td:first-child::after{
+      display: none !important;
     }
     :root[data-theme="light"] .prog-topic-row td{
-      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 8%, white), transparent 80%);
+      background: color-mix(in oklab, var(--accent) 6%, white) !important;
+    }
+    :root[data-theme="light"] .prog-topic-row td:first-child{
+      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 10%, white), color-mix(in oklab, var(--accent) 6%, white) 100%) !important;
     }
     .prog-topic-wrap{
-      display:flex; align-items:center; gap:8px;
+      display:flex; align-items:center; gap:8px; width:100%; min-width:0; overflow:hidden;
     }
     .prog-topic-icon{
       font-size:15px; opacity:.8; cursor:pointer; user-select:none;
@@ -2021,7 +2066,7 @@
       border:none; background:transparent; color:var(--fg);
       font-size:14px; font-weight:800; letter-spacing:.03em;
       outline:none; padding:4px 6px; border-radius:6px;
-      min-width:12em; max-width:100%;
+      flex:1 1 auto; min-width:0; max-width:100%;
     }
     .prog-topic-input:focus{
       background: rgba(255,255,255,.06);
@@ -2421,6 +2466,35 @@
     }
     .manage-tbl th.col-hwavg{
       box-shadow: inset 0 -2px 0 var(--line);
+    }
+
+    /* ── 編輯模式按鈕 ── */
+    #btn-manage-edit.active{
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    /* 編輯模式 input */
+    .manage-tbl td .edit-input{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 8px;
+      font-size: 13px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: rgba(129,140,248,.08);
+      color: var(--fg);
+      outline: none;
+      font-family: inherit;
+      transition: border-color .15s;
+    }
+    .manage-tbl td .edit-input:focus{
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 2px rgba(129,140,248,.18);
+    }
+    :root[data-theme="light"] .manage-tbl td .edit-input{
+      background: rgba(129,140,248,.06);
+      border-color: var(--accent);
     }
 
     /* ── 中間作業欄（可捲動） ── */
@@ -3879,7 +3953,7 @@
           <input id="rows-input" type="number" class="input" min="1" max="9" value="6" aria-label="列數">
           <span>×</span>
           <input id="cols-input" type="number" class="input" min="1" max="9" value="6" aria-label="欄數">
-          <button id="btn-auto" class="btn">自動排位</button>
+          <button id="btn-auto" class="btn">自動排位 ⮕⬆</button>
           <button id="btn-random-fill" class="btn">隨機入座</button>
           <button id="btn-clear" class="btn">清空</button>
           <span id="seat-hint" class="hint"></span>
@@ -4026,6 +4100,7 @@
               <div class="manage-right-head">
                 <span class="manage-right-title" id="manage-right-title">請選擇班級</span>
                 <div class="manage-right-actions">
+                  <button id="btn-manage-edit" class="btn" disabled>✏️ 編輯模式</button>
                   <button id="btn-manage-add" class="btn add" disabled>＋ 新增學生</button>
                   <button id="btn-manage-del" class="btn sub" disabled>－ 刪除學生</button>
                 </div>
@@ -4444,8 +4519,11 @@
       <span id="pick-bar-name" class="pick-bar__name"></span>
     </div>
     <div class="pick-bar__quick">
-      <label for="pick-bar-num">→ 座位#</label>
-      <input id="pick-bar-num" type="number" class="input" min="1" placeholder="號" inputmode="numeric">
+      <label>→ 第</label>
+      <select id="pick-bar-row" class="pick-bar-coord" aria-label="列"></select>
+      <label>列</label>
+      <select id="pick-bar-col" class="pick-bar-coord" aria-label="欄"></select>
+      <label>欄</label>
       <button id="pick-bar-go" class="btn">放入</button>
     </div>
     <button id="pick-bar-cancel" class="pick-bar__cancel">✕ 取消</button>
@@ -4475,7 +4553,8 @@
     const elPickBar      = document.getElementById('pick-bar');
     const elPickBarSeat   = document.getElementById('pick-bar-seat');
     const elPickBarName   = document.getElementById('pick-bar-name');
-    const elPickBarNum    = document.getElementById('pick-bar-num');
+    const elPickBarRow    = document.getElementById('pick-bar-row');
+    const elPickBarCol    = document.getElementById('pick-bar-col');
     const elPickBarGo     = document.getElementById('pick-bar-go');
     const elPickBarCancel = document.getElementById('pick-bar-cancel');
 
@@ -4502,7 +4581,8 @@
       if(elPickBar){
         elPickBarSeat.textContent = stu?.seat ? `#${stu.seat}` : '';
         elPickBarName.textContent = stu?.name || id;
-        elPickBarNum.value = '';
+        // 建立列/欄選單
+        _updatePickBarCoords();
         elPickBar.classList.add('show');
       }
     }
@@ -4523,31 +4603,42 @@
       elPickBar?.classList.remove('show');
     }
 
-    /* ===== 浮動列：快速座號放入 ===== */
-    function pickBarPlaceBySeatNum(){
+    /* ===== 浮動列：快速座標放入 ===== */
+    function _updatePickBarCoords(){
+      const cls = document.getElementById('class-select')?.value;
+      if(!cls) return;
+      const {rows, cols} = getCurrentRowsCols(cls);
+      // 列選單
+      if(elPickBarRow){
+        const prev = elPickBarRow.value;
+        elPickBarRow.innerHTML = '';
+        for(let r=1; r<=rows; r++){
+          const o = document.createElement('option'); o.value=r; o.textContent=r; elPickBarRow.appendChild(o);
+        }
+        if(prev && parseInt(prev)<=rows) elPickBarRow.value = prev;
+      }
+      // 欄選單
+      if(elPickBarCol){
+        const prev = elPickBarCol.value;
+        elPickBarCol.innerHTML = '';
+        for(let c=1; c<=cols; c++){
+          const o = document.createElement('option'); o.value=c; o.textContent=c; elPickBarCol.appendChild(o);
+        }
+        if(prev && parseInt(prev)<=cols) elPickBarCol.value = prev;
+      }
+    }
+    function pickBarPlaceByCoord(){
       if(!pickedId) return;
       const cls = document.getElementById('class-select')?.value;
       if(!cls) return;
-      const st = ensureSeatState(cls);
-      const num = parseInt(elPickBarNum?.value, 10);
-      if(!num || num < 1) return;
-
+      const r = parseInt(elPickBarRow?.value, 10);
+      const c = parseInt(elPickBarCol?.value, 10);
+      if(!r || !c) return;
       const {rows, cols} = getCurrentRowsCols(cls);
-      // 將座位號轉成 (r,c) — 跟 seatIndexLabel 反推
-      let targetR = null, targetC = null;
-      for(let r=1; r<=rows; r++){
-        for(let c=1; c<=cols; c++){
-          if(seatIndexLabel(r, c, rows, cols) === num){
-            targetR = r; targetC = c; break;
-          }
-        }
-        if(targetR !== null) break;
-      }
-      if(targetR === null){ elPickBarNum.value=''; elPickBarNum.placeholder='無此號'; setTimeout(()=>{ elPickBarNum.placeholder='號'; },1200); return; }
-      placeStudent(cls, targetR, targetC, pickedId);
+      if(r > rows || c > cols) return;
+      placeStudent(cls, r, c, pickedId);
     }
-    elPickBarGo?.addEventListener('click', pickBarPlaceBySeatNum);
-    elPickBarNum?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); pickBarPlaceBySeatNum(); } });
+    elPickBarGo?.addEventListener('click', pickBarPlaceByCoord);
     elPickBarCancel?.addEventListener('click', ()=>{ clearPicked(); });
 
 
@@ -4690,7 +4781,9 @@
     const elManageDelClass=document.getElementById('btn-manage-delclass');
     const elManageAdd=document.getElementById('btn-manage-add');
     const elManageDel=document.getElementById('btn-manage-del');
+    const elManageEdit=document.getElementById('btn-manage-edit');
     let manageSelectedClass = '';
+    let manageEditMode = false;
     const elSeatControls=document.getElementById('seat-controls');
     const elSeatboard=document.getElementById('seatboard');
     const elUnassigned=document.getElementById('unassigned');
@@ -6591,14 +6684,41 @@
     }
     /* ===== 全域自訂 Pointer 拖曳系統 結束 ===== */
 
+    /* ★ 自動排位方向循環：共 4 種模式 */
+    const AUTO_ARRANGE_MODES = [
+      { key:'rl-up', label:'自動排位 ⮕⬆', next:'lr-up',
+        sort:(a,b,rows,cols)=>{
+          // 右→左，下→上（預設）：先按欄倒序，同欄按列倒序
+          if(a.c !== b.c) return b.c - a.c; return b.r - a.r; } },
+      { key:'lr-up', label:'自動排位 ⬅⬆', next:'rl-down',
+        sort:(a,b,rows,cols)=>{
+          // 左→右，下→上：先按欄正序，同欄按列倒序
+          if(a.c !== b.c) return a.c - b.c; return b.r - a.r; } },
+      { key:'rl-down', label:'自動排位 ⮕⬇', next:'lr-down',
+        sort:(a,b,rows,cols)=>{
+          // 右→左，上→下：先按欄倒序，同欄按列正序
+          if(a.c !== b.c) return b.c - a.c; return a.r - b.r; } },
+      { key:'lr-down', label:'自動排位 ⬅⬇', next:'rl-up',
+        sort:(a,b,rows,cols)=>{
+          // 左→右，上→下：先按欄正序，同欄按列正序
+          if(a.c !== b.c) return a.c - b.c; return a.r - b.r; } },
+    ];
+    let _autoArrangeIdx = 0;
+
     function autoArrange(cls){
+      const mode = AUTO_ARRANGE_MODES[_autoArrangeIdx];
       const st=ensureSeatState(cls); const list=(state.classMap[cls]||[]).slice();
       const {rows, cols} = getCurrentRowsCols(cls); const coords=[];
       const disabledSet = new Set(st.disabled||[]);
-      for(let r=1;r<=rows;r++){ for(let c=1;c<=cols;c++){ if(!disabledSet.has(r+'-'+c)) coords.push({r,c,idx:seatIndexLabel(r,c,rows,cols)}); } }
-      coords.sort((a,b)=>a.idx-b.idx); st.map={};
+      for(let r=1;r<=rows;r++){ for(let c=1;c<=cols;c++){ if(!disabledSet.has(r+'-'+c)) coords.push({r,c}); } }
+      coords.sort((a,b)=> mode.sort(a,b,rows,cols));
+      st.map={};
       for(let i=0;i<coords.length && i<list.length;i++){ const {r,c}=coords[i]; st.map[r+'-'+c]=list[i].id; }
       saveSeatState(cls, st); renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
+      // 切換到下一個模式，按鈕文字更新
+      _autoArrangeIdx = (_autoArrangeIdx + 1) % AUTO_ARRANGE_MODES.length;
+      const btnAuto = document.getElementById('btn-auto');
+      if(btnAuto) btnAuto.textContent = AUTO_ARRANGE_MODES[_autoArrangeIdx].label;
     }
 
     function randomFillSeats(cls){
@@ -7226,7 +7346,7 @@ classes.forEach((cls, idx)=>{
           tr.dataset.type = 'topic';
           tr.draggable = true;
           const td = document.createElement('td');
-          td.setAttribute('colspan', String(colCount));
+          // 不用 colspan，讓 td:first-child sticky 生效；額外 td 透過 CSS 融為一體
 
           const wrap = document.createElement('div');
           wrap.className = 'prog-topic-wrap';
@@ -7301,6 +7421,11 @@ classes.forEach((cls, idx)=>{
 
           td.appendChild(wrap);
           tr.appendChild(td);
+
+          // 為每個班級欄補空 td，CSS 讓它們視覺上融入主題列背景
+          for(let ci = 0; ci < classes.length; ci++){
+            tr.appendChild(document.createElement('td'));
+          }
 
           // ★ 拖移事件（桌面端）
           bindProgRowDrag(tr, idx, true, pg);
@@ -8294,6 +8419,8 @@ function onTimerDone(){
       if(elManageDelClass) elManageDelClass.disabled = !hasClasses;
       if(elManageAdd) elManageAdd.disabled = !manageSelectedClass;
       if(elManageDel) elManageDel.disabled = !manageSelectedClass;
+      if(elManageEdit) elManageEdit.disabled = !manageSelectedClass;
+      if(elManageEdit) elManageEdit.classList.toggle('active', manageEditMode);
 
       renderManageStudents();
     }
@@ -8341,10 +8468,16 @@ function onTimerDone(){
             const hwNums = hwArr.filter(v=> v !== '' && v != null && String(v).trim() !== '');
             const hwSum = hwNums.reduce((t, v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
             const hwAvg = hwNums.length ? (hwSum / hwNums.length).toFixed(2) : '—';
-            return `<tr>
-              <td class="col-seat">${seat ? escapeHTML(String(seat)) : '-'}</td>
-              <td class="col-name">${escapeHTML(s.name)}</td>
-              <td class="col-sid">${escapeHTML(sid)}</td>
+            return `<tr data-stu-id="${escapeHTML(s.id)}">
+              <td class="col-seat">${manageEditMode
+                ? `<input class="edit-input" data-field="seat" data-id="${escapeHTML(s.id)}" value="${escapeHTML(String(seat))}" />`
+                : (seat ? escapeHTML(String(seat)) : '-')}</td>
+              <td class="col-name">${manageEditMode
+                ? `<input class="edit-input" data-field="name" data-id="${escapeHTML(s.id)}" value="${escapeHTML(s.name)}" />`
+                : escapeHTML(s.name)}</td>
+              <td class="col-sid">${manageEditMode
+                ? `<input class="edit-input" data-field="sid" data-id="${escapeHTML(s.id)}" value="${escapeHTML(sid)}" />`
+                : escapeHTML(sid)}</td>
               ${hwCols.map((_, i)=>`<td class="col-hw">${hwArr[i] !== '' && hwArr[i] != null && String(hwArr[i]).trim() !== '' ? escapeHTML(String(hwArr[i])) : '—'}</td>`).join('')}
               <td class="col-score">${score}</td>
               <td class="col-hwavg">${hwAvg}</td>
@@ -8354,10 +8487,46 @@ function onTimerDone(){
       }
     }
 
+    // ✏️ 編輯模式：切換 & 儲存
+    function applyManageEdits(){
+      const inputs = document.querySelectorAll('.manage-tbl .edit-input');
+      if(!inputs.length) return;
+      const cls = manageSelectedClass;
+      if(!cls) return;
+      const list = state.classMap[cls] || [];
+      let changed = false;
+      inputs.forEach(inp => {
+        const id = inp.dataset.id;
+        const field = inp.dataset.field;
+        const val = inp.value.trim();
+        const stu = list.find(s => s.id === id);
+        if(!stu) return;
+        if(field === 'seat'){
+          const oldVal = stu.seat || stu.row?.['座號'] || '';
+          if(String(oldVal) !== val){ stu.seat = val; if(stu.row) stu.row['座號'] = val; changed = true; }
+        } else if(field === 'name'){
+          if(stu.name !== val && val){ stu.name = val; if(stu.row) stu.row['姓名'] = val; changed = true; }
+        } else if(field === 'sid'){
+          if((stu.sid||'') !== val){ stu.sid = val; if(stu.row) stu.row['學號'] = val; changed = true; }
+        }
+      });
+      if(changed){
+        saveSession('edit students');
+        setStatus('已儲存學生資料變更');
+      }
+    }
+
+    elManageEdit?.addEventListener('click', ()=>{
+      if(manageEditMode) applyManageEdits();
+      manageEditMode = !manageEditMode;
+      renderManage();
+    });
+
     // 班級列表點擊切換
     elManageClassList?.addEventListener('click', (e)=>{
       const item = e.target.closest('.manage-class-item');
       if(!item) return;
+      if(manageEditMode) applyManageEdits();
       manageSelectedClass = item.dataset.cls;
       renderManage();
     });
