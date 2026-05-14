@@ -320,7 +320,8 @@
     .main > .welcome-guide{
       flex:1 1 auto; min-height:0; overflow:auto;
     }
-    .main > #hw-pane{
+    .main > #hw-pane,
+    .main > #violations-pane{
       display:flex;
       flex-direction:column;
       flex:1 1 auto;
@@ -561,11 +562,13 @@
     .board{ border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow: var(--shadow); flex:1 1 auto; min-height:0; overflow:hidden; }
     .board h3{ margin:0; font-size:16px; display:flex; align-items:center; gap:8px; }
     .badge{ display:inline-block; padding:2px 6px; border-radius:999px; border:1px solid var(--line); font-size:12px; color:var(--muted); }
-    #leaderboard{ flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; contain: layout style; }
+    .leaderboard-list{ flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; contain: layout style; }
     .board .row{ display:grid; grid-template-columns: 38px 1fr 64px; gap:8px; padding:8px 8px; border-radius:10px; align-items:center; transition: background .15s ease; contain: layout style; }
     .board .row:nth-child(odd){ background:rgba(255,255,255,0.02); }
     .board .rank{ display:flex; align-items:center; justify-content:center; }
     .board .score{ text-align:right; font-variant-numeric: tabular-nums; font-weight:800; }
+    .board-deduct .score{ color:#fca5a5; }
+    :root[data-theme="light"] .board-deduct .score{ color:#b91c1c; }
     .empty{ color:var(--muted); padding:8px; text-align:center; }
     .medal{ display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border-radius:999px; font-weight:900; font-size:13px; color:#0a0e1a; border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,0.2),rgba(255,255,255,0)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
     .rank-1 .medal{ background:var(--gold); color:#1a1300; } .rank-2 .medal{ background:var(--silver); color:#0b0e10; } .rank-3 .medal{ background:var(--bronze); color:#1a1200; } .rank-4 .medal{ background:var(--rank4); color:#031225; } .rank-5 .medal{ background:var(--rank5); color:#03150f; }
@@ -737,6 +740,7 @@
     body[data-mode="progress"] .controls-row{ display:none !important; }
     body[data-mode="timer"] .controls-row{ display:none !important; }
     body[data-mode="draw"] .controls-row{ display:none !important; }
+    body[data-mode="violations"] .controls-row{ display:none !important; }
     body[data-mode="hw"] .controls-row{ display:none !important; }
     .seat-controls{ display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
     .seat-controls .input{ min-width:auto; width:70px; text-align:center; padding:8px 10px; }
@@ -1159,6 +1163,11 @@
       cursor:pointer;
     }
     .hw-col .mini-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.2); }
+    .viol-cell{ min-width:126px; }
+    .viol-stepper{ display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; }
+    .viol-stepper .viol-btn{ min-width:30px; padding:2px 8px; }
+    .viol-count{ min-width:1.6em; text-align:center; font-variant-numeric: tabular-nums; font-weight:800; }
+    .viol-reset-row[disabled]{ opacity:.45; cursor:not-allowed; }
 
     /* 🔎 搜尋命中高亮（列表卡片） */
     .card.match{
@@ -3730,7 +3739,7 @@
     }
 
     /* ===== 模式切換的頁面過渡 ===== */
-    #students, #seatwrap, #hw-pane, #draw-pane, #progress-pane, #timer-pane{
+    #students, #seatwrap, #hw-pane, #violations-pane, #draw-pane, #progress-pane, #timer-pane{
       animation: pageFadeIn .3s ease;
     }
     @keyframes pageFadeIn{
@@ -3892,6 +3901,7 @@
                                 <button id="mode-manage" class="seg-btn" data-mode="manage">學生管理</button>
                                 <button id="mode-progress" class="seg-btn" data-mode="progress">教學進度</button>
                                 <button id="mode-list" class="seg-btn active" data-mode="list">加扣分</button>
+                                <button id="mode-violations" class="seg-btn" data-mode="violations">違規記錄簿</button>
                                 <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
                                 <div class="more-menu" id="more-menu">
                                   <button id="mode-more" class="seg-btn more-toggle" aria-haspopup="true" aria-expanded="false">更多 ▾</button>
@@ -3927,13 +3937,21 @@
       <button id="btn-sidebar" class="side-toggle" aria-label="收合側欄" aria-controls="sidebar" aria-expanded="true">‹</button>
 
       <aside id="sidebar" class="sidebar">
-<section class="board">
+        <section id="board-score" class="board">
           <h3>🏆 加分排行榜 <span id="board-class" class="badge">尚未載入</span></h3>
-          <div id="leaderboard"></div>
+          <div id="leaderboard" class="leaderboard-list"></div>
         </section>
 
+        <section id="board-deduct" class="board board-deduct">
+          <h3>📉 扣分排行榜 <span id="board-class-deduct" class="badge">尚未載入</span></h3>
+          <div id="leaderboard-deduct" class="leaderboard-list"></div>
+        </section>
 
-</aside>
+        <section id="board-violations" class="board hidden">
+          <h3>🚨 違規排行榜 <span id="board-class-violations" class="badge">尚未載入</span></h3>
+          <div id="leaderboard-violations" class="leaderboard-list"></div>
+        </section>
+      </aside>
 
             <div class="main-col">
 <section class="main">
@@ -4159,6 +4177,19 @@
           <span id="hw-class-pill" style="display:none"></span>
           <div class="hwtbl-wrap">
             <table class="hwtbl" id="hw-table" role="grid"></table>
+          </div>
+        </section>
+
+        <section id="violations-pane" class="hidden" aria-label="違規記錄簿頁">
+          <div class="hw-bar">
+            <span class="hw-bar-label">🚨 違規記錄簿</span>
+            <select id="viol-class-select" class="hw-class-select" title="切換班級"><option value="" disabled selected>尚未載入</option></select>
+            <span class="spacer"></span>
+            <button id="btn-viol-reset" class="btn" title="清空目前班級的違規紀錄">清空本班紀錄</button>
+          </div>
+          <span id="viol-class-pill" style="display:none"></span>
+          <div class="hwtbl-wrap">
+            <table class="hwtbl" id="viol-table" role="grid"></table>
           </div>
         </section>
         <!-- 🎲 抽號模式（新版：抽籤動畫） -->
@@ -4396,7 +4427,10 @@
             <input type="checkbox" class="clear-cb" value="classMap"> 📋 學生名單（班級、座號、姓名）
           </label>
           <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="scores"> ⭐ 平時分數（加扣分）
+            <input type="checkbox" class="clear-cb" value="scores"> ⭐ 平時分數（含扣分統計）
+          </label>
+          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="violations"> 🚨 違規紀錄簿
           </label>
           <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
             <input type="checkbox" class="clear-cb" value="hw"> 📝 作業成績
@@ -4535,7 +4569,7 @@
   <script>
     /* ====== 全域狀態 ====== */
     const state={
-      classMap:{}, classOrder:[], scores:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
+      classMap:{}, classOrder:[], scores:{}, deductions:{}, violations:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
       hw:{}, savedHW:{}, draw:{}, showStageInList: true,
       group:{},
       // ★ 新增：教學進度（跨班勾選）與倒數計時
@@ -4658,6 +4692,8 @@
         classMap: state.classMap,
         classOrder: state.classOrder,
         scores: state.scores,
+        deductions: state.deductions,
+        violations: state.violations,
         sidMap: state.sidMap,
         seating: state.seating,
         hw: state.hw,
@@ -4688,7 +4724,9 @@
     function saveSessionNow(){
       if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
       if(_scoreTimer){ clearTimeout(_scoreTimer); _scoreTimer = null; }
+      if(_deductionTimer){ clearTimeout(_deductionTimer); _deductionTimer = null; }
       try{ localStorage.setItem('scores_v2', JSON.stringify(state.scores)); }catch{}
+      try{ localStorage.setItem('deductions_v1', JSON.stringify(state.deductions)); }catch{}
       try{ localStorage.setItem(SESSION_KEY, JSON.stringify(buildSession())); }catch{}
     }
     function tryRestoreSession(){
@@ -4701,6 +4739,8 @@
         state.classMap   = s.classMap   || {};
         state.classOrder = s.classOrder || [];
         state.scores     = s.scores     || {};
+        state.deductions = s.deductions || {};
+        state.violations = s.violations || {};
         state.sidMap     = s.sidMap     || {};
         state.seating    = s.seating    || {};
         state.hw         = s.hw         || {};
@@ -4743,6 +4783,7 @@
 
           renderStudents(elSelect.value);
           renderLeaderboard(elSelect.value);
+          renderViolations(elSelect.value);
           renderHW(elSelect.value);
           setStatus('已從本機暫存還原。');
           return true;
@@ -4763,6 +4804,8 @@
     const elStatus=document.getElementById('status');
     const elBoard=document.getElementById('leaderboard');
     const elBoardClass=document.getElementById('board-class');
+    const elDeductBoard=document.getElementById('leaderboard-deduct');
+    const elDeductBoardClass=document.getElementById('board-class-deduct');
     const elExport=document.getElementById('btn-export');
     const elSearch=document.getElementById('search-input');
     const elAddStudent=document.getElementById('btn-add-student');
@@ -4776,6 +4819,7 @@
     const elModeDraw=document.getElementById('mode-draw');
     const elModeGroup=document.getElementById('mode-group');
     const elModeManage=document.getElementById('mode-manage');
+    const elModeViolations=document.getElementById('mode-violations');
     const elGroupPane=document.getElementById('group-pane');
     const elManagePane=document.getElementById('manage-pane');
     const elManageClassList=document.getElementById('manage-class-list');
@@ -4845,6 +4889,16 @@
     const elHWTable=document.getElementById('hw-table');
     const elHWAdd=document.getElementById('btn-hw-add');
     const elHWDel=document.getElementById('btn-hw-del');
+
+    const elViolationsPane=document.getElementById('violations-pane');
+    const elViolClassPill=document.getElementById('viol-class-pill');
+    const elViolClassSelect=document.getElementById('viol-class-select');
+    const elViolTable=document.getElementById('viol-table');
+    const elViolReset=document.getElementById('btn-viol-reset');
+
+    const elViolBoard=document.getElementById('board-violations');
+    const elViolBoardClass=document.getElementById('board-class-violations');
+    const elViolLeaderboard=document.getElementById('leaderboard-violations');
 
     /* ★ 抽號 DOM */
     const elDrawPane = document.getElementById('draw-pane');
@@ -4930,6 +4984,21 @@
     try{
       state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
     }catch{ state.scores = {}; }
+
+    try{
+      state.deductions = JSON.parse(localStorage.getItem('deductions_v1') || '{}') || {};
+    }catch{ state.deductions = {}; }
+
+    let _deductionTimer = null;
+    function scheduleDeductionSave(reason=''){
+      if(!_deductionTimer){
+        _deductionTimer = setTimeout(()=>{
+          _deductionTimer = null;
+          try{ localStorage.setItem('deductions_v1', JSON.stringify(state.deductions)); }catch{}
+        }, 500);
+      }
+      saveSession(reason || 'deduction change');
+    }
 
     // ★ 學生備註（作業成績座號前的 📝）
     try{
@@ -5222,7 +5291,7 @@
           if(elManageDel) elManageDel.disabled=false;
           // ★ 移除無資料狀態
           document.body.classList.remove('no-data');
-          renderStudents(order[0]); renderLeaderboard(order[0]); renderHW(order[0]);
+          renderStudents(order[0]); renderLeaderboard(order[0]); renderViolations(order[0]); renderHW(order[0]);
           // ★ 匯入後立即刷新學生管理名單（不論目前模式）
           try{ renderManage(); }catch(e){}
           // ★ 匯入後立即依當前模式刷新所有資訊
@@ -5247,6 +5316,7 @@
       state._seatNoticeDismissed = false;   // 切班重置提示
       renderStudents(cls); renderLeaderboard(cls);
       if(state.mode==='seat') renderSeatUI(cls);
+      if(state.mode==='violations') renderViolations(cls);
       if(state.mode==='hw') renderHW(cls);
       if(state.mode==='draw') renderDraw(cls);
       if(state.mode==='group') renderGroup(cls);
@@ -5285,6 +5355,22 @@
         }
       }
 
+      for(const k of Object.keys(state.deductions)){
+        if(k.startsWith(oldPrefix)){
+          const newKey = newPrefix + k.slice(oldPrefix.length);
+          state.deductions[newKey] = state.deductions[k];
+          delete state.deductions[k];
+        }
+      }
+
+      for(const k of Object.keys(state.violations)){
+        if(k.startsWith(oldPrefix)){
+          const newKey = newPrefix + k.slice(oldPrefix.length);
+          state.violations[newKey] = state.violations[k];
+          delete state.violations[k];
+        }
+      }
+
       // 更新 seating
       if(state.seating[oldName]){ state.seating[newName] = state.seating[oldName]; delete state.seating[oldName]; }
 
@@ -5307,6 +5393,7 @@
       elSelect.value = newName;
       renderStudents(newName);
       renderLeaderboard(newName);
+      renderViolations(newName);
       if(state.mode==='seat') renderSeatUI(newName);
       if(state.mode==='hw') renderHW(newName);
       if(state.mode==='draw') renderDraw(newName);
@@ -5645,6 +5732,7 @@
         localStorage.removeItem(SESSION_KEY);          // 整份快照
         localStorage.removeItem('scores_v1');          // 平時分數
         localStorage.removeItem('scores_v2');   // ★ 新版分數也清掉
+        localStorage.removeItem('deductions_v1');      // ★ 扣分排行榜統計
         localStorage.removeItem('stu_notes_v1'); // ★ 學生備註
 
         // 作業 & 座位都一併清除
@@ -5668,6 +5756,8 @@
       state.sidMap     = {};
       state.seating    = {};
       state.scores     = {};
+      state.deductions = {};
+      state.violations = {};
       state.legacyScores = {};
       state.hw         = {};
       state.savedHW    = {};
@@ -5696,6 +5786,10 @@
       document.getElementById('students').innerHTML = '';
       elBoard.innerHTML = '<div class="empty">此班級尚無成員</div>';
       elBoardClass.textContent = '尚未載入';
+      if(elDeductBoard) elDeductBoard.innerHTML = '<div class="empty">尚無扣分紀錄</div>';
+      if(elDeductBoardClass) elDeductBoardClass.textContent = '尚未載入';
+      if(elViolLeaderboard) elViolLeaderboard.innerHTML = '<div class="empty">尚無違規紀錄</div>';
+      if(elViolBoardClass) elViolBoardClass.textContent = '尚未載入';
 
       // 座位頁
       elRows.value = 6; 
@@ -5707,6 +5801,10 @@
       // 作業頁
       elHWTable.innerHTML = '';
       elHWClassPill.textContent = '尚未載入';
+      if(elHWClassSelect) elHWClassSelect.innerHTML = '<option value="" disabled selected>尚未載入</option>';
+      if(elViolTable) elViolTable.innerHTML = '';
+      if(elViolClassPill) elViolClassPill.textContent = '尚未載入';
+      if(elViolClassSelect) elViolClassSelect.innerHTML = '<option value="" disabled selected>尚未載入</option>';
 
       // 教學進度 / 倒數計時
       if(elProgTable) elProgTable.innerHTML = '';
@@ -5755,9 +5853,9 @@
       if(!picked.length){ alert('請至少勾選一個要清除的項目'); return; }
 
       const labels = {
-        classMap: '學生名單', scores: '平時分數', hw: '作業成績',
+        classMap: '學生名單', scores: '平時分數（含扣分統計）', hw: '作業成績',
         seating: '座位表', notes: '學生備註', progress: '教學進度', timer: '倒數計時',
-        group: '分組名單'
+        group: '分組名單', violations: '違規紀錄'
       };
       const desc = picked.map(k=>labels[k]||k).join('、');
       if(!confirm(`確定要清除以下資料嗎？\n→ ${desc}`)){ return; }
@@ -5772,13 +5870,14 @@
         state.classOrder = [];
         state.sidMap = {};
         // 名單清了，分數/作業/座位/備註也沒意義
-        state.scores = {}; state.savedScores = {}; state.legacyScores = {};
+        state.scores = {}; state.deductions = {}; state.violations = {}; state.savedScores = {}; state.legacyScores = {};
         state.hw = {}; state.savedHW = {};
         state.seating = {};
         state.notes = {};
         state.group = {};
       }else{
-        if(picked.includes('scores')){ state.scores = {}; state.savedScores = {}; state.legacyScores = {}; }
+        if(picked.includes('scores')){ state.scores = {}; state.deductions = {}; state.savedScores = {}; state.legacyScores = {}; }
+        if(picked.includes('violations')){ state.violations = {}; }
         if(picked.includes('hw')){ state.hw = {}; state.savedHW = {}; }
         if(picked.includes('seating')){ state.seating = {}; }
         if(picked.includes('notes')){ state.notes = {}; }
@@ -5799,6 +5898,7 @@
         if(cls){
           try{ renderStudents(cls); }catch(e){}
           try{ renderLeaderboard(cls); }catch(e){}
+          try{ renderViolations(cls); }catch(e){}
           if(picked.includes('seating')){ try{ renderSeatUI(cls); }catch(e){} }
           if(picked.includes('hw')){ try{ renderHW(cls); }catch(e){} }
           if(picked.includes('group')){ try{ renderGroup(cls); }catch(e){} }
@@ -5808,6 +5908,7 @@
         // 再刷一次目前模式確保畫面正確
         if(state.mode==='list' && cls) try{ renderStudents(cls); }catch(e){}
         else if(state.mode==='seat' && cls) try{ renderSeatUI(cls); }catch(e){}
+        else if(state.mode==='violations' && cls) try{ renderViolations(cls); }catch(e){}
         else if(state.mode==='hw' && cls) try{ renderHW(cls); }catch(e){}
         else if(state.mode==='progress') try{ renderProgress(); }catch(e){}
         else if(state.mode==='group' && cls) try{ renderGroup(cls); }catch(e){}
@@ -5896,10 +5997,26 @@
       return (scoreKey(cls, id) in state.scores);
     }
 
+    function hasDeduction(cls, id){
+      return (scoreKey(cls, id) in state.deductions);
+    }
+
     function getScore(cls, id){
       const v = state.scores[scoreKey(cls, id)];
       const n = Number(v);
       return Number.isFinite(n) ? n : 0;
+    }
+
+    function estimateDeductionFromScore(score){
+      const n = Number(score);
+      return Number.isFinite(n) && n < 0 ? Math.abs(n) : 0;
+    }
+
+    function getDeduction(cls, id){
+      const v = state.deductions[scoreKey(cls, id)];
+      const n = Number(v);
+      if(Number.isFinite(n)) return Math.max(0, n);
+      return estimateDeductionFromScore(getScore(cls, id));
     }
 
     // ★ 節流版：分數寫入 localStorage（避免每次 tap 都做完整序列化）
@@ -5913,6 +6030,70 @@
         }, 500);
       }
       saveSession('score change');
+    }
+
+    function setDeduction(cls, id, val){
+      const key = scoreKey(cls, id);
+      const next = Math.max(0, Number(val) || 0);
+      if(next <= 0){
+        if(key in state.deductions){
+          delete state.deductions[key];
+          scheduleDeductionSave('deduction reset');
+        }
+        return;
+      }
+      state.deductions[key] = next;
+      scheduleDeductionSave('deduction change');
+    }
+
+    const VIOLATION_FIELDS = Object.freeze([
+      { key:'late', label:'遲到' },
+      { key:'missing', label:'缺交' },
+      { key:'classroom', label:'上課違規' },
+      { key:'other', label:'其他' }
+    ]);
+
+    function createEmptyViolationRecord(){
+      return { late:0, missing:0, classroom:0, other:0 };
+    }
+
+    function normalizeViolationRecord(raw){
+      const rec = createEmptyViolationRecord();
+      if(raw && typeof raw === 'object'){
+        VIOLATION_FIELDS.forEach(({ key })=>{
+          const n = Number(raw[key]);
+          rec[key] = Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+        });
+      }
+      return rec;
+    }
+
+    function getViolationRecord(cls, id){
+      return normalizeViolationRecord(state.violations[scoreKey(cls, id)]);
+    }
+
+    function getViolationTotal(cls, id){
+      const rec = getViolationRecord(cls, id);
+      return VIOLATION_FIELDS.reduce((sum, { key })=> sum + (rec[key] || 0), 0);
+    }
+
+    function setViolationRecord(cls, id, record){
+      const key = scoreKey(cls, id);
+      const next = normalizeViolationRecord(record);
+      const total = VIOLATION_FIELDS.reduce((sum, { key: fieldKey })=> sum + next[fieldKey], 0);
+      if(total <= 0){
+        if(key in state.violations) delete state.violations[key];
+      }else{
+        state.violations[key] = next;
+      }
+      saveSession('violations change');
+    }
+
+    function changeViolationCount(cls, id, kind, delta){
+      if(!VIOLATION_FIELDS.some(field => field.key === kind)) return;
+      const rec = getViolationRecord(cls, id);
+      rec[kind] = Math.max(0, (rec[kind] || 0) + delta);
+      setViolationRecord(cls, id, rec);
     }
 
 
@@ -6179,8 +6360,14 @@
     }
     function changeScore(cls, id, delta, scoreEl){
       const old  = getScore(cls, id);        // ★
+      const oldDeduction = getDeduction(cls, id);
       const next = old + delta;
       setScore(cls, id, next);               // ★
+      if(delta < 0){
+        setDeduction(cls, id, oldDeduction + Math.abs(delta));
+      }else if(hasDeduction(cls, id) || oldDeduction > 0){
+        setDeduction(cls, id, oldDeduction);
+      }
       scoreEl.textContent = next;
       debouncedRenderLeaderboard(cls);       // ★ 節流版
     }
@@ -6194,40 +6381,59 @@
 
     function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); requestAnimationFrame(()=>{ el.classList.add('show'); }); }
 
-    function renderLeaderboard(cls){
-      elBoardClass.textContent=cls||'未選擇';
-      const list = (state.classMap[cls]||[]).map(s => ({
+    function compareBoardEntries(a, b, valueKey){
+      if(b[valueKey] !== a[valueKey]) return b[valueKey] - a[valueKey];
+      const na = Number(a.seat), nb = Number(b.seat);
+      if(!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+      return a.name.localeCompare(b.name, 'zh-Hant');
+    }
+
+    function buildLeaderboardEntries(cls){
+      return (state.classMap[cls] || []).map(s => ({
         id: s.id,
         name: s.name,
         seat: s.seat,
-        score: getScore(cls, s.id)   // ★
+        score: getScore(cls, s.id),
+        deduction: getDeduction(cls, s.id),
+        violationTotal: getViolationTotal(cls, s.id)
       }));
+    }
 
-      if(list.length===0){ elBoard.innerHTML='<div class="empty">此班級尚無成員</div>'; return; }
-      list.sort((a,b)=>{ if(b.score!==a.score) return b.score-a.score; const na=Number(a.seat), nb=Number(b.seat); if(!Number.isNaN(na)&&!Number.isNaN(nb)&&na!==nb) return na-nb; return a.name.localeCompare(b.name,'zh-Hant'); });
+    function renderBoard(el, elClass, cls, options={}){
+      const {
+        valueKey = 'score',
+        emptyText = '此班級尚無成員',
+        filter = null
+      } = options;
 
-      // ★ 增量更新：如果行數相同，只更新分數和排名（避免完整 innerHTML 重繪）
-      const existingRows = elBoard.querySelectorAll('.row');
+      if(elClass) elClass.textContent = cls || '未選擇';
+      let list = buildLeaderboardEntries(cls);
+      if(typeof filter === 'function') list = list.filter(filter);
+
+      if(list.length===0){ el.innerHTML = `<div class="empty">${emptyText}</div>`; return; }
+      list.sort((a,b)=> compareBoardEntries(a, b, valueKey));
+
+      const existingRows = el.querySelectorAll('.row');
       if(existingRows.length === list.length){
         let canPatch = true;
         for(let i=0; i<list.length; i++){
           const s = list[i];
           const row = existingRows[i];
-          const rank = i+1;
-          const scoreEl = row.querySelector('.score');
           const whoEl = row.querySelector('.who');
           const seatDisp = padSeat(s.seat);
           const expectedWho = (s.seat ? `#${seatDisp} ` : '') + s.name;
-          // 如果姓名順序變了，需要完整重繪
-          if(whoEl && whoEl.textContent.trim() !== expectedWho.trim()){ canPatch = false; break; }
+          if(whoEl && whoEl.textContent.trim() !== expectedWho.trim()){
+            canPatch = false;
+            break;
+          }
         }
         if(canPatch){
           for(let i=0; i<list.length; i++){
-            const s = list[i]; const rank = i+1;
+            const s = list[i];
+            const rank = i+1;
             const row = existingRows[i];
             const scoreEl = row.querySelector('.score');
-            if(scoreEl) scoreEl.textContent = s.score;
-            // 更新排名 class
+            if(scoreEl) scoreEl.textContent = s[valueKey];
             const newCls = 'row' + (rank<=5 ? ` rank-${rank}` : '');
             if(row.className !== newCls) row.className = newCls;
           }
@@ -6238,18 +6444,43 @@
       const frag = document.createDocumentFragment();
       for(let i=0; i<list.length; i++){
         const s = list[i];
-        const rank = i+1; const clsRank = rank<=5 ? `rank-${rank}` : ''; const medalText = rank<=5 ? rank : '';
+        const rank = i+1;
+        const clsRank = rank<=5 ? `rank-${rank}` : '';
+        const medalText = rank<=5 ? rank : '';
         const seatDisp = padSeat(s.seat);
         const row = document.createElement('div');
         row.className = `row ${clsRank}`;
         row.innerHTML = `
             <div class="rank">${rank<=5 ? `<span class="medal">${medalText}</span>` : rank}</div>
             <div class="who">${s.seat?`<span class="seat-badge">#${escapeHTML(seatDisp)}</span> `:''}${escapeHTML(s.name)}</div>
-            <div class="score">${s.score}</div>`;
+            <div class="score">${s[valueKey]}</div>`;
         frag.appendChild(row);
       }
-      elBoard.innerHTML = '';
-      elBoard.appendChild(frag);
+      el.innerHTML = '';
+      el.appendChild(frag);
+    }
+
+    function renderLeaderboard(cls){
+      renderBoard(elBoard, elBoardClass, cls, {
+        valueKey: 'score',
+        emptyText: '此班級尚無成員'
+      });
+      if(elDeductBoard){
+        renderBoard(elDeductBoard, elDeductBoardClass, cls, {
+          valueKey: 'deduction',
+          emptyText: '尚無扣分紀錄',
+          filter: s => s.deduction > 0
+        });
+      }
+    }
+
+    function renderViolationsLeaderboard(cls){
+      if(!elViolLeaderboard) return;
+      renderBoard(elViolLeaderboard, elViolBoardClass, cls, {
+        valueKey: 'violationTotal',
+        emptyText: '尚無違規紀錄',
+        filter: s => s.violationTotal > 0
+      });
     }
 
     /* ====== ★ 主題切換（深/淺） ====== */
@@ -8581,6 +8812,18 @@ function onTimerDone(){
           delete state.scores[k];
         }
       }
+      for(const k of Object.keys(state.deductions)){
+        if(k.startsWith(oldPrefix)){
+          state.deductions[newPrefix + k.slice(oldPrefix.length)] = state.deductions[k];
+          delete state.deductions[k];
+        }
+      }
+      for(const k of Object.keys(state.violations)){
+        if(k.startsWith(oldPrefix)){
+          state.violations[newPrefix + k.slice(oldPrefix.length)] = state.violations[k];
+          delete state.violations[k];
+        }
+      }
       if(state.seating[oldName]){ state.seating[newName] = state.seating[oldName]; delete state.seating[oldName]; }
       if(state.hw[oldName]){ state.hw[newName] = state.hw[oldName]; delete state.hw[oldName]; }
       if(state.group[oldName]){ state.group[newName] = state.group[oldName]; delete state.group[oldName]; }
@@ -8607,6 +8850,12 @@ function onTimerDone(){
       const prefix = scoreKey(cls, '');
       for(const k of Object.keys(state.scores)){
         if(k.startsWith(prefix)) delete state.scores[k];
+      }
+      for(const k of Object.keys(state.deductions)){
+        if(k.startsWith(prefix)) delete state.deductions[k];
+      }
+      for(const k of Object.keys(state.violations)){
+        if(k.startsWith(prefix)) delete state.violations[k];
       }
       delete state.seating[cls];
       delete state.hw[cls];
@@ -8654,14 +8903,15 @@ function onTimerDone(){
 
       state.mode=m;
       document.body.dataset.mode = m;
-      // ★ 只有「list（加扣分）」模式顯示 sidebar
-      document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list');
-      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw');
+      // ★ list / violations 模式顯示 sidebar
+      document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list' && m!=='violations');
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw' || m==='violations');
 
       // 模式按鈕狀態
       elModeManage?.classList.toggle('active', m==='manage');
       elModeProgress?.classList.toggle('active', m==='progress');
       elModeList.classList.toggle('active', m==='list');
+      elModeViolations?.classList.toggle('active', m==='violations');
       elModeSeat.classList.toggle('active', m==='seat');
       elModeHW.classList.toggle('active', m==='hw');
       elModeDraw.classList.toggle('active', m==='draw');
@@ -8684,6 +8934,10 @@ function onTimerDone(){
       elToggleStageWrap.classList.toggle('hidden', m!=='list');
       applyStageToggleUI();
 
+      document.getElementById('board-score')?.classList.toggle('hidden', m!=='list');
+      document.getElementById('board-deduct')?.classList.toggle('hidden', m!=='list');
+      elViolBoard?.classList.toggle('hidden', m!=='violations');
+
       // 各頁顯示/隱藏
       document.getElementById('students').classList.toggle('hidden', m!=='list');
       const _seatNotice = document.getElementById('seat-notice');
@@ -8696,6 +8950,7 @@ function onTimerDone(){
       document.getElementById('seat-controls').classList.toggle('hidden', m!=='seat');
       document.getElementById('seatwrap').classList.toggle('hidden', m!=='seat');
       elProgressPane?.classList.toggle('hidden', m!=='progress');
+      elViolationsPane?.classList.toggle('hidden', m!=='violations');
       elHWPane.classList.toggle('hidden', m!=='hw');
       elDrawPane.classList.toggle('hidden', m!=='draw');
       elTimerPane?.classList.toggle('hidden', m!=='timer');
@@ -8706,6 +8961,7 @@ function onTimerDone(){
       if(m==='seat'){ ensureSeatState(cls); renderSeatUI(cls); }
       else if(m==='list'){ renderStudents(cls); }
       else if(m==='progress'){ renderProgress(); }
+      else if(m==='violations'){ renderViolations?.(cls); }
       else if(m==='hw'){ renderHW(cls); }
       else if(m==='draw'){ renderDraw(cls); }
       else if(m==='timer'){ renderTimerUI(); }
@@ -8717,6 +8973,7 @@ function onTimerDone(){
 
     document.getElementById('mode-progress')?.addEventListener('click', ()=> setMode('progress'));
     document.getElementById('mode-list').addEventListener('click', ()=> setMode('list'));
+    document.getElementById('mode-violations')?.addEventListener('click', ()=> setMode('violations'));
     document.getElementById('mode-seat-more')?.addEventListener('click', ()=> setMode('seat'));
     document.getElementById('mode-hw').addEventListener('click', ()=> setMode('hw'));
     document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
@@ -9462,7 +9719,7 @@ elProgAdd?.addEventListener('click', ()=>{
         {
           target: '.modebar .seg',
           title: '功能模式切換',
-          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
+          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>違規記錄簿</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
           pos: 'bottom'
         },
         {
@@ -9474,13 +9731,19 @@ elProgAdd?.addEventListener('click', ()=>{
         {
           target: '#students',
           title: '學生卡片',
-          desc: '每位學生顯示為一張卡片，點擊 <b>＋ / −</b> 按鈕即可即時加扣分。分數變動會立即反映在左側排行榜中。',
+          desc: '每位學生顯示為一張卡片，點擊 <b>＋ / −</b> 按鈕即可即時加扣分。分數變動會立即反映在左側雙排行榜中。',
           pos: 'top'
         },
         {
-          target: '#sidebar .board',
+          target: '#board-score',
           title: '加分排行榜',
           desc: '左側欄即時顯示目前班級的<b>加分排名</b>，方便掌握學生表現。前五名會顯示獎牌圖示。',
+          pos: 'right'
+        },
+        {
+          target: '#board-deduct',
+          title: '扣分排行榜',
+          desc: '下方會另外顯示<b>累計扣分最多</b>的學生，方便快速掌握需要提醒或追蹤的對象。尚未有扣分紀錄時會顯示空狀態。',
           pos: 'right'
         },
         ...COMMON_BOTTOM
@@ -9524,6 +9787,30 @@ elProgAdd?.addEventListener('click', ()=>{
           title: '作業成績表',
           desc: '直接<b>點擊數字格</b>輸入成績。<b>雙擊欄位名稱</b>可重新命名作業欄。需要大量輸入時請按欄位標題旁的「⚡」使用<b>批次輸入</b>（整欄同分 或 貼上多筆）。',
           pos: 'top'
+        },
+        ...COMMON_BOTTOM
+      ];
+
+      /* ── 違規記錄簿模式 ── */
+      const STEPS_VIOLATIONS = [
+        ...COMMON_TOP,
+        {
+          target: '#violations-pane .hw-bar',
+          title: '違規記錄工具列',
+          desc: '可在此切換班級，並用「清空本班紀錄」快速重置本班所有違規次數。',
+          pos: 'bottom'
+        },
+        {
+          target: '#viol-table',
+          title: '違規記錄簿',
+          desc: '表格會顯示每位學生的<b>總違規次數</b>與四種固定類型：<b>遲到</b>、<b>缺交</b>、<b>上課違規</b>、<b>其他</b>。可直接用各欄位的 <b>＋ / −</b> 按鈕增減。',
+          pos: 'top'
+        },
+        {
+          target: '#board-violations',
+          title: '違規排行榜',
+          desc: '左側會依<b>總違規次數</b>即時排序，方便快速掌握需要優先關注的學生。',
+          pos: 'right'
         },
         ...COMMON_BOTTOM
       ];
@@ -9637,6 +9924,7 @@ elProgAdd?.addEventListener('click', ()=>{
         switch(state.mode){
           case 'list':     return STEPS_LIST;
           case 'seat':     return STEPS_SEAT;
+          case 'violations': return STEPS_VIOLATIONS;
           case 'hw':       return STEPS_HW;
           case 'draw':     return STEPS_DRAW;
           case 'group':    return STEPS_GROUP;
@@ -9705,7 +9993,7 @@ elProgAdd?.addEventListener('click', ()=>{
           highlightEl.style.height = (r.height + pad*2) + 'px';
 
           // mode label for tooltip header
-          const modeLabels = { list:'加扣分', seat:'座位', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
+          const modeLabels = { list:'加扣分', seat:'座位', violations:'違規記錄簿', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
           const hasData = state.classOrder && state.classOrder.length > 0;
           const modeLabel = hasData ? (modeLabels[state.mode] || '') : '歡迎';
 
@@ -9835,6 +10123,115 @@ elProgAdd?.addEventListener('click', ()=>{
       if(canFit()) return;
       let size=MAX; while(size>MIN){ size-=0.5; textEl.style.fontSize=size+'px'; if(canFit()) break; }
     }
+
+    /* ===== ★ 違規記錄簿：狀態 + UI ===== */
+    function syncViolClassSelect(cls){
+      if(!elViolClassSelect) return;
+      elViolClassSelect.innerHTML = '';
+      if(!state.classOrder.length){
+        const o = document.createElement('option');
+        o.value = ''; o.textContent = '尚未載入'; o.disabled = true; o.selected = true;
+        elViolClassSelect.appendChild(o);
+      }else{
+        state.classOrder.forEach(c=>{
+          const o = document.createElement('option'); o.value = c; o.textContent = c;
+          if(c===cls) o.selected = true;
+          elViolClassSelect.appendChild(o);
+        });
+      }
+    }
+    elViolClassSelect?.addEventListener('change', (e)=>{
+      const newCls = e.target.value;
+      if(newCls){
+        elSelect.value = newCls;
+        elSelect.dispatchEvent(new Event('change'));
+      }
+    });
+
+    function renderViolations(cls){
+      if(!elViolTable) return;
+      if(!cls){
+        elViolTable.innerHTML = '';
+        if(elViolClassPill) elViolClassPill.textContent = '未選擇';
+        syncViolClassSelect(cls);
+        renderViolationsLeaderboard(cls);
+        return;
+      }
+
+      const list = getSortedList(cls);
+      const q = '';
+      if(elViolClassPill) elViolClassPill.textContent = cls;
+      syncViolClassSelect(cls);
+
+      const th = `
+        <thead>
+          <tr>
+            <th style="min-width:64px">座號</th>
+            <th style="min-width:120px">姓名</th>
+            <th class="num">總次數</th>
+            ${VIOLATION_FIELDS.map(({ label })=>`<th class="num">${label}</th>`).join('')}
+            <th class="num">操作</th>
+          </tr>
+        </thead>`;
+
+      const rows = list.map(s=>{
+        const rec = getViolationRecord(cls, s.id);
+        const total = getViolationTotal(cls, s.id);
+        const isHit = q && matchFilter(s, q);
+        return `
+          <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}">
+            <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
+            <td>${isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'')}</td>
+            <td class="num"><strong>${total}</strong></td>
+            ${VIOLATION_FIELDS.map(({ key, label })=>`
+              <td class="num viol-cell">
+                <div class="viol-stepper">
+                  <button class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="-1" title="${label} -1">−</button>
+                  <span class="viol-count">${rec[key]}</span>
+                  <button class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="1" title="${label} +1">＋</button>
+                </div>
+              </td>`).join('')}
+            <td class="num"><button class="mini-btn viol-reset-row" data-id="${escapeHTML(s.id)}" ${total<=0?'disabled':''}>歸零</button></td>
+          </tr>`;
+      }).join('');
+
+      elViolTable.innerHTML = th + `<tbody>${rows || '<tr><td colspan="999" class="hint">尚無學生資料</td></tr>'}</tbody>`;
+
+      elViolTable.querySelectorAll('.viol-btn[data-id][data-kind][data-delta]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-id') || '';
+          const kind = btn.getAttribute('data-kind') || '';
+          const delta = Number(btn.getAttribute('data-delta')) || 0;
+          if(!id || !kind || !delta) return;
+          changeViolationCount(cls, id, kind, delta);
+          renderViolations(cls);
+        });
+      });
+
+      elViolTable.querySelectorAll('.viol-reset-row[data-id]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-id') || '';
+          if(!id) return;
+          setViolationRecord(cls, id, createEmptyViolationRecord());
+          renderViolations(cls);
+        });
+      });
+
+      renderViolationsLeaderboard(cls);
+    }
+
+    elViolReset?.addEventListener('click', ()=>{
+      const cls = elSelect.value;
+      if(!cls) return;
+      if(!confirm(`確定要清空「${cls}」全班的違規紀錄嗎？`)) return;
+      const prefix = scoreKey(cls, '');
+      for(const key of Object.keys(state.violations)){
+        if(key.startsWith(prefix)) delete state.violations[key];
+      }
+      renderViolations(cls);
+      saveSession('violations reset class');
+      setStatus(`已清空「${cls}」的違規紀錄。`);
+    });
 
     /* ===== ★ 作業成績：狀態 + UI ===== */
     function syncHWClassSelect(cls){
@@ -10687,6 +11084,7 @@ noteSave?.addEventListener('click', ()=>{
       // 更新畫面
       renderStudents(cls);
       renderLeaderboard(cls);
+      renderViolations(cls);
       if(state.mode==='seat') renderSeatUI(cls);
       if(state.mode==='hw') renderHW(cls);
       if(state.mode==='draw') renderDraw(cls);
@@ -10811,6 +11209,13 @@ noteSave?.addEventListener('click', ()=>{
           saveSession('score delete');
         }catch{}
       }
+      if(k in state.deductions){
+        delete state.deductions[k];
+        try{ localStorage.setItem('deductions_v1', JSON.stringify(state.deductions)); }catch{}
+      }
+      if(k in state.violations){
+        delete state.violations[k];
+      }
 
       // 作業成績
       const hw = ensureHWState(cls);
@@ -10835,6 +11240,7 @@ noteSave?.addEventListener('click', ()=>{
       // 更新畫面
       renderStudents(cls);
       renderLeaderboard(cls);
+      renderViolations(cls);
       renderSeatUI(cls);
       renderHW(cls);
       renderDraw(cls);
