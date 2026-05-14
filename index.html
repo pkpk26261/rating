@@ -1163,10 +1163,54 @@
       cursor:pointer;
     }
     .hw-col .mini-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.2); }
-    .viol-cell{ min-width:126px; }
-    .viol-stepper{ display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; }
-    .viol-stepper .viol-btn{ min-width:30px; padding:2px 8px; }
-    .viol-count{ min-width:1.6em; text-align:center; font-variant-numeric: tabular-nums; font-weight:800; }
+    .viol-cell{ min-width:126px; text-align:center; }
+    #viol-table thead th.num:not(:last-child),
+    #viol-table tbody td.num:not(:last-child){ text-align:center; }
+    .viol-stepper{
+      display:inline-grid;
+      grid-template-columns:30px minmax(1.6em, auto) 30px;
+      align-items:center;
+      justify-items:center;
+      column-gap:6px;
+    }
+    .viol-stepper .viol-btn{
+      min-width:30px;
+      width:30px;
+      padding:2px 0;
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transform:scale(.92);
+      transition:opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+    }
+    .viol-cell:hover .viol-btn,
+    .viol-stepper.is-open .viol-btn,
+    .viol-stepper:focus-within .viol-btn{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transform:none;
+      transition-delay:0s;
+    }
+    .viol-count{
+      min-width:1.6em;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:2px 0;
+      border-radius:8px;
+      text-align:center;
+      font-variant-numeric: tabular-nums;
+      font-weight:800;
+      line-height:1.2;
+      cursor:pointer;
+      user-select:none;
+      touch-action:manipulation;
+    }
+    .viol-count:focus-visible{
+      outline:none;
+      box-shadow:0 0 0 3px rgba(129,140,248,.18);
+    }
     .viol-reset-row[disabled]{ opacity:.45; cursor:not-allowed; }
 
     /* 🔎 搜尋命中高亮（列表卡片） */
@@ -1826,6 +1870,20 @@
       background: rgba(255,90,90,.08);
     }
     .progtbl-wrap{ flex:1 1 auto; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
+    .progtbl-wrap.is-empty{ display:flex; overflow:hidden; }
+    .progtbl-wrap.is-empty .progtbl{ flex:1 1 auto; min-width:0; height:100%; }
+    .progtbl-wrap.is-empty .progtbl tbody,
+    .progtbl-wrap.is-empty .progtbl tr,
+    .progtbl-wrap.is-empty .progtbl td{ height:100%; }
+    .progtbl-wrap.is-empty .progtbl td{ border-bottom:none; }
+    .progtbl-wrap.is-empty .progtbl td:first-child{
+      width:auto;
+      min-width:0;
+      max-width:none;
+      position:static;
+      background:transparent;
+    }
+    .progtbl-wrap.is-empty .progtbl td:first-child::after{ display:none; }
     .progtbl{ width:100%; min-width:max-content; border-collapse:separate; border-spacing:0; }
     .progtbl th, .progtbl td{ border-bottom:1px solid var(--line); padding:10px 10px; text-align:center; }
     .progtbl th{ position:sticky; top:0; background:rgba(10,14,26,.92); backdrop-filter: blur(6px); z-index:2; font-size:13px; }
@@ -1981,6 +2039,7 @@
     /* ★ 進度模式空白引導改善 */
     .prog-empty{
       display:flex; flex-direction:column; align-items:center; justify-content:center;
+      width:100%; min-height:100%; box-sizing:border-box;
       padding:64px 20px; gap:12px;
     }
     .prog-empty-icon{ font-size:48px; opacity:.7; }
@@ -2637,23 +2696,26 @@
     /* -- 群組看板 -- */
     .grp-board{
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      grid-auto-flow:column;
+      grid-auto-columns:minmax(max-content, 1fr);
       align-items:start;
       gap:14px;
       margin-bottom:22px;
-      overflow-x:hidden;
+      overflow-x:auto;
+      overflow-y:hidden;
       min-width:0;
       flex-shrink:0;
     }
     .grp-board > .grp-card{
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
+      width:100%;
+      max-width:none;
+      min-width:0;
     }
 
     /* -- 群組卡片 -- */
     .grp-card{
       align-self:start;
+      width:100%;
       height:auto;
       border:1px solid color-mix(in oklab, var(--gc) 20%, var(--line));
       border-radius:18px;
@@ -2703,6 +2765,8 @@
     .grp-card-body{
       padding:10px 12px;
       display:flex; flex-direction:column; gap:6px;
+      width:100%;
+      min-width:max-content;
       min-height:56px;
       transition: background .2s;
     }
@@ -2726,6 +2790,8 @@
       border:1px solid var(--line);
       font-size:13px; font-weight:700;
       cursor:grab; user-select:none;
+      white-space:nowrap;
+      min-width:max-content;
       transition: all .18s ease;
       animation: grpFadeIn .25s ease both;
     }
@@ -2745,7 +2811,7 @@
       font-size:11px; font-weight:800; color:#fff; flex-shrink:0;
       background: linear-gradient(135deg, var(--gc, var(--accent)), color-mix(in oklab, var(--gc, var(--accent)) 60%, #000));
     }
-    .grp-member .grp-member-name{ flex:1; line-height:1.3; }
+    .grp-member .grp-member-name{ flex:1; line-height:1.3; white-space:nowrap; }
     .grp-member .grp-member-remove{
       background:none; border:none; color:var(--muted); cursor:pointer;
       font-size:15px; padding:2px 4px; line-height:1; border-radius:6px;
@@ -3901,7 +3967,7 @@
                                 <button id="mode-manage" class="seg-btn" data-mode="manage">學生管理</button>
                                 <button id="mode-progress" class="seg-btn" data-mode="progress">教學進度</button>
                                 <button id="mode-list" class="seg-btn active" data-mode="list">加扣分</button>
-                                <button id="mode-violations" class="seg-btn" data-mode="violations">違規記錄簿</button>
+                                <button id="mode-violations" class="seg-btn" data-mode="violations">違規記錄</button>
                                 <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
                                 <div class="more-menu" id="more-menu">
                                   <button id="mode-more" class="seg-btn more-toggle" aria-haspopup="true" aria-expanded="false">更多 ▾</button>
@@ -4180,9 +4246,9 @@
           </div>
         </section>
 
-        <section id="violations-pane" class="hidden" aria-label="違規記錄簿頁">
+        <section id="violations-pane" class="hidden" aria-label="違規記錄頁">
           <div class="hw-bar">
-            <span class="hw-bar-label">🚨 違規記錄簿</span>
+            <span class="hw-bar-label">🚨 違規記錄</span>
             <select id="viol-class-select" class="hw-class-select" title="切換班級"><option value="" disabled selected>尚未載入</option></select>
             <span class="spacer"></span>
             <button id="btn-viol-reset" class="btn" title="清空目前班級的違規紀錄">清空本班紀錄</button>
@@ -4857,6 +4923,7 @@
     /* ★ 作業成績 DOM */
     const elProgressPane=document.getElementById('progress-pane');
     const elProgTable=document.getElementById('prog-table');
+    const elProgTableWrap=elProgTable?.closest('.progtbl-wrap');
     const elProgPageSel=document.getElementById('prog-page-select');
     const elProgPageMenuBtn=document.getElementById('btn-prog-page-menu');
     const elProgPageMenu=document.getElementById('prog-page-menu');
@@ -6381,8 +6448,12 @@
 
     function showFloater(el, delta){ el.textContent = delta>0? `+${delta}` : `${delta}`; el.style.color = delta>0? 'rgb(74,222,128)' : 'rgb(248,113,113)'; el.classList.remove('show'); requestAnimationFrame(()=>{ el.classList.add('show'); }); }
 
-    function compareBoardEntries(a, b, valueKey){
-      if(b[valueKey] !== a[valueKey]) return b[valueKey] - a[valueKey];
+    function compareBoardEntries(a, b, valueKey, sortDirection='desc'){
+      if(b[valueKey] !== a[valueKey]){
+        return sortDirection === 'asc'
+          ? a[valueKey] - b[valueKey]
+          : b[valueKey] - a[valueKey];
+      }
       const na = Number(a.seat), nb = Number(b.seat);
       if(!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
       return a.name.localeCompare(b.name, 'zh-Hant');
@@ -6403,7 +6474,8 @@
       const {
         valueKey = 'score',
         emptyText = '此班級尚無成員',
-        filter = null
+        filter = null,
+        sortDirection = 'desc'
       } = options;
 
       if(elClass) elClass.textContent = cls || '未選擇';
@@ -6411,7 +6483,7 @@
       if(typeof filter === 'function') list = list.filter(filter);
 
       if(list.length===0){ el.innerHTML = `<div class="empty">${emptyText}</div>`; return; }
-      list.sort((a,b)=> compareBoardEntries(a, b, valueKey));
+      list.sort((a,b)=> compareBoardEntries(a, b, valueKey, sortDirection));
 
       const existingRows = el.querySelectorAll('.row');
       if(existingRows.length === list.length){
@@ -6463,13 +6535,15 @@
     function renderLeaderboard(cls){
       renderBoard(elBoard, elBoardClass, cls, {
         valueKey: 'score',
-        emptyText: '此班級尚無成員'
+        emptyText: '尚無加分紀錄',
+        filter: s => s.score > 0
       });
       if(elDeductBoard){
         renderBoard(elDeductBoard, elDeductBoardClass, cls, {
-          valueKey: 'deduction',
+          valueKey: 'score',
           emptyText: '尚無扣分紀錄',
-          filter: s => s.deduction > 0
+          filter: s => s.score < 0,
+          sortDirection: 'asc'
         });
       }
     }
@@ -6482,6 +6556,72 @@
         filter: s => s.violationTotal > 0
       });
     }
+
+    function syncViolationSteppers(nextOpenStepper=null){
+      if(!elViolTable) return;
+      elViolTable.querySelectorAll('.viol-stepper').forEach(stepper=>{
+        const isOpen = !!nextOpenStepper && stepper === nextOpenStepper;
+        stepper.classList.toggle('is-open', isOpen);
+        const toggle = stepper.querySelector('.viol-count[data-viol-toggle]');
+        if(toggle) toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
+
+    function shouldUseTapViolationControls(pointerType=''){
+      if(pointerType === 'mouse') return false;
+      if(pointerType === 'touch' || pointerType === 'pen') return true;
+      return HAS_TOUCH || IS_COARSE;
+    }
+
+    elViolTable?.addEventListener('mousedown', (e)=>{
+      const target = e.target;
+      if(!(target instanceof Element)) return;
+      if(!target.closest('.viol-count[data-viol-toggle]')) return;
+      e.preventDefault();
+    });
+
+    elViolTable?.addEventListener('pointerdown', (e)=>{
+      if(!shouldUseTapViolationControls(e.pointerType)) return;
+      const target = e.target;
+      if(!(target instanceof Element)) return;
+      const toggle = target.closest('.viol-count[data-viol-toggle]');
+      if(!toggle) return;
+      e.preventDefault();
+      const stepper = toggle.closest('.viol-stepper');
+      if(!stepper) return;
+      const shouldOpen = !stepper.classList.contains('is-open');
+      syncViolationSteppers(shouldOpen ? stepper : null);
+    });
+
+    elViolTable?.addEventListener('keydown', (e)=>{
+      if(e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      const target = e.target;
+      if(!(target instanceof Element)) return;
+      const toggle = target.closest('.viol-count[data-viol-toggle]');
+      if(!toggle) return;
+      e.preventDefault();
+      const stepper = toggle.closest('.viol-stepper');
+      if(!stepper) return;
+      const shouldOpen = !stepper.classList.contains('is-open');
+      syncViolationSteppers(shouldOpen ? stepper : null);
+    });
+
+    elViolTable?.addEventListener('focusout', (e)=>{
+      const target = e.target;
+      if(!(target instanceof Element)) return;
+      const stepper = target.closest('.viol-stepper');
+      if(!stepper) return;
+      const nextTarget = e.relatedTarget;
+      if(nextTarget instanceof Element && stepper.contains(nextTarget)) return;
+      syncViolationSteppers();
+    });
+
+    document.addEventListener('pointerdown', (e)=>{
+      if(!shouldUseTapViolationControls(e.pointerType)) return;
+      const target = e.target;
+      if(target instanceof Element && target.closest('#viol-table .viol-stepper')) return;
+      syncViolationSteppers();
+    });
 
     /* ====== ★ 主題切換（深/淺） ====== */
     function initThemeToggle(){
@@ -7434,8 +7574,13 @@
 
       // ★ 沒有任何分頁時：顯示改良版空白提示
       if(!prog.order.length || !prog.active){
+        elProgTableWrap?.classList.add('is-empty');
         elProgTable.innerHTML = '';
-        if(elProgPageSel) elProgPageSel.innerHTML = '';
+        if(elProgPageSel){
+          const noPageHint = '尚未建立分頁，請先從⋯新增';
+          elProgPageSel.innerHTML = `<option value="">${escapeHTML(noPageHint)}</option>`;
+          elProgPageSel.title = noPageHint;
+        }
         if(elStats) elStats.innerHTML = '';
         const emptyWrap = document.createElement('div');
         emptyWrap.className = 'prog-empty';
@@ -7456,6 +7601,8 @@
         return;
       }
 
+      elProgTableWrap?.classList.remove('is-empty');
+
       const pageName = prog.active;
       const pg = prog.pages[pageName] || (prog.pages[pageName] = { items:[], classes:(state.classOrder||[]).slice() });
 
@@ -7463,6 +7610,7 @@
       if(elProgPageSel){
         elProgPageSel.innerHTML = (prog.order||[]).map(n=>`<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
         elProgPageSel.value = pageName;
+        elProgPageSel.title = '';
       }
 
       // 進度模式也提供「新增/刪除學生」快捷
@@ -9719,7 +9867,7 @@ elProgAdd?.addEventListener('click', ()=>{
         {
           target: '.modebar .seg',
           title: '功能模式切換',
-          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>違規記錄簿</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
+          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>違規記錄</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
           pos: 'bottom'
         },
         {
@@ -9791,7 +9939,7 @@ elProgAdd?.addEventListener('click', ()=>{
         ...COMMON_BOTTOM
       ];
 
-      /* ── 違規記錄簿模式 ── */
+      /* ── 違規記錄模式 ── */
       const STEPS_VIOLATIONS = [
         ...COMMON_TOP,
         {
@@ -9802,7 +9950,7 @@ elProgAdd?.addEventListener('click', ()=>{
         },
         {
           target: '#viol-table',
-          title: '違規記錄簿',
+          title: '違規記錄',
           desc: '表格會顯示每位學生的<b>總違規次數</b>與四種固定類型：<b>遲到</b>、<b>缺交</b>、<b>上課違規</b>、<b>其他</b>。可直接用各欄位的 <b>＋ / −</b> 按鈕增減。',
           pos: 'top'
         },
@@ -9993,7 +10141,7 @@ elProgAdd?.addEventListener('click', ()=>{
           highlightEl.style.height = (r.height + pad*2) + 'px';
 
           // mode label for tooltip header
-          const modeLabels = { list:'加扣分', seat:'座位', violations:'違規記錄簿', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
+          const modeLabels = { list:'加扣分', seat:'座位', violations:'違規記錄', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
           const hasData = state.classOrder && state.classOrder.length > 0;
           const modeLabel = hasData ? (modeLabels[state.mode] || '') : '歡迎';
 
@@ -10124,7 +10272,7 @@ elProgAdd?.addEventListener('click', ()=>{
       let size=MAX; while(size>MIN){ size-=0.5; textEl.style.fontSize=size+'px'; if(canFit()) break; }
     }
 
-    /* ===== ★ 違規記錄簿：狀態 + UI ===== */
+    /* ===== ★ 違規記錄：狀態 + UI ===== */
     function syncViolClassSelect(cls){
       if(!elViolClassSelect) return;
       elViolClassSelect.innerHTML = '';
@@ -10186,9 +10334,9 @@ elProgAdd?.addEventListener('click', ()=>{
             ${VIOLATION_FIELDS.map(({ key, label })=>`
               <td class="num viol-cell">
                 <div class="viol-stepper">
-                  <button class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="-1" title="${label} -1">−</button>
-                  <span class="viol-count">${rec[key]}</span>
-                  <button class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="1" title="${label} +1">＋</button>
+                  <button type="button" class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="-1" title="${label} -1">−</button>
+                  <span class="viol-count" data-viol-toggle tabindex="0" role="button" aria-expanded="false" aria-label="${label} 目前 ${rec[key]} 次，滑鼠靠近或點一下調整">${rec[key]}</span>
+                  <button type="button" class="mini-btn viol-btn" data-id="${escapeHTML(s.id)}" data-kind="${key}" data-delta="1" title="${label} +1">＋</button>
                 </div>
               </td>`).join('')}
             <td class="num"><button class="mini-btn viol-reset-row" data-id="${escapeHTML(s.id)}" ${total<=0?'disabled':''}>歸零</button></td>
