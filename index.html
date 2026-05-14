@@ -1166,6 +1166,48 @@
     .viol-cell{ min-width:126px; text-align:center; }
     #viol-table thead th.num:not(:last-child),
     #viol-table tbody td.num:not(:last-child){ text-align:center; }
+    .viol-student-cell{ text-align:left; }
+    .viol-name-cell{ display:inline-flex; align-items:center; gap:8px; max-width:100%; }
+    .viol-name-text{ display:inline-block; }
+    .viol-note-btn{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:26px;
+      height:26px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      cursor:pointer;
+      flex-shrink:0;
+    }
+    .viol-note-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.18); filter:brightness(1.08); }
+    .viol-note-btn.has-notes{
+      color:#f59e0b;
+      border-color:rgba(245,158,11,.42);
+      background:rgba(245,158,11,.12);
+    }
+    .viol-note-btn.has-notes::after{
+      content:attr(data-count);
+      position:absolute;
+      top:-5px;
+      right:-5px;
+      min-width:16px;
+      height:16px;
+      padding:0 4px;
+      border-radius:999px;
+      background:#f59e0b;
+      color:#111827;
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 0 2px var(--card);
+    }
     .viol-stepper{
       display:inline-grid;
       grid-template-columns:30px minmax(1.6em, auto) 30px;
@@ -1212,6 +1254,69 @@
       box-shadow:0 0 0 3px rgba(129,140,248,.18);
     }
     .viol-reset-row[disabled]{ opacity:.45; cursor:not-allowed; }
+    #viol-note-mask .modal{ width:min(760px, 94vw); max-height:86vh; }
+    #viol-note-mask .content{ display:flex; flex-direction:column; gap:12px; }
+    #viol-note-mask .viol-note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    #viol-note-mask .viol-note-help{ margin-left:auto; font-size:12px; opacity:.8; }
+    .viol-note-form{
+      display:grid;
+      grid-template-columns:170px minmax(0, 1fr) auto;
+      gap:10px;
+      align-items:end;
+    }
+    .viol-note-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .viol-note-field > span{ font-size:12px; color:var(--muted); }
+    .viol-note-input{
+      width:100%;
+      height:var(--btn-h);
+      padding:0 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      color:var(--fg);
+      outline:none;
+      box-sizing:border-box;
+    }
+    .viol-note-input:focus{
+      border-color:color-mix(in oklab, var(--accent) 55%, white);
+      box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+    }
+    .viol-note-list{ display:flex; flex-direction:column; gap:10px; max-height:320px; overflow:auto; padding-right:4px; }
+    .viol-note-empty{
+      padding:18px 12px;
+      border:1px dashed var(--line);
+      border-radius:14px;
+      text-align:center;
+      color:var(--muted);
+    }
+    .viol-note-entry{
+      display:grid;
+      grid-template-columns:auto minmax(0, 1fr) auto;
+      gap:10px;
+      align-items:start;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+    }
+    .viol-note-entry-date{
+      white-space:nowrap;
+      font-variant-numeric:tabular-nums;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      padding-top:3px;
+    }
+    .viol-note-entry-text{ line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+    .viol-note-remove{ align-self:start; }
+    .viol-note-actions{ display:flex; justify-content:space-between; gap:10px; }
+    @media (max-width: 640px){
+      #viol-note-mask .viol-note-help{ margin-left:0; width:100%; }
+      .viol-note-form{ grid-template-columns:1fr; }
+      .viol-note-entry{ grid-template-columns:1fr; }
+      .viol-note-actions{ flex-direction:column-reverse; }
+      .viol-note-remove{ justify-self:end; }
+    }
 
     /* 🔎 搜尋命中高亮（列表卡片） */
     .card.match{
@@ -4612,6 +4717,43 @@
     </div>
   </div>
 
+  <div id="viol-note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="viol-note-title">
+    <div class="modal" role="document">
+      <header>
+        <h3 id="viol-note-title">🗒 違規記事</h3>
+        <button id="viol-note-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div class="viol-note-meta">
+          <div class="hint">
+            班級：<span id="viol-note-class" class="pill"></span>
+            　學生：<span id="viol-note-student" class="pill"></span>
+          </div>
+          <div class="viol-note-help">可新增多筆違規日期與違規事項，新增後會立即儲存。</div>
+        </div>
+
+        <div class="viol-note-form">
+          <label class="viol-note-field">
+            <span>違規日期</span>
+            <input id="viol-note-date" class="viol-note-input" type="date">
+          </label>
+          <label class="viol-note-field">
+            <span>違規事項</span>
+            <input id="viol-note-item" class="viol-note-input" type="text" maxlength="120" placeholder="例如：上課聊天、未帶作業、遲到 10 分鐘">
+          </label>
+          <button id="viol-note-add" class="btn add" type="button">新增記事</button>
+        </div>
+
+        <div id="viol-note-list" class="viol-note-list"></div>
+
+        <div class="viol-note-actions">
+          <button id="viol-note-clear" class="btn sub" type="button">清空記事</button>
+          <button id="viol-note-done" class="btn" type="button">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
   <!-- 平板觸控：浮動選取列 -->
@@ -5047,6 +5189,16 @@
     
     const noteCancel = document.getElementById('note-cancel');
     const noteCount = document.getElementById('note-count');
+    const violNoteMask = document.getElementById('viol-note-mask');
+    const violNoteClose = document.getElementById('viol-note-close');
+    const violNoteClass = document.getElementById('viol-note-class');
+    const violNoteStudent = document.getElementById('viol-note-student');
+    const violNoteDate = document.getElementById('viol-note-date');
+    const violNoteItem = document.getElementById('viol-note-item');
+    const violNoteAdd = document.getElementById('viol-note-add');
+    const violNoteList = document.getElementById('viol-note-list');
+    const violNoteClear = document.getElementById('viol-note-clear');
+    const violNoteDone = document.getElementById('viol-note-done');
 /* ====== 輕量持久化（讀取） ====== */
     try{
       state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
@@ -6121,7 +6273,35 @@
     ]);
 
     function createEmptyViolationRecord(){
-      return { late:0, missing:0, classroom:0, other:0 };
+      return { late:0, missing:0, classroom:0, other:0, entries:[] };
+    }
+
+    function getTodayInputDateValue(){
+      const now = new Date();
+      return `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+    }
+
+    function normalizeViolationDateValue(raw){
+      const value = String(raw || '').trim();
+      if(/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+      const matched = value.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/);
+      if(matched){
+        return `${matched[1]}-${pad2(Number(matched[2]))}-${pad2(Number(matched[3]))}`;
+      }
+      const dt = new Date(value);
+      if(Number.isNaN(dt.getTime())) return '';
+      return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+    }
+
+    function normalizeViolationEntries(rawEntries){
+      if(!Array.isArray(rawEntries)) return [];
+      return rawEntries.map(entry=>{
+        if(!entry || typeof entry !== 'object') return null;
+        const item = String(entry.item || '').trim();
+        const date = normalizeViolationDateValue(entry.date) || getTodayInputDateValue();
+        if(!item) return null;
+        return { date, item };
+      }).filter(Boolean).sort((a, b)=> b.date.localeCompare(a.date) || a.item.localeCompare(b.item, 'zh-Hant'));
     }
 
     function normalizeViolationRecord(raw){
@@ -6131,12 +6311,17 @@
           const n = Number(raw[key]);
           rec[key] = Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
         });
+        rec.entries = normalizeViolationEntries(raw.entries);
       }
       return rec;
     }
 
     function getViolationRecord(cls, id){
       return normalizeViolationRecord(state.violations[scoreKey(cls, id)]);
+    }
+
+    function getViolationEntries(cls, id){
+      return getViolationRecord(cls, id).entries.map(entry=> ({ ...entry }));
     }
 
     function getViolationTotal(cls, id){
@@ -6148,12 +6333,18 @@
       const key = scoreKey(cls, id);
       const next = normalizeViolationRecord(record);
       const total = VIOLATION_FIELDS.reduce((sum, { key: fieldKey })=> sum + next[fieldKey], 0);
-      if(total <= 0){
+      if(total <= 0 && next.entries.length === 0){
         if(key in state.violations) delete state.violations[key];
       }else{
         state.violations[key] = next;
       }
       saveSession('violations change');
+    }
+
+    function setViolationEntries(cls, id, entries){
+      const rec = getViolationRecord(cls, id);
+      rec.entries = normalizeViolationEntries(entries);
+      setViolationRecord(cls, id, rec);
     }
 
     function changeViolationCount(cls, id, kind, delta){
@@ -10326,10 +10517,14 @@ elProgAdd?.addEventListener('click', ()=>{
         const rec = getViolationRecord(cls, s.id);
         const total = getViolationTotal(cls, s.id);
         const isHit = q && matchFilter(s, q);
+        const studentNameHtml = isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'');
+        const studentLabel = `${s.seat ? `#${padSeat(s.seat)} ` : ''}${s.name || ''}`.trim();
+        const entryCount = rec.entries.length;
+        const noteTitle = entryCount > 0 ? `違規記事（${entryCount} 筆）` : '新增違規記事';
         return `
           <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}">
             <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
-            <td>${isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'')}</td>
+            <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${entryCount>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${entryCount}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
             <td class="num"><strong>${total}</strong></td>
             ${VIOLATION_FIELDS.map(({ key, label })=>`
               <td class="num viol-cell">
@@ -10353,6 +10548,15 @@ elProgAdd?.addEventListener('click', ()=>{
           if(!id || !kind || !delta) return;
           changeViolationCount(cls, id, kind, delta);
           renderViolations(cls);
+        });
+      });
+
+      elViolTable.querySelectorAll('.viol-note-btn[data-id][data-label]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-id') || '';
+          const label = btn.getAttribute('data-label') || '';
+          if(!id) return;
+          openViolationNoteModal(cls, id, label);
         });
       });
 
@@ -11186,6 +11390,108 @@ noteSave?.addEventListener('click', ()=>{
       saveSession('note clear');
       closeNoteModal();
     });
+
+        // 違規記事彈窗
+        let _violNoteCtx = { cls:'', id:'', label:'' };
+        let _violNoteKeyHandler = null;
+
+        function renderViolationNoteList(){
+          if(!violNoteList) return;
+          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          violNoteList.innerHTML = '';
+          if(violNoteClear) violNoteClear.disabled = entries.length === 0;
+          if(entries.length === 0){
+            violNoteList.innerHTML = '<div class="viol-note-empty">尚無違規記事，請先新增違規日期與違規事項。</div>';
+            return;
+          }
+          const frag = document.createDocumentFragment();
+          entries.forEach((entry, idx)=>{
+            const row = document.createElement('div');
+            row.className = 'viol-note-entry';
+            row.innerHTML = `
+              <div class="viol-note-entry-date">${escapeHTML(entry.date)}</div>
+              <div class="viol-note-entry-text">${escapeHTML(entry.item)}</div>
+              <button type="button" class="mini-btn viol-note-remove" data-idx="${idx}" title="刪除此筆記事">刪除</button>`;
+            frag.appendChild(row);
+          });
+          violNoteList.appendChild(frag);
+        }
+
+        function closeViolationNoteModal(){
+          if(violNoteMask) violNoteMask.classList.remove('show');
+          if(_violNoteKeyHandler){
+            window.removeEventListener('keydown', _violNoteKeyHandler);
+            _violNoteKeyHandler = null;
+          }
+        }
+
+        function openViolationNoteModal(cls, id, label){
+          if(!violNoteMask) return;
+          _violNoteCtx = { cls: cls || '', id: id || '', label: label || '' };
+          if(violNoteClass) violNoteClass.textContent = _violNoteCtx.cls;
+          if(violNoteStudent) violNoteStudent.textContent = _violNoteCtx.label || _violNoteCtx.id;
+          if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
+          if(violNoteItem) violNoteItem.value = '';
+          renderViolationNoteList();
+          violNoteMask.classList.add('show');
+          violNoteItem?.focus();
+          if(_violNoteKeyHandler) window.removeEventListener('keydown', _violNoteKeyHandler);
+          _violNoteKeyHandler = (e)=>{ if(e.key === 'Escape') closeViolationNoteModal(); };
+          window.addEventListener('keydown', _violNoteKeyHandler);
+        }
+
+        violNoteClose?.addEventListener('click', closeViolationNoteModal);
+        violNoteDone?.addEventListener('click', closeViolationNoteModal);
+        violNoteMask?.addEventListener('click', (e)=>{ if(e.target === violNoteMask) closeViolationNoteModal(); });
+        violNoteItem?.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            violNoteAdd?.click();
+          }
+        });
+        violNoteAdd?.addEventListener('click', ()=>{
+          if(!_violNoteCtx.cls || !_violNoteCtx.id) return;
+          const date = normalizeViolationDateValue(violNoteDate?.value || '');
+          const item = String(violNoteItem?.value || '').trim();
+          if(!date){
+            showInAppModal('違規記事', '請先選擇違規日期。');
+            violNoteDate?.focus();
+            return;
+          }
+          if(!item){
+            showInAppModal('違規記事', '請輸入違規事項。');
+            violNoteItem?.focus();
+            return;
+          }
+          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          entries.push({ date, item });
+          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, entries);
+          renderViolationNoteList();
+          if(violNoteItem) violNoteItem.value = '';
+          if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
+          if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
+          violNoteItem?.focus();
+        });
+        violNoteList?.addEventListener('click', (e)=>{
+          const btn = e.target?.closest?.('.viol-note-remove[data-idx]');
+          if(!btn || !_violNoteCtx.cls || !_violNoteCtx.id) return;
+          const idx = Number(btn.getAttribute('data-idx'));
+          if(!Number.isInteger(idx) || idx < 0) return;
+          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          entries.splice(idx, 1);
+          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, entries);
+          renderViolationNoteList();
+          if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
+        });
+        violNoteClear?.addEventListener('click', ()=>{
+          if(!_violNoteCtx.cls || !_violNoteCtx.id) return;
+          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          if(entries.length === 0) return;
+          if(!confirm('確定要清空這位學生的所有違規記事嗎？')) return;
+          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, []);
+          renderViolationNoteList();
+          if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
+        });
 
     // ★ 新增學生彈窗
     let _addStuSource = ''; // 'list' | 'manage'，用來判斷確認後要更新哪裡
