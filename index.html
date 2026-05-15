@@ -1139,7 +1139,7 @@
       border-bottom:1px solid var(--line); padding:8px 10px; font-size:13px;
       white-space: nowrap;
     }
-    .hwtbl th{ position:sticky; top:0; background:rgba(10,14,26,.9); backdrop-filter: blur(4px); text-align:left; }
+    .hwtbl th{ position:sticky; top:0; background:rgb(10,14,26); text-align:left; }
     .hwtbl tr:last-child td{ border-bottom:0; }
     .hwtbl .num{ text-align:right; font-variant-numeric: tabular-nums; }
     .hwtbl th.hw-col{ min-width:96px; }
@@ -1164,6 +1164,7 @@
     }
     .hw-col .mini-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.2); }
     .viol-cell{ min-width:126px; text-align:center; }
+    #viol-table thead th{ z-index:3; }
     #viol-table thead th.num:not(:last-child),
     #viol-table tbody td.num:not(:last-child){ text-align:center; }
     .viol-student-cell{ text-align:left; }
@@ -1192,7 +1193,8 @@
     .viol-note-btn.has-notes::after{
       content:attr(data-count);
       position:absolute;
-      top:-5px;
+      top:auto;
+      bottom:-5px;
       right:-5px;
       min-width:16px;
       height:16px;
@@ -3474,14 +3476,13 @@
       background: rgba(255,255,255,.5) !important;
     }
     .hwtbl th{
-      background: rgba(10,14,26,.92) !important;
-      backdrop-filter: blur(8px) !important;
+      background: rgb(10,14,26) !important;
       border-bottom: 2px solid rgba(129,140,248,.18) !important;
       font-weight: 800;
       letter-spacing: .02em;
     }
     :root[data-theme="light"] .hwtbl th{
-      background: rgba(255,255,255,.95) !important;
+      background: rgb(255,255,255) !important;
       border-bottom: 2px solid rgba(99,102,241,.12) !important;
     }
     .hwtbl tbody tr{
