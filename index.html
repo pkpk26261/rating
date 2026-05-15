@@ -7100,15 +7100,23 @@
       // ★ 自訂 pointer 拖曳（取代原生 HTML5 DnD）
       tile.addEventListener('pointerdown', (e)=>{
         if(e.button !== 0 || state.mode !== 'seat') return;
+        if(window._seatDrag) _cancelSeatDrag();
+        try{ tile.setPointerCapture(e.pointerId); }catch{}
         const rect = tile.getBoundingClientRect();
         window._seatDrag = {
           id: s.id, tile, cls,
+          pointerId: e.pointerId,
           startX: e.clientX, startY: e.clientY,
           offsetX: e.clientX - rect.left,
           offsetY: e.clientY - rect.top,
           w: rect.width, h: rect.height,
           ghost: null, active: false
         };
+      });
+
+      tile.addEventListener('lostpointercapture', ()=>{
+        const d = window._seatDrag;
+        if(d?.tile === tile) _cancelSeatDrag();
       });
 
       // 點一下選取，再點座位放置（所有裝置通用）
@@ -7151,9 +7159,36 @@
     window._seatDragJustEnded = false;
     let _lastDragHL = null;
 
+    function _teardownSeatDrag(d) {
+      if (!d) return;
+      _clearSeatDragHL();
+      if (d.ghost) {
+        d.ghost.classList.remove('visible');
+        d.ghost.remove();
+      }
+      d.tile?.classList?.remove('dragging-src');
+      if (d.pointerId != null && d.tile?.hasPointerCapture?.(d.pointerId)) {
+        try { d.tile.releasePointerCapture(d.pointerId); } catch {}
+      }
+    }
+
+    function _cancelSeatDrag() {
+      const d = window._seatDrag;
+      window._seatDrag = null;
+      _teardownSeatDrag(d);
+      window._seatDragActive = false;
+      return d;
+    }
+
+    function _markSeatDragEnded() {
+      window._seatDragJustEnded = true;
+      setTimeout(() => { window._seatDragJustEnded = false; }, 250);
+    }
+
     document.addEventListener('pointermove', (e) => {
       const d = window._seatDrag;
       if (!d) return;
+      if (d.pointerId != null && e.pointerId !== d.pointerId) return;
       const dx = e.clientX - d.startX;
       const dy = e.clientY - d.startY;
 
@@ -7188,14 +7223,17 @@
     document.addEventListener('pointerup', (e) => {
       const d = window._seatDrag;
       if (!d) return;
+      if (d.pointerId != null && e.pointerId !== d.pointerId) return;
       window._seatDrag = null;
+      const wasActive = d.active;
 
-      if (!d.active) return; // 不是拖曳（只是 click），交給 click handler
+      if (!wasActive) {
+        _teardownSeatDrag(d);
+        return;
+      }
 
       // ── 拖曳結束：執行 drop ──
-      _clearSeatDragHL();
-      if (d.ghost) { d.ghost.classList.remove('visible'); d.ghost.remove(); }
-      d.tile.classList.remove('dragging-src');
+      _teardownSeatDrag(d);
 
       // 找出滑鼠下方的目標元素
       const target = document.elementFromPoint(e.clientX, e.clientY);
@@ -7215,20 +7253,29 @@
       }
 
       window._seatDragActive = false;
-      window._seatDragJustEnded = true;
-      setTimeout(() => { window._seatDragJustEnded = false; }, 250);
+      _markSeatDragEnded();
+    });
+
+    document.addEventListener('pointercancel', (e) => {
+      const d = window._seatDrag;
+      if (!d) return;
+      if (d.pointerId != null && e.pointerId !== d.pointerId) return;
+      _cancelSeatDrag();
     });
 
     // Esc 取消拖曳
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && window._seatDrag?.active) {
-        const d = window._seatDrag;
-        window._seatDrag = null;
-        _clearSeatDragHL();
-        if (d.ghost) d.ghost.remove();
-        d.tile.classList.remove('dragging-src');
-        window._seatDragActive = false;
+        _cancelSeatDrag();
       }
+    });
+
+    window.addEventListener('blur', () => {
+      if (window._seatDrag) _cancelSeatDrag();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && window._seatDrag) _cancelSeatDrag();
     });
 
     function _updateSeatDragHL(e) {
