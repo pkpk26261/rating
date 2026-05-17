@@ -183,8 +183,7 @@
     }
     .topbar__left, .topbar__right{ display:flex; gap:8px; align-items:center; padding-inline: var(--page-x); }
     .topbar__right{ flex-direction:column; align-items:flex-end; gap:4px; }
-    .topbar__right-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-    .topbar__right-meta{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+    .topbar__right-actions{ display:flex; gap:8px; align-items:center; }
     .dt-display{ display:flex; flex-direction:row; align-items:center; justify-content:flex-end; gap:8px; font-size:12px; line-height:1.1; opacity:.92; user-select:none; white-space:nowrap; }
     
     /* ===== 匯入區：狀態顯示在匯入按鈕下方（高度不宜過高） ===== */
@@ -200,84 +199,6 @@
       padding:0;
       margin:0 0 0 2px;
     }
-    .google-status-line{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:8px;
-      min-height:18px;
-      max-width:420px;
-      font-size:12px;
-      line-height:1.2;
-      text-align:right;
-      color:var(--muted);
-    }
-    .google-status-line[data-state="ready"]{ color:var(--accent-2); }
-    .google-status-line[data-state="syncing"]{ color:var(--accent); }
-    .google-status-line[data-state="error"]{ color:var(--bad); }
-    .google-status-line[data-state="warn"]{ color:var(--gold); }
-    .google-sheet-summary{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.03);
-      font-size:13px;
-      line-height:1.5;
-    }
-    .google-settings-grid{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-    .google-field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .google-field > span{
-      font-size:13px;
-      font-weight:800;
-    }
-    .google-field small{
-      color:var(--muted);
-      line-height:1.5;
-    }
-    .google-field input[type="text"]{
-      width:100%;
-    }
-    .google-checks{
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-      gap:10px;
-    }
-    .google-checks label{
-      display:flex;
-      gap:8px;
-      align-items:flex-start;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:rgba(255,255,255,.02);
-      font-size:13px;
-      line-height:1.45;
-    }
-    .google-checks input{
-      margin-top:2px;
-    }
-    .google-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      margin-top:6px;
-    }
-    .google-config-status{
-      min-height:18px;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .google-config-status[data-state="error"]{ color:var(--bad); }
-    .google-config-status[data-state="ok"]{ color:var(--accent-2); }
 .topbar__left{ justify-self:start; }
     .topbar__right{ justify-self:end; }
     .title-stack{ grid-column:2; display:flex; flex-direction:column; align-items:center; gap:6px; line-height:1.1; }
@@ -4094,7 +4015,6 @@
 
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer data-google-identity="1"></script>
 </head>
 <body class="no-data">
   <!-- ===== 手機封鎖遮罩 ===== -->
@@ -4173,17 +4093,12 @@
         <!-- ★ 新增主題切換按鈕 -->
         <!-- ★ 日期時間（民國年 + 24 小時） -->
         <div class="topbar__right-actions">
-          <button id="btn-google-config" class="btn" title="設定 Google 試算表同步">☁️ Google</button>
-          <button id="btn-google-sync-now" class="btn" title="立即與 Google 試算表同步" disabled>⇅ 同步</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
           <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
         </div>
-        <div class="topbar__right-meta">
-          <div id="google-status" class="google-status-line" data-state="idle" aria-live="polite">Google：尚未設定</div>
-          <div id="dt-display" class="dt-display" aria-label="日期與時間">
-            <div id="dt-date">114年12月16日</div>
-            <div id="dt-time">00:00:00</div>
-          </div>
+        <div id="dt-display" class="dt-display" aria-label="日期與時間">
+          <div id="dt-date">114年12月16日</div>
+          <div id="dt-time">00:00:00</div>
         </div>
       </div>
     </header>
@@ -4776,56 +4691,6 @@
     </div>
   </div>
 
-  <div id="google-sync-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="google-sync-title">
-    <div class="modal" role="document" style="width:min(680px, 94vw);">
-      <header>
-        <h3 id="google-sync-title">☁️ Google 試算表同步</h3>
-        <button id="google-sync-close" class="close" aria-label="關閉">✕</button>
-      </header>
-      <div class="content google-settings-grid">
-        <label class="google-field">
-          <span>Google OAuth Client ID</span>
-          <input id="google-client-id" type="text" placeholder="已預設本站 Client ID；若要改用自己的，可直接覆寫">
-          <small>此網站已預設可用的 Client ID。你可以直接使用，或改貼自己的 Web application Client ID。Client secret 不可放在前端網站。</small>
-        </label>
-
-        <label class="google-field">
-          <span>Google 試算表網址或 ID</span>
-          <input id="google-sheet-input" type="text" placeholder="例如 https://docs.google.com/spreadsheets/d/... 或直接貼 spreadsheetId">
-          <small>可貼上可編輯分享連結或直接輸入 spreadsheetId；系統會自動解析目標試算表。</small>
-        </label>
-
-        <div id="google-sheet-summary" class="google-sheet-summary">尚未設定試算表。</div>
-
-        <div class="google-checks">
-          <label>
-            <input id="google-auto-import" type="checkbox" checked>
-            <span>啟動頁面後，自動檢查 Google 並匯入最新資料</span>
-          </label>
-          <label>
-            <input id="google-auto-sync" type="checkbox" checked>
-            <span>本機資料變更後，自動延遲幾秒同步回 Google 試算表</span>
-          </label>
-        </div>
-
-        <div class="google-actions">
-          <button id="google-connect" class="btn">登入 Google</button>
-          <button id="google-import" class="btn">從 Google 匯入</button>
-          <button id="google-restore" class="btn">還原快照</button>
-          <button id="google-revoke" class="btn">中斷授權</button>
-        </div>
-
-        <div id="google-config-status" class="google-config-status" data-state="idle">先儲存設定，下一步會啟用 Google 登入與自動同步。</div>
-
-        <div class="google-actions">
-          <button id="google-clear" class="btn">清空設定</button>
-          <button id="google-sync-cancel" class="btn">取消</button>
-          <button id="google-sync-save" class="btn add">儲存設定</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="note-title">
     <div class="modal" role="document">
       <header>
@@ -5042,8 +4907,6 @@
         seating: state.seating,
         hw: state.hw,
         group: state.group,
-        notes: state.notes,
-        draw: state.draw,
         // ★ 教學進度 & 倒數計時
         progress: state.progress,
         timer: state.timer,
@@ -5056,7 +4919,6 @@
     /* ★ 節流版 saveSession：避免高頻加分時 JSON.stringify 造成平板卡頓 */
     let _saveTimer = null;
     function saveSession(reason=''){
-      queueGoogleAutoSync(reason);
       if(_saveTimer) return;              // 已排程，跳過
       _saveTimer = setTimeout(()=>{
         _saveTimer = null;
@@ -5076,69 +4938,65 @@
       try{ localStorage.setItem('deductions_v1', JSON.stringify(state.deductions)); }catch{}
       try{ localStorage.setItem(SESSION_KEY, JSON.stringify(buildSession())); }catch{}
     }
-    function applySessionData(s, sourceLabel='本機暫存'){
-      if(!s || s.v!==1) return false;
-
-      state.classMap   = s.classMap   || {};
-      state.classOrder = s.classOrder || [];
-      state.scores     = s.scores     || {};
-      state.deductions = s.deductions || {};
-      state.violations = s.violations || {};
-      state.sidMap     = s.sidMap     || {};
-      state.seating    = s.seating    || {};
-      state.hw         = s.hw         || {};
-      state.group      = s.group      || {};
-      state.notes      = s.notes      || state.notes || {};
-      state.draw       = s.draw       || state.draw || {};
-      state.progress   = s.progress   || { pages:{}, order:[], active:'' };
-      state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
-
-      try{
-        ensureTimerState();
-        syncTimerFromEndAt();
-        if(state.timer?.running) startTimerInterval();
-      }catch(e){ /* ignore */ }
-
-      state.mode = s.mode || 'list';
-      state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
-
-      if(!state.classOrder.length){
-        document.body.classList.add('no-data');
-        return false;
-      }
-
-      renderClassOptions(state.classOrder);
-      elSelect.disabled=false;
-      elSelect.value = (s.selectedClass && state.classOrder.includes(s.selectedClass))
-        ? s.selectedClass : state.classOrder[0];
-      elSearch.disabled=false;
-      state.filter='';
-      if(elAddStudent) elAddStudent.disabled=false;
-      if(elDelStudent) elDelStudent.disabled=false;
-      if(elRenameClass) elRenameClass.disabled=false;
-      if(elManageRename) elManageRename.disabled=false;
-      if(elManageDelClass) elManageDelClass.disabled=false;
-      if(elManageAdd) elManageAdd.disabled=false;
-      if(elManageDel) elManageDel.disabled=false;
-      document.body.classList.remove('no-data');
-
-      state.mode = 'list';
-      setMode('list');
-      renderStudents(elSelect.value);
-      renderLeaderboard(elSelect.value);
-      renderViolations(elSelect.value);
-      renderHW(elSelect.value);
-      try{ renderManage(); }catch(e){}
-      setStatus(`已從${sourceLabel}還原。`);
-      return true;
-    }
-
     function tryRestoreSession(){
       try{
         const raw = localStorage.getItem(SESSION_KEY);
         if(!raw) return false;
         const s = JSON.parse(raw);
-        return applySessionData(s, '本機暫存');
+        if(!s || s.v!==1) return false;
+
+        state.classMap   = s.classMap   || {};
+        state.classOrder = s.classOrder || [];
+        state.scores     = s.scores     || {};
+        state.deductions = s.deductions || {};
+        state.violations = s.violations || {};
+        state.sidMap     = s.sidMap     || {};
+        state.seating    = s.seating    || {};
+        state.hw         = s.hw         || {};
+        state.group      = s.group      || {};
+        // ★ 教學進度/倒數計時
+        state.progress   = s.progress   || { items: [] };
+        state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
+
+        // 若倒數計時正在進行，讓它在背景繼續跑
+        try{
+          ensureTimerState();
+          syncTimerFromEndAt();
+          if(state.timer?.running) startTimerInterval();
+        }catch(e){ /* ignore */ }
+
+        state.mode       = s.mode       || 'list';
+
+        state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
+
+        if(state.classOrder.length){
+          renderClassOptions(state.classOrder);
+          elSelect.disabled=false;
+          elSelect.value = (s.selectedClass && state.classOrder.includes(s.selectedClass))
+            ? s.selectedClass : state.classOrder[0];
+          elSearch.disabled=false; state.filter='';
+          if(elAddStudent) elAddStudent.disabled=false;
+          if(elDelStudent) elDelStudent.disabled=false;
+          if(elRenameClass) elRenameClass.disabled=false;
+          if(elManageRename) elManageRename.disabled=false;
+          if(elManageDelClass) elManageDelClass.disabled=false;
+          if(elManageAdd) elManageAdd.disabled=false;
+          if(elManageDel) elManageDel.disabled=false;
+          // ★ 有資料→移除空狀態標記
+          document.body.classList.remove('no-data');
+
+          // ★ 重整後一律回到「加扣分」模式
+          state.mode = 'list';
+          setMode('list');
+
+
+          renderStudents(elSelect.value);
+          renderLeaderboard(elSelect.value);
+          renderViolations(elSelect.value);
+          renderHW(elSelect.value);
+          setStatus('已從本機暫存還原。');
+          return true;
+        }
       }catch(e){
         console.warn('還原暫存失敗', e);
       }
@@ -5153,7 +5011,6 @@
     const elSelect=document.getElementById('class-select');
     const elStudents=document.getElementById('students');
     const elStatus=document.getElementById('status');
-    const elGoogleStatus=document.getElementById('google-status');
     const elBoard=document.getElementById('leaderboard');
     const elBoardClass=document.getElementById('board-class');
     const elDeductBoard=document.getElementById('leaderboard-deduct');
@@ -5172,8 +5029,6 @@
     const elModeGroup=document.getElementById('mode-group');
     const elModeManage=document.getElementById('mode-manage');
     const elModeViolations=document.getElementById('mode-violations');
-    const elGoogleConfig=document.getElementById('btn-google-config');
-    const elGoogleSyncNow=document.getElementById('btn-google-sync-now');
     const elGroupPane=document.getElementById('group-pane');
     const elManagePane=document.getElementById('manage-pane');
     const elManageClassList=document.getElementById('manage-class-list');
@@ -5276,835 +5131,6 @@
     /* ★ 日期時間（民國年 + 24 小時） */
     const dtDateEl = document.getElementById('dt-date');
     const dtTimeEl = document.getElementById('dt-time');
-    const elGoogleSyncMask = document.getElementById('google-sync-mask');
-    const elGoogleSyncClose = document.getElementById('google-sync-close');
-    const elGoogleSyncCancel = document.getElementById('google-sync-cancel');
-    const elGoogleSyncSave = document.getElementById('google-sync-save');
-    const elGoogleClear = document.getElementById('google-clear');
-    const elGoogleConnect = document.getElementById('google-connect');
-    const elGoogleImport = document.getElementById('google-import');
-    const elGoogleRestore = document.getElementById('google-restore');
-    const elGoogleRevoke = document.getElementById('google-revoke');
-    const elGoogleClientId = document.getElementById('google-client-id');
-    const elGoogleSheetInput = document.getElementById('google-sheet-input');
-    const elGoogleAutoImport = document.getElementById('google-auto-import');
-    const elGoogleAutoSync = document.getElementById('google-auto-sync');
-    const elGoogleSheetSummary = document.getElementById('google-sheet-summary');
-    const elGoogleConfigStatus = document.getElementById('google-config-status');
-
-    const GOOGLE_SYNC_KEY = 'pscore_google_sync_v1';
-    const GOOGLE_DEFAULT_CLIENT_ID = '396317904682-k188h5j2op32unrn96ti1ksge3hgo3ag.apps.googleusercontent.com';
-    const GOOGLE_SYNC_DEFAULTS = Object.freeze({
-      clientId: GOOGLE_DEFAULT_CLIENT_ID,
-      spreadsheetInput: '',
-      spreadsheetId: '',
-      autoImportOnLoad: true,
-      autoSync: true,
-      lastSyncAt: 0,
-      lastImportAt: 0
-    });
-
-    function extractSpreadsheetId(raw){
-      const text = String(raw || '').trim();
-      if(!text) return '';
-      const urlMatch = text.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      if(urlMatch && urlMatch[1]) return urlMatch[1];
-      const plain = text.match(/^[a-zA-Z0-9-_]{20,}$/);
-      return plain ? plain[0] : '';
-    }
-
-    function loadGoogleSyncConfig(){
-      try{
-        const raw = localStorage.getItem(GOOGLE_SYNC_KEY);
-        if(!raw) return { ...GOOGLE_SYNC_DEFAULTS };
-        const parsed = JSON.parse(raw) || {};
-        return {
-          clientId: String(parsed.clientId || GOOGLE_DEFAULT_CLIENT_ID).trim(),
-          spreadsheetInput: String(parsed.spreadsheetInput || '').trim(),
-          spreadsheetId: String(parsed.spreadsheetId || '').trim(),
-          autoImportOnLoad: parsed.autoImportOnLoad !== false,
-          autoSync: parsed.autoSync !== false,
-          lastSyncAt: Number(parsed.lastSyncAt) || 0,
-          lastImportAt: Number(parsed.lastImportAt) || 0
-        };
-      }catch(e){
-        console.warn('Google 同步設定讀取失敗', e);
-        return { ...GOOGLE_SYNC_DEFAULTS };
-      }
-    }
-
-    const googleSyncConfig = loadGoogleSyncConfig();
-    const GOOGLE_SYNC_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
-    const GOOGLE_META_SHEET = '__sync_meta';
-    const GOOGLE_SNAPSHOT_SHEET = '__snapshot_chunks';
-    const GOOGLE_CLASS_PREFIX = '班級__';
-    const GOOGLE_PROGRESS_PREFIX = '進度__';
-    const GOOGLE_SNAPSHOT_CHUNK_SIZE = 40000;
-    const googleSyncRuntime = {
-      gisPromise: null,
-      tokenClient: null,
-      tokenClientId: '',
-      accessToken: '',
-      tokenExpiresAt: 0,
-      statusText: '',
-      statusState: 'idle',
-      syncTimer: null,
-      pendingAutoSync: false,
-      autoImportStarted: false,
-      syncInFlight: false,
-      suspendDepth: 0
-    };
-
-    function saveGoogleSyncConfig(){
-      try{
-        localStorage.setItem(GOOGLE_SYNC_KEY, JSON.stringify(googleSyncConfig));
-      }catch(e){
-        console.warn('Google 同步設定儲存失敗', e);
-      }
-    }
-
-    function googleConfigReady(){
-      return !!(googleSyncConfig.clientId && googleSyncConfig.spreadsheetId);
-    }
-
-    function clearGoogleAccessToken(){
-      googleSyncRuntime.accessToken = '';
-      googleSyncRuntime.tokenExpiresAt = 0;
-    }
-
-    function formatSyncTime(ts){
-      if(!ts) return '尚未同步';
-      const d = new Date(ts);
-      if(Number.isNaN(d.getTime())) return '尚未同步';
-      return `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    }
-
-    function getCurrentAppOrigin(){
-      const protocol = window.location?.protocol || '';
-      if(protocol === 'file:') return 'file://';
-      return window.location?.origin || `${protocol}//`;
-    }
-
-    function isLocalhostOrigin(origin){
-      return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(String(origin || '').trim());
-    }
-
-    function getGoogleOAuthSetupHint(){
-      const origin = getCurrentAppOrigin();
-      return [
-        `目前網站來源：${origin}`,
-        '請確認以下三件事：',
-        '1. 用外部 Chrome 或 Edge 開啟，不要用 VS Code 內嵌預覽或其他 WebView',
-        '2. 不要用 file:// 直接開啟 index.html，改用 http://localhost 或正式 https 網址',
-        `3. 到 Google Cloud Console 的 Authorized JavaScript origins 加入 ${origin}`
-      ].join('\n');
-    }
-
-    function getGoogleOAuthContextIssue(){
-      const protocol = window.location?.protocol || '';
-      const origin = getCurrentAppOrigin();
-      const userAgent = String(navigator.userAgent || '');
-
-      if(protocol === 'file:'){
-        return '目前是從 file:// 直接開啟頁面。Google OAuth 不接受這種來源。';
-      }
-      if(protocol !== 'http:' && protocol !== 'https:'){
-        return `目前網站來源是 ${origin}。Google OAuth 只接受 http(s) 網址。`;
-      }
-      if(protocol === 'http:' && !isLocalhostOrigin(origin)){
-        return `目前網站來源是 ${origin}。Google OAuth 在 http 下只接受 localhost，本機之外必須改用 https。`;
-      }
-      if(/vscode/i.test(origin) || /VSCode|Electron/i.test(userAgent) || window.self !== window.top){
-        return `目前看起來是在內嵌瀏覽器或 VS Code 預覽中開啟（${origin}）。Google 會封鎖這類登入流程。`;
-      }
-      return '';
-    }
-
-    function setGoogleConfigStatus(text, state='idle'){
-      if(!elGoogleConfigStatus) return;
-      elGoogleConfigStatus.textContent = text || '';
-      elGoogleConfigStatus.dataset.state = state;
-    }
-
-    function setGoogleRuntimeStatus(text='', state='idle'){
-      googleSyncRuntime.statusText = text || '';
-      googleSyncRuntime.statusState = state;
-      renderGoogleStatus();
-    }
-
-    function clearGoogleRuntimeStatus(){
-      googleSyncRuntime.statusText = '';
-      googleSyncRuntime.statusState = 'idle';
-      renderGoogleStatus();
-    }
-
-    function isGoogleSyncSuspended(){
-      return googleSyncRuntime.suspendDepth > 0;
-    }
-
-    async function runWithGoogleSyncSuspended(task){
-      googleSyncRuntime.suspendDepth += 1;
-      try{
-        return await task();
-      }finally{
-        googleSyncRuntime.suspendDepth = Math.max(0, googleSyncRuntime.suspendDepth - 1);
-      }
-    }
-
-    function normalizeArrayBuffer(data){
-      if(data instanceof ArrayBuffer) return data;
-      if(ArrayBuffer.isView(data)) return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-      return Uint8Array.from(data || []).buffer;
-    }
-
-    function quoteGoogleRangeTitle(title, suffix='A1'){
-      const escaped = String(title || '').replace(/'/g, "''");
-      return `'${escaped}'!${suffix}`;
-    }
-
-    function safeVirtualFileName(name, fallback='Google'){ 
-      return (String(name || fallback).trim().replace(/[\\/:*?"<>|]/g, '_') || fallback);
-    }
-
-    function getLocalSessionTimestamp(){
-      try{
-        const raw = localStorage.getItem(SESSION_KEY);
-        if(!raw) return 0;
-        const parsed = JSON.parse(raw);
-        return Number(parsed?.ts) || 0;
-      }catch{
-        return 0;
-      }
-    }
-
-    function parseMetaTable(values){
-      const record = {};
-      for(let i=1;i<(values || []).length;i++){
-        const row = values[i] || [];
-        const key = String(row[0] || '').trim();
-        if(!key) continue;
-        record[key] = String(row[1] ?? '').trim();
-      }
-      return record;
-    }
-
-    function tryParseJSONObject(text){
-      try{
-        const parsed = JSON.parse(text || '{}');
-        return parsed && typeof parsed === 'object' ? parsed : {};
-      }catch{
-        return {};
-      }
-    }
-
-    function worksheetToValues(ws){
-      return XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
-    }
-
-    function valuesToWorksheet(values){
-      return XLSX.utils.aoa_to_sheet(values && values.length ? values : [['']]);
-    }
-
-    function buildGoogleSheetTitle(prefix, name, usedTitles){
-      const cleaned = String(name || '').trim().replace(/[\\/?*\[\]:]/g, '-') || 'Sheet';
-      let base = `${prefix}${cleaned}`;
-      if(base.length > 96) base = base.slice(0, 96);
-      let title = base;
-      let suffix = 2;
-      while(usedTitles.has(title)){
-        const marker = `_${suffix++}`;
-        title = `${base.slice(0, 100 - marker.length)}${marker}`;
-      }
-      usedTitles.add(title);
-      return title;
-    }
-
-    function buildSnapshotChunks(){
-      const raw = JSON.stringify(buildSession());
-      const chunks = [];
-      for(let i=0;i<raw.length;i+=GOOGLE_SNAPSHOT_CHUNK_SIZE){
-        chunks.push(raw.slice(i, i + GOOGLE_SNAPSHOT_CHUNK_SIZE));
-      }
-      return chunks;
-    }
-
-    function buildGoogleSyncPlan(){
-      const usedTitles = new Set([GOOGLE_META_SHEET, GOOGLE_SNAPSHOT_SHEET]);
-      const classSheets = (state.classOrder || []).map(cls=>({
-        name: cls,
-        title: buildGoogleSheetTitle(GOOGLE_CLASS_PREFIX, cls, usedTitles),
-        values: worksheetToValues(buildClassSheet(cls))
-      }));
-      const prog = ensureProgressState(false);
-      const progressSheets = (prog.order || []).map(pageName=>({
-        name: pageName,
-        title: buildGoogleSheetTitle(GOOGLE_PROGRESS_PREFIX, pageName, usedTitles),
-        values: buildProgressAOA(pageName)
-      }));
-      const snapshotChunks = buildSnapshotChunks();
-      const classSheetMap = {};
-      const progressSheetMap = {};
-      classSheets.forEach(entry=>{ classSheetMap[entry.name] = entry.title; });
-      progressSheets.forEach(entry=>{ progressSheetMap[entry.name] = entry.title; });
-
-      return {
-        classSheets,
-        progressSheets,
-        metaValues: [
-          ['key','value'],
-          ['schemaVersion','1'],
-          ['updatedAt', String(Date.now())],
-          ['selectedClass', elSelect?.value || ''],
-          ['classCount', String(classSheets.length)],
-          ['progressPageCount', String(progressSheets.length)],
-          ['snapshotChunkCount', String(snapshotChunks.length)],
-          ['localSessionTs', String(getLocalSessionTimestamp())],
-          ['classSheetMap', JSON.stringify(classSheetMap)],
-          ['progressSheetMap', JSON.stringify(progressSheetMap)],
-          ['appVersion', 'google-sync-v1'],
-          ['lastSyncMode', 'full']
-        ],
-        snapshotValues: [['index','chunk'], ...snapshotChunks.map((chunk, index)=>[String(index), chunk])]
-      };
-    }
-
-    function persistSupplementalLocalState(){
-      saveNotes();
-      Object.keys(state.seating || {}).forEach(cls=>{ try{ localStorage.setItem('seat_v1__'+cls, JSON.stringify(state.seating[cls] || {})); }catch{} });
-      Object.keys(state.hw || {}).forEach(cls=>{ try{ localStorage.setItem('hw_v1__'+cls, JSON.stringify(state.hw[cls] || {})); }catch{} });
-      Object.keys(state.draw || {}).forEach(cls=>{ try{ localStorage.setItem('draw_v1__'+cls, JSON.stringify(state.draw[cls] || {})); }catch{} });
-    }
-
-    async function ensureGoogleIdentityLibrary(){
-      if(window.google?.accounts?.oauth2) return window.google;
-      if(googleSyncRuntime.gisPromise) return googleSyncRuntime.gisPromise;
-      googleSyncRuntime.gisPromise = new Promise((resolve, reject)=>{
-        const script = document.querySelector('script[data-google-identity="1"]');
-        if(!script){
-          reject(new Error('Google Identity Services script 不存在。'));
-          return;
-        }
-        const timeout = setTimeout(()=> reject(new Error('Google Identity Services 載入逾時。')), 12000);
-        const onLoad = ()=>{ clearTimeout(timeout); resolve(window.google); };
-        const onError = ()=>{ clearTimeout(timeout); reject(new Error('Google Identity Services 載入失敗。')); };
-        script.addEventListener('load', onLoad, { once: true });
-        script.addEventListener('error', onError, { once: true });
-      });
-      return googleSyncRuntime.gisPromise;
-    }
-
-    function getGoogleTokenClient(){
-      if(googleSyncRuntime.tokenClient && googleSyncRuntime.tokenClientId === googleSyncConfig.clientId){
-        return googleSyncRuntime.tokenClient;
-      }
-      googleSyncRuntime.tokenClientId = googleSyncConfig.clientId;
-      googleSyncRuntime.tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: googleSyncConfig.clientId,
-        scope: GOOGLE_SYNC_SCOPE,
-        callback: ()=>{}
-      });
-      return googleSyncRuntime.tokenClient;
-    }
-
-    async function getGoogleAccessToken({ interactive=false, forcePrompt=false } = {}){
-      if(!googleConfigReady()){
-        const err = new Error('請先設定 Google OAuth Client ID 與試算表網址。');
-        err.code = 'config_missing';
-        throw err;
-      }
-      const contextIssue = getGoogleOAuthContextIssue();
-      if(contextIssue){
-        const err = new Error(`${contextIssue}\n\n${getGoogleOAuthSetupHint()}`);
-        err.code = 'oauth_context_invalid';
-        throw err;
-      }
-      if(googleSyncRuntime.accessToken && Date.now() < (googleSyncRuntime.tokenExpiresAt - 60000)){
-        return googleSyncRuntime.accessToken;
-      }
-
-      await ensureGoogleIdentityLibrary();
-      return new Promise((resolve, reject)=>{
-        const tokenClient = getGoogleTokenClient();
-        const prompt = interactive ? (forcePrompt || !googleSyncRuntime.accessToken ? 'consent' : '') : '';
-        let settled = false;
-        const timer = setTimeout(()=>{
-          if(settled) return;
-          settled = true;
-          const err = new Error(interactive ? '登入視窗已關閉或未完成授權。' : '需要手動登入 Google 才能繼續。');
-          err.code = interactive ? 'cancelled' : 'needs_interaction';
-          reject(err);
-        }, interactive ? 60000 : 8000);
-
-        tokenClient.callback = (response)=>{
-          if(settled) return;
-          settled = true;
-          clearTimeout(timer);
-          if(response?.error){
-            const err = new Error(response.error_description || response.error || 'Google 授權失敗');
-            err.code = (!interactive || response.error === 'consent_required') ? 'needs_interaction' : 'auth_failed';
-            reject(err);
-            return;
-          }
-          googleSyncRuntime.accessToken = response.access_token;
-          googleSyncRuntime.tokenExpiresAt = Date.now() + Math.max(60, Number(response.expires_in) || 3600) * 1000;
-          resolve(googleSyncRuntime.accessToken);
-        };
-
-        try{
-          tokenClient.requestAccessToken({ prompt });
-        }catch(e){
-          clearTimeout(timer);
-          reject(e);
-        }
-      });
-    }
-
-    function googleSpreadsheetEndpoint(suffix=''){
-      return `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(googleSyncConfig.spreadsheetId)}${suffix}`;
-    }
-
-    async function googleApiJson(url, { method='GET', body, interactive=false } = {}){
-      const token = await getGoogleAccessToken({ interactive });
-      const headers = { Authorization: `Bearer ${token}` };
-      if(typeof body !== 'undefined') headers['Content-Type'] = 'application/json';
-      const res = await fetch(url, {
-        method,
-        headers,
-        body: typeof body === 'undefined' ? undefined : JSON.stringify(body)
-      });
-      const text = await res.text();
-      let json = null;
-      try{ json = text ? JSON.parse(text) : null; }catch{}
-      if(!res.ok){
-        if(res.status === 401) clearGoogleAccessToken();
-        const err = new Error(json?.error?.message || text || `HTTP ${res.status}`);
-        err.code = res.status === 401 ? 'needs_interaction' : 'api_error';
-        throw err;
-      }
-      return json;
-    }
-
-    async function fetchGoogleSpreadsheetMeta({ interactive=false } = {}){
-      return googleApiJson(`${googleSpreadsheetEndpoint()}?fields=spreadsheetId,properties.title,sheets.properties(sheetId,title,index)`, { interactive });
-    }
-
-    async function fetchGoogleValues(rangeEntries, { interactive=false } = {}){
-      if(!rangeEntries.length) return new Map();
-      const url = new URL(`${googleSpreadsheetEndpoint('/values:batchGet')}`);
-      rangeEntries.forEach(entry=> url.searchParams.append('ranges', entry.range));
-      url.searchParams.set('majorDimension', 'ROWS');
-      const json = await googleApiJson(url.toString(), { interactive });
-      const map = new Map();
-      rangeEntries.forEach((entry, index)=>{
-        map.set(entry.title, json?.valueRanges?.[index]?.values || []);
-      });
-      return map;
-    }
-
-    async function clearGoogleSheetValues(titles, { interactive=false } = {}){
-      if(!titles.length) return;
-      await googleApiJson(`${googleSpreadsheetEndpoint('/values:batchClear')}`, {
-        method: 'POST',
-        interactive,
-        body: { ranges: titles.map(title=> quoteGoogleRangeTitle(title, 'A:ZZ')) }
-      });
-    }
-
-    async function batchWriteGoogleValues(entries, { interactive=false } = {}){
-      if(!entries.length) return;
-      await googleApiJson(`${googleSpreadsheetEndpoint('/values:batchUpdate')}`, {
-        method: 'POST',
-        interactive,
-        body: {
-          valueInputOption: 'RAW',
-          data: entries.map(entry=>({
-            range: quoteGoogleRangeTitle(entry.title, 'A1'),
-            majorDimension: 'ROWS',
-            values: entry.values && entry.values.length ? entry.values : [['']]
-          }))
-        }
-      });
-    }
-
-    async function fetchGoogleSyncState({ interactive=false } = {}){
-      const metadata = await fetchGoogleSpreadsheetMeta({ interactive });
-      let metaRecord = {};
-      const hasMetaSheet = (metadata?.sheets || []).some(sheet => sheet.properties?.title === GOOGLE_META_SHEET);
-      if(hasMetaSheet){
-        const valueMap = await fetchGoogleValues([{ title: GOOGLE_META_SHEET, range: quoteGoogleRangeTitle(GOOGLE_META_SHEET, 'A:B') }], { interactive });
-        metaRecord = parseMetaTable(valueMap.get(GOOGLE_META_SHEET) || []);
-      }
-      return { metadata, metaRecord };
-    }
-
-    function deriveRemoteStructuredSheets(metadata, metaRecord){
-      const existingTitles = new Set((metadata?.sheets || []).map(sheet => sheet.properties?.title).filter(Boolean));
-      const classSheetMap = tryParseJSONObject(metaRecord.classSheetMap);
-      const progressSheetMap = tryParseJSONObject(metaRecord.progressSheetMap);
-      const classes = [];
-      const pages = [];
-
-      Object.entries(classSheetMap).forEach(([name, title])=>{
-        if(existingTitles.has(title)) classes.push({ name, title });
-      });
-      Object.entries(progressSheetMap).forEach(([name, title])=>{
-        if(existingTitles.has(title)) pages.push({ name, title });
-      });
-
-      if(!classes.length){
-        (metadata?.sheets || []).forEach(sheet=>{
-          const title = String(sheet.properties?.title || '');
-          if(title.startsWith(GOOGLE_CLASS_PREFIX)) classes.push({ name: title.slice(GOOGLE_CLASS_PREFIX.length), title });
-        });
-      }
-      if(!pages.length){
-        (metadata?.sheets || []).forEach(sheet=>{
-          const title = String(sheet.properties?.title || '');
-          if(title.startsWith(GOOGLE_PROGRESS_PREFIX)) pages.push({ name: title.slice(GOOGLE_PROGRESS_PREFIX.length), title });
-        });
-      }
-      return { classes, pages };
-    }
-
-    function createVirtualWorkbookFile(sheetDefs, fileName){
-      const wb = XLSX.utils.book_new();
-      sheetDefs.forEach((sheetDef, index)=>{
-        let title = sheetDef.sheetName || safeSheetName(sheetDef.name || `Sheet${index+1}`);
-        if(sheetDefs.length === 1 && !sheetDef.forceName){
-          title = 'Sheet1';
-        }
-        if(wb.SheetNames.includes(title)){
-          let n = 2;
-          while(wb.SheetNames.includes(`${title}_${n}`)) n++;
-          title = `${title}_${n}`;
-        }
-        XLSX.utils.book_append_sheet(wb, valuesToWorksheet(sheetDef.values), title);
-      });
-      const buffer = normalizeArrayBuffer(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }));
-      return {
-        name: fileName,
-        async arrayBuffer(){ return buffer; }
-      };
-    }
-
-    async function importGoogleStructuredSheets({ interactive=false, preloadedState=null } = {}){
-      const syncState = preloadedState || await fetchGoogleSyncState({ interactive });
-      const remoteSheets = deriveRemoteStructuredSheets(syncState.metadata, syncState.metaRecord);
-      if(!remoteSheets.classes.length && !remoteSheets.pages.length){
-        throw new Error('試算表內沒有可匯入的班級或進度工作表。');
-      }
-
-      const rangeEntries = [
-        ...remoteSheets.classes.map(entry=>({ title: entry.title, range: quoteGoogleRangeTitle(entry.title, 'A:ZZ') })),
-        ...remoteSheets.pages.map(entry=>({ title: entry.title, range: quoteGoogleRangeTitle(entry.title, 'A:ZZ') }))
-      ];
-      const valueMap = await fetchGoogleValues(rangeEntries, { interactive });
-      const files = [];
-
-      remoteSheets.classes.forEach(entry=>{
-        const values = valueMap.get(entry.title) || [];
-        if(values.length){
-          files.push(createVirtualWorkbookFile([
-            { name: entry.name, values, forceName: false }
-          ], `${safeVirtualFileName(entry.name, 'Google_班級')}.xlsx`));
-        }
-      });
-
-      if(remoteSheets.pages.length){
-        files.push(createVirtualWorkbookFile(
-          remoteSheets.pages.map(entry=>({ name: entry.name, sheetName: safeSheetName(entry.name), values: valueMap.get(entry.title) || [['教學進度']], forceName: true })),
-          'Google_教學進度.xlsx'
-        ));
-      }
-
-      await runWithGoogleSyncSuspended(async ()=>{
-        await handleFiles(files);
-        saveSessionNow();
-      });
-
-      googleSyncConfig.lastImportAt = Date.now();
-      saveGoogleSyncConfig();
-      renderGoogleSheetSummary();
-      setGoogleRuntimeStatus(`Google：已匯入 ${formatSyncTime(googleSyncConfig.lastImportAt)}`, 'ready');
-      setStatus('已從 Google 試算表匯入資料。');
-      return true;
-    }
-
-    async function restoreGoogleSnapshot({ interactive=false, preloadedState=null } = {}){
-      const syncState = preloadedState || await fetchGoogleSyncState({ interactive });
-      const hasSnapshotSheet = (syncState.metadata?.sheets || []).some(sheet => sheet.properties?.title === GOOGLE_SNAPSHOT_SHEET);
-      if(!hasSnapshotSheet){
-        throw new Error('Google 試算表內找不到完整快照。');
-      }
-
-      const valueMap = await fetchGoogleValues([{ title: GOOGLE_SNAPSHOT_SHEET, range: quoteGoogleRangeTitle(GOOGLE_SNAPSHOT_SHEET, 'A:B') }], { interactive });
-      const rows = valueMap.get(GOOGLE_SNAPSHOT_SHEET) || [];
-      const chunks = rows.slice(1)
-        .map(row=>({ index: Number(row[0]), chunk: String(row[1] || '') }))
-        .filter(row=>row.chunk)
-        .sort((a,b)=>a.index - b.index)
-        .map(row=>row.chunk);
-      if(!chunks.length){
-        throw new Error('完整快照內容是空的。');
-      }
-      const sessionData = JSON.parse(chunks.join(''));
-
-      await runWithGoogleSyncSuspended(async ()=>{
-        if(!applySessionData(sessionData, 'Google 快照')){
-          throw new Error('快照內容無法還原。');
-        }
-        persistSupplementalLocalState();
-        saveSessionNow();
-      });
-
-      googleSyncConfig.lastImportAt = Date.now();
-      saveGoogleSyncConfig();
-      renderGoogleSheetSummary();
-      setGoogleRuntimeStatus(`Google：已還原快照 ${formatSyncTime(googleSyncConfig.lastImportAt)}`, 'ready');
-      setStatus('已從 Google 快照還原整份資料。');
-      return true;
-    }
-
-    async function reconcileGoogleSheetStructure(metadata, plan, { interactive=false } = {}){
-      const existing = new Map((metadata?.sheets || []).map(sheet => [sheet.properties?.title, sheet.properties?.sheetId]));
-      const requiredTitles = new Set([
-        GOOGLE_META_SHEET,
-        GOOGLE_SNAPSHOT_SHEET,
-        ...plan.classSheets.map(entry=>entry.title),
-        ...plan.progressSheets.map(entry=>entry.title)
-      ]);
-      const requests = [];
-
-      existing.forEach((sheetId, title)=>{
-        if((title.startsWith(GOOGLE_CLASS_PREFIX) || title.startsWith(GOOGLE_PROGRESS_PREFIX)) && !requiredTitles.has(title)){
-          requests.push({ deleteSheet: { sheetId } });
-        }
-      });
-
-      requiredTitles.forEach(title=>{
-        if(!existing.has(title)){
-          requests.push({ addSheet: { properties: { title } } });
-        }
-      });
-
-      if(requests.length){
-        await googleApiJson(`${googleSpreadsheetEndpoint(':batchUpdate')}`, {
-          method: 'POST',
-          interactive,
-          body: { requests }
-        });
-      }
-    }
-
-    async function syncGoogleNow({ interactive=false } = {}){
-      if(!googleConfigReady()){
-        const err = new Error('請先設定 Google OAuth Client ID 與試算表網址。');
-        err.code = 'config_missing';
-        throw err;
-      }
-      if(googleSyncRuntime.syncInFlight) return false;
-
-      if(googleSyncRuntime.syncTimer){
-        clearTimeout(googleSyncRuntime.syncTimer);
-        googleSyncRuntime.syncTimer = null;
-      }
-
-      googleSyncRuntime.syncInFlight = true;
-      try{
-        setGoogleRuntimeStatus(interactive ? 'Google：同步中...' : 'Google：自動同步中...', 'syncing');
-        const metadata = await fetchGoogleSpreadsheetMeta({ interactive });
-        const plan = buildGoogleSyncPlan();
-        await reconcileGoogleSheetStructure(metadata, plan, { interactive });
-        const allTitles = [GOOGLE_META_SHEET, GOOGLE_SNAPSHOT_SHEET, ...plan.classSheets.map(entry=>entry.title), ...plan.progressSheets.map(entry=>entry.title)];
-        await clearGoogleSheetValues(allTitles, { interactive });
-        await batchWriteGoogleValues([
-          { title: GOOGLE_META_SHEET, values: plan.metaValues },
-          { title: GOOGLE_SNAPSHOT_SHEET, values: plan.snapshotValues },
-          ...plan.classSheets.map(entry=>({ title: entry.title, values: entry.values })),
-          ...plan.progressSheets.map(entry=>({ title: entry.title, values: entry.values }))
-        ], { interactive });
-
-        googleSyncRuntime.pendingAutoSync = false;
-        googleSyncConfig.lastSyncAt = Date.now();
-        saveGoogleSyncConfig();
-        renderGoogleSheetSummary();
-        setGoogleRuntimeStatus(`Google：同步完成 ${formatSyncTime(googleSyncConfig.lastSyncAt)}`, 'ready');
-        if(interactive) setStatus('已同步到 Google 試算表。');
-        return true;
-      }finally{
-        googleSyncRuntime.syncInFlight = false;
-        renderGoogleStatus();
-      }
-    }
-
-    function handleGoogleActionError(actionLabel, error, interactive=false){
-      console.warn(actionLabel, error);
-      if(!interactive && error?.code === 'needs_interaction'){
-        setGoogleRuntimeStatus('Google：等待手動登入後繼續', 'warn');
-        return;
-      }
-      let message = error?.message || '發生未知錯誤';
-      if((/invalid_request/i.test(message) || error?.code === 'auth_failed') && !/Authorized JavaScript origins/.test(message)){
-        message = `${message}\n\n${getGoogleOAuthSetupHint()}`;
-      }
-      setGoogleRuntimeStatus(`Google：${message}`, interactive ? 'error' : 'warn');
-      if(interactive){
-        showInAppModal(actionLabel, message);
-      }
-    }
-
-    async function connectGoogleAccount(){
-      setGoogleRuntimeStatus('Google：登入中...', 'syncing');
-      await getGoogleAccessToken({ interactive: true, forcePrompt: true });
-      setGoogleConfigStatus('Google 授權成功，可以開始同步。', 'ok');
-      setGoogleRuntimeStatus('Google：已登入，可開始同步', 'ready');
-    }
-
-    async function revokeGoogleAccountAccess(){
-      try{
-        await ensureGoogleIdentityLibrary();
-        if(googleSyncRuntime.accessToken && window.google?.accounts?.oauth2?.revoke){
-          await new Promise(resolve => window.google.accounts.oauth2.revoke(googleSyncRuntime.accessToken, ()=> resolve()));
-        }
-      }catch(e){
-        console.warn('撤銷 Google 授權失敗', e);
-      }
-      clearGoogleAccessToken();
-      setGoogleRuntimeStatus('Google：已中斷授權', 'warn');
-      setGoogleConfigStatus('已清除本頁面的 Google 授權狀態。', 'ok');
-    }
-
-    function queueGoogleAutoSync(){
-      if(!googleSyncConfig.autoSync || !googleConfigReady() || isGoogleSyncSuspended()) return;
-      googleSyncRuntime.pendingAutoSync = true;
-      if(googleSyncRuntime.syncTimer) return;
-      setGoogleRuntimeStatus('Google：等待自動同步...', 'ready');
-      googleSyncRuntime.syncTimer = setTimeout(async ()=>{
-        googleSyncRuntime.syncTimer = null;
-        try{
-          await syncGoogleNow({ interactive: false });
-        }catch(e){
-          handleGoogleActionError('Google 自動同步', e, false);
-        }
-      }, 2500);
-    }
-
-    async function maybeAutoImportFromGoogleOnBoot(){
-      if(googleSyncRuntime.autoImportStarted || !googleConfigReady() || !googleSyncConfig.autoImportOnLoad) return;
-      googleSyncRuntime.autoImportStarted = true;
-      try{
-        setGoogleRuntimeStatus('Google：檢查遠端資料中...', 'syncing');
-        const syncState = await fetchGoogleSyncState({ interactive: false });
-        const remoteUpdatedAt = Number(syncState.metaRecord.updatedAt) || 0;
-        const localTs = getLocalSessionTimestamp();
-        if(localTs && remoteUpdatedAt && localTs > remoteUpdatedAt){
-          setGoogleRuntimeStatus('Google：本機資料較新，略過自動匯入', 'warn');
-          return;
-        }
-        if(state.classOrder.length && localTs && remoteUpdatedAt && remoteUpdatedAt < localTs){
-          clearGoogleRuntimeStatus();
-          return;
-        }
-        await importGoogleStructuredSheets({ interactive: false, preloadedState: syncState });
-      }catch(e){
-        handleGoogleActionError('Google 自動匯入', e, false);
-      }
-    }
-
-    function renderGoogleSheetSummary(){
-      if(!elGoogleSheetSummary) return;
-      if(!googleSyncConfig.spreadsheetId){
-        elGoogleSheetSummary.innerHTML = `尚未設定試算表。<br>目前網站來源：<strong>${escapeHTML(getCurrentAppOrigin())}</strong>`;
-        return;
-      }
-      const authText = (googleSyncRuntime.accessToken && Date.now() < googleSyncRuntime.tokenExpiresAt) ? '已登入' : '尚未登入';
-      const lastSync = formatSyncTime(googleSyncConfig.lastSyncAt);
-      const lastImport = formatSyncTime(googleSyncConfig.lastImportAt);
-      elGoogleSheetSummary.innerHTML = `試算表 ID：<strong>${escapeHTML(googleSyncConfig.spreadsheetId)}</strong><br>目前網站來源：<strong>${escapeHTML(getCurrentAppOrigin())}</strong><br>登入狀態：${authText}<br>最近上傳：${lastSync}<br>最近匯入：${lastImport}`;
-    }
-
-    function renderGoogleStatus(){
-      if(!elGoogleStatus) return;
-
-      let text = 'Google：尚未設定';
-      let state = 'idle';
-      if(googleSyncRuntime.statusText){
-        text = googleSyncRuntime.statusText;
-        state = googleSyncRuntime.statusState || 'idle';
-      }else if(!googleSyncConfig.clientId){
-        text = 'Google：尚未設定 Client ID';
-        state = 'warn';
-      }else if(!googleSyncConfig.spreadsheetId){
-        text = 'Google：尚未設定試算表';
-        state = 'warn';
-      }else if(googleSyncRuntime.accessToken && Date.now() < googleSyncRuntime.tokenExpiresAt){
-        text = 'Google：已登入，可開始同步';
-        state = 'ready';
-      }else if(googleSyncConfig.lastSyncAt){
-        text = `Google：已設定，最近同步 ${formatSyncTime(googleSyncConfig.lastSyncAt)}`;
-        state = 'ready';
-      }else{
-        text = 'Google：已設定，尚未同步';
-        state = 'ready';
-      }
-
-      elGoogleStatus.textContent = text;
-      elGoogleStatus.dataset.state = state;
-
-      const hasConfig = googleConfigReady();
-      const isBusy = googleSyncRuntime.syncInFlight;
-      if(elGoogleSyncNow) elGoogleSyncNow.disabled = isBusy || !hasConfig;
-      if(elGoogleConnect) elGoogleConnect.disabled = isBusy || !hasConfig;
-      if(elGoogleImport) elGoogleImport.disabled = isBusy || !hasConfig;
-      if(elGoogleRestore) elGoogleRestore.disabled = isBusy || !hasConfig;
-      if(elGoogleRevoke) elGoogleRevoke.disabled = isBusy || !googleSyncRuntime.accessToken;
-      if(elGoogleSyncSave) elGoogleSyncSave.disabled = isBusy;
-      if(elGoogleClear) elGoogleClear.disabled = isBusy;
-    }
-
-    function syncGoogleFormFromConfig(){
-      if(elGoogleClientId) elGoogleClientId.value = googleSyncConfig.clientId || '';
-      if(elGoogleSheetInput) elGoogleSheetInput.value = googleSyncConfig.spreadsheetInput || googleSyncConfig.spreadsheetId || '';
-      if(elGoogleAutoImport) elGoogleAutoImport.checked = googleSyncConfig.autoImportOnLoad !== false;
-      if(elGoogleAutoSync) elGoogleAutoSync.checked = googleSyncConfig.autoSync !== false;
-      renderGoogleSheetSummary();
-      setGoogleConfigStatus('輸入 Client ID 與試算表網址後可登入 Google、匯入或同步。', 'idle');
-      renderGoogleStatus();
-    }
-
-    function openGoogleSyncModal(){
-      syncGoogleFormFromConfig();
-      elGoogleSyncMask?.classList.add('show');
-    }
-
-    function closeGoogleSyncModal(){
-      elGoogleSyncMask?.classList.remove('show');
-    }
-
-    function applyGoogleSyncForm(){
-      const clientId = String(elGoogleClientId?.value || '').trim();
-      const spreadsheetInput = String(elGoogleSheetInput?.value || '').trim();
-      const spreadsheetId = extractSpreadsheetId(spreadsheetInput);
-      if(spreadsheetInput && !spreadsheetId){
-        setGoogleConfigStatus('無法辨識試算表網址或 ID，請重新貼上。', 'error');
-        elGoogleSheetInput?.focus();
-        return false;
-      }
-      if(googleSyncConfig.clientId !== clientId){
-        clearGoogleAccessToken();
-      }
-      googleSyncConfig.clientId = clientId;
-      googleSyncConfig.spreadsheetInput = spreadsheetInput;
-      googleSyncConfig.spreadsheetId = spreadsheetId;
-      googleSyncConfig.autoImportOnLoad = !!elGoogleAutoImport?.checked;
-      googleSyncConfig.autoSync = !!elGoogleAutoSync?.checked;
-      saveGoogleSyncConfig();
-      renderGoogleSheetSummary();
-      renderGoogleStatus();
-      setGoogleConfigStatus('Google 同步設定已儲存。', 'ok');
-      return true;
-    }
-
     function pad2(n){ return String(n).padStart(2,'0'); }
     function updateDateTime(){
       if(!dtDateEl || !dtTimeEl) return;
@@ -6120,72 +5146,6 @@
     }
     updateDateTime();
     setInterval(updateDateTime, 1000);
-    renderGoogleStatus();
-
-    elGoogleConfig?.addEventListener('click', openGoogleSyncModal);
-    elGoogleSyncNow?.addEventListener('click', async ()=>{
-      if(!googleSyncConfig.clientId || !googleSyncConfig.spreadsheetId){
-        openGoogleSyncModal();
-        setGoogleConfigStatus('請先完成 Client ID 與試算表設定。', 'error');
-        return;
-      }
-      try{
-        await syncGoogleNow({ interactive: true });
-      }catch(e){
-        handleGoogleActionError('Google 同步', e, true);
-      }
-    });
-    elGoogleSyncClose?.addEventListener('click', closeGoogleSyncModal);
-    elGoogleSyncCancel?.addEventListener('click', closeGoogleSyncModal);
-    elGoogleSyncMask?.addEventListener('click', (e)=>{ if(e.target === elGoogleSyncMask) closeGoogleSyncModal(); });
-    elGoogleSyncSave?.addEventListener('click', ()=>{
-      if(!applyGoogleSyncForm()) return;
-      closeGoogleSyncModal();
-      setStatus('Google 同步設定已儲存。');
-    });
-    elGoogleClear?.addEventListener('click', ()=>{
-      Object.assign(googleSyncConfig, { ...GOOGLE_SYNC_DEFAULTS });
-      saveGoogleSyncConfig();
-      clearGoogleAccessToken();
-      syncGoogleFormFromConfig();
-      renderGoogleStatus();
-      setStatus('已清空 Google 同步設定。');
-    });
-    elGoogleConnect?.addEventListener('click', async ()=>{
-      try{
-        if(!applyGoogleSyncForm()) return;
-        await connectGoogleAccount();
-      }catch(e){
-        handleGoogleActionError('Google 登入', e, true);
-      }
-    });
-    elGoogleImport?.addEventListener('click', async ()=>{
-      try{
-        if(!applyGoogleSyncForm()) return;
-        setGoogleConfigStatus('正在從 Google 匯入工作表...', 'ok');
-        await importGoogleStructuredSheets({ interactive: true });
-        closeGoogleSyncModal();
-      }catch(e){
-        handleGoogleActionError('Google 匯入', e, true);
-      }
-    });
-    elGoogleRestore?.addEventListener('click', async ()=>{
-      try{
-        if(!applyGoogleSyncForm()) return;
-        setGoogleConfigStatus('正在還原 Google 快照...', 'ok');
-        await restoreGoogleSnapshot({ interactive: true });
-        closeGoogleSyncModal();
-      }catch(e){
-        handleGoogleActionError('Google 快照還原', e, true);
-      }
-    });
-    elGoogleRevoke?.addEventListener('click', async ()=>{
-      try{
-        await revokeGoogleAccountAccess();
-      }catch(e){
-        handleGoogleActionError('Google 撤銷授權', e, true);
-      }
-    });
 
 
 
@@ -6283,7 +5243,6 @@
         state.notes[cls][id] = v;
       }
       saveNotes();
-      saveSession('note change');
     }
 
     function loadHWFromLS(cls){ try{ const raw=localStorage.getItem('hw_v1__'+cls); if(raw){ state.hw[cls]=JSON.parse(raw); } }catch{} }
@@ -11079,7 +10038,6 @@ elProgAdd?.addEventListener('click', ()=>{
       document.body.classList.add('no-data');
       setMode('list');
     }
-    void maybeAutoImportFromGoogleOnBoot();
 
 
 
