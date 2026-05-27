@@ -5349,6 +5349,11 @@
             const seatRIdx = header.findIndex(h => h === COL.R);
             const seatCIdx = header.findIndex(h => h === COL.C);
             const groupIdx = header.findIndex(h => /^分組$/i.test(String(h||"").trim()));
+            const violLateIdx = header.findIndex(h => /^遲到$/i.test(String(h||"").trim()));
+            const violMissingIdx = header.findIndex(h => /^缺交$/i.test(String(h||"").trim()));
+            const violClassroomIdx = header.findIndex(h => /^上課違規$/i.test(String(h||"").trim()));
+            const violOtherIdx = header.findIndex(h => /^其他$/i.test(String(h||"").trim()));
+            const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -5356,7 +5361,10 @@
             */
             const hwCols=[];
             if(scoreIdx >= 0){
-              const reserved = new Set([idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx, groupIdx].filter(x=>x>=0));
+              const reserved = new Set([
+                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx, groupIdx,
+                violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx
+              ].filter(x=>x>=0));
               const endCols = new Set();
               header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
               const firstEnd = endCols.size ? Math.min(...endCols) : header.length;
@@ -5437,6 +5445,29 @@
               if(hwCols.length){
                 const arr=[]; hwCols.forEach((c,ci)=>{ const v=row[c.idx]; const n=(v===''||v==null)?'':Number(v); arr[ci]=(Number.isFinite(n)?n:''); });
                 state.hw[className].data[id]=arr;
+              }
+
+              if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0){
+                const rec = createEmptyViolationRecord();
+                rec.late = violLateIdx >= 0 ? Math.max(0, Number(row[violLateIdx]) || 0) : 0;
+                rec.missing = violMissingIdx >= 0 ? Math.max(0, Number(row[violMissingIdx]) || 0) : 0;
+                rec.classroom = violClassroomIdx >= 0 ? Math.max(0, Number(row[violClassroomIdx]) || 0) : 0;
+                rec.other = violOtherIdx >= 0 ? Math.max(0, Number(row[violOtherIdx]) || 0) : 0;
+
+                if(violEntriesIdx >= 0){
+                  const entriesRaw = row[violEntriesIdx];
+                  if(entriesRaw != null && String(entriesRaw).trim() !== ''){
+                    const text = String(entriesRaw).trim();
+                    try{
+                      const parsed = JSON.parse(text);
+                      rec.entries = normalizeViolationEntries(parsed);
+                    }catch(_){
+                      rec.entries = [];
+                    }
+                  }
+                }
+
+                setViolationRecord(className, id, rec);
               }
             }
 
@@ -5764,7 +5795,7 @@
         });
       }
 
-      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C];
+      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事'];
       const aoa = [header];
 
       for (const s of list){
@@ -5783,8 +5814,27 @@
         const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;
 
         const groupLabel = idToGroup.get(id) || '';
+        const viol = getViolationRecord(cls, id);
+        const violEntriesJson = JSON.stringify(viol.entries || []);
 
-        aoa.push([sid, s.seat ?? '', s.name ?? '', getNote(cls, id), sc, ...arr, sum, avg, groupLabel, rr, cc]);
+        aoa.push([
+          sid,
+          s.seat ?? '',
+          s.name ?? '',
+          getNote(cls, id),
+          sc,
+          ...arr,
+          sum,
+          avg,
+          groupLabel,
+          rr,
+          cc,
+          viol.late || 0,
+          viol.missing || 0,
+          viol.classroom || 0,
+          viol.other || 0,
+          violEntriesJson
+        ]);
       }
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -5795,7 +5845,8 @@
         ...hwColsW,
         {wch:8}, {wch:8},
         {wch:14},
-        {wch:8}, {wch:8}
+        {wch:8}, {wch:8},
+        {wch:8}, {wch:8}, {wch:12}, {wch:8}, {wch:28}
       ];
       return ws;
     }
