@@ -6713,6 +6713,19 @@
       }));
     }
 
+    function buildDenseRanks(list, valueKey){
+      const ranks = [];
+      let rank = 0;
+      let prevValue;
+      for(let i=0; i<list.length; i++){
+        const value = list[i][valueKey];
+        if(i===0 || value !== prevValue) rank += 1;
+        ranks.push(rank);
+        prevValue = value;
+      }
+      return ranks;
+    }
+
     function renderBoard(el, elClass, cls, options={}){
       const {
         valueKey = 'score',
@@ -6727,6 +6740,7 @@
 
       if(list.length===0){ el.innerHTML = `<div class="empty">${emptyText}</div>`; return; }
       list.sort((a,b)=> compareBoardEntries(a, b, valueKey, sortDirection));
+      const ranks = buildDenseRanks(list, valueKey);
 
       const existingRows = el.querySelectorAll('.row');
       if(existingRows.length === list.length){
@@ -6745,9 +6759,13 @@
         if(canPatch){
           for(let i=0; i<list.length; i++){
             const s = list[i];
-            const rank = i+1;
+            const rank = ranks[i];
             const row = existingRows[i];
+            const rankEl = row.querySelector('.rank');
             const scoreEl = row.querySelector('.score');
+            if(rankEl){
+              rankEl.innerHTML = rank<=5 ? `<span class="medal">${rank}</span>` : String(rank);
+            }
             if(scoreEl) scoreEl.textContent = s[valueKey];
             const newCls = 'row' + (rank<=5 ? ` rank-${rank}` : '');
             if(row.className !== newCls) row.className = newCls;
@@ -6759,7 +6777,7 @@
       const frag = document.createDocumentFragment();
       for(let i=0; i<list.length; i++){
         const s = list[i];
-        const rank = i+1;
+        const rank = ranks[i];
         const clsRank = rank<=5 ? `rank-${rank}` : '';
         const medalText = rank<=5 ? rank : '';
         const seatDisp = padSeat(s.seat);
