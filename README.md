@@ -7,7 +7,7 @@
 | 模式 | 說明 |
 |------|------|
 | **加扣分** | 點擊學生卡片的 ＋/− 按鈕即時加扣分，左側同步更新加分排行榜與扣分排行榜 |
-| **違規記錄簿** | 以表格式記錄每位學生的違規次數，支援遲到、缺交、上課違規、其他四類，左側同步顯示違規排行榜 |
+| **違規記錄簿** | 以表格式記錄每位學生的違規次數，支援遲到、缺交、上課違規、其他四類，並可在同一記事視窗切換「違規記事 / 特殊記事」，左側同步顯示違規排行榜 |
 | **座位** | 自訂列×欄數，拖放學生安排座位；支援自動排位、隨機入座 |
 | **作業成績** | 動態新增作業欄位、雙擊改名；支援批次輸入（整欄同分/貼上多筆） |
 | **抽號** | 隨機抽取學生，可設抽選人數、序列模式、不重覆；支援緩停動畫 |
@@ -48,6 +48,7 @@
 - **多檔匯入**：每個檔案 = 一個班級（檔名自動作為班級名稱）
 - **單檔多工作表**：每個工作表 = 一個班級
 - 匯出的檔案可直接再匯入回來
+- 匯出後的班級工作表會一併保留四類違規次數、違規記事 JSON 與特殊記事 JSON，重新匯入時可完整還原違規狀態
 
 ### 欄位對應
 
@@ -61,10 +62,104 @@
 | 作業 N | 選填 | 作業成績欄位（可多欄） |
 | 備註 | 選填 | 學生備註文字 |
 | 分組 | 選填 | 分組名稱 |
+| 遲到 / 缺交 / 上課違規 / 其他 | 選填 | 四類違規次數（由系統匯出，用於再次匯入還原） |
+| 違規記事 | 選填 | JSON 格式記事清單（由系統匯出，用於再次匯入還原） |
+| 特殊記事 | 選填 | JSON 格式特殊記事清單（由系統匯出，用於再次匯入還原） |
 
 ## 匯出
 
 右上角「💾 匯出」可將資料輸出為 Excel / CSV / ODS，支援選擇匯出項目（分數、作業、座位、進度、分組等）。
+
+若匯出的是班級工作表，檔內也會包含違規資料，方便日後直接重新匯入。
+
+## ☁️ Google 試算表同步
+
+透過 Google **Apps Script 網頁應用程式**，可把全部班級資料（每個班級一個分頁）雙向同步到你自己的 Google 試算表。**完全免費，不需要 Google Cloud、不需要信用卡。**
+
+### 一次性設定
+
+1. 開啟（或新建）一個 Google 試算表 → 上方選單「**擴充功能**」→「**Apps Script**」。
+2. 刪除編輯器內原本的內容，貼上下方「Apps Script 程式碼」，並把 `SECRET_TOKEN` 改成你自己的密碼。
+3. 點右上角「**部署**」→「**新增部署作業**」→ 齒輪選「**網頁應用程式**」。
+4. 設定「**執行身分**」為**你自己**、「**誰可以存取**」為「**任何人**」，按「部署」並完成授權。
+5. 複製產生的「網頁應用程式」網址（形如 `https://script.google.com/macros/s/.../exec`）。
+6. 回到成績系統，點工具列「**☁️ Google 試算表**」，貼上網址與剛剛設定的密碼。
+
+> 🔒 「誰可以存取」必須設為「任何人」，前端才能呼叫；資料安全由你設定的密碼（`SECRET_TOKEN`）把關，請勿外洩網址與密碼。
+
+### 使用方式
+
+- **⬆️ 上傳到試算表**：把目前所有班級寫入試算表（每班一個分頁，會覆蓋同名分頁）。
+- **⬇️ 從試算表下載**：把試算表內容讀回系統（會覆蓋目前的本機班級資料）。
+- **變更後自動上傳**：勾選後，資料一有變動就會在約 3.5 秒後自動上傳。
+
+同步的欄位與 Excel 匯出完全相同（含分數、作業、座位、分組、四類違規次數與違規/特殊記事 JSON）。
+
+### Apps Script 程式碼
+
+> 系統內的「☁️ Google 試算表 → 📖 如何設定」也提供同一份程式碼與「複製程式碼」按鈕。
+
+```javascript
+/**
+ * 成績系統 ←→ Google 試算表 同步用 Apps Script
+ * 使用方式：把 SECRET_TOKEN 改成你自己的密碼，
+ * 然後「部署」成「網頁應用程式」（執行身分=你自己、誰可以存取=任何人）。
+ */
+const SECRET_TOKEN = '請改成你自己的密碼';
+
+function doGet(e) {
+  try {
+    if (!e || !e.parameter || e.parameter.token !== SECRET_TOKEN) {
+      return jsonOut({ ok: false, error: '密碼錯誤' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = {};
+    ss.getSheets().forEach(function (sh) {
+      const values = sh.getDataRange().getValues();
+      if (values && values.length) sheets[sh.getName()] = values;
+    });
+    return jsonOut({ ok: true, sheets: sheets });
+  } catch (err) {
+    return jsonOut({ ok: false, error: String(err) });
+  }
+}
+
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    if (payload.token !== SECRET_TOKEN) {
+      return jsonOut({ ok: false, error: '密碼錯誤' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = payload.sheets || {};
+    Object.keys(sheets).forEach(function (name) {
+      const aoa = sheets[name];
+      if (!aoa || !aoa.length) return;
+      let sh = ss.getSheetByName(name);
+      if (!sh) sh = ss.insertSheet(name);
+      else sh.clear();
+      const cols = Math.max.apply(null, aoa.map(function (r) { return r.length; }));
+      const norm = aoa.map(function (r) {
+        const row = r.slice();
+        while (row.length < cols) row.push('');
+        return row;
+      });
+      sh.getRange(1, 1, norm.length, cols).setValues(norm);
+    });
+    return jsonOut({ ok: true });
+  } catch (err) {
+    return jsonOut({ ok: false, error: String(err) });
+  }
+}
+
+function jsonOut(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+> 改過程式碼後若同步沒生效，請到「部署 → 管理部署作業」重新部署（或建立新版本）。
 
 ## 主題
 

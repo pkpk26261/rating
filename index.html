@@ -1312,6 +1312,43 @@
     .viol-note-entry-text{ line-height:1.5; white-space:pre-wrap; word-break:break-word; }
     .viol-note-remove{ align-self:start; }
     .viol-note-actions{ display:flex; justify-content:space-between; gap:10px; }
+    .viol-note-tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .viol-note-tab{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      min-height:36px;
+      padding:0 14px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .viol-note-tab.active{
+      color:var(--fg);
+      border-color:color-mix(in oklab, var(--accent) 40%, white);
+      background:color-mix(in oklab, var(--accent) 18%, transparent);
+      box-shadow:0 0 0 2px color-mix(in oklab, var(--accent) 14%, transparent);
+    }
+    .viol-note-tab-count{
+      min-width:20px;
+      height:20px;
+      padding:0 6px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      color:inherit;
+      font-size:11px;
+      font-weight:800;
+      line-height:20px;
+      text-align:center;
+      font-variant-numeric:tabular-nums;
+    }
     @media (max-width: 640px){
       #viol-note-mask .viol-note-help{ margin-left:0; width:100%; }
       .viol-note-form{ grid-template-columns:1fr; }
@@ -4095,6 +4132,7 @@
         <div class="topbar__right-actions">
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
           <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
+          <button id="btn-gsheet" class="btn" title="與 Google 試算表雙向同步">☁️ Google 試算表</button>
         </div>
         <div id="dt-display" class="dt-display" aria-label="日期與時間">
           <div id="dt-date">114年12月16日</div>
@@ -4691,6 +4729,80 @@
     </div>
   </div>
 
+  <!-- ★ Google 試算表同步彈窗 -->
+  <div id="gsheet-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="gsheet-title">
+    <div class="modal" role="document" style="width:min(640px, 94vw);">
+      <header>
+        <h3 id="gsheet-title">☁️ Google 試算表同步</h3>
+        <button id="gsheet-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
+          把你的 Google 試算表部署成「網頁應用程式」後，貼上網址與密碼，即可雙向同步全部班級資料（每個班級一個分頁）。完全免費，不需要 Google Cloud。
+        </p>
+
+        <!-- 網址 -->
+        <div style="margin-bottom:12px;">
+          <label for="gs-url" style="font-weight:700; font-size:14px;">網頁應用程式網址</label>
+          <input id="gs-url" type="url" placeholder="https://script.google.com/macros/s/AKfyc.../exec"
+            style="width:100%; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
+        </div>
+
+        <!-- 密碼 token -->
+        <div style="margin-bottom:12px;">
+          <label for="gs-token" style="font-weight:700; font-size:14px;">同步密碼（與 Apps Script 內設定的 SECRET_TOKEN 相同）</label>
+          <input id="gs-token" type="text" autocomplete="off" placeholder="自訂的密碼"
+            style="width:100%; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
+        </div>
+
+        <!-- 自動同步 -->
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
+          <input type="checkbox" id="gs-auto"> 變更後自動上傳到試算表（約 3.5 秒延遲）
+        </label>
+
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:14px 0;">
+          <button id="gs-upload" class="btn add">⬆️ 上傳到試算表</button>
+          <button id="gs-download" class="btn">⬇️ 從試算表下載</button>
+          <span id="gs-last-sync" style="font-size:12px; color:var(--muted);">尚未同步</span>
+        </div>
+        <div id="gs-status" style="font-size:13px; min-height:20px; color:var(--muted);"></div>
+
+        <div style="height:1px; background:var(--line); margin:14px 0;"></div>
+
+        <!-- 設定說明 -->
+        <details>
+          <summary style="cursor:pointer; font-weight:700; font-size:14px;">📖 第一次使用：如何設定（點此展開）</summary>
+          <ol style="font-size:13px; line-height:1.7; padding-left:20px; margin-top:10px;">
+            <li>開啟你的 Google 試算表 →上方選單「擴充功能」→「Apps Script」。</li>
+            <li>刪除原本的內容，貼上下方程式碼，並把 <code>SECRET_TOKEN</code> 改成你自己的密碼。</li>
+            <li>點右上角「部署」→「新增部署作業」→ 類型選「網頁應用程式」。</li>
+            <li>「執行身分」選<b>你自己</b>；「誰可以存取」選<b>「任何人」</b>，然後按「部署」並完成授權。</li>
+            <li>複製產生的「網頁應用程式」網址，連同剛剛設定的密碼貼到上面欄位。</li>
+          </ol>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 4px;">
+            <span style="font-size:13px; font-weight:700;">Apps Script 程式碼</span>
+            <button id="gs-copy-code" class="btn" style="font-size:12px; padding:3px 10px;">📋 複製程式碼</button>
+          </div>
+          <pre id="gs-code" style="font-size:11px; line-height:1.5; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 多分頁唯讀提示（同一瀏覽器同時只允許一個分頁寫入，避免資料衝突） -->
+  <div id="tablock-overlay" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,.62); backdrop-filter:blur(2px); align-items:center; justify-content:center; padding:20px;">
+    <div style="max-width:460px; width:100%; background:var(--card,#fff); color:inherit; border-radius:16px; box-shadow:0 12px 48px rgba(0,0,0,.35); padding:26px 24px; text-align:center;">
+      <div style="font-size:42px; line-height:1; margin-bottom:10px;">🔒</div>
+      <h3 style="margin:0 0 10px; font-size:18px;">已在另一個視窗開啟</h3>
+      <p style="font-size:14px; line-height:1.7; color:var(--muted); margin:0 0 18px;">
+        為避免兩個視窗同時編輯造成資料覆蓋或存錯，本視窗暫時設為唯讀。<br>
+        你可以關閉這個視窗，或點下方按鈕改用此視窗（會重新載入並取得最新資料）。
+      </p>
+      <button id="tablock-takeover" class="btn add" style="font-size:15px; padding:9px 20px;">改用此視窗</button>
+    </div>
+  </div>
+
+
   <div id="note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="note-title">
     <div class="modal" role="document">
       <header>
@@ -4721,7 +4833,7 @@
   <div id="viol-note-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="viol-note-title">
     <div class="modal" role="document">
       <header>
-        <h3 id="viol-note-title">🗒 違規記事</h3>
+        <h3 id="viol-note-title">🗒 學生記事</h3>
         <button id="viol-note-close" class="close" aria-label="關閉">✕</button>
       </header>
       <div class="content">
@@ -4730,16 +4842,27 @@
             班級：<span id="viol-note-class" class="pill"></span>
             　學生：<span id="viol-note-student" class="pill"></span>
           </div>
-          <div class="viol-note-help">可新增多筆違規日期與違規事項，新增後會立即儲存。</div>
+          <div id="viol-note-help" class="viol-note-help">可新增多筆違規日期與違規事項，新增後會立即儲存。</div>
+        </div>
+
+        <div class="viol-note-tabs" role="tablist" aria-label="記事類型">
+          <button id="viol-note-tab-entries" class="viol-note-tab active" type="button" role="tab" aria-selected="true" data-viol-note-tab="entries">
+            <span>違規記事</span>
+            <span class="viol-note-tab-count">0</span>
+          </button>
+          <button id="viol-note-tab-special" class="viol-note-tab" type="button" role="tab" aria-selected="false" data-viol-note-tab="specialEntries">
+            <span>特殊記事</span>
+            <span class="viol-note-tab-count">0</span>
+          </button>
         </div>
 
         <div class="viol-note-form">
           <label class="viol-note-field">
-            <span>違規日期</span>
+            <span>日期</span>
             <input id="viol-note-date" class="viol-note-input" type="date">
           </label>
           <label class="viol-note-field">
-            <span>違規事項</span>
+            <span>記事內容</span>
             <input id="viol-note-item" class="viol-note-input" type="text" maxlength="120" placeholder="例如：上課聊天、未帶作業、遲到 10 分鐘">
           </label>
           <button id="viol-note-add" class="btn add" type="button">新增記事</button>
@@ -4895,6 +5018,80 @@
     // ===== 本機暫存（整份狀態） =====
     const SESSION_KEY = 'pscore_session_v1';
 
+    /* =========================================================
+       多分頁單一寫入鎖：同一瀏覽器同時只允許「一個分頁」寫入資料
+       （localStorage + Google 同步），避免兩個分頁互相覆蓋造成存錯。
+       - 用 BroadcastChannel 互相溝通；不支援時退回單分頁行為。
+       - 後開的分頁自動轉唯讀，顯示遮罩；可按鈕接管（接管會重新載入）。
+       ========================================================= */
+    const TabLock = (() => {
+      const tabId = (self.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                  : 'tab-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      let active = true;          // 本分頁是否為作用中（可寫入）
+      let bc = null;
+      try{ bc = ('BroadcastChannel' in self) ? new BroadcastChannel('pscore_tablock') : null; }catch(e){ bc = null; }
+
+      const overlay   = document.getElementById('tablock-overlay');
+      const takeoverBtn= document.getElementById('tablock-takeover');
+
+      function showOverlay(show){ if(overlay) overlay.style.display = show ? 'flex' : 'none'; }
+
+      function becomeReadonly(){
+        if(!active) { showOverlay(true); return; }
+        active = false;
+        showOverlay(true);
+      }
+      function becomeActive(){
+        active = true;
+        showOverlay(false);
+      }
+
+      if(bc){
+        bc.onmessage = (ev)=>{
+          const m = ev.data || {};
+          if(m.from === tabId) return;
+          if(m.type === 'claim'){
+            // 別的分頁宣告接管 → 本分頁讓位轉唯讀
+            becomeReadonly();
+          }else if(m.type === 'ping' && active){
+            // 有新分頁詢問，作用中分頁回應「已被占用」
+            bc.postMessage({ type:'busy', from: tabId });
+          }
+        };
+      }
+
+      // 啟動：詢問是否已有作用中分頁；短暫等待，沒人回應就由自己當作用分頁
+      function init(){
+        if(!bc){ becomeActive(); return; }   // 不支援 → 維持單分頁行為
+        let gotBusy = false;
+        const onProbe = (ev)=>{
+          const m = ev.data || {};
+          if(m.from === tabId) return;
+          if(m.type === 'busy' || m.type === 'claim') gotBusy = true;
+        };
+        bc.addEventListener('message', onProbe);
+        bc.postMessage({ type:'ping', from: tabId });
+        setTimeout(()=>{
+          bc.removeEventListener('message', onProbe);
+          if(gotBusy){ becomeReadonly(); }
+          else { becomeActive(); }
+        }, 250);
+      }
+
+      // 使用者按「改用此視窗」：宣告接管後重新載入，確保拿到最新資料
+      if(takeoverBtn){
+        takeoverBtn.addEventListener('click', ()=>{
+          if(bc) bc.postMessage({ type:'claim', from: tabId });
+          setTimeout(()=> location.reload(), 120);
+        });
+      }
+
+      return {
+        init,
+        isActive: ()=> active
+      };
+    })();
+
     function buildSession(){
       return {
         v: 1,
@@ -4919,6 +5116,8 @@
     /* ★ 節流版 saveSession：避免高頻加分時 JSON.stringify 造成平板卡頓 */
     let _saveTimer = null;
     function saveSession(reason=''){
+      if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不寫入，避免覆蓋
+      if(typeof gsScheduleAutoUpload === 'function') gsScheduleAutoUpload();  // ★ 自動同步到 Google 試算表
       if(_saveTimer) return;              // 已排程，跳過
       _saveTimer = setTimeout(()=>{
         _saveTimer = null;
@@ -4931,6 +5130,7 @@
     }
     /* 頁面離開時強制同步存檔 */
     function saveSessionNow(){
+      if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不寫入
       if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
       if(_scoreTimer){ clearTimeout(_scoreTimer); _scoreTimer = null; }
       if(_deductionTimer){ clearTimeout(_deductionTimer); _deductionTimer = null; }
@@ -5200,6 +5400,8 @@
     const violNoteList = document.getElementById('viol-note-list');
     const violNoteClear = document.getElementById('viol-note-clear');
     const violNoteDone = document.getElementById('viol-note-done');
+    const violNoteHelp = document.getElementById('viol-note-help');
+    const violNoteTabs = [...document.querySelectorAll('[data-viol-note-tab]')];
 /* ====== 輕量持久化（讀取） ====== */
     try{
       state.scores = JSON.parse(localStorage.getItem('scores_v2') || '{}') || {};
@@ -5354,6 +5556,7 @@
             const violClassroomIdx = header.findIndex(h => /^上課違規$/i.test(String(h||"").trim()));
             const violOtherIdx = header.findIndex(h => /^其他$/i.test(String(h||"").trim()));
             const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
+            const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -5363,7 +5566,7 @@
             if(scoreIdx >= 0){
               const reserved = new Set([
                 idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx, groupIdx,
-                violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx
+                violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
               header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
@@ -5447,7 +5650,7 @@
                 state.hw[className].data[id]=arr;
               }
 
-              if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0){
+              if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0 || violSpecialEntriesIdx >= 0){
                 const rec = createEmptyViolationRecord();
                 rec.late = violLateIdx >= 0 ? Math.max(0, Number(row[violLateIdx]) || 0) : 0;
                 rec.missing = violMissingIdx >= 0 ? Math.max(0, Number(row[violMissingIdx]) || 0) : 0;
@@ -5463,6 +5666,19 @@
                       rec.entries = normalizeViolationEntries(parsed);
                     }catch(_){
                       rec.entries = [];
+                    }
+                  }
+                }
+
+                if(violSpecialEntriesIdx >= 0){
+                  const specialEntriesRaw = row[violSpecialEntriesIdx];
+                  if(specialEntriesRaw != null && String(specialEntriesRaw).trim() !== ''){
+                    const text = String(specialEntriesRaw).trim();
+                    try{
+                      const parsed = JSON.parse(text);
+                      rec.specialEntries = normalizeViolationEntries(parsed);
+                    }catch(_){
+                      rec.specialEntries = [];
                     }
                   }
                 }
@@ -5779,8 +5995,8 @@
       setStatus(`已開始下載 ${files.length} 個檔案`);
     }
 
-    /* ===== 建立班級成績工作表（共用邏輯） ===== */
-    function buildClassSheet(cls){
+    /* ===== 建立班級成績二維陣列（AoA，Excel 與 Google 試算表共用） ===== */
+    function buildClassAoA(cls){
       const list = state.classMap[cls] || [];
       const seatSt = ensureSeatState(cls);
       const hwSt = ensureHWState(cls);
@@ -5795,7 +6011,7 @@
         });
       }
 
-      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事'];
+      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事'];
       const aoa = [header];
 
       for (const s of list){
@@ -5816,6 +6032,7 @@
         const groupLabel = idToGroup.get(id) || '';
         const viol = getViolationRecord(cls, id);
         const violEntriesJson = JSON.stringify(viol.entries || []);
+        const violSpecialEntriesJson = JSON.stringify(viol.specialEntries || []);
 
         aoa.push([
           sid,
@@ -5833,9 +6050,18 @@
           viol.missing || 0,
           viol.classroom || 0,
           viol.other || 0,
-          violEntriesJson
+          violEntriesJson,
+          violSpecialEntriesJson
         ]);
       }
+
+      return aoa;
+    }
+
+    /* ===== 建立班級成績工作表（共用邏輯） ===== */
+    function buildClassSheet(cls){
+      const hwSt = ensureHWState(cls);
+      const aoa = buildClassAoA(cls);
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
       const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:8}];
@@ -5851,7 +6077,180 @@
       return ws;
     }
 
-    /* ===== 匯出設定彈窗邏輯 ===== */
+    /* =========================================================
+       Google 試算表雙向同步（透過 Apps Script 網頁應用程式，免費）
+       - 下載：GET ?token=XXX → { ok, sheets:{ 分頁名:[[...]] } }
+       - 上傳：POST text/plain（避免 CORS 預檢），body = { token, sheets }
+       ========================================================= */
+    const GS_CFG_KEY = 'gsheet_sync_v1';
+    const gsConfig = {
+      url: '',
+      token: '',
+      autoSync: false,
+      lastSync: 0
+    };
+    function gsLoadConfig(){
+      try{
+        const raw = localStorage.getItem(GS_CFG_KEY);
+        if(raw){
+          const o = JSON.parse(raw);
+          gsConfig.url      = typeof o.url === 'string' ? o.url : '';
+          gsConfig.token    = typeof o.token === 'string' ? o.token : '';
+          gsConfig.autoSync = !!o.autoSync;
+          gsConfig.lastSync = Number(o.lastSync) || 0;
+        }
+      }catch(e){ /* 忽略損壞設定 */ }
+    }
+    function gsSaveConfig(){
+      try{ localStorage.setItem(GS_CFG_KEY, JSON.stringify(gsConfig)); }catch(e){}
+    }
+    function gsReady(){
+      return !!(gsConfig.url && /^https:\/\/script\.google\.com\//i.test(gsConfig.url) && gsConfig.token);
+    }
+    function gsSetSyncStatus(msg, kind){
+      const el = document.getElementById('gs-status');
+      if(!el) return;
+      el.textContent = msg || '';
+      el.dataset.kind = kind || '';
+      el.style.color = kind==='error' ? 'var(--danger, #e5484d)'
+                     : kind==='ok'    ? 'var(--ok, #30a46c)'
+                     : 'var(--muted)';
+    }
+    function gsFormatTime(ts){
+      if(!ts) return '尚未同步';
+      const d = new Date(ts);
+      const p = n => String(n).padStart(2,'0');
+      return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
+    function gsUpdateLastSyncLabel(){
+      const el = document.getElementById('gs-last-sync');
+      if(el) el.textContent = `最後同步：${gsFormatTime(gsConfig.lastSync)}`;
+    }
+
+    /* ★ 上傳：將本機所有班級資料寫入 Google 試算表（每班一分頁） */
+    async function gsUpload(opts={}){
+      const silent = !!opts.silent;
+      if(typeof TabLock !== 'undefined' && !TabLock.isActive()){
+        if(!silent) gsSetSyncStatus('此視窗為唯讀狀態（已在另一個視窗開啟），無法上傳。', 'error');
+        return false;
+      }
+      if(!gsReady()){
+        if(!silent) gsSetSyncStatus('請先填寫正確的網頁應用程式網址與密碼。', 'error');
+        return false;
+      }
+      const classes = state.classOrder || [];
+      if(classes.length === 0){
+        if(!silent) gsSetSyncStatus('目前沒有任何班級可上傳。', 'error');
+        return false;
+      }
+      const sheets = {};
+      for(const cls of classes){
+        // 試算表分頁名稱長度上限 100；safeSheetName 已處理非法字元
+        sheets[safeSheetName(cls)] = buildClassAoA(cls);
+      }
+      const payload = { token: gsConfig.token, action: 'upload', sheets };
+      if(!silent) gsSetSyncStatus('上傳中…', '');
+      try{
+        const res = await fetch(gsConfig.url, {
+          method: 'POST',
+          // text/plain 屬於「簡單請求」，不會觸發 CORS 預檢 OPTIONS（Apps Script 不處理 OPTIONS）
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          redirect: 'follow'
+        });
+        const data = await gsParseResponse(res);
+        if(!data.ok) throw new Error(data.error || '上傳失敗');
+        gsConfig.lastSync = Date.now();
+        gsSaveConfig();
+        gsUpdateLastSyncLabel();
+        if(!silent) gsSetSyncStatus(`已上傳 ${classes.length} 個班級到試算表。`, 'ok');
+        return true;
+      }catch(err){
+        if(!silent) gsSetSyncStatus('上傳失敗：' + gsFriendlyError(err), 'error');
+        else console.warn('自動上傳失敗', err);
+        return false;
+      }
+    }
+
+    /* ★ 下載：從 Google 試算表讀回資料，組成 workbook 後沿用既有匯入流程 */
+    async function gsDownload(){
+      if(typeof TabLock !== 'undefined' && !TabLock.isActive()){
+        gsSetSyncStatus('此視窗為唯讀狀態（已在另一個視窗開啟），無法下載。', 'error');
+        return false;
+      }
+      if(!gsReady()){
+        gsSetSyncStatus('請先填寫正確的網頁應用程式網址與密碼。', 'error');
+        return false;
+      }
+      gsSetSyncStatus('下載中…', '');
+      try{
+        const url = gsConfig.url + (gsConfig.url.includes('?') ? '&' : '?')
+                  + 'action=download&token=' + encodeURIComponent(gsConfig.token);
+        const res = await fetch(url, { method:'GET', redirect:'follow' });
+        const data = await gsParseResponse(res);
+        if(!data.ok) throw new Error(data.error || '下載失敗');
+        const sheetsObj = data.sheets || {};
+        const names = Object.keys(sheetsObj).filter(n => Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
+        if(names.length === 0){
+          gsSetSyncStatus('試算表沒有可匯入的班級資料。', 'error');
+          return false;
+        }
+        // 將下載資料組成單一 workbook（每分頁=一個班級），再餵給既有 handleFiles 解析
+        const wb = XLSX.utils.book_new();
+        for(const name of names){
+          const ws = XLSX.utils.aoa_to_sheet(sheetsObj[name]);
+          XLSX.utils.book_append_sheet(wb, ws, safeSheetName(name));
+        }
+        const buf = XLSX.write(wb, { type:'array', bookType:'xlsx' });
+        const file = new File([buf], 'GoogleSheets.xlsx',
+          { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        await handleFiles([file]);
+        gsConfig.lastSync = Date.now();
+        gsSaveConfig();
+        gsUpdateLastSyncLabel();
+        gsSetSyncStatus(`已從試算表下載 ${names.length} 個班級。`, 'ok');
+        return true;
+      }catch(err){
+        gsSetSyncStatus('下載失敗：' + gsFriendlyError(err), 'error');
+        return false;
+      }
+    }
+
+    async function gsParseResponse(res){
+      const text = await res.text();
+      let data;
+      try{ data = JSON.parse(text); }
+      catch(e){
+        // 常見：網址錯誤、未部署、或回傳 Google 登入頁（存取權未設為「任何人」）
+        throw new Error('回應格式錯誤，請確認網址正確、已部署，且「誰可以存取」設為「任何人」。');
+      }
+      return data;
+    }
+    function gsFriendlyError(err){
+      const m = (err && err.message) || String(err);
+      if(/Failed to fetch|NetworkError|TypeError/i.test(m)){
+        return '無法連線，請確認網址正確且已部署為網頁應用程式。';
+      }
+      return m;
+    }
+
+    /* ★ 自動上傳（防抖）：資料變更後延遲 3.5 秒上傳，僅在開啟自動同步且已設定時生效 */
+    let _gsAutoTimer = null;
+    function gsScheduleAutoUpload(){
+      if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不自動上傳
+      if(!gsConfig.autoSync || !gsReady()) return;
+      if(_gsAutoTimer) clearTimeout(_gsAutoTimer);
+      _gsAutoTimer = setTimeout(async ()=>{
+        _gsAutoTimer = null;
+        const ok = await gsUpload({ silent:true });
+        gsUpdateLastSyncLabel();
+        if(ok) gsSetSyncStatus(`已自動同步（${gsFormatTime(gsConfig.lastSync)}）`, 'ok');
+      }, 3500);
+    }
+
+    gsLoadConfig();
+
+
     const exportMask     = document.getElementById('export-mask');
     const exportClose    = document.getElementById('export-close');
     const exportCancel   = document.getElementById('export-cancel');
@@ -5911,6 +6310,105 @@
     document.getElementById('btn-export').addEventListener('click', ()=>{
       if(state.classOrder.length===0){ alert('尚未載入任何班級資料'); return; }
       openExportModal();
+    });
+
+    /* ===== Google 試算表同步：UI 串接 ===== */
+    const GS_APPS_SCRIPT_CODE = `/**
+ * 成績系統 ←→ Google 試算表 同步用 Apps Script
+ * 使用方式：把 SECRET_TOKEN 改成你自己的密碼，
+ * 然後「部署」成「網頁應用程式」（執行身分=你自己、誰可以存取=任何人）。
+ */
+const SECRET_TOKEN = '請改成你自己的密碼';
+
+function doGet(e) {
+  try {
+    if (!e || !e.parameter || e.parameter.token !== SECRET_TOKEN) {
+      return jsonOut({ ok: false, error: '密碼錯誤' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = {};
+    ss.getSheets().forEach(function (sh) {
+      const values = sh.getDataRange().getValues();
+      if (values && values.length) sheets[sh.getName()] = values;
+    });
+    return jsonOut({ ok: true, sheets: sheets });
+  } catch (err) {
+    return jsonOut({ ok: false, error: String(err) });
+  }
+}
+
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    if (payload.token !== SECRET_TOKEN) {
+      return jsonOut({ ok: false, error: '密碼錯誤' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = payload.sheets || {};
+    Object.keys(sheets).forEach(function (name) {
+      const aoa = sheets[name];
+      if (!aoa || !aoa.length) return;
+      let sh = ss.getSheetByName(name);
+      if (!sh) sh = ss.insertSheet(name);
+      else sh.clear();
+      const cols = Math.max.apply(null, aoa.map(function (r) { return r.length; }));
+      const norm = aoa.map(function (r) {
+        const row = r.slice();
+        while (row.length < cols) row.push('');
+        return row;
+      });
+      sh.getRange(1, 1, norm.length, cols).setValues(norm);
+    });
+    return jsonOut({ ok: true });
+  } catch (err) {
+    return jsonOut({ ok: false, error: String(err) });
+  }
+}
+
+function jsonOut(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    const gsheetMask  = document.getElementById('gsheet-mask');
+    const gsUrlInput  = document.getElementById('gs-url');
+    const gsTokenInput= document.getElementById('gs-token');
+    const gsAutoCb    = document.getElementById('gs-auto');
+
+    function openGsheetModal(){
+      gsUrlInput.value   = gsConfig.url;
+      gsTokenInput.value = gsConfig.token;
+      gsAutoCb.checked   = gsConfig.autoSync;
+      const codeEl = document.getElementById('gs-code');
+      if(codeEl && !codeEl.textContent) codeEl.textContent = GS_APPS_SCRIPT_CODE;
+      gsSetSyncStatus('', '');
+      gsUpdateLastSyncLabel();
+      gsheetMask.classList.add('show');
+    }
+    function closeGsheetModal(){ gsheetMask.classList.remove('show'); }
+
+    document.getElementById('btn-gsheet').addEventListener('click', openGsheetModal);
+    document.getElementById('gsheet-close').addEventListener('click', closeGsheetModal);
+    gsheetMask.addEventListener('click', e=>{ if(e.target===gsheetMask) closeGsheetModal(); });
+    window.addEventListener('keydown', e=>{ if(e.key==='Escape' && gsheetMask.classList.contains('show')) closeGsheetModal(); });
+
+    gsUrlInput.addEventListener('input', ()=>{ gsConfig.url = gsUrlInput.value.trim(); gsSaveConfig(); });
+    gsTokenInput.addEventListener('input', ()=>{ gsConfig.token = gsTokenInput.value.trim(); gsSaveConfig(); });
+    gsAutoCb.addEventListener('change', ()=>{ gsConfig.autoSync = gsAutoCb.checked; gsSaveConfig(); });
+
+    document.getElementById('gs-upload').addEventListener('click', ()=>{ gsUpload(); });
+    document.getElementById('gs-download').addEventListener('click', async ()=>{
+      if(state.classOrder.length>0 && !confirm('從試算表下載會覆蓋目前的班級資料，確定要繼續嗎？')) return;
+      gsDownload();
+    });
+    document.getElementById('gs-copy-code').addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(GS_APPS_SCRIPT_CODE);
+        gsSetSyncStatus('已複製 Apps Script 程式碼。', 'ok');
+      }catch(e){
+        gsSetSyncStatus('複製失敗，請手動選取程式碼複製。', 'error');
+      }
     });
 
     // 執行匯出
@@ -6323,9 +6821,28 @@
       { key:'classroom', label:'上課違規' },
       { key:'other', label:'其他' }
     ]);
+    const VIOLATION_NOTE_KEYS = Object.freeze(['entries', 'specialEntries']);
+    const VIOLATION_NOTE_META = Object.freeze({
+      entries: {
+        label: '違規記事',
+        help: '可新增多筆違規日期與違規事項，新增後會立即儲存。',
+        empty: '尚無違規記事，請先新增違規日期與違規事項。',
+        placeholder: '例如：上課聊天、未帶作業、遲到 10 分鐘',
+        missingItem: '請輸入違規事項。',
+        clearConfirm: '確定要清空這位學生的所有違規記事嗎？'
+      },
+      specialEntries: {
+        label: '特殊記事',
+        help: '可新增多筆特殊日期與補充事件，新增後會立即儲存。',
+        empty: '尚無特殊記事，請先新增日期與記事內容。',
+        placeholder: '例如：需要關懷、情緒狀況、已聯繫家長',
+        missingItem: '請輸入特殊記事內容。',
+        clearConfirm: '確定要清空這位學生的所有特殊記事嗎？'
+      }
+    });
 
     function createEmptyViolationRecord(){
-      return { late:0, missing:0, classroom:0, other:0, entries:[] };
+      return { late:0, missing:0, classroom:0, other:0, entries:[], specialEntries:[] };
     }
 
     function getTodayInputDateValue(){
@@ -6356,6 +6873,14 @@
       }).filter(Boolean).sort((a, b)=> b.date.localeCompare(a.date) || a.item.localeCompare(b.item, 'zh-Hant'));
     }
 
+    function normalizeViolationNoteKey(noteKey){
+      return VIOLATION_NOTE_KEYS.includes(noteKey) ? noteKey : 'entries';
+    }
+
+    function getViolationNoteMeta(noteKey){
+      return VIOLATION_NOTE_META[normalizeViolationNoteKey(noteKey)] || VIOLATION_NOTE_META.entries;
+    }
+
     function normalizeViolationRecord(raw){
       const rec = createEmptyViolationRecord();
       if(raw && typeof raw === 'object'){
@@ -6364,6 +6889,7 @@
           rec[key] = Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
         });
         rec.entries = normalizeViolationEntries(raw.entries);
+        rec.specialEntries = normalizeViolationEntries(raw.specialEntries);
       }
       return rec;
     }
@@ -6373,7 +6899,19 @@
     }
 
     function getViolationEntries(cls, id){
-      return getViolationRecord(cls, id).entries.map(entry=> ({ ...entry }));
+      return getViolationEntriesByType(cls, id, 'entries');
+    }
+
+    function getViolationEntriesByType(cls, id, noteKey='entries'){
+      const normalizedKey = normalizeViolationNoteKey(noteKey);
+      return getViolationRecord(cls, id)[normalizedKey].map(entry=> ({ ...entry }));
+    }
+
+    function getViolationNoteCounts(cls, id){
+      const rec = getViolationRecord(cls, id);
+      const entries = rec.entries.length;
+      const specialEntries = rec.specialEntries.length;
+      return { entries, specialEntries, total: entries + specialEntries };
     }
 
     function getViolationTotal(cls, id){
@@ -6394,8 +6932,12 @@
     }
 
     function setViolationEntries(cls, id, entries){
+      setViolationEntriesByType(cls, id, 'entries', entries);
+    }
+
+    function setViolationEntriesByType(cls, id, noteKey, entries){
       const rec = getViolationRecord(cls, id);
-      rec.entries = normalizeViolationEntries(entries);
+      rec[normalizeViolationNoteKey(noteKey)] = normalizeViolationEntries(entries);
       setViolationRecord(cls, id, rec);
     }
 
@@ -10108,6 +10650,9 @@ elProgAdd?.addEventListener('click', ()=>{
       setMode('list');
     }
 
+    // ★ 啟動多分頁單一寫入鎖（同一瀏覽器同時只允許一個分頁寫入）
+    try{ TabLock.init(); }catch(e){ console.warn('TabLock 初始化失敗', e); }
+
 
 
 
@@ -10633,15 +11178,17 @@ elProgAdd?.addEventListener('click', ()=>{
       const rows = list.map(s=>{
         const rec = getViolationRecord(cls, s.id);
         const total = getViolationTotal(cls, s.id);
+        const noteCounts = getViolationNoteCounts(cls, s.id);
         const isHit = q && matchFilter(s, q);
         const studentNameHtml = isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'');
         const studentLabel = `${s.seat ? `#${padSeat(s.seat)} ` : ''}${s.name || ''}`.trim();
-        const entryCount = rec.entries.length;
-        const noteTitle = entryCount > 0 ? `違規記事（${entryCount} 筆）` : '新增違規記事';
+        const noteTitle = noteCounts.total > 0
+          ? `學生記事：違規 ${noteCounts.entries} 筆 / 特殊 ${noteCounts.specialEntries} 筆`
+          : '新增學生記事';
         return `
           <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}">
             <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
-            <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${entryCount>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${entryCount}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
+            <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${noteCounts.total>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${noteCounts.total}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
             <td class="num"><strong>${total}</strong></td>
             ${VIOLATION_FIELDS.map(({ key, label })=>`
               <td class="num viol-cell">
@@ -11509,16 +12056,48 @@ noteSave?.addEventListener('click', ()=>{
     });
 
         // 違規記事彈窗
-        let _violNoteCtx = { cls:'', id:'', label:'' };
+        let _violNoteCtx = { cls:'', id:'', label:'', tab:'entries' };
         let _violNoteKeyHandler = null;
+
+        function getActiveViolationNoteTab(){
+          return normalizeViolationNoteKey(_violNoteCtx.tab);
+        }
+
+        function renderViolationNoteTabs(){
+          const counts = _violNoteCtx.cls && _violNoteCtx.id
+            ? getViolationNoteCounts(_violNoteCtx.cls, _violNoteCtx.id)
+            : { entries:0, specialEntries:0, total:0 };
+          const activeTab = getActiveViolationNoteTab();
+          const meta = getViolationNoteMeta(activeTab);
+          violNoteTabs.forEach(btn=>{
+            const tabKey = normalizeViolationNoteKey(btn.getAttribute('data-viol-note-tab'));
+            const active = tabKey === activeTab;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            btn.tabIndex = active ? 0 : -1;
+            const countEl = btn.querySelector('.viol-note-tab-count');
+            if(countEl) countEl.textContent = String(counts[tabKey] || 0);
+          });
+          if(violNoteHelp) violNoteHelp.textContent = meta.help;
+          if(violNoteItem) violNoteItem.placeholder = meta.placeholder;
+        }
+
+        function setActiveViolationNoteTab(tabKey){
+          _violNoteCtx.tab = normalizeViolationNoteKey(tabKey);
+          renderViolationNoteList();
+          violNoteItem?.focus();
+        }
 
         function renderViolationNoteList(){
           if(!violNoteList) return;
-          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          const activeTab = getActiveViolationNoteTab();
+          const meta = getViolationNoteMeta(activeTab);
+          const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
+          renderViolationNoteTabs();
           violNoteList.innerHTML = '';
           if(violNoteClear) violNoteClear.disabled = entries.length === 0;
           if(entries.length === 0){
-            violNoteList.innerHTML = '<div class="viol-note-empty">尚無違規記事，請先新增違規日期與違規事項。</div>';
+            violNoteList.innerHTML = `<div class="viol-note-empty">${escapeHTML(meta.empty)}</div>`;
             return;
           }
           const frag = document.createDocumentFragment();
@@ -11544,7 +12123,7 @@ noteSave?.addEventListener('click', ()=>{
 
         function openViolationNoteModal(cls, id, label){
           if(!violNoteMask) return;
-          _violNoteCtx = { cls: cls || '', id: id || '', label: label || '' };
+          _violNoteCtx = { cls: cls || '', id: id || '', label: label || '', tab:'entries' };
           if(violNoteClass) violNoteClass.textContent = _violNoteCtx.cls;
           if(violNoteStudent) violNoteStudent.textContent = _violNoteCtx.label || _violNoteCtx.id;
           if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
@@ -11566,23 +12145,28 @@ noteSave?.addEventListener('click', ()=>{
             violNoteAdd?.click();
           }
         });
+        violNoteTabs.forEach(btn=>{
+          btn.addEventListener('click', ()=> setActiveViolationNoteTab(btn.getAttribute('data-viol-note-tab')));
+        });
         violNoteAdd?.addEventListener('click', ()=>{
           if(!_violNoteCtx.cls || !_violNoteCtx.id) return;
+          const activeTab = getActiveViolationNoteTab();
+          const meta = getViolationNoteMeta(activeTab);
           const date = normalizeViolationDateValue(violNoteDate?.value || '');
           const item = String(violNoteItem?.value || '').trim();
           if(!date){
-            showInAppModal('違規記事', '請先選擇違規日期。');
+            showInAppModal(meta.label, '請先選擇日期。');
             violNoteDate?.focus();
             return;
           }
           if(!item){
-            showInAppModal('違規記事', '請輸入違規事項。');
+            showInAppModal(meta.label, meta.missingItem);
             violNoteItem?.focus();
             return;
           }
-          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
           entries.push({ date, item });
-          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, entries);
+          setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, entries);
           renderViolationNoteList();
           if(violNoteItem) violNoteItem.value = '';
           if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
@@ -11592,20 +12176,23 @@ noteSave?.addEventListener('click', ()=>{
         violNoteList?.addEventListener('click', (e)=>{
           const btn = e.target?.closest?.('.viol-note-remove[data-idx]');
           if(!btn || !_violNoteCtx.cls || !_violNoteCtx.id) return;
+          const activeTab = getActiveViolationNoteTab();
           const idx = Number(btn.getAttribute('data-idx'));
           if(!Number.isInteger(idx) || idx < 0) return;
-          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
           entries.splice(idx, 1);
-          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, entries);
+          setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, entries);
           renderViolationNoteList();
           if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
         });
         violNoteClear?.addEventListener('click', ()=>{
           if(!_violNoteCtx.cls || !_violNoteCtx.id) return;
-          const entries = getViolationEntries(_violNoteCtx.cls, _violNoteCtx.id);
+          const activeTab = getActiveViolationNoteTab();
+          const meta = getViolationNoteMeta(activeTab);
+          const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
           if(entries.length === 0) return;
-          if(!confirm('確定要清空這位學生的所有違規記事嗎？')) return;
-          setViolationEntries(_violNoteCtx.cls, _violNoteCtx.id, []);
+          if(!confirm(meta.clearConfirm)) return;
+          setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, []);
           renderViolationNoteList();
           if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
         });
