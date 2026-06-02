@@ -1165,6 +1165,11 @@
     .hw-col .mini-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.2); }
     .viol-cell{ min-width:126px; text-align:center; }
     #viol-table thead th{ z-index:3; }
+    /* ★ 待處理欄位 */
+    .viol-pending-cell{ text-align:center; }
+    .viol-pending-cb{ width:18px; height:18px; cursor:pointer; accent-color:#e5a000; }
+    #viol-table tbody tr.viol-pending-row{ background:rgba(255, 196, 0, .14); }
+    #viol-table tbody tr.viol-pending-row td{ box-shadow: inset 4px 0 0 -1px #e5a000; }
     #viol-table thead th.num:not(:last-child),
     #viol-table tbody td.num:not(:last-child){ text-align:center; }
     .viol-student-cell{ text-align:left; }
@@ -5560,6 +5565,7 @@
             const violOtherIdx = header.findIndex(h => /^其他$/i.test(String(h||"").trim()));
             const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
             const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
+            const violPendingIdx = header.findIndex(h => /^待處理$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -5569,7 +5575,7 @@
             if(scoreIdx >= 0){
               const reserved = new Set([
                 idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx, groupIdx,
-                violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx
+                violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx, violPendingIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
               header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
@@ -5653,12 +5659,16 @@
                 state.hw[className].data[id]=arr;
               }
 
-              if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0 || violSpecialEntriesIdx >= 0){
+              if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0 || violSpecialEntriesIdx >= 0 || violPendingIdx >= 0){
                 const rec = createEmptyViolationRecord();
                 rec.late = violLateIdx >= 0 ? Math.max(0, Number(row[violLateIdx]) || 0) : 0;
                 rec.missing = violMissingIdx >= 0 ? Math.max(0, Number(row[violMissingIdx]) || 0) : 0;
                 rec.classroom = violClassroomIdx >= 0 ? Math.max(0, Number(row[violClassroomIdx]) || 0) : 0;
                 rec.other = violOtherIdx >= 0 ? Math.max(0, Number(row[violOtherIdx]) || 0) : 0;
+                if(violPendingIdx >= 0){
+                  const pv = String(row[violPendingIdx] ?? '').trim().toLowerCase();
+                  rec.pending = (pv === '1' || pv === 'true' || pv === '是' || pv === 'v' || pv === 'yes' || pv === '✓');
+                }
 
                 if(violEntriesIdx >= 0){
                   const entriesRaw = row[violEntriesIdx];
@@ -6014,7 +6024,7 @@
         });
       }
 
-      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事'];
+      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事', '待處理'];
       const aoa = [header];
 
       for (const s of list){
@@ -6054,7 +6064,8 @@
           viol.classroom || 0,
           viol.other || 0,
           violEntriesJson,
-          violSpecialEntriesJson
+          violSpecialEntriesJson,
+          viol.pending ? 1 : 0
         ]);
       }
 
@@ -6075,7 +6086,7 @@
         {wch:8}, {wch:8},
         {wch:14},
         {wch:8}, {wch:8},
-        {wch:8}, {wch:8}, {wch:12}, {wch:8}, {wch:28}
+        {wch:8}, {wch:8}, {wch:12}, {wch:8}, {wch:28}, {wch:28}, {wch:8}
       ];
       return ws;
     }
@@ -6153,6 +6164,20 @@
         // 試算表分頁名稱長度上限 100；safeSheetName 已處理非法字元
         sheets[safeSheetName(cls)] = buildClassAoA(cls);
       }
+      // ★ 一併上傳教學進度（每個進度分頁 = 一個工作表，A1 標記「教學進度」供下載時辨識）
+      try{
+        const prog = ensureProgressState();
+        for(const pageName of (prog.order || [])){
+          let name = safeSheetName(pageName || '教學進度') || '教學進度';
+          // 避免與班級分頁或其他進度分頁名稱衝突
+          if(sheets[name] !== undefined){
+            let i = 2;
+            while(sheets[`${name}_${i}`] !== undefined) i++;
+            name = `${name}_${i}`;
+          }
+          sheets[name] = buildProgressAOA(pageName);
+        }
+      }catch(e){ console.warn('上傳教學進度失敗', e); }
       const payload = { token: gsConfig.token, action: 'upload', sheets };
       if(!silent) gsSetSyncStatus('上傳中…', '');
       try{
@@ -6850,7 +6875,7 @@ function jsonOut(obj) {
     });
 
     function createEmptyViolationRecord(){
-      return { late:0, missing:0, classroom:0, other:0, entries:[], specialEntries:[] };
+      return { late:0, missing:0, classroom:0, other:0, pending:false, entries:[], specialEntries:[] };
     }
 
     function getTodayInputDateValue(){
@@ -6896,6 +6921,7 @@ function jsonOut(obj) {
           const n = Number(raw[key]);
           rec[key] = Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
         });
+        rec.pending = (raw.pending === true || raw.pending === 1 || raw.pending === '1' || raw.pending === 'true');
         rec.entries = normalizeViolationEntries(raw.entries);
         rec.specialEntries = normalizeViolationEntries(raw.specialEntries);
       }
@@ -6931,12 +6957,18 @@ function jsonOut(obj) {
       const key = scoreKey(cls, id);
       const next = normalizeViolationRecord(record);
       const total = VIOLATION_FIELDS.reduce((sum, { key: fieldKey })=> sum + next[fieldKey], 0);
-      if(total <= 0 && next.entries.length === 0){
+      if(total <= 0 && next.entries.length === 0 && next.specialEntries.length === 0 && !next.pending){
         if(key in state.violations) delete state.violations[key];
       }else{
         state.violations[key] = next;
       }
       saveSession('violations change');
+    }
+
+    function setViolationPending(cls, id, val){
+      const rec = getViolationRecord(cls, id);
+      rec.pending = !!val;
+      setViolationRecord(cls, id, rec);
     }
 
     function setViolationEntries(cls, id, entries){
@@ -11194,6 +11226,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const th = `
         <thead>
           <tr>
+            <th style="min-width:56px">待處理</th>
             <th style="min-width:64px">座號</th>
             <th style="min-width:120px">姓名</th>
             <th class="num">總次數</th>
@@ -11213,7 +11246,8 @@ elProgAdd?.addEventListener('click', ()=>{
           ? `學生記事：違規 ${noteCounts.entries} 筆 / 特殊 ${noteCounts.specialEntries} 筆`
           : '新增學生記事';
         return `
-          <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}">
+          <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}${rec.pending?' viol-pending-row':''}">
+            <td class="viol-pending-cell"><input type="checkbox" class="viol-pending-cb" data-id="${escapeHTML(s.id)}" ${rec.pending?'checked':''} title="標記為待處理，提醒老師" aria-label="待處理"></td>
             <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
             <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${noteCounts.total>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${noteCounts.total}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
             <td class="num"><strong>${total}</strong></td>
@@ -11230,6 +11264,16 @@ elProgAdd?.addEventListener('click', ()=>{
       }).join('');
 
       elViolTable.innerHTML = th + `<tbody>${rows || '<tr><td colspan="999" class="hint">尚無學生資料</td></tr>'}</tbody>`;
+
+      elViolTable.querySelectorAll('.viol-pending-cb[data-id]').forEach(cb=>{
+        cb.addEventListener('change', ()=>{
+          const id = cb.getAttribute('data-id') || '';
+          if(!id) return;
+          setViolationPending(cls, id, cb.checked);
+          const tr = cb.closest('tr');
+          if(tr) tr.classList.toggle('viol-pending-row', cb.checked);
+        });
+      });
 
       elViolTable.querySelectorAll('.viol-btn[data-id][data-kind][data-delta]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
