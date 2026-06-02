@@ -4799,14 +4799,18 @@
 
   <!-- ★ 多分頁唯讀提示（同一瀏覽器同時只允許一個分頁寫入，避免資料衝突） -->
   <div id="tablock-overlay" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,.62); backdrop-filter:blur(2px); align-items:center; justify-content:center; padding:20px;">
-    <div style="max-width:460px; width:100%; background:var(--card,#fff); color:inherit; border-radius:16px; box-shadow:0 12px 48px rgba(0,0,0,.35); padding:26px 24px; text-align:center;">
+    <div style="position:relative; max-width:460px; width:100%; background:var(--card,#fff); color:inherit; border-radius:16px; box-shadow:0 12px 48px rgba(0,0,0,.35); padding:26px 24px; text-align:center;">
+      <button id="tablock-close-x" class="close" type="button" aria-label="關閉此視窗" style="position:absolute; right:12px; top:10px;">✕</button>
       <div style="font-size:42px; line-height:1; margin-bottom:10px;">🔒</div>
       <h3 style="margin:0 0 10px; font-size:18px;">已在另一個視窗開啟</h3>
       <p style="font-size:14px; line-height:1.7; color:var(--muted); margin:0 0 18px;">
         為避免兩個視窗同時編輯造成資料覆蓋或存錯，本視窗暫時設為唯讀。<br>
         你可以關閉這個視窗，或點下方按鈕改用此視窗（會重新載入並取得最新資料）。
       </p>
-      <button id="tablock-takeover" class="btn add" style="font-size:15px; padding:9px 20px;">改用此視窗</button>
+      <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <button id="tablock-close" class="btn" style="font-size:15px; padding:9px 20px;">關閉此視窗</button>
+        <button id="tablock-takeover" class="btn add" style="font-size:15px; padding:9px 20px;">改用此視窗</button>
+      </div>
     </div>
   </div>
 
@@ -5040,7 +5044,23 @@
       try{ bc = ('BroadcastChannel' in self) ? new BroadcastChannel('pscore_tablock') : null; }catch(e){ bc = null; }
 
       const overlay   = document.getElementById('tablock-overlay');
+      const closeBtn  = document.getElementById('tablock-close');
+      const closeXBtn = document.getElementById('tablock-close-x');
       const takeoverBtn= document.getElementById('tablock-takeover');
+
+      function closeThisWindow(){
+        let closed = false;
+        try{
+          window.open('', '_self');
+          window.close();
+          closed = true;
+        }catch(e){}
+        if(!closed){
+          setTimeout(()=>{
+            alert('瀏覽器限制無法自動關閉此分頁，請手動關閉。');
+          }, 20);
+        }
+      }
 
       function showOverlay(show){ if(overlay) overlay.style.display = show ? 'flex' : 'none'; }
 
@@ -5093,6 +5113,9 @@
           setTimeout(()=> location.reload(), 120);
         });
       }
+      [closeBtn, closeXBtn].filter(Boolean).forEach(btn=>{
+        btn.addEventListener('click', closeThisWindow);
+      });
 
       return {
         init,
