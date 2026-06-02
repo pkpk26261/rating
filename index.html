@@ -7332,7 +7332,7 @@ function jsonOut(obj) {
           const row = existingRows[i];
           const whoEl = row.querySelector('.who');
           const seatDisp = padSeat(s.seat);
-          const expectedWho = (s.seat ? `#${seatDisp} ` : '') + s.name;
+          const expectedWho = (s.seat ? `#${seatDisp}` : '') + s.name;
           if(whoEl && whoEl.textContent.trim() !== expectedWho.trim()){
             canPatch = false;
             break;
@@ -7367,7 +7367,7 @@ function jsonOut(obj) {
         row.className = `row ${clsRank}`;
         row.innerHTML = `
             <div class="rank">${rank<=5 ? `<span class="medal">${medalText}</span>` : rank}</div>
-            <div class="who">${s.seat?`<span class="seat-badge">#${escapeHTML(seatDisp)}</span> `:''}${escapeHTML(s.name)}</div>
+          <div class="who">${s.seat ? `#${escapeHTML(seatDisp)}` : ''}${escapeHTML(s.name)}</div>
             <div class="score">${s[valueKey]}</div>`;
         frag.appendChild(row);
       }
