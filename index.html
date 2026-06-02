@@ -4759,6 +4759,9 @@
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
           <input type="checkbox" id="gs-auto"> 變更後自動上傳到試算表（約 3.5 秒延遲）
         </label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
+          <input type="checkbox" id="gs-autoload"> 開啟網頁時自動從試算表載入最新資料
+        </label>
 
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:14px 0;">
           <button id="gs-upload" class="btn add">⬆️ 上傳到試算表</button>
@@ -6087,6 +6090,7 @@
       url: '',
       token: '',
       autoSync: false,
+      autoLoad: true,
       lastSync: 0
     };
     function gsLoadConfig(){
@@ -6097,6 +6101,7 @@
           gsConfig.url      = typeof o.url === 'string' ? o.url : '';
           gsConfig.token    = typeof o.token === 'string' ? o.token : '';
           gsConfig.autoSync = !!o.autoSync;
+          gsConfig.autoLoad = (o.autoLoad === undefined) ? true : !!o.autoLoad;
           gsConfig.lastSync = Number(o.lastSync) || 0;
         }
       }catch(e){ /* 忽略損壞設定 */ }
@@ -6375,11 +6380,13 @@ function jsonOut(obj) {
     const gsUrlInput  = document.getElementById('gs-url');
     const gsTokenInput= document.getElementById('gs-token');
     const gsAutoCb    = document.getElementById('gs-auto');
+    const gsAutoLoadCb= document.getElementById('gs-autoload');
 
     function openGsheetModal(){
       gsUrlInput.value   = gsConfig.url;
       gsTokenInput.value = gsConfig.token;
       gsAutoCb.checked   = gsConfig.autoSync;
+      gsAutoLoadCb.checked = gsConfig.autoLoad;
       const codeEl = document.getElementById('gs-code');
       if(codeEl && !codeEl.textContent) codeEl.textContent = GS_APPS_SCRIPT_CODE;
       gsSetSyncStatus('', '');
@@ -6396,6 +6403,7 @@ function jsonOut(obj) {
     gsUrlInput.addEventListener('input', ()=>{ gsConfig.url = gsUrlInput.value.trim(); gsSaveConfig(); });
     gsTokenInput.addEventListener('input', ()=>{ gsConfig.token = gsTokenInput.value.trim(); gsSaveConfig(); });
     gsAutoCb.addEventListener('change', ()=>{ gsConfig.autoSync = gsAutoCb.checked; gsSaveConfig(); });
+    gsAutoLoadCb.addEventListener('change', ()=>{ gsConfig.autoLoad = gsAutoLoadCb.checked; gsSaveConfig(); });
 
     document.getElementById('gs-upload').addEventListener('click', ()=>{ gsUpload(); });
     document.getElementById('gs-download').addEventListener('click', async ()=>{
@@ -10652,6 +10660,25 @@ elProgAdd?.addEventListener('click', ()=>{
 
     // ★ 啟動多分頁單一寫入鎖（同一瀏覽器同時只允許一個分頁寫入）
     try{ TabLock.init(); }catch(e){ console.warn('TabLock 初始化失敗', e); }
+
+    // ★ 開啟網頁時優先從 Google 試算表自動載入最新資料
+    //   - 僅在作用分頁、已設定網址密碼、且開啟「自動載入」時執行
+    //   - 失敗時自動沿用本機暫存資料，不影響使用
+    (function gsAutoLoadOnStartup(){
+      if(!gsConfig.autoLoad || !gsReady()) return;
+      // 等分頁鎖判定完成（init 內探測約 250ms）後再決定是否載入
+      setTimeout(async ()=>{
+        if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // 唯讀分頁不載入
+        try{
+          setStatus('正在從 Google 試算表載入最新資料…');
+          const ok = await gsDownload();
+          if(!ok) setStatus('已沿用本機暫存資料（雲端載入未完成）。');
+        }catch(e){
+          console.warn('開啟時自動載入失敗，沿用本機資料', e);
+          setStatus('已沿用本機暫存資料（雲端載入失敗）。');
+        }
+      }, 400);
+    })();
 
 
 
