@@ -6400,10 +6400,17 @@
         return false;
       }
       const sheets = {};
+      // ★ 幹部選項集中寫入獨立的 __CLASS_META__ 分頁，班級分頁本身不含 metadata 列
+      const classMeta = [['班級', '幹部選項']];
       for(const cls of classes){
         // 試算表分頁名稱長度上限 100；safeSheetName 已處理非法字元
-        sheets[safeSheetName(cls)] = buildClassAoA(cls);
+        let aoa = buildClassAoA(cls);
+        // 剝除班級 AoA 最前面的 metadata 列，讓班級分頁維持純資料
+        if(aoa.length > 0 && String(aoa[0][0] || '').trim() === CLASS_META_MARKER) aoa = aoa.slice(1);
+        sheets[safeSheetName(cls)] = aoa;
+        classMeta.push([cls, JSON.stringify(ensureCadreOptions(cls))]);
       }
+      sheets['__CLASS_META__'] = classMeta;
       // ★ 一併上傳教學進度（每個進度分頁 = 一個工作表，A1 標記「教學進度」供下載時辨識）
       try{
         const prog = ensureProgressState();
@@ -6464,7 +6471,20 @@
         const data = await gsParseResponse(res);
         if(!data.ok) throw new Error(data.error || '下載失敗');
         const sheetsObj = data.sheets || {};
-        const names = Object.keys(sheetsObj).filter(n => Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
+        // ★ 先從 __CLASS_META__ 分頁還原幹部選項
+        const metaRows = sheetsObj['__CLASS_META__'];
+        if(Array.isArray(metaRows)){
+          metaRows.slice(1).forEach(row=>{
+            const cls = String(row[0] || '').trim();
+            const raw = String(row[1] || '').trim();
+            if(!cls || !raw) return;
+            try{
+              const opts = JSON.parse(raw);
+              if(Array.isArray(opts)) state.cadreOptions[cls] = uniqCadreTitles(opts);
+            }catch(e){}
+          });
+        }
+        const names = Object.keys(sheetsObj).filter(n => n !== '__CLASS_META__' && Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
         if(names.length === 0){
           gsSetSyncStatus('試算表沒有可匯入的班級資料。', 'error');
           return false;
