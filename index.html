@@ -5049,17 +5049,32 @@
       const takeoverBtn= document.getElementById('tablock-takeover');
 
       function closeThisWindow(){
-        let closed = false;
         try{
-          window.open('', '_self');
+          window.open('', '_self', '');
           window.close();
-          closed = true;
         }catch(e){}
-        if(!closed){
+
+        setTimeout(()=>{
+          if(window.closed) return;
+
+          try{
+            document.title = '此分頁可安全關閉';
+            document.body.innerHTML = `
+              <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#111827;color:#fff;font-family:sans-serif;text-align:center;">
+                <div>
+                  <div style="font-size:42px;line-height:1;margin-bottom:12px;">🔒</div>
+                  <div style="font-size:20px;font-weight:700;margin-bottom:10px;">瀏覽器已阻止自動關閉此分頁</div>
+                  <div style="font-size:14px;line-height:1.7;opacity:.85;">本分頁已停用，不會寫入資料。你可以直接關閉這個分頁。</div>
+                </div>
+              </div>
+            `;
+            document.body.style.margin = '0';
+          }catch(e){}
+
           setTimeout(()=>{
-            alert('瀏覽器限制無法自動關閉此分頁，請手動關閉。');
-          }, 20);
-        }
+            try{ location.replace('about:blank'); }catch(e){}
+          }, 120);
+        }, 120);
       }
 
       function showOverlay(show){ if(overlay) overlay.style.display = show ? 'flex' : 'none'; }
@@ -6258,6 +6273,8 @@
         const file = new File([buf], 'GoogleSheets.xlsx',
           { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         await handleFiles([file]);
+        // 匯入後立刻持久化，避免重新整理時還原到舊的作業欄名。
+        saveSessionNow();
         gsConfig.lastSync = Date.now();
         gsSaveConfig();
         gsUpdateLastSyncLabel();
