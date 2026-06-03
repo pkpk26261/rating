@@ -591,6 +591,11 @@
       display:none !important;
     }
 
+    /* 有資料時隱藏頂部導覽按鈕 */
+    body:not(.no-data) #btn-tour{
+      display:none !important;
+    }
+
     /* 日期時間隱藏 */
     body.no-data .dt-display{
       display:none !important;
@@ -624,7 +629,7 @@
     }
 
     /* ── 匯入按鈕脈衝高亮提示 ── */
-    body.no-data .topbar__left .import-block label.btn{
+    body.no-data .topbar__left .import-block #btn-data{
       animation:importPulse 2s ease-in-out infinite;
       box-shadow:0 0 0 0 rgba(129,140,248,.4);
     }
@@ -1166,8 +1171,9 @@
     .viol-cell{ min-width:126px; text-align:center; }
     #viol-table thead th{ z-index:3; }
     /* ★ 待處理欄位 */
-    .viol-pending-cell{ text-align:center; }
-    .viol-pending-cb{ width:18px; height:18px; cursor:pointer; accent-color:#e5a000; }
+    .viol-pending-col{ min-width:56px; text-align:center; }
+    .viol-pending-cell{ text-align:center; vertical-align:middle; }
+    .viol-pending-cb{ display:block; width:18px; height:18px; margin:0 auto; cursor:pointer; accent-color:#e5a000; }
     #viol-table tbody tr.viol-pending-row{ background:rgba(255, 196, 0, .14); }
     #viol-table tbody tr.viol-pending-row td{ box-shadow: inset 4px 0 0 -1px #e5a000; }
     #viol-table thead th.num:not(:last-child),
@@ -3306,6 +3312,36 @@
       color: #312e81;
     }
 
+    /* ===== 資料合併選單（匯入 / Google 試算表） ===== */
+    .data-menu{ position:relative; display:inline-flex; }
+    .data-dropdown[hidden]{ display:none !important; }
+    .data-dropdown{
+      position:absolute; top:100%; left:0; padding-top:6px;
+      display:flex; flex-direction:column; gap:4px; min-width:180px; z-index:999;
+      animation:dataDropIn .15s ease;
+    }
+    .data-dropdown > .data-inner{
+      background:var(--card); border:1px solid rgba(255,255,255,.1);
+      border-radius:12px; padding:6px; display:flex; flex-direction:column; gap:4px;
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    }
+    :root[data-theme="light"] .data-dropdown > .data-inner{
+      background:rgba(255,255,255,.92); border-color:rgba(0,0,0,.1);
+      box-shadow:0 8px 24px rgba(0,0,0,.12);
+    }
+    @keyframes dataDropIn{
+      from{ opacity:0; transform:translateY(-6px); }
+      to{   opacity:1; transform:translateY(0); }
+    }
+    .data-item{
+      appearance:none; border:0; background:transparent; color:var(--fg);
+      padding:9px 14px; border-radius:8px; cursor:pointer; font-weight:700; font-size:13px;
+      text-align:left; white-space:nowrap; transition:background .15s; display:block; width:100%;
+    }
+    .data-item:hover{ background:rgba(129,140,248,.16); }
+    :root[data-theme="light"] .data-item:hover{ background:rgba(99,102,241,.08); }
+
     /* ===== 側欄 & Main 面板玻璃效果 ===== */
     .sidebar, .main{
       background: rgba(10,14,26,.42) !important;
@@ -4099,7 +4135,15 @@
       <div class="topbar__left">
         <div class="import-block">
           <div style="display:flex; gap:8px; align-items:center;">
-            <label class="btn" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 匯入</label>
+            <div class="data-menu" id="data-menu">
+              <button id="btn-data" class="btn data-toggle" type="button" aria-haspopup="true" aria-expanded="false" title="匯入檔案或與 Google 試算表同步">📂 匯入 / 同步 ▾</button>
+              <div class="data-dropdown" id="data-dropdown" hidden>
+                <div class="data-inner">
+                  <label class="data-item" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 從檔案匯入</label>
+                  <button type="button" class="data-item" id="btn-gsheet" title="與 Google 試算表雙向同步">☁️ Google 試算表</button>
+                </div>
+              </div>
+            </div>
             <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
             <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
             <button id="btn-tour" class="btn" title="啟動新手導覽，逐步了解各項功能" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:rgba(129,140,248,.5);color:#fff;font-weight:800;">🚀 導覽</button>
@@ -4137,7 +4181,6 @@
         <div class="topbar__right-actions">
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
           <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
-          <button id="btn-gsheet" class="btn" title="與 Google 試算表雙向同步">☁️ Google 試算表</button>
         </div>
         <div id="dt-display" class="dt-display" aria-label="日期與時間">
           <div id="dt-date">114年12月16日</div>
@@ -6462,6 +6505,19 @@ function jsonOut(obj) {
 
     document.getElementById('btn-gsheet').addEventListener('click', openGsheetModal);
     document.getElementById('gsheet-close').addEventListener('click', closeGsheetModal);
+
+    /* ★ 資料合併選單：匯入 / Google 試算表（點擊開關、點外部關閉） */
+    (()=>{
+      const menu = document.getElementById('data-menu');
+      const btn  = document.getElementById('btn-data');
+      const dd   = document.getElementById('data-dropdown');
+      if(!menu || !btn || !dd) return;
+      const openMenu  = ()=>{ dd.hidden = false; btn.setAttribute('aria-expanded','true'); };
+      const closeMenu = ()=>{ dd.hidden = true;  btn.setAttribute('aria-expanded','false'); };
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); dd.hidden ? openMenu() : closeMenu(); });
+      dd.addEventListener('click', ()=> closeMenu());
+      document.addEventListener('click', (e)=>{ if(!menu.contains(e.target)) closeMenu(); });
+    })();
     gsheetMask.addEventListener('click', e=>{ if(e.target===gsheetMask) closeGsheetModal(); });
     window.addEventListener('keydown', e=>{ if(e.key==='Escape' && gsheetMask.classList.contains('show')) closeGsheetModal(); });
 
@@ -10790,7 +10846,7 @@ elProgAdd?.addEventListener('click', ()=>{
         {
           target: '.topbar__left .import-block div:first-child',
           title: '工具列按鈕',
-          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「🚀 導覽」可隨時重新啟動此導覽。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
+          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「🚀 導覽」會在空白頁面時顯示，方便查看新手引導。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
           pos: 'bottom'
         }
       ];
@@ -11266,7 +11322,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const th = `
         <thead>
           <tr>
-            <th style="min-width:56px">待處理</th>
+            <th class="viol-pending-col">待處理</th>
             <th style="min-width:64px">座號</th>
             <th style="min-width:120px">姓名</th>
             <th class="num">總次數</th>
@@ -11287,7 +11343,7 @@ elProgAdd?.addEventListener('click', ()=>{
           : '新增學生記事';
         return `
           <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}${rec.pending?' viol-pending-row':''}">
-            <td class="viol-pending-cell"><input type="checkbox" class="viol-pending-cb" data-id="${escapeHTML(s.id)}" ${rec.pending?'checked':''} title="標記為待處理，提醒老師" aria-label="待處理"></td>
+            <td class="viol-pending-cell viol-pending-col"><input type="checkbox" class="viol-pending-cb" data-id="${escapeHTML(s.id)}" ${rec.pending?'checked':''} title="標記為待處理，提醒老師" aria-label="待處理"></td>
             <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
             <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${noteCounts.total>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${noteCounts.total}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
             <td class="num"><strong>${total}</strong></td>
