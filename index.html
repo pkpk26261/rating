@@ -2671,19 +2671,22 @@
     :root[data-theme="light"] .manage-tbl-wrap,
     :root[data-theme="light"] .manage-tbl{ background:#eef0f6; }
 
-    /* ── 左側凍結欄：座號、姓名、學號 ── */
+    /* ── 左側凍結欄：幹部職稱、座號、姓名、學號 ── */
+    .manage-tbl .col-cadre,
     .manage-tbl .col-seat,
     .manage-tbl .col-name,
     .manage-tbl .col-sid{
       position:sticky; z-index:1;
       background:#131b2e; box-sizing:border-box;
     }
-    .manage-tbl .col-seat{ width:70px; left:0; text-align:center; }
-    .manage-tbl .col-name{ width:120px; left:70px; font-weight:700; }
-    .manage-tbl .col-sid{ width:110px; left:190px; color:var(--muted); font-size:12px;
+    .manage-tbl .col-cadre{ width:180px; left:0; min-width:180px; }
+    .manage-tbl .col-seat{ width:70px; left:180px; text-align:center; }
+    .manage-tbl .col-name{ width:120px; left:250px; font-weight:700; }
+    .manage-tbl .col-sid{ width:110px; left:370px; color:var(--muted); font-size:12px;
       box-shadow: inset -2px 0 0 var(--line), inset 0 -1px 0 var(--line);
     }
     /* 左凍結表頭 z-index 要比一般表頭高 */
+    .manage-tbl th.col-cadre,
     .manage-tbl th.col-seat,
     .manage-tbl th.col-name,
     .manage-tbl th.col-sid{ z-index:4; }
@@ -2741,12 +2744,86 @@
       border-color: var(--accent);
     }
 
+    .manage-cadre-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      min-width:150px;
+    }
+    .manage-cadre-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      max-width:100%;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:rgba(34,197,94,.14);
+      border:1px solid rgba(34,197,94,.28);
+      color:var(--fg);
+    }
+    .manage-cadre-chip.is-edit{
+      padding-right:6px;
+      background:rgba(99,102,241,.12);
+      border-color:rgba(99,102,241,.24);
+    }
+    .manage-cadre-remove{
+      border:none;
+      background:transparent;
+      color:inherit;
+      cursor:pointer;
+      font-size:14px;
+      line-height:1;
+      padding:0 2px;
+    }
+    .manage-cadre-empty{
+      color:var(--muted);
+      font-size:12px;
+    }
+    .manage-cadre-editor{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:160px;
+    }
+    .manage-cadre-controls{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .manage-cadre-select{
+      flex:1 1 120px;
+      min-width:0;
+      padding:5px 8px;
+      border-radius:8px;
+      border:1px solid var(--accent);
+      background:rgba(129,140,248,.08);
+      color:var(--fg);
+      font:inherit;
+    }
+    .manage-cadre-select:focus{
+      outline:none;
+      border-color:var(--accent-2);
+      box-shadow:0 0 0 2px rgba(129,140,248,.18);
+    }
+    .manage-cadre-controls .btn{
+      padding:4px 8px;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    :root[data-theme="light"] .manage-cadre-select{
+      background:rgba(129,140,248,.06);
+    }
+
     /* ── 中間作業欄（可捲動） ── */
     .manage-tbl .col-hw{ min-width:92px; text-align:center; font-variant-numeric:tabular-nums; }
     /* 無作業時的佔位欄 */
     .manage-tbl .col-hw-spacer{ min-width:120px; width:100%; }
 
     /* ── hover 時凍結欄也要顯示 hover 底色 ── */
+    .manage-tbl tbody tr:hover .col-cadre,
     .manage-tbl tbody tr:hover .col-seat,
     .manage-tbl tbody tr:hover .col-name,
     .manage-tbl tbody tr:hover .col-sid,
@@ -2755,11 +2832,13 @@
       background: color-mix(in srgb, #131b2e 90%, #6366f1);
     }
     /* 淺色主題凍結欄背景 */
+    :root[data-theme="light"] .manage-tbl td.col-cadre,
     :root[data-theme="light"] .manage-tbl td.col-seat,
     :root[data-theme="light"] .manage-tbl td.col-name,
     :root[data-theme="light"] .manage-tbl td.col-sid,
     :root[data-theme="light"] .manage-tbl td.col-score,
     :root[data-theme="light"] .manage-tbl td.col-hwavg{ background:#eef0f6; }
+    :root[data-theme="light"] .manage-tbl tbody tr:hover .col-cadre,
     :root[data-theme="light"] .manage-tbl tbody tr:hover .col-seat,
     :root[data-theme="light"] .manage-tbl tbody tr:hover .col-name,
     :root[data-theme="light"] .manage-tbl tbody tr:hover .col-sid,
@@ -5019,6 +5098,7 @@
       classMap:{}, classOrder:[], scores:{}, deductions:{}, violations:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
       hw:{}, savedHW:{}, draw:{}, showStageInList: true,
       group:{},
+      cadreOptions:{},
       // ★ 新增：教學進度（跨班勾選）與倒數計時
       progress:{ pages:{}, order:[], active:'' },
       timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
@@ -5253,6 +5333,7 @@
         seating: state.seating,
         hw: state.hw,
         group: state.group,
+        cadreOptions: state.cadreOptions,
         // ★ 教學進度 & 倒數計時
         progress: state.progress,
         timer: state.timer,
@@ -5303,9 +5384,15 @@
         state.seating    = s.seating    || {};
         state.hw         = s.hw         || {};
         state.group      = s.group      || {};
+        state.cadreOptions = s.cadreOptions || {};
         // ★ 教學進度/倒數計時
         state.progress   = s.progress   || { items: [] };
         state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
+
+        for(const cls of Object.keys(state.classMap || {})){
+          (state.classMap[cls] || []).forEach(stu => normalizeStudentCadres(stu));
+          ensureCadreOptions(cls);
+        }
 
         // 若倒數計時正在進行，讓它在背景繼續跑
         try{
@@ -5690,6 +5777,10 @@
               while(map[className+'_'+suffix]) suffix++;
               className = className+'_'+suffix;
             }
+            const classMeta = parseClassMetaRows(rows, headerRowIdx);
+            if(Array.isArray(classMeta.cadreOptions)){
+              state.cadreOptions[className] = uniqCadreTitles(classMeta.cadreOptions);
+            }
 
             const idIdx=findIdColumnIndex(header);
             const seatIdx=findSeatColumnIndex(header);
@@ -5707,6 +5798,7 @@
             const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
             const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
             const violPendingIdx = header.findIndex(h => /^待處理$/i.test(String(h||"").trim()));
+            const titleIdx = header.findIndex(h => /^幹部職稱$|^幹部$|^職稱$|^cadres?$|^titles?$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -5715,7 +5807,7 @@
             const hwCols=[];
             if(scoreIdx >= 0){
               const reserved = new Set([
-                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, seatRIdx, seatCIdx, groupIdx,
+                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, titleIdx, seatRIdx, seatCIdx, groupIdx,
                 violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx, violPendingIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
@@ -5744,6 +5836,7 @@
                 existing.cols = hwCols.map(c=>c.name);
               }
             }
+            ensureCadreOptions(className);
 
             for(let r=headerRowIdx+1; r<rows.length; r++){
               const row=rows[r]; if(!row||row.length===0) continue;
@@ -5751,7 +5844,8 @@
               const seat=seatIdx>=0?String(row[seatIdx]??'').trim():'';
               const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
               const id = sid ? `SID__${sid}` : makeFallbackId(className, seat, name);
-              list.push({id,sid,name, seat, row:r+1, sheet:className});
+              const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
+              list.push({id,sid,name, seat, titles, row:r+1, sheet:className});
 
               // 備註（可選）
               if(noteIdx>=0){
@@ -5900,6 +5994,8 @@
         }else{
           // 有班級資料：正常流程
           state.classMap=map; state.classOrder=order;
+          state.cadreOptions = {};
+          order.forEach(cls => ensureCadreOptions(cls));
           renderClassOptions(order);
           elSelect.disabled=true; elSelect.disabled=false; elSelect.value=order[0];
           elSearch.disabled=false; elSearch.value=""; state.filter="";
@@ -6003,6 +6099,7 @@
 
       // 更新 notes
       if(state.notes && state.notes[oldName]){ state.notes[newName] = state.notes[oldName]; delete state.notes[oldName]; }
+      if(state.cadreOptions && state.cadreOptions[oldName]){ state.cadreOptions[newName] = state.cadreOptions[oldName]; delete state.cadreOptions[oldName]; }
 
       // 更新 sidMap
       for(const id of Object.keys(state.sidMap)){
@@ -6165,10 +6262,11 @@
         });
       }
 
-      const header = ['學號','座號','姓名','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事', '待處理'];
-      const aoa = [header];
+      const header = ['學號','座號','姓名','幹部職稱','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事', '待處理'];
+      const aoa = [buildClassMetaRow(cls), header];
 
       for (const s of list){
+        normalizeStudentCadres(s);
         const id = s.id, sc = getScore(cls, id);
         const sid = s.sid || (state.sidMap[id]?.sid) || '';
 
@@ -6192,6 +6290,7 @@
           sid,
           s.seat ?? '',
           s.name ?? '',
+          (s.titles || []).join('、'),
           getNote(cls, id),
           sc,
           ...arr,
@@ -6792,6 +6891,7 @@ function jsonOut(obj) {
       state.legacyScores = {};
       state.hw         = {};
       state.savedHW    = {};
+      state.cadreOptions = {};
       state.group      = {};
       state.filter     = '';
       state.mode       = 'list';
@@ -6918,6 +7018,7 @@ function jsonOut(obj) {
         state.classMap = {};
         state.classOrder = [];
         state.sidMap = {};
+        state.cadreOptions = {};
         // 名單清了，分數/作業/座位/備註也沒意義
         state.scores = {}; state.deductions = {}; state.violations = {}; state.savedScores = {}; state.legacyScores = {};
         state.hw = {}; state.savedHW = {};
@@ -7335,6 +7436,72 @@ function jsonOut(obj) {
 
     function makeFallbackId(sheet, seat, name){ const norm=(v)=>String(v??'').trim().replace(/\s+/g,'_').replace(/[^\w\u4e00-\u9fa5\-]/g,''); return `FALLBACK__${norm(sheet)}__${norm(seat)}__${norm(name)}`; }
     function safeSheetName(name){ return String(name).slice(0,31).replace(/[\\\/?*\[\]:]/g,'-') || 'Sheet'; }
+
+    const DEFAULT_CADRE_OPTIONS = Object.freeze(['班長','副班長','學藝','風紀','衛生','總務','康樂','資訊','輔導','圖書']);
+    const CLASS_META_MARKER = '__CLASS_META__';
+    function normalizeCadreTitle(v){ return String(v ?? '').trim().replace(/\s+/g, ' '); }
+    function uniqCadreTitles(list){
+      const seen = new Set();
+      const out = [];
+      for(const raw of (list || [])){
+        const title = normalizeCadreTitle(raw);
+        if(!title || seen.has(title)) continue;
+        seen.add(title);
+        out.push(title);
+      }
+      return out;
+    }
+    function splitCadreTitles(raw){
+      if(Array.isArray(raw)) return uniqCadreTitles(raw);
+      const text = String(raw ?? '').trim();
+      if(!text) return [];
+      return uniqCadreTitles(text.split(/[、,\/／;；|｜]+/));
+    }
+    function normalizeStudentCadres(stu){
+      if(!stu || typeof stu !== 'object') return stu;
+      stu.titles = uniqCadreTitles([
+        ...splitCadreTitles(stu.titles),
+        ...splitCadreTitles(stu.title)
+      ]);
+      return stu;
+    }
+    function ensureCadreOptions(cls){
+      const current = Array.isArray(state.cadreOptions?.[cls]) ? state.cadreOptions[cls] : [];
+      const fromStudents = (state.classMap?.[cls] || []).flatMap(stu => normalizeStudentCadres(stu).titles || []);
+      const merged = uniqCadreTitles([...DEFAULT_CADRE_OPTIONS, ...current, ...fromStudents]);
+      if(cls){
+        if(!state.cadreOptions || typeof state.cadreOptions !== 'object') state.cadreOptions = {};
+        state.cadreOptions[cls] = merged;
+      }
+      return merged;
+    }
+    function addCadreOption(cls, title){
+      const next = normalizeCadreTitle(title);
+      if(!cls || !next) return '';
+      const options = ensureCadreOptions(cls);
+      if(!options.includes(next)) options.push(next);
+      state.cadreOptions[cls] = uniqCadreTitles(options);
+      return next;
+    }
+    function buildClassMetaRow(cls){
+      return [CLASS_META_MARKER, JSON.stringify({ cadreOptions: ensureCadreOptions(cls) })];
+    }
+    function parseClassMetaRows(rows, headerRowIdx){
+      const meta = {};
+      for(let i=0; i<headerRowIdx; i++){
+        const row = rows[i];
+        if(!Array.isArray(row) || String(row[0] || '').trim() !== CLASS_META_MARKER) continue;
+        const raw = String(row[1] || '').trim();
+        if(!raw) continue;
+        try{
+          const parsed = JSON.parse(raw);
+          if(parsed && typeof parsed === 'object') Object.assign(meta, parsed);
+        }catch(e){
+          console.warn('班級 metadata 解析失敗', e);
+        }
+      }
+      return meta;
+    }
 
     function clampSize(n){ n=Number(n); if(!Number.isFinite(n)) return 6; return Math.max(1, Math.min(9, Math.round(n))); }
     function ensureSeatState(cls){
@@ -9952,6 +10119,7 @@ function onTimerDone(){
       if(elManageDel) elManageDel.disabled = !manageSelectedClass;
       if(elManageEdit) elManageEdit.disabled = !manageSelectedClass;
       if(elManageEdit) elManageEdit.classList.toggle('active', manageEditMode);
+      if(elManageEdit) elManageEdit.textContent = manageEditMode ? '退出編輯' : '✏️ 編輯模式';
 
       renderManageStudents();
     }
@@ -9960,10 +10128,12 @@ function onTimerDone(){
       const cls = manageSelectedClass;
       const hw = cls ? ensureHWState(cls) : { cols:[], data:{} };
       const hwCols = hw.cols || [];
+      const cadreOptions = cls ? ensureCadreOptions(cls) : [...DEFAULT_CADRE_OPTIONS];
       if(elManageTable){
         elManageTable.innerHTML = `
           <thead>
             <tr>
+              <th class="col-cadre">幹部職稱</th>
               <th class="col-seat">座號</th>
               <th class="col-name">姓名</th>
               <th class="col-sid">學號</th>
@@ -9976,7 +10146,7 @@ function onTimerDone(){
       }
       const tbody = document.getElementById('manage-tbody');
       if(!cls || !state.classMap[cls]){
-        if(tbody) tbody.innerHTML = `<tr><td colspan="${5 + hwCols.length}" class="manage-empty">請先選擇班級</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="${6 + hwCols.length}" class="manage-empty">請先選擇班級</td></tr>`;
         if(elManageRightTitle) elManageRightTitle.textContent = '請選擇班級';
         return;
       }
@@ -9984,7 +10154,7 @@ function onTimerDone(){
       if(elManageRightTitle) elManageRightTitle.innerHTML = `📋 ${escapeHTML(cls)} <span class="pill" style="font-weight:400;font-size:12px;">${list.length} 人</span>`;
       if(tbody){
         if(!list.length){
-          tbody.innerHTML = `<tr><td colspan="${5 + hwCols.length}" class="manage-empty">此班級沒有學生</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="${6 + hwCols.length}" class="manage-empty">此班級沒有學生</td></tr>`;
         } else {
           // 依座號排序
           const sorted = [...list].sort((a,b)=>{
@@ -9992,14 +10162,19 @@ function onTimerDone(){
             return sa - sb;
           });
           tbody.innerHTML = sorted.map(s=>{
+            normalizeStudentCadres(s);
             const seat = s.seat || s.row?.['座號'] || '';
             const sid = s.sid || '';
+            const titles = s.titles || [];
             const score = getScore(cls, s.id);
             const hwArr = Array.isArray(hw.data?.[s.id]) ? hw.data[s.id].slice(0, hw.cols.length) : [];
             const hwNums = hwArr.filter(v=> v !== '' && v != null && String(v).trim() !== '');
             const hwSum = hwNums.reduce((t, v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
             const hwAvg = hwNums.length ? (hwSum / hwNums.length).toFixed(2) : '—';
             return `<tr data-stu-id="${escapeHTML(s.id)}">
+              <td class="col-cadre">${manageEditMode
+                ? renderManageCadreEditor(cls, s, cadreOptions)
+                : renderManageCadreView(titles)}</td>
               <td class="col-seat">${manageEditMode
                 ? `<input class="edit-input" data-field="seat" data-id="${escapeHTML(s.id)}" value="${escapeHTML(String(seat))}" />`
                 : (seat ? escapeHTML(String(seat)) : '-')}</td>
@@ -10016,6 +10191,47 @@ function onTimerDone(){
           }).join('');
         }
       }
+    }
+
+    function renderManageCadreView(titles){
+      const list = uniqCadreTitles(titles);
+      if(!list.length) return '<span class="manage-cadre-empty">未設定</span>';
+      return `<div class="manage-cadre-list">${list.map(title=>`<span class="manage-cadre-chip">${escapeHTML(title)}</span>`).join('')}</div>`;
+    }
+
+    function renderManageCadreEditor(cls, stu, options){
+      const titles = uniqCadreTitles(stu.titles || []);
+      const chips = titles.length
+        ? titles.map(title=>`<span class="manage-cadre-chip is-edit">${escapeHTML(title)}<button type="button" class="manage-cadre-remove" data-id="${escapeHTML(stu.id)}" data-title="${escapeHTML(title)}" aria-label="移除 ${escapeHTML(title)}">×</button></span>`).join('')
+        : '<span class="manage-cadre-empty">尚未設定職稱</span>';
+      return `<div class="manage-cadre-editor" data-id="${escapeHTML(stu.id)}" data-cls="${escapeHTML(cls)}">
+        <div class="manage-cadre-list">${chips}</div>
+        <div class="manage-cadre-controls">
+          <select class="manage-cadre-select" data-id="${escapeHTML(stu.id)}">
+            <option value="">選擇職稱</option>
+            ${options.map(title=>`<option value="${escapeHTML(title)}">${escapeHTML(title)}</option>`).join('')}
+          </select>
+          <button type="button" class="btn manage-cadre-add" data-id="${escapeHTML(stu.id)}">加入</button>
+          <button type="button" class="btn manage-cadre-custom" data-id="${escapeHTML(stu.id)}">＋自訂</button>
+        </div>
+      </div>`;
+    }
+
+    function updateManageStudentCadres(cls, id, nextTitles){
+      const list = state.classMap[cls] || [];
+      const stu = list.find(item => item.id === id);
+      if(!stu) return false;
+      normalizeStudentCadres(stu);
+      const prev = uniqCadreTitles(stu.titles || []);
+      const next = uniqCadreTitles(nextTitles);
+      if(prev.length === next.length && prev.every((title, idx)=> title === next[idx])) return false;
+      stu.titles = next;
+      if(stu.row && typeof stu.row === 'object') stu.row['幹部職稱'] = next.join('、');
+      ensureCadreOptions(cls);
+      saveSession('edit student cadres');
+      setStatus(`已更新「${stu.name}」的幹部職稱`);
+      renderManageStudents();
+      return true;
     }
 
     // ✏️ 編輯模式：切換 & 儲存
@@ -10062,6 +10278,48 @@ function onTimerDone(){
       renderManage();
     });
 
+    elManageTable?.addEventListener('click', (e)=>{
+      if(!manageEditMode || !manageSelectedClass) return;
+
+      const removeBtn = e.target.closest('.manage-cadre-remove[data-id][data-title]');
+      if(removeBtn){
+        const id = removeBtn.dataset.id;
+        const title = removeBtn.dataset.title || '';
+        const list = state.classMap[manageSelectedClass] || [];
+        const stu = list.find(item => item.id === id);
+        if(!stu) return;
+        updateManageStudentCadres(manageSelectedClass, id, (stu.titles || []).filter(item => item !== title));
+        return;
+      }
+
+      const addBtn = e.target.closest('.manage-cadre-add[data-id]');
+      if(addBtn){
+        const editor = addBtn.closest('.manage-cadre-editor');
+        const select = editor?.querySelector('.manage-cadre-select');
+        const picked = select?.value || '';
+        if(!picked){ alert('請先選擇幹部職稱'); return; }
+        const id = addBtn.dataset.id;
+        const list = state.classMap[manageSelectedClass] || [];
+        const stu = list.find(item => item.id === id);
+        if(!stu) return;
+        updateManageStudentCadres(manageSelectedClass, id, [...(stu.titles || []), picked]);
+        return;
+      }
+
+      const customBtn = e.target.closest('.manage-cadre-custom[data-id]');
+      if(customBtn){
+        const raw = prompt('請輸入新的幹部職稱：');
+        if(raw == null) return;
+        const customTitle = addCadreOption(manageSelectedClass, raw);
+        if(!customTitle){ alert('請先輸入有效的幹部職稱'); return; }
+        const id = customBtn.dataset.id;
+        const list = state.classMap[manageSelectedClass] || [];
+        const stu = list.find(item => item.id === id);
+        if(!stu) return;
+        updateManageStudentCadres(manageSelectedClass, id, [...(stu.titles || []), customTitle]);
+      }
+    });
+
     // ＋ 新增班級（管理模式）
     elManageAddClass?.addEventListener('click', ()=>{
       const name = (prompt('請輸入新班級名稱：') || '').trim();
@@ -10069,6 +10327,7 @@ function onTimerDone(){
       if(state.classOrder.includes(name)){ alert('此班級名稱已存在！'); return; }
       state.classOrder.push(name);
       state.classMap[name] = [];
+      ensureCadreOptions(name);
       renderClassOptions(state.classOrder);
       document.body.classList.remove('no-data');
       manageSelectedClass = name;
@@ -10116,6 +10375,7 @@ function onTimerDone(){
       if(state.hw[oldName]){ state.hw[newName] = state.hw[oldName]; delete state.hw[oldName]; }
       if(state.group[oldName]){ state.group[newName] = state.group[oldName]; delete state.group[oldName]; }
       if(state.notes && state.notes[oldName]){ state.notes[newName] = state.notes[oldName]; delete state.notes[oldName]; }
+      if(state.cadreOptions && state.cadreOptions[oldName]){ state.cadreOptions[newName] = state.cadreOptions[oldName]; delete state.cadreOptions[oldName]; }
       for(const id of Object.keys(state.sidMap)){
         if(state.sidMap[id].sheet === oldName) state.sidMap[id].sheet = newName;
       }
@@ -10148,6 +10408,7 @@ function onTimerDone(){
       delete state.seating[cls];
       delete state.hw[cls];
       delete state.group[cls];
+      if(state.cadreOptions) delete state.cadreOptions[cls];
       if(state.notes) delete state.notes[cls];
       for(const id of Object.keys(state.sidMap)){
         if(state.sidMap[id].sheet === cls) delete state.sidMap[id];
@@ -12553,9 +12814,10 @@ noteSave?.addEventListener('click', ()=>{
       const name = (addStuName.value || '').trim() || sid;
       const seat = (addStuSeat.value || '').trim();
 
-      const student = { id, sid, name, seat, row: null, sheet: cls };
+      const student = { id, sid, name, seat, titles: [], row: null, sheet: cls };
       list.push(student);
       state.classMap[cls] = list;
+      ensureCadreOptions(cls);
       state.sidMap[id] = { sid, sheet: cls, seat, name };
       setScore(cls, id, 0);
 
