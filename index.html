@@ -5847,14 +5847,10 @@
               const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
               list.push({id,sid,name, seat, titles, row:r+1, sheet:className});
 
-              // 備註（可選）
+              // 備註（可選）：不論是否為空都更新，確保在試算表刪除備註後能同步清除
               if(noteIdx>=0){
                 const note = String(row[noteIdx]??'').trim();
-                if(note){
-                  if(!state.notes) state.notes = {};
-                  if(!state.notes[className]) state.notes[className] = {};
-                  state.notes[className][id] = note;
-                }
+                setNote(className, id, note);
               }
 
               if(seatRIdx>=0 && seatCIdx>=0){
