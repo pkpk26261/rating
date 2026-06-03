@@ -1165,27 +1165,102 @@
     .hwtbl th{ position:sticky; top:0; background:rgb(10,14,26); text-align:left; }
     .hwtbl tr:last-child td{ border-bottom:0; }
     .hwtbl .num{ text-align:right; font-variant-numeric: tabular-nums; }
-    .hwtbl th.hw-col{ min-width:96px; }
+    .hwtbl th.hw-col{ min-width:156px; }
     .hwtbl input[type="number"]{ width:76px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px 8px; text-align:center; outline:none; }
     .hwtbl input[type="number"]:focus{ border-color: color-mix(in oklab, var(--accent) 60%, #000); box-shadow: 0 0 0 3px rgba(129,140,248,.18); }
     .pill{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--muted); }
 
     .hw-col{ position:relative; white-space:nowrap; }
+    .hw-col .hw-col-head{
+      display:flex; align-items:center; justify-content:flex-end; gap:6px;
+      min-width:0;
+      margin:-4px -6px;
+      padding:4px 6px;
+      border-radius:10px;
+      transition: background .15s ease, box-shadow .15s ease;
+    }
+    .hw-col .hw-col-head.hw-head-grabbable{ cursor:grab; }
+    .hw-col .hw-col-head.hw-head-grabbable:hover{ background:rgba(255,255,255,.04); }
+    .hw-col .hw-col-head.hw-head-dragging{
+      cursor:grabbing;
+      background:rgba(129,140,248,.12);
+      box-shadow: inset 0 0 0 1px rgba(129,140,248,.2);
+    }
+    :root[data-theme="light"] .hw-col .hw-col-head.hw-head-grabbable:hover{ background:rgba(0,0,0,.04); }
+    :root[data-theme="light"] .hw-col .hw-col-head.hw-head-dragging{
+      background:rgba(99,102,241,.08);
+      box-shadow: inset 0 0 0 1px rgba(99,102,241,.18);
+    }
     .hw-col .hw-col-name{
       cursor:pointer; border-bottom:1px dashed rgba(255,255,255,.25); padding-bottom:1px;
+      display:inline-block; min-width:0; max-width:84px; overflow:hidden; text-overflow:ellipsis;
     }
     .hw-col .hw-col-name:hover{ border-bottom-color: var(--accent); color: var(--accent-2); }
-    .hw-col .hw-col-edit{
-      width:72px; background:var(--card); color:var(--fg); border:1px solid var(--accent);
-      border-radius:6px; padding:2px 6px; font-size:13px; font-weight:700; text-align:center; outline:none;
-      box-shadow: 0 0 0 3px rgba(129,140,248,.18);
-    }
     .hw-col .mini-btn{
-      margin-left:6px; padding:2px 6px; font-size:12px; line-height:1.2;
-      border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg);
-      cursor:pointer;
+      appearance:none; -webkit-appearance:none;
+      display:inline-flex; align-items:center; justify-content:center;
+      width:30px; height:24px;
+      padding:0;
+      border:1px solid rgba(129,140,248,.24);
+      border-radius:8px;
+      background:color-mix(in oklab, var(--card) 82%, var(--accent) 18%);
+      color:var(--accent-2);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+      font-size:12px; line-height:1; font-weight:800;
+      cursor:pointer; flex-shrink:0;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
     }
-    .hw-col .mini-btn:hover{ box-shadow:0 2px 10px rgba(0,0,0,.2); }
+    .hw-col .mini-btn:hover{
+      background:color-mix(in oklab, var(--card) 72%, var(--accent) 28%);
+      border-color:rgba(129,140,248,.36);
+      box-shadow:0 2px 10px rgba(0,0,0,.2);
+    }
+    .hw-col .mini-btn:active{ transform:translateY(1px) scale(.97); }
+    .hw-col .mini-btn:focus-visible{
+      outline:none;
+      box-shadow:0 0 0 3px rgba(129,140,248,.18);
+    }
+    :root[data-theme="light"] .hw-col .mini-btn{
+      background:color-mix(in oklab, white 78%, var(--accent) 22%);
+      border-color:color-mix(in oklab, var(--accent) 24%, var(--line));
+      color:color-mix(in oklab, var(--accent) 75%, #111827);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+    }
+    :root[data-theme="light"] .hw-col .mini-btn:hover{
+      background:color-mix(in oklab, white 68%, var(--accent) 32%);
+      box-shadow:0 2px 10px rgba(15,23,42,.08);
+    }
+    .hwtbl th.hw-col.hw-dragging{ opacity:.45; }
+    .hwtbl th.hw-col.hw-drag-over-before{ box-shadow: inset 3px 0 0 0 var(--accent); }
+    .hwtbl th.hw-col.hw-drag-over-after{ box-shadow: inset -3px 0 0 0 var(--accent); }
+    .hw-drag-ghost{
+      position:fixed;
+      left:0; top:0;
+      z-index:9999;
+      pointer-events:none;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:12px;
+      border:1px solid rgba(129,140,248,.24);
+      background:color-mix(in oklab, var(--card) 88%, var(--accent) 12%);
+      color:var(--fg);
+      box-shadow:0 14px 32px rgba(0,0,0,.22);
+      font-size:13px; font-weight:800;
+      transform:translate(-50%,-50%) scale(.96);
+      opacity:0;
+      transition:opacity .12s ease, transform .12s ease;
+      white-space:nowrap;
+    }
+    .hw-drag-ghost.show{
+      opacity:1;
+      transform:translate(-50%,-50%) scale(1);
+    }
+    .hw-drag-ghost .hw-drag-ghost-icon{ opacity:.7; font-size:14px; }
+    body.hw-dragging{ cursor:grabbing; }
+    body.hw-dragging *{ user-select:none; }
+    @media (pointer:fine){
+      .hw-col .hw-move-btns{ display:none !important; }
+    }
     .viol-cell{ min-width:126px; text-align:center; }
     #viol-table thead th{ z-index:3; }
     /* ★ 待處理欄位 */
@@ -11883,6 +11958,41 @@ elProgAdd?.addEventListener('click', ()=>{
       const next=(nums.length?Math.max(...nums):0)+1;
       return `作業${next}`;
     }
+    function normalizeHWRow(row, colCount){
+      const nextRow = Array.isArray(row) ? row : [];
+      while(nextRow.length < colCount) nextRow.push('');
+      if(nextRow.length > colCount) nextRow.length = colCount;
+      return nextRow;
+    }
+    function hwMoveCol(hw, fromIdx, toIdx){
+      if(!hw || !Array.isArray(hw.cols)) return false;
+      const colCount = hw.cols.length;
+      if(fromIdx === toIdx) return false;
+      if(fromIdx < 0 || toIdx < 0 || fromIdx >= colCount || toIdx >= colCount) return false;
+
+      const [movedCol] = hw.cols.splice(fromIdx, 1);
+      hw.cols.splice(toIdx, 0, movedCol);
+
+      const rows = hw.data || {};
+      Object.keys(rows).forEach(id=>{
+        const row = normalizeHWRow(rows[id], colCount);
+        const [movedVal] = row.splice(fromIdx, 1);
+        row.splice(toIdx, 0, movedVal ?? '');
+        rows[id] = row;
+      });
+      return true;
+    }
+    function getHWDropIndex(fromIdx, targetIdx, position){
+      if(fromIdx === targetIdx) return fromIdx;
+      if(position === 'before') return fromIdx < targetIdx ? targetIdx - 1 : targetIdx;
+      return fromIdx < targetIdx ? targetIdx : targetIdx + 1;
+    }
+    var _cleanupHWPointerDrag = null;
+    var _hwDragJustEnded = false;
+    function markHWDragJustEnded(){
+      _hwDragJustEnded = true;
+      setTimeout(()=>{ _hwDragJustEnded = false; }, 220);
+    }
     function getSortedList(cls){
       const list=(state.classMap[cls]||[]).slice();
       list.sort((a,b)=>{ const na=Number(a.seat), nb=Number(b.seat); if(!Number.isNaN(na)&&!Number.isNaN(nb)&&na!==nb) return na-nb; return a.name.localeCompare(b.name,'zh-Hant'); });
@@ -11890,21 +12000,176 @@ elProgAdd?.addEventListener('click', ()=>{
     }
 
     function renderHW(cls){
+      if(_cleanupHWPointerDrag){ _cleanupHWPointerDrag(); _cleanupHWPointerDrag = null; }
       if(!cls){ elHWTable.innerHTML=''; elHWClassPill.textContent='未選擇'; syncHWClassSelect(cls); return; }
       const hw=ensureHWState(cls);
+      const hwWrap = elHWTable.closest('.hwtbl-wrap');
       const list=getSortedList(cls);
       const q = state.filter.trim().toLowerCase();
+      const dragState = { fromIdx:-1, overIdx:-1, position:'' };
       elHWClassPill.textContent=cls;
       syncHWClassSelect(cls);
 
       list.forEach(s=>{ if(!hw.data[s.id]) hw.data[s.id]=[]; const arr=hw.data[s.id]; while(arr.length<hw.cols.length) arr.push(''); });
+
+      const syncHWDragClasses = ()=>{
+        elHWTable.querySelectorAll('th.hw-col[data-col-index]').forEach(th=>{
+          const idx = Number(th.getAttribute('data-col-index'));
+          th.classList.toggle('hw-dragging', idx === dragState.fromIdx);
+          th.classList.toggle('hw-drag-over-before', idx === dragState.overIdx && dragState.position === 'before');
+          th.classList.toggle('hw-drag-over-after', idx === dragState.overIdx && dragState.position === 'after');
+        });
+      };
+      const clearHWDragState = ()=>{
+        dragState.fromIdx = -1;
+        dragState.overIdx = -1;
+        dragState.position = '';
+        syncHWDragClasses();
+      };
+      const commitHWMove = (fromIdx, toIdx, reason='hw cols reorder')=>{
+        if(!hwMoveCol(hw, fromIdx, toIdx)) return false;
+        saveHWToLS(cls);
+        saveSession(reason);
+        renderHW(cls);
+        return true;
+      };
+      const createHWDragGhost = (label, clientX, clientY)=>{
+        const ghost = document.createElement('div');
+        ghost.className = 'hw-drag-ghost';
+        ghost.innerHTML = `<span class="hw-drag-ghost-icon">⠿</span><span>${escapeHTML(label || '作業')}</span>`;
+        ghost.style.left = `${clientX}px`;
+        ghost.style.top = `${clientY}px`;
+        document.body.appendChild(ghost);
+        requestAnimationFrame(()=> ghost.classList.add('show'));
+        return ghost;
+      };
+      const getHWTargetFromPoint = (clientX, clientY)=>{
+        const hit = document.elementFromPoint(clientX, clientY);
+        const th = hit?.closest?.('#hw-table th.hw-col[data-col-index]');
+        if(!th || !elHWTable.contains(th)) return null;
+        const rect = th.getBoundingClientRect();
+        return {
+          idx: Number(th.getAttribute('data-col-index')),
+          position: (clientX - rect.left) < rect.width / 2 ? 'before' : 'after'
+        };
+      };
+      const syncHWTargetFromPoint = (clientX, clientY)=>{
+        const target = getHWTargetFromPoint(clientX, clientY);
+        if(!target){
+          dragState.overIdx = -1;
+          dragState.position = '';
+          syncHWDragClasses();
+          return null;
+        }
+        dragState.overIdx = target.idx;
+        dragState.position = target.position;
+        syncHWDragClasses();
+        return target;
+      };
+      const hwAutoScroll = {
+        frameId: 0,
+        direction: 0,
+        speed: 0,
+        clientX: 0,
+        clientY: 0
+      };
+      const stopHWAutoScroll = ()=>{
+        hwAutoScroll.direction = 0;
+        hwAutoScroll.speed = 0;
+        if(hwAutoScroll.frameId){
+          cancelAnimationFrame(hwAutoScroll.frameId);
+          hwAutoScroll.frameId = 0;
+        }
+      };
+      const queueHWAutoScroll = ()=>{
+        if(hwAutoScroll.frameId || !hwAutoScroll.direction || !pointerDrag?.dragged || !hwWrap) return;
+        hwAutoScroll.frameId = requestAnimationFrame(()=>{
+          hwAutoScroll.frameId = 0;
+          if(!pointerDrag?.dragged || !hwWrap || !hwAutoScroll.direction) return;
+          const maxLeft = Math.max(0, hwWrap.scrollWidth - hwWrap.clientWidth);
+          if(maxLeft <= 0){
+            stopHWAutoScroll();
+            return;
+          }
+          const prev = hwWrap.scrollLeft;
+          const next = Math.max(0, Math.min(maxLeft, prev + hwAutoScroll.direction * hwAutoScroll.speed));
+          if(next !== prev){
+            hwWrap.scrollLeft = next;
+            syncHWTargetFromPoint(hwAutoScroll.clientX, hwAutoScroll.clientY);
+          }
+          updateHWAutoScroll(hwAutoScroll.clientX, hwAutoScroll.clientY);
+        });
+      };
+      const updateHWAutoScroll = (clientX, clientY)=>{
+        hwAutoScroll.clientX = clientX;
+        hwAutoScroll.clientY = clientY;
+        if(!pointerDrag?.dragged || !hwWrap){
+          stopHWAutoScroll();
+          return;
+        }
+        const maxLeft = Math.max(0, hwWrap.scrollWidth - hwWrap.clientWidth);
+        if(maxLeft <= 0){
+          stopHWAutoScroll();
+          return;
+        }
+        const edgeSize = 72;
+        const minSpeed = 6;
+        const maxSpeed = 24;
+        const rect = hwWrap.getBoundingClientRect();
+        let direction = 0;
+        let speed = 0;
+        if(clientX < rect.left + edgeSize && hwWrap.scrollLeft > 0){
+          const ratio = Math.min(1, Math.max(0, (rect.left + edgeSize - clientX) / edgeSize));
+          direction = -1;
+          speed = Math.round(minSpeed + ratio * (maxSpeed - minSpeed));
+        }else if(clientX > rect.right - edgeSize && hwWrap.scrollLeft < maxLeft){
+          const ratio = Math.min(1, Math.max(0, (clientX - (rect.right - edgeSize)) / edgeSize));
+          direction = 1;
+          speed = Math.round(minSpeed + ratio * (maxSpeed - minSpeed));
+        }
+        hwAutoScroll.direction = direction;
+        hwAutoScroll.speed = speed;
+        if(!direction){
+          stopHWAutoScroll();
+          return;
+        }
+        queueHWAutoScroll();
+      };
+      let pointerDrag = null;
+      const finishHWPointerDrag = (clientX, clientY, shouldCommit)=>{
+        const current = pointerDrag;
+        if(!current) return;
+        stopHWAutoScroll();
+        pointerDrag = null;
+
+        current.head.classList.remove('hw-head-dragging');
+        document.body.classList.remove('hw-dragging');
+        if(current.ghost){
+          current.ghost.classList.remove('show');
+          current.ghost.remove();
+        }
+        if(current.pointerId != null && current.head?.hasPointerCapture?.(current.pointerId)){
+          try{ current.head.releasePointerCapture(current.pointerId); }catch{}
+        }
+
+        let moved = false;
+        if(shouldCommit && current.dragged){
+          const target = syncHWTargetFromPoint(clientX, clientY);
+          if(target){
+            const toIdx = getHWDropIndex(current.fromIdx, target.idx, target.position);
+            moved = commitHWMove(current.fromIdx, toIdx);
+          }
+        }
+        if(!moved) clearHWDragState();
+        if(current.dragged) markHWDragJustEnded();
+      };
 
       const th = `
         <thead>
           <tr>
             <th style="min-width:64px">座號</th>
             <th style="min-width:120px">姓名</th>
-            ${hw.cols.map((c,i)=>`<th class="num hw-col"><span class="hw-col-name" data-col="${i}" title="點擊修改名稱">${escapeHTML(c)}</span> <button class="mini-btn" data-col="${i}" title="批次輸入這一欄">⚡</button></th>`).join('')}
+            ${hw.cols.map((c,i)=>`<th class="num hw-col" data-col-index="${i}"><div class="hw-col-head hw-head-grabbable" data-col="${i}" title="拖曳排序"><span class="hw-col-name" data-col="${i}" title="點擊修改名稱">${escapeHTML(c)}</span><span class="hw-move-btns"><button class="hw-move-btn" data-col="${i}" data-dir="-1" type="button" title="前移" ${i===0?'disabled':''}>◀</button><button class="hw-move-btn" data-col="${i}" data-dir="1" type="button" title="後移" ${i===hw.cols.length-1?'disabled':''}>▶</button></span><button class="mini-btn" data-col="${i}" type="button" title="批次輸入這一欄">⚡</button></div></th>`).join('')}
             <th class="num">小計</th>
             <th class="num">平均</th>
           </tr>
@@ -11967,6 +12232,7 @@ elProgAdd?.addEventListener('click', ()=>{
       // ★ 綁定作業名稱點擊編輯
       elHWTable.querySelectorAll('.hw-col-name[data-col]').forEach(span=>{
         span.addEventListener('click', ()=>{
+          if(_hwDragJustEnded) return;
           const ci = Number(span.getAttribute('data-col'));
           const oldName = hw.cols[ci] || '';
           const input = document.createElement('input');
@@ -11989,6 +12255,90 @@ elProgAdd?.addEventListener('click', ()=>{
             if(e.key === 'Enter'){ e.preventDefault(); input.blur(); }
             if(e.key === 'Escape'){ input.value = oldName; input.blur(); }
           });
+        });
+      });
+
+      const onHWPointerMove = (e)=>{
+        if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+        pointerDrag.lastX = e.clientX;
+        pointerDrag.lastY = e.clientY;
+        const dx = e.clientX - pointerDrag.startX;
+        const dy = e.clientY - pointerDrag.startY;
+        if(!pointerDrag.dragged){
+          if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          pointerDrag.dragged = true;
+          dragState.fromIdx = pointerDrag.fromIdx;
+          dragState.overIdx = pointerDrag.fromIdx;
+          dragState.position = 'after';
+          pointerDrag.head.classList.add('hw-head-dragging');
+          document.body.classList.add('hw-dragging');
+          pointerDrag.ghost = createHWDragGhost(pointerDrag.label, e.clientX, e.clientY);
+          syncHWDragClasses();
+        }
+        if(pointerDrag.ghost){
+          pointerDrag.ghost.style.left = `${e.clientX}px`;
+          pointerDrag.ghost.style.top = `${e.clientY}px`;
+        }
+        syncHWTargetFromPoint(e.clientX, e.clientY);
+        updateHWAutoScroll(e.clientX, e.clientY);
+      };
+      const onHWPointerUp = (e)=>{
+        if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+        finishHWPointerDrag(e.clientX, e.clientY, true);
+      };
+      const onHWPointerCancel = (e)=>{
+        if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+        finishHWPointerDrag(pointerDrag.lastX ?? pointerDrag.startX, pointerDrag.lastY ?? pointerDrag.startY, false);
+      };
+      const onHWPointerKeydown = (e)=>{
+        if(e.key !== 'Escape' || !pointerDrag) return;
+        finishHWPointerDrag(pointerDrag.lastX ?? pointerDrag.startX, pointerDrag.lastY ?? pointerDrag.startY, false);
+      };
+      document.addEventListener('pointermove', onHWPointerMove);
+      document.addEventListener('pointerup', onHWPointerUp);
+      document.addEventListener('pointercancel', onHWPointerCancel);
+      document.addEventListener('keydown', onHWPointerKeydown);
+      _cleanupHWPointerDrag = ()=>{
+        document.removeEventListener('pointermove', onHWPointerMove);
+        document.removeEventListener('pointerup', onHWPointerUp);
+        document.removeEventListener('pointercancel', onHWPointerCancel);
+        document.removeEventListener('keydown', onHWPointerKeydown);
+        stopHWAutoScroll();
+        if(pointerDrag){
+          finishHWPointerDrag(pointerDrag.lastX ?? pointerDrag.startX, pointerDrag.lastY ?? pointerDrag.startY, false);
+        }
+      };
+
+      elHWTable.querySelectorAll('.hw-col-head[data-col]').forEach(head=>{
+        head.addEventListener('pointerdown', (e)=>{
+          if(e.button !== 0) return;
+          if(e.pointerType === 'touch') return;
+          if(e.target.closest('.mini-btn, .hw-move-btn')) return;
+          const ci = Number(head.getAttribute('data-col'));
+          if(!Number.isInteger(ci)) return;
+          pointerDrag = {
+            fromIdx: ci,
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            lastX: e.clientX,
+            lastY: e.clientY,
+            label: hw.cols[ci] || '',
+            head,
+            dragged: false,
+            ghost: null
+          };
+          try{ head.setPointerCapture(e.pointerId); }catch{}
+        });
+      });
+
+      elHWTable.querySelectorAll('.hw-move-btn[data-col][data-dir]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          const ci = Number(btn.getAttribute('data-col'));
+          const dir = Number(btn.getAttribute('data-dir'));
+          commitHWMove(ci, ci + dir);
         });
       });
 
@@ -13105,6 +13455,7 @@ noteSave?.addEventListener('click', ()=>{
       let dragging=false, startX=0, startLeft=0;
       wrap.addEventListener('mousedown', (e)=>{
         if(e.button!==0) return;
+        if(e.target.closest('.hw-col-head[data-col]')) return;
         if(e.target.closest('input,textarea,select,button')) return;
         dragging=true; startX=e.clientX; startLeft=wrap.scrollLeft;
         wrap.classList.add('grabbing');
