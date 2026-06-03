@@ -6639,6 +6639,8 @@ function doPost(e) {
         return row;
       });
       sh.getRange(1, 1, norm.length, cols).setValues(norm);
+      if (norm[0] && norm[0][0] === '__CLASS_META__') sh.hideRows(1, 1);
+      else sh.showRows(1, 1);
     });
     return jsonOut({ ok: true });
   } catch (err) {
