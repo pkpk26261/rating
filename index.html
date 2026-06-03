@@ -591,11 +591,6 @@
       display:none !important;
     }
 
-    /* 有資料時隱藏頂部導覽按鈕 */
-    body:not(.no-data) #btn-tour{
-      display:none !important;
-    }
-
     /* 日期時間隱藏 */
     body.no-data .dt-display{
       display:none !important;
@@ -4146,7 +4141,6 @@
             </div>
             <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
             <button id="btn-reset" class="btn" title="清除本機暫存（分數/座位/作業/快速還原）">🧹 清除</button>
-            <button id="btn-tour" class="btn" title="啟動新手導覽，逐步了解各項功能" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:rgba(129,140,248,.5);color:#fff;font-weight:800;">🚀 導覽</button>
           </div>
           <div id="status" class="status-inline">尚未載入名單。</div>
         </div>
@@ -10873,7 +10867,7 @@ elProgAdd?.addEventListener('click', ()=>{
         {
           target: '.topbar__left .import-block div:first-child',
           title: '工具列按鈕',
-          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。「🚀 導覽」會在空白頁面時顯示，方便查看新手引導。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
+          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
           pos: 'bottom'
         }
       ];
@@ -10889,7 +10883,6 @@ elProgAdd?.addEventListener('click', ()=>{
         },
         {
           target: '#btn-welcome-sample',
-          title: '下載範例檔',
           desc: '點擊下載一份包含「班級A / 班級B」各 30 位學生的 Excel 範例檔，<b>方便快速體驗</b>各項功能。',
           pos: 'bottom'
         },
