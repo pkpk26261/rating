@@ -4680,6 +4680,9 @@
       </header>
       <div class="content">
         <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">請勾選要清除的資料類別：</div>
+        <div id="clear-gs-note" style="display:none; font-size:12px; line-height:1.5; color:var(--fg); background:rgba(255,196,0,.12); border:1px solid rgba(229,160,0,.4); border-radius:10px; padding:8px 10px; margin-bottom:10px;">
+          ☁️ <b>此清除只影響本機資料</b>，不會刪除 Google 試算表的內容。
+        </div>
         <div style="display:flex; flex-direction:column; gap:6px;">
           <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
             <input type="checkbox" class="clear-cb" value="classMap"> 📋 學生名單（班級、座號、姓名）
@@ -6349,7 +6352,10 @@
 
     /* ★ 自動上傳（防抖）：資料變更後延遲 3.5 秒上傳，僅在開啟自動同步且已設定時生效 */
     let _gsAutoTimer = null;
+    let _gsSuppressAutoUpload = false;   // ★ 清除資料期間暫停自動上傳，避免覆蓋 Google 試算表
+    function gsCancelAutoUpload(){ if(_gsAutoTimer){ clearTimeout(_gsAutoTimer); _gsAutoTimer = null; } }
     function gsScheduleAutoUpload(){
+      if(_gsSuppressAutoUpload) return;  // ★ 清除動作不自動上傳，避免誤刪雲端資料
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不自動上傳
       if(!gsConfig.autoSync || !gsReady()) return;
       if(_gsAutoTimer) clearTimeout(_gsAutoTimer);
@@ -6729,7 +6735,11 @@ function jsonOut(obj) {
     const clearSelAll  = document.getElementById('clear-sel-all');
     const clearSelNone = document.getElementById('clear-sel-none');
 
-    function openClearModal(){ clearMask.classList.add('show'); }
+    function openClearModal(){
+      const note = document.getElementById('clear-gs-note');
+      if(note) note.style.display = (typeof gsReady === 'function' && gsReady()) ? '' : 'none';
+      clearMask.classList.add('show');
+    }
     function closeClearModal(){ clearMask.classList.remove('show'); }
 
     clearClose.addEventListener('click', closeClearModal);
@@ -6756,7 +6766,21 @@ function jsonOut(obj) {
         group: '分組名單', violations: '違規紀錄'
       };
       const desc = picked.map(k=>labels[k]||k).join('、');
-      if(!confirm(`確定要清除以下資料嗎？\n→ ${desc}`)){ return; }
+      let confirmMsg = `確定要清除以下資料嗎？\n→ ${desc}`;
+      if(typeof gsReady === 'function' && gsReady()){
+        confirmMsg += `\n\n☁️ 此清除只會刪除「本機」資料，不會更動 Google 試算表內容。`;
+        if(gsConfig.autoSync){
+          confirmMsg += `\n（已開啟自動同步，但清除動作不會自動上傳覆蓋雲端。）`;
+        }
+        if(gsConfig.autoLoad){
+          confirmMsg += `\n（已開啟自動載入，下次開啟頁面可能會從試算表重新下載這些資料。）`;
+        }
+      }
+      if(!confirm(confirmMsg)){ return; }
+
+      // ★ 清除期間暫停自動上傳，並取消已排程的上傳，避免把清空資料覆蓋到 Google 試算表
+      _gsSuppressAutoUpload = true;
+      if(typeof gsCancelAutoUpload === 'function') gsCancelAutoUpload();
 
       closeClearModal();
 
@@ -6820,6 +6844,9 @@ function jsonOut(obj) {
 
       // 清除勾選狀態
       clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=false);
+
+      // ★ 還原自動上傳（清除過程的自動同步已被抑制，雲端資料未受影響）
+      _gsSuppressAutoUpload = false;
     });
 
     // 讓清除按鈕也有 ripple 效果（可選）
