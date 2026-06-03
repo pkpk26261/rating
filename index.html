@@ -3269,6 +3269,15 @@
       box-shadow: inset 0 0 0 1px rgba(129,140,248,.3), 0 2px 8px rgba(129,140,248,.15);
       color: #fff;
     }
+    .seg-btn.active[data-icon]{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .seg-btn.active[data-icon]::before{
+      content: attr(data-icon);
+      line-height:1;
+    }
     :root[data-theme="light"] .seg-btn.active{
       background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(16,185,129,.1)) !important;
       color: #312e81;
@@ -3337,6 +3346,15 @@
       background: linear-gradient(135deg, rgba(129,140,248,.3), rgba(52,211,153,.15));
       box-shadow: inset 0 0 0 1px rgba(129,140,248,.3);
       color: #fff;
+    }
+    .more-item.active[data-icon]{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .more-item.active[data-icon]::before{
+      content: attr(data-icon);
+      line-height:1;
     }
     :root[data-theme="light"] .more-item.active{
       background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(16,185,129,.1));
@@ -4186,18 +4204,18 @@
         <h1 class="title">成績管理系統</h1>
         <div class="modebar">
           <div class="seg" role="tablist" aria-label="顯示模式">
-                                <button id="mode-manage" class="seg-btn" data-mode="manage">學生管理</button>
-                                <button id="mode-progress" class="seg-btn" data-mode="progress">教學進度</button>
-                                <button id="mode-list" class="seg-btn active" data-mode="list">加扣分</button>
-                                <button id="mode-violations" class="seg-btn" data-mode="violations">違規記錄</button>
-                                <button id="mode-hw" class="seg-btn" data-mode="hw">作業成績</button>
+                                <button id="mode-manage" class="seg-btn" data-mode="manage" data-icon="📋">學生管理</button>
+                                <button id="mode-progress" class="seg-btn" data-mode="progress" data-icon="📖">教學進度</button>
+                                <button id="mode-list" class="seg-btn active" data-mode="list" data-icon="⭐">加扣分</button>
+                                <button id="mode-violations" class="seg-btn" data-mode="violations" data-icon="🚨">違規記錄</button>
+                                <button id="mode-hw" class="seg-btn" data-mode="hw" data-icon="📝">作業成績</button>
                                 <div class="more-menu" id="more-menu">
                                   <button id="mode-more" class="seg-btn more-toggle" aria-haspopup="true" aria-expanded="false">更多 ▾</button>
                                   <div class="more-dropdown" id="more-dropdown" hidden>
-                                    <button id="mode-seat-more" class="more-item" data-mode="seat">座位</button>
-                                    <button id="mode-group" class="more-item" data-mode="group">分組</button>
-                                    <button id="mode-draw" class="more-item" data-mode="draw">抽號</button>
-                                    <button id="mode-timer" class="more-item" data-mode="timer">倒數計時</button>
+                                    <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
+                                    <button id="mode-group" class="more-item" data-mode="group" data-icon="👥">分組</button>
+                                    <button id="mode-draw" class="more-item" data-mode="draw" data-icon="🎲">抽號</button>
+                                    <button id="mode-timer" class="more-item" data-mode="timer" data-icon="⏳">倒數計時</button>
                                   </div>
                                 </div>
           
