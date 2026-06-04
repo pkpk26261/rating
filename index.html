@@ -7521,7 +7521,7 @@ function jsonOut(obj) {
     }
 
     function isViolationEntryRemovable(entry){
-      return !isSystemViolationEntry(entry);
+      return true;
     }
 
     function createViolationSystemEntry({ kind, delta=0, action='', date='', totalBefore=0, totalAfter=0 }){
@@ -13470,7 +13470,7 @@ noteSave?.addEventListener('click', ()=>{
             row.innerHTML = `
               <div class="viol-note-entry-date">${escapeHTML(entry.date)}</div>
               <div class="viol-note-entry-body">${tagText ? `<div class="viol-note-entry-tags"><span class="viol-note-entry-tag is-system">${escapeHTML(tagText)}</span></div>` : ''}<div class="viol-note-entry-text">${escapeHTML(entry.item)}</div></div>
-              ${isSystem ? '<span class="viol-note-entry-lock">系統</span>' : `<button type="button" class="mini-btn viol-note-remove" data-idx="${idx}" title="刪除此筆記事">刪除</button>`}`;
+              <button type="button" class="mini-btn viol-note-remove" data-idx="${idx}" title="刪除此筆記事">刪除</button>`;
             frag.appendChild(row);
           });
           violNoteList.appendChild(frag);
@@ -13559,11 +13559,11 @@ noteSave?.addEventListener('click', ()=>{
             : entries;
           if(removableEntries.length === 0) return;
           const clearConfirmText = activeTab === 'entries'
-            ? '確定要清空這位學生的手動違規記事嗎？系統違規紀錄會保留。'
+            ? '確定要清空這位學生的所有違規記事嗎？包含系統違規紀錄。'
             : meta.clearConfirm;
           if(!confirm(clearConfirmText)) return;
           const nextEntries = activeTab === 'entries'
-            ? entries.filter(entry => !isViolationEntryRemovable(entry))
+            ? []
             : [];
           setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, nextEntries);
           renderViolationNoteList();
