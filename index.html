@@ -566,6 +566,27 @@
     .board .row{ display:grid; grid-template-columns: 38px 1fr 64px; gap:8px; padding:8px 8px; border-radius:10px; align-items:center; transition: background .15s ease; contain: layout style; }
     .board .row:nth-child(odd){ background:rgba(255,255,255,0.02); }
     .board .rank{ display:flex; align-items:center; justify-content:center; }
+    .board .who{ min-width:0; display:flex; align-items:center; gap:8px; }
+    .board .who-text{ min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .board .who-new-badge{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid color-mix(in oklab, var(--accent) 34%, var(--line));
+      background:color-mix(in oklab, var(--card) 76%, var(--accent) 24%);
+      color:color-mix(in oklab, var(--accent) 78%, white);
+      font-size:11px;
+      font-weight:900;
+      line-height:1.2;
+      letter-spacing:.02em;
+      white-space:nowrap;
+    }
+    :root[data-theme="light"] .board .who-new-badge{
+      background:color-mix(in oklab, white 72%, var(--accent) 28%);
+      color:color-mix(in oklab, var(--accent) 82%, #0f172a);
+    }
     .board .score{ text-align:right; font-variant-numeric: tabular-nums; font-weight:800; }
     .board-deduct .score{ color:#fca5a5; }
     :root[data-theme="light"] .board-deduct .score{ color:#b91c1c; }
@@ -1337,6 +1358,17 @@
       border-color:rgba(245,158,11,.42);
       background:rgba(245,158,11,.12);
     }
+    .viol-note-btn.has-today-viol{
+      color:color-mix(in oklab, var(--accent) 78%, white);
+      border-color:color-mix(in oklab, var(--accent) 42%, var(--line));
+      background:color-mix(in oklab, var(--accent) 20%, transparent);
+      box-shadow:0 0 0 2px color-mix(in oklab, var(--accent) 12%, transparent);
+    }
+    .viol-note-btn.has-today-viol::after{ background:var(--accent); color:white; }
+    :root[data-theme="light"] .viol-note-btn.has-today-viol{
+      color:color-mix(in oklab, var(--accent) 82%, #0f172a);
+      background:color-mix(in oklab, var(--accent) 16%, white);
+    }
     .viol-note-btn.has-notes::after{
       content:attr(data-count);
       position:absolute;
@@ -1458,6 +1490,48 @@
     }
     .viol-note-entry-text{ line-height:1.5; white-space:pre-wrap; word-break:break-word; }
     .viol-note-remove{ align-self:start; }
+    .viol-note-entry-body{ min-width:0; display:flex; flex-direction:column; gap:6px; }
+    .viol-note-entry-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+    .viol-note-entry-tag{
+      display:inline-flex;
+      align-items:center;
+      min-height:22px;
+      padding:0 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      font-weight:800;
+      line-height:1;
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+    }
+    .viol-note-entry-tag.is-system{
+      color:color-mix(in oklab, var(--accent) 80%, white);
+      border-color:color-mix(in oklab, var(--accent) 38%, var(--line));
+      background:color-mix(in oklab, var(--accent) 18%, transparent);
+    }
+    .viol-note-entry.is-system{
+      border-color:color-mix(in oklab, var(--accent) 22%, var(--line));
+      background:linear-gradient(180deg, color-mix(in oklab, var(--accent) 10%, transparent), rgba(255,255,255,.02));
+    }
+    .viol-note-entry-lock{
+      align-self:start;
+      display:inline-flex;
+      align-items:center;
+      min-height:26px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      font-weight:800;
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    :root[data-theme="light"] .viol-note-entry-tag.is-system,
+    :root[data-theme="light"] .viol-note-entry.is-system{
+      color:color-mix(in oklab, var(--accent) 78%, #0f172a);
+    }
     .viol-note-actions{ display:flex; justify-content:space-between; gap:10px; }
     .viol-note-tabs{
       display:flex;
@@ -7396,6 +7470,10 @@ function jsonOut(obj) {
       return `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
     }
 
+    function isStudentAddedToday(createdAt, today=getTodayInputDateValue()){
+      return typeof createdAt === 'string' && createdAt === today;
+    }
+
     function normalizeViolationDateValue(raw){
       const value = String(raw || '').trim();
       if(/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
@@ -7408,6 +7486,86 @@ function jsonOut(obj) {
       return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
     }
 
+    function isSystemViolationEntry(entry){
+      return !!entry && entry.source === 'system';
+    }
+
+    function normalizeViolationEntryAction(raw){
+      return ['increment', 'decrement', 'reset'].includes(raw) ? raw : '';
+    }
+
+    function normalizeViolationEntryKind(raw){
+      if(raw === 'all') return 'all';
+      return VIOLATION_FIELDS.some(field => field.key === raw) ? raw : '';
+    }
+
+    function getViolationFieldLabel(kind){
+      if(kind === 'all') return '全部違規';
+      return VIOLATION_FIELDS.find(field => field.key === kind)?.label || '違規';
+    }
+
+    function buildViolationSystemEntryText({ kind, delta=0, action='', totalBefore=0 }){
+      const label = getViolationFieldLabel(kind);
+      if(action === 'increment') return `${label} +${Math.max(1, Math.abs(delta))}`;
+      if(action === 'decrement') return `${label} 更正 -${Math.max(1, Math.abs(delta))}`;
+      if(action === 'reset') return `全部歸零（原總次數 ${Math.max(0, totalBefore)}）`;
+      return label;
+    }
+
+    function getViolationSystemEntryTag(entry){
+      if(!isSystemViolationEntry(entry)) return '';
+      if(entry.action === 'increment') return '今日新增違規';
+      if(entry.action === 'decrement') return '更正紀錄';
+      if(entry.action === 'reset') return '歸零紀錄';
+      return '系統紀錄';
+    }
+
+    function isViolationEntryRemovable(entry){
+      return !isSystemViolationEntry(entry);
+    }
+
+    function createViolationSystemEntry({ kind, delta=0, action='', date='', totalBefore=0, totalAfter=0 }){
+      const normalizedAction = normalizeViolationEntryAction(action);
+      const normalizedKind = normalizeViolationEntryKind(kind);
+      if(!normalizedAction) return null;
+      if(normalizedAction !== 'reset' && !normalizedKind) return null;
+      const roundedDelta = Number.isFinite(Number(delta)) ? Math.trunc(Number(delta)) : 0;
+      const entry = {
+        date: normalizeViolationDateValue(date) || getTodayInputDateValue(),
+        item: buildViolationSystemEntryText({
+          kind: normalizedKind || 'all',
+          delta: roundedDelta,
+          action: normalizedAction,
+          totalBefore: Math.max(0, Math.round(Number(totalBefore) || 0))
+        }),
+        source: 'system',
+        action: normalizedAction,
+        kind: normalizedKind || 'all',
+        delta: roundedDelta,
+        totalBefore: Math.max(0, Math.round(Number(totalBefore) || 0)),
+        totalAfter: Math.max(0, Math.round(Number(totalAfter) || 0))
+      };
+      return entry;
+    }
+
+    function getTodayViolationCountFromEntries(entries, today=getTodayInputDateValue()){
+      if(!Array.isArray(entries)) return 0;
+      return entries.reduce((count, entry)=>{
+        if(!isSystemViolationEntry(entry)) return count;
+        if(entry.date !== today) return count;
+        if(entry.action !== 'increment') return count;
+        return count + Math.max(1, Math.abs(Number(entry.delta) || 0));
+      }, 0);
+    }
+
+    function getLatestViolationLogDate(entries){
+      if(!Array.isArray(entries)) return '';
+      return entries.reduce((latest, entry)=>{
+        if(!isSystemViolationEntry(entry) || !entry.date) return latest;
+        return !latest || entry.date > latest ? entry.date : latest;
+      }, '');
+    }
+
     function normalizeViolationEntries(rawEntries){
       if(!Array.isArray(rawEntries)) return [];
       return rawEntries.map(entry=>{
@@ -7415,7 +7573,18 @@ function jsonOut(obj) {
         const item = String(entry.item || '').trim();
         const date = normalizeViolationDateValue(entry.date) || getTodayInputDateValue();
         if(!item) return null;
-        return { date, item };
+        const next = { date, item };
+        if(isSystemViolationEntry(entry)){
+          const action = normalizeViolationEntryAction(entry.action);
+          const kind = normalizeViolationEntryKind(entry.kind) || 'all';
+          next.source = 'system';
+          if(action) next.action = action;
+          next.kind = kind;
+          if(Number.isFinite(Number(entry.delta))) next.delta = Math.trunc(Number(entry.delta));
+          if(Number.isFinite(Number(entry.totalBefore))) next.totalBefore = Math.max(0, Math.round(Number(entry.totalBefore)));
+          if(Number.isFinite(Number(entry.totalAfter))) next.totalAfter = Math.max(0, Math.round(Number(entry.totalAfter)));
+        }
+        return next;
       }).filter(Boolean).sort((a, b)=> b.date.localeCompare(a.date) || a.item.localeCompare(b.item, 'zh-Hant'));
     }
 
@@ -7456,14 +7625,49 @@ function jsonOut(obj) {
 
     function getViolationNoteCounts(cls, id){
       const rec = getViolationRecord(cls, id);
-      const entries = rec.entries.length;
+      const manualEntries = rec.entries.filter(entry => !isSystemViolationEntry(entry)).length;
+      const systemEntries = rec.entries.length - manualEntries;
       const specialEntries = rec.specialEntries.length;
-      return { entries, specialEntries, total: entries + specialEntries };
+      const todayViolationCount = getTodayViolationCountFromEntries(rec.entries);
+      const latestViolationDate = getLatestViolationLogDate(rec.entries);
+      return {
+        entries: rec.entries.length,
+        manualEntries,
+        systemEntries,
+        specialEntries,
+        total: rec.entries.length + specialEntries,
+        todayViolationCount,
+        latestViolationDate
+      };
+    }
+
+    function getTodayViolationCount(cls, id, today=getTodayInputDateValue()){
+      return getTodayViolationCountFromEntries(getViolationRecord(cls, id).entries, today);
+    }
+
+    function buildViolationNoteTitle(noteCounts){
+      const parts = [];
+      if(noteCounts.manualEntries > 0) parts.push(`違規記事 ${noteCounts.manualEntries} 筆`);
+      if(noteCounts.systemEntries > 0) parts.push(`系統紀錄 ${noteCounts.systemEntries} 筆`);
+      if(noteCounts.specialEntries > 0) parts.push(`特殊記事 ${noteCounts.specialEntries} 筆`);
+      if(noteCounts.todayViolationCount > 0) parts.push(`今日新增違規 ${noteCounts.todayViolationCount} 次`);
+      if(noteCounts.latestViolationDate) parts.push(`最新登記 ${noteCounts.latestViolationDate}`);
+      return parts.length ? `學生記事：${parts.join(' / ')}` : '新增學生記事';
+    }
+
+    function getViolationRecordTotal(rec){
+      return VIOLATION_FIELDS.reduce((sum, { key })=> sum + (Number(rec?.[key]) || 0), 0);
+    }
+
+    function appendViolationSystemEntry(rec, payload){
+      const entry = createViolationSystemEntry(payload);
+      if(!entry) return false;
+      rec.entries = normalizeViolationEntries([...(Array.isArray(rec.entries) ? rec.entries : []), entry]);
+      return true;
     }
 
     function getViolationTotal(cls, id){
-      const rec = getViolationRecord(cls, id);
-      return VIOLATION_FIELDS.reduce((sum, { key })=> sum + (rec[key] || 0), 0);
+      return getViolationRecordTotal(getViolationRecord(cls, id));
     }
 
     function setViolationRecord(cls, id, record){
@@ -7495,10 +7699,39 @@ function jsonOut(obj) {
     }
 
     function changeViolationCount(cls, id, kind, delta){
-      if(!VIOLATION_FIELDS.some(field => field.key === kind)) return;
+      if(!VIOLATION_FIELDS.some(field => field.key === kind)) return false;
       const rec = getViolationRecord(cls, id);
-      rec[kind] = Math.max(0, (rec[kind] || 0) + delta);
+      const current = Math.max(0, Number(rec[kind]) || 0);
+      const nextValue = Math.max(0, current + delta);
+      if(current === nextValue) return false;
+      const totalBefore = getViolationRecordTotal(rec);
+      rec[kind] = nextValue;
+      const totalAfter = getViolationRecordTotal(rec);
+      appendViolationSystemEntry(rec, {
+        kind,
+        delta: nextValue - current,
+        action: delta > 0 ? 'increment' : 'decrement',
+        totalBefore,
+        totalAfter
+      });
       setViolationRecord(cls, id, rec);
+      return true;
+    }
+
+    function resetViolationCounts(cls, id){
+      const rec = getViolationRecord(cls, id);
+      const totalBefore = getViolationRecordTotal(rec);
+      if(totalBefore <= 0) return false;
+      VIOLATION_FIELDS.forEach(({ key })=>{ rec[key] = 0; });
+      appendViolationSystemEntry(rec, {
+        kind: 'all',
+        delta: -totalBefore,
+        action: 'reset',
+        totalBefore,
+        totalAfter: 0
+      });
+      setViolationRecord(cls, id, rec);
+      return true;
     }
 
 
@@ -7868,9 +8101,11 @@ function jsonOut(obj) {
         id: s.id,
         name: s.name,
         seat: s.seat,
+        createdAt: typeof s.createdAt === 'string' ? s.createdAt : '',
         score: getScore(cls, s.id),
         deduction: getDeduction(cls, s.id),
-        violationTotal: getViolationTotal(cls, s.id)
+        violationTotal: getViolationTotal(cls, s.id),
+        todayViolationCount: getTodayViolationCount(cls, s.id)
       }));
     }
 
@@ -7887,13 +8122,28 @@ function jsonOut(obj) {
       return ranks;
     }
 
+    function getBoardWhoText(entry){
+      const seatDisp = padSeat(entry.seat);
+      return `${entry.seat ? `#${seatDisp}` : ''}${entry.name || ''}`;
+    }
+
+    function buildBoardWhoHTML(entry, showTodayViolationBadge){
+      const whoText = getBoardWhoText(entry);
+      if(!showTodayViolationBadge) return `<div class="who">${escapeHTML(whoText)}</div>`;
+      const todayCount = Math.max(0, Math.round(Number(entry.todayViolationCount) || 0));
+      const badgeHTML = todayCount > 0 ? `<span class="who-new-badge">${escapeHTML(`今日新增 ${todayCount}次`)}</span>` : '';
+      return `<div class="who"><span class="who-text">${escapeHTML(whoText)}</span>${badgeHTML}</div>`;
+    }
+
     function renderBoard(el, elClass, cls, options={}){
       const {
         valueKey = 'score',
         emptyText = '此班級尚無成員',
         filter = null,
-        sortDirection = 'desc'
+        sortDirection = 'desc',
+        showTodayViolationBadge = false
       } = options;
+      const today = getTodayInputDateValue();
 
       if(elClass) elClass.textContent = cls || '未選擇';
       let list = buildLeaderboardEntries(cls);
@@ -7910,9 +8160,13 @@ function jsonOut(obj) {
           const s = list[i];
           const row = existingRows[i];
           const whoEl = row.querySelector('.who');
-          const seatDisp = padSeat(s.seat);
-          const expectedWho = (s.seat ? `#${seatDisp}` : '') + s.name;
-          if(whoEl && whoEl.textContent.trim() !== expectedWho.trim()){
+          const whoTextEl = whoEl ? whoEl.querySelector('.who-text') : null;
+          const expectedWho = getBoardWhoText(s);
+          const currentWho = (whoTextEl ? whoTextEl.textContent : whoEl?.textContent || '').trim();
+          const badgeEl = whoEl?.querySelector('.who-new-badge');
+          const expectedBadgeText = showTodayViolationBadge && Number(s.todayViolationCount) > 0 ? `今日新增 ${s.todayViolationCount}次` : '';
+          const currentBadgeText = badgeEl?.textContent?.trim() || '';
+          if(!whoEl || currentWho !== expectedWho.trim() || currentBadgeText !== expectedBadgeText){
             canPatch = false;
             break;
           }
@@ -7941,12 +8195,11 @@ function jsonOut(obj) {
         const rank = ranks[i];
         const clsRank = rank<=5 ? `rank-${rank}` : '';
         const medalText = rank<=5 ? rank : '';
-        const seatDisp = padSeat(s.seat);
         const row = document.createElement('div');
         row.className = `row ${clsRank}`;
         row.innerHTML = `
             <div class="rank">${rank<=5 ? `<span class="medal">${medalText}</span>` : rank}</div>
-          <div class="who">${s.seat ? `#${escapeHTML(seatDisp)}` : ''}${escapeHTML(s.name)}</div>
+          ${buildBoardWhoHTML(s, showTodayViolationBadge)}
             <div class="score">${s[valueKey]}</div>`;
         frag.appendChild(row);
       }
@@ -7975,7 +8228,8 @@ function jsonOut(obj) {
       renderBoard(elViolLeaderboard, elViolBoardClass, cls, {
         valueKey: 'violationTotal',
         emptyText: '尚無違規紀錄',
-        filter: s => s.violationTotal > 0
+        filter: s => s.violationTotal > 0 || s.todayViolationCount > 0,
+        showTodayViolationBadge: true
       });
     }
 
@@ -11914,14 +12168,12 @@ elProgAdd?.addEventListener('click', ()=>{
         const isHit = q && matchFilter(s, q);
         const studentNameHtml = isHit ? highlightHTML(s.name||'', q) : escapeHTML(s.name||'');
         const studentLabel = `${s.seat ? `#${padSeat(s.seat)} ` : ''}${s.name || ''}`.trim();
-        const noteTitle = noteCounts.total > 0
-          ? `學生記事：違規 ${noteCounts.entries} 筆 / 特殊 ${noteCounts.specialEntries} 筆`
-          : '新增學生記事';
+        const noteTitle = buildViolationNoteTitle(noteCounts);
         return `
           <tr data-id="${escapeHTML(s.id)}" class="${isHit?'match':''}${rec.pending?' viol-pending-row':''}">
             <td class="viol-pending-cell viol-pending-col"><input type="checkbox" class="viol-pending-cb" data-id="${escapeHTML(s.id)}" ${rec.pending?'checked':''} title="標記為待處理，提醒老師" aria-label="待處理"></td>
             <td>${highlightSeat(s.seat||'', isHit ? q : '')}</td>
-            <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${noteCounts.total>0 ? ' has-notes' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${noteCounts.total}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
+            <td class="viol-student-cell"><div class="viol-name-cell"><span class="viol-name-text">${studentNameHtml}</span><button type="button" class="viol-note-btn${noteCounts.total>0 ? ' has-notes' : ''}${noteCounts.todayViolationCount>0 ? ' has-today-viol' : ''}" data-id="${escapeHTML(s.id)}" data-label="${escapeHTML(studentLabel)}" data-count="${noteCounts.total}" data-today-count="${noteCounts.todayViolationCount}" data-latest-date="${escapeHTML(noteCounts.latestViolationDate || '')}" title="${escapeHTML(noteTitle)}" aria-label="${escapeHTML(noteTitle)}">🗒</button></div></td>
             <td class="num"><strong>${total}</strong></td>
             ${VIOLATION_FIELDS.map(({ key, label })=>`
               <td class="num viol-cell">
@@ -11971,7 +12223,7 @@ elProgAdd?.addEventListener('click', ()=>{
         btn.addEventListener('click', ()=>{
           const id = btn.getAttribute('data-id') || '';
           if(!id) return;
-          setViolationRecord(cls, id, createEmptyViolationRecord());
+          resetViolationCounts(cls, id);
           renderViolations(cls);
         });
       });
@@ -13199,21 +13451,26 @@ noteSave?.addEventListener('click', ()=>{
           const activeTab = getActiveViolationNoteTab();
           const meta = getViolationNoteMeta(activeTab);
           const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
+          const removableEntries = activeTab === 'entries'
+            ? entries.filter(entry => isViolationEntryRemovable(entry))
+            : entries;
           renderViolationNoteTabs();
           violNoteList.innerHTML = '';
-          if(violNoteClear) violNoteClear.disabled = entries.length === 0;
+          if(violNoteClear) violNoteClear.disabled = removableEntries.length === 0;
           if(entries.length === 0){
             violNoteList.innerHTML = `<div class="viol-note-empty">${escapeHTML(meta.empty)}</div>`;
             return;
           }
           const frag = document.createDocumentFragment();
           entries.forEach((entry, idx)=>{
+            const isSystem = isSystemViolationEntry(entry);
+            const tagText = getViolationSystemEntryTag(entry);
             const row = document.createElement('div');
-            row.className = 'viol-note-entry';
+            row.className = `viol-note-entry${isSystem ? ' is-system' : ''}`;
             row.innerHTML = `
               <div class="viol-note-entry-date">${escapeHTML(entry.date)}</div>
-              <div class="viol-note-entry-text">${escapeHTML(entry.item)}</div>
-              <button type="button" class="mini-btn viol-note-remove" data-idx="${idx}" title="刪除此筆記事">刪除</button>`;
+              <div class="viol-note-entry-body">${tagText ? `<div class="viol-note-entry-tags"><span class="viol-note-entry-tag is-system">${escapeHTML(tagText)}</span></div>` : ''}<div class="viol-note-entry-text">${escapeHTML(entry.item)}</div></div>
+              ${isSystem ? '<span class="viol-note-entry-lock">系統</span>' : `<button type="button" class="mini-btn viol-note-remove" data-idx="${idx}" title="刪除此筆記事">刪除</button>`}`;
             frag.appendChild(row);
           });
           violNoteList.appendChild(frag);
@@ -13286,6 +13543,7 @@ noteSave?.addEventListener('click', ()=>{
           const idx = Number(btn.getAttribute('data-idx'));
           if(!Number.isInteger(idx) || idx < 0) return;
           const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
+          if(!isViolationEntryRemovable(entries[idx])) return;
           entries.splice(idx, 1);
           setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, entries);
           renderViolationNoteList();
@@ -13296,9 +13554,18 @@ noteSave?.addEventListener('click', ()=>{
           const activeTab = getActiveViolationNoteTab();
           const meta = getViolationNoteMeta(activeTab);
           const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
-          if(entries.length === 0) return;
-          if(!confirm(meta.clearConfirm)) return;
-          setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, []);
+          const removableEntries = activeTab === 'entries'
+            ? entries.filter(entry => isViolationEntryRemovable(entry))
+            : entries;
+          if(removableEntries.length === 0) return;
+          const clearConfirmText = activeTab === 'entries'
+            ? '確定要清空這位學生的手動違規記事嗎？系統違規紀錄會保留。'
+            : meta.clearConfirm;
+          if(!confirm(clearConfirmText)) return;
+          const nextEntries = activeTab === 'entries'
+            ? entries.filter(entry => !isViolationEntryRemovable(entry))
+            : [];
+          setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, nextEntries);
           renderViolationNoteList();
           if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
         });
@@ -13338,8 +13605,9 @@ noteSave?.addEventListener('click', ()=>{
 
       const name = (addStuName.value || '').trim() || sid;
       const seat = (addStuSeat.value || '').trim();
+      const createdAt = getTodayInputDateValue();
 
-      const student = { id, sid, name, seat, titles: [], row: null, sheet: cls };
+      const student = { id, sid, name, seat, titles: [], row: null, sheet: cls, createdAt };
       list.push(student);
       state.classMap[cls] = list;
       ensureCadreOptions(cls);
