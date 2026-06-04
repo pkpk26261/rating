@@ -1179,6 +1179,7 @@
       border-radius:10px;
       transition: background .15s ease, box-shadow .15s ease;
     }
+    .hw-col .hw-col-head{ position:relative; }
     .hw-col .hw-col-head.hw-head-grabbable{ cursor:grab; }
     .hw-col .hw-col-head.hw-head-grabbable:hover{ background:rgba(255,255,255,.04); }
     .hw-col .hw-col-head.hw-head-dragging{
@@ -1190,6 +1191,49 @@
     :root[data-theme="light"] .hw-col .hw-col-head.hw-head-dragging{
       background:rgba(99,102,241,.08);
       box-shadow: inset 0 0 0 1px rgba(99,102,241,.18);
+    }
+    .hw-col .hw-del-btn{
+      position:absolute;
+      left:4px;
+      top:50%;
+      transform:translateY(-50%) scale(.92);
+      width:22px; height:22px;
+      padding:0;
+      border:1px solid color-mix(in oklab, var(--bad) 45%, var(--line));
+      border-radius:7px;
+      background:color-mix(in oklab, var(--card) 82%, var(--bad) 18%);
+      color:var(--bad);
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:900; line-height:1;
+      opacity:0; visibility:hidden; pointer-events:none;
+      box-shadow:0 4px 14px rgba(0,0,0,.16);
+      transition:opacity .14s ease, transform .14s ease, background .14s ease, border-color .14s ease;
+      z-index:1;
+    }
+    .hw-col .hw-col-head:hover .hw-del-btn,
+    .hw-col .hw-col-head:focus-within .hw-del-btn{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transform:translateY(-50%) scale(1);
+    }
+    .hw-col .hw-del-btn:hover{
+      background:color-mix(in oklab, var(--card) 68%, var(--bad) 32%);
+      border-color:color-mix(in oklab, var(--bad) 62%, var(--line));
+    }
+    .hw-col .hw-del-btn:focus-visible{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      outline:none;
+      box-shadow:0 0 0 3px color-mix(in oklab, var(--bad) 22%, transparent);
+    }
+    :root[data-theme="light"] .hw-col .hw-del-btn{
+      background:color-mix(in oklab, white 78%, var(--bad) 22%);
+      box-shadow:0 4px 14px rgba(15,23,42,.08);
+    }
+    :root[data-theme="light"] .hw-col .hw-del-btn:hover{
+      background:color-mix(in oklab, white 62%, var(--bad) 38%);
     }
     .hw-col .hw-col-name{
       cursor:pointer; border-bottom:1px dashed rgba(255,255,255,.25); padding-bottom:1px;
@@ -4797,6 +4841,24 @@
     </div>
   </div>
 
+  <div id="hw-col-del-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="hw-col-del-title">
+    <div class="modal" role="document" style="width:min(420px, 92vw);">
+      <header>
+        <h3 id="hw-col-del-title">✕ 刪除作業欄位</h3>
+        <button id="hw-col-del-close" class="close" aria-label="關閉">✕</button>
+      </header>
+      <div class="content">
+        <div class="hint">目前班級：<span id="hw-col-del-class" class="pill"></span></div>
+        <div style="margin:12px 0 10px; font-size:15px; line-height:1.6;">確定要刪除「<strong id="hw-col-del-name"></strong>」嗎？</div>
+        <div class="hint" style="color:var(--bad);">此操作會刪除整個作業欄與全班該欄成績，且無法復原。</div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+          <button id="hw-col-del-cancel" class="btn" type="button">取消</button>
+          <button id="hw-col-del-confirm" class="btn sub" type="button">確認刪除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ★ 新增學生彈窗 -->
   <div id="add-stu-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="add-stu-title">
@@ -5671,6 +5733,14 @@
     const bulkApplySame = document.getElementById('bulk-apply-same');
     const bulkApplyPaste = document.getElementById('bulk-apply-paste');
     const bulkPaste = document.getElementById('bulk-paste');
+
+    /* ★ 刪除作業欄位彈窗 DOM */
+    const hwColDelMask = document.getElementById('hw-col-del-mask');
+    const hwColDelClose = document.getElementById('hw-col-del-close');
+    const hwColDelClass = document.getElementById('hw-col-del-class');
+    const hwColDelName = document.getElementById('hw-col-del-name');
+    const hwColDelCancel = document.getElementById('hw-col-del-cancel');
+    const hwColDelConfirm = document.getElementById('hw-col-del-confirm');
 
     /* ★ 刪除學生彈窗 DOM */
     const delMask = document.getElementById('del-mask');
@@ -11982,6 +12052,22 @@ elProgAdd?.addEventListener('click', ()=>{
       });
       return true;
     }
+    function hwDeleteCol(hw, colIdx){
+      if(!hw || !Array.isArray(hw.cols)) return false;
+      const colCount = hw.cols.length;
+      if(colCount <= 1) return false;
+      if(colIdx < 0 || colIdx >= colCount) return false;
+
+      hw.cols.splice(colIdx, 1);
+
+      const rows = hw.data || {};
+      Object.keys(rows).forEach(id=>{
+        const row = normalizeHWRow(rows[id], colCount);
+        row.splice(colIdx, 1);
+        rows[id] = normalizeHWRow(row, colCount - 1);
+      });
+      return true;
+    }
     function getHWDropIndex(fromIdx, targetIdx, position){
       if(fromIdx === targetIdx) return fromIdx;
       if(position === 'before') return fromIdx < targetIdx ? targetIdx - 1 : targetIdx;
@@ -12026,6 +12112,7 @@ elProgAdd?.addEventListener('click', ()=>{
         dragState.position = '';
         syncHWDragClasses();
       };
+      let pendingHWNameEditCol = null;
       const commitHWMove = (fromIdx, toIdx, reason='hw cols reorder')=>{
         if(!hwMoveCol(hw, fromIdx, toIdx)) return false;
         saveHWToLS(cls);
@@ -12135,11 +12222,39 @@ elProgAdd?.addEventListener('click', ()=>{
         }
         queueHWAutoScroll();
       };
+      const openHWColEditor = (ci)=>{
+        if(_hwDragJustEnded) return;
+        if(!Number.isInteger(ci)) return;
+        const span = elHWTable.querySelector(`.hw-col-name[data-col="${ci}"]`);
+        if(!span) return;
+        const oldName = hw.cols[ci] || '';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'hw-col-edit';
+        input.value = oldName;
+        input.maxLength = 20;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+        const commit = ()=>{
+          const newName = input.value.trim() || oldName;
+          hw.cols[ci] = newName;
+          saveHWToLS(cls);
+          saveSession('hw col rename');
+          renderHW(cls);
+        };
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){ e.preventDefault(); input.blur(); }
+          if(e.key === 'Escape'){ input.value = oldName; input.blur(); }
+        });
+      };
       let pointerDrag = null;
       const finishHWPointerDrag = (clientX, clientY, shouldCommit)=>{
         const current = pointerDrag;
         if(!current) return;
         stopHWAutoScroll();
+        if(current.dragged || !shouldCommit) pendingHWNameEditCol = null;
         pointerDrag = null;
 
         current.head.classList.remove('hw-head-dragging');
@@ -12169,7 +12284,7 @@ elProgAdd?.addEventListener('click', ()=>{
           <tr>
             <th style="min-width:64px">座號</th>
             <th style="min-width:120px">姓名</th>
-            ${hw.cols.map((c,i)=>`<th class="num hw-col" data-col-index="${i}"><div class="hw-col-head hw-head-grabbable" data-col="${i}" title="拖曳排序"><span class="hw-col-name" data-col="${i}" title="點擊修改名稱">${escapeHTML(c)}</span><span class="hw-move-btns"><button class="hw-move-btn" data-col="${i}" data-dir="-1" type="button" title="前移" ${i===0?'disabled':''}>◀</button><button class="hw-move-btn" data-col="${i}" data-dir="1" type="button" title="後移" ${i===hw.cols.length-1?'disabled':''}>▶</button></span><button class="mini-btn" data-col="${i}" type="button" title="批次輸入這一欄">⚡</button></div></th>`).join('')}
+            ${hw.cols.map((c,i)=>`<th class="num hw-col" data-col-index="${i}"><div class="hw-col-head hw-head-grabbable" data-col="${i}" title="拖曳排序"><button class="hw-del-btn" data-col="${i}" type="button" title="刪除這個作業欄位" aria-label="刪除 ${escapeHTML(c)}">✕</button><span class="hw-col-name" data-col="${i}" title="點擊修改名稱">${escapeHTML(c)}</span><span class="hw-move-btns"><button class="hw-move-btn" data-col="${i}" data-dir="-1" type="button" title="前移" ${i===0?'disabled':''}>◀</button><button class="hw-move-btn" data-col="${i}" data-dir="1" type="button" title="後移" ${i===hw.cols.length-1?'disabled':''}>▶</button></span><button class="mini-btn" data-col="${i}" type="button" title="批次輸入這一欄">⚡</button></div></th>`).join('')}
             <th class="num">小計</th>
             <th class="num">平均</th>
           </tr>
@@ -12229,35 +12344,6 @@ elProgAdd?.addEventListener('click', ()=>{
       });
 
 
-      // ★ 綁定作業名稱點擊編輯
-      elHWTable.querySelectorAll('.hw-col-name[data-col]').forEach(span=>{
-        span.addEventListener('click', ()=>{
-          if(_hwDragJustEnded) return;
-          const ci = Number(span.getAttribute('data-col'));
-          const oldName = hw.cols[ci] || '';
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.className = 'hw-col-edit';
-          input.value = oldName;
-          input.maxLength = 20;
-          span.replaceWith(input);
-          input.focus();
-          input.select();
-          const commit = ()=>{
-            const newName = input.value.trim() || oldName;
-            hw.cols[ci] = newName;
-            saveHWToLS(cls);
-            saveSession('hw col rename');
-            renderHW(cls);
-          };
-          input.addEventListener('blur', commit);
-          input.addEventListener('keydown', (e)=>{
-            if(e.key === 'Enter'){ e.preventDefault(); input.blur(); }
-            if(e.key === 'Escape'){ input.value = oldName; input.blur(); }
-          });
-        });
-      });
-
       const onHWPointerMove = (e)=>{
         if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
         pointerDrag.lastX = e.clientX;
@@ -12267,9 +12353,11 @@ elProgAdd?.addEventListener('click', ()=>{
         if(!pointerDrag.dragged){
           if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
           pointerDrag.dragged = true;
+          pendingHWNameEditCol = null;
           dragState.fromIdx = pointerDrag.fromIdx;
           dragState.overIdx = pointerDrag.fromIdx;
           dragState.position = 'after';
+          try{ pointerDrag.head.setPointerCapture(pointerDrag.pointerId); }catch{}
           pointerDrag.head.classList.add('hw-head-dragging');
           document.body.classList.add('hw-dragging');
           pointerDrag.ghost = createHWDragGhost(pointerDrag.label, e.clientX, e.clientY);
@@ -12310,12 +12398,22 @@ elProgAdd?.addEventListener('click', ()=>{
       };
 
       elHWTable.querySelectorAll('.hw-col-head[data-col]').forEach(head=>{
+        head.addEventListener('click', (e)=>{
+          if(e.target.closest('.hw-del-btn, .mini-btn, .hw-move-btn')) return;
+          const ci = Number(head.getAttribute('data-col'));
+          if(!Number.isInteger(ci)) return;
+          const clickedName = !!e.target.closest('.hw-col-name[data-col]');
+          if(!clickedName && pendingHWNameEditCol !== ci) return;
+          pendingHWNameEditCol = null;
+          openHWColEditor(ci);
+        });
         head.addEventListener('pointerdown', (e)=>{
           if(e.button !== 0) return;
           if(e.pointerType === 'touch') return;
-          if(e.target.closest('.mini-btn, .hw-move-btn')) return;
+          if(e.target.closest('.hw-del-btn, .mini-btn, .hw-move-btn')) return;
           const ci = Number(head.getAttribute('data-col'));
           if(!Number.isInteger(ci)) return;
+          pendingHWNameEditCol = e.target.closest('.hw-col-name[data-col]') ? ci : null;
           pointerDrag = {
             fromIdx: ci,
             pointerId: e.pointerId,
@@ -12328,7 +12426,6 @@ elProgAdd?.addEventListener('click', ()=>{
             dragged: false,
             ghost: null
           };
-          try{ head.setPointerCapture(e.pointerId); }catch{}
         });
       });
 
@@ -12348,6 +12445,13 @@ elProgAdd?.addEventListener('click', ()=>{
           openBulkModal(cls, Number(btn.getAttribute('data-col')));
         });
       });
+      elHWTable.querySelectorAll('.hw-del-btn[data-col]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          openHWColDeleteModal(cls, Number(btn.getAttribute('data-col')));
+        });
+      });
 
       // 控制鈕（新增/刪除作業）
       elHWAdd.onclick = ()=>{
@@ -12357,10 +12461,7 @@ elProgAdd?.addEventListener('click', ()=>{
         saveSession('hw cols change'); // ★ 新增
       };
       elHWDel.onclick = ()=>{
-        if(hw.cols.length<=1) return; hw.cols.pop();
-        Object.keys(hw.data).forEach(id=>{ const arr=hw.data[id]; if(Array.isArray(arr) && arr.length>hw.cols.length) arr.length=hw.cols.length; });
-        saveHWToLS(cls); renderHW(cls);
-        saveSession('hw cols change'); // ★ 新增
+        openHWColDeleteModal(cls, hw.cols.length - 1);
       };
 
       // ⤵ 搜尋時自動捲到第一個命中的列
@@ -12929,6 +13030,63 @@ elProgAdd?.addEventListener('click', ()=>{
     }
     function closeBulkModal(){ bulkMask.classList.remove('show'); }
     bulkClose.addEventListener('click', closeBulkModal);
+
+    let _hwColDeleteKeyHandler = null;
+    function closeHWColDeleteModal(){
+      if(!hwColDelMask) return;
+      hwColDelMask.classList.remove('show');
+      delete hwColDelMask.dataset.cls;
+      delete hwColDelMask.dataset.col;
+      if(_hwColDeleteKeyHandler){
+        window.removeEventListener('keydown', _hwColDeleteKeyHandler);
+        _hwColDeleteKeyHandler = null;
+      }
+    }
+    function openHWColDeleteModal(cls, colIndex){
+      const hw = ensureHWState(cls);
+      if(!hwColDelMask || !hwColDelClass || !hwColDelName){
+        showInAppModal('刪除作業欄位', '刪除視窗目前無法開啟。');
+        return;
+      }
+      if(!hw || !Array.isArray(hw.cols) || hw.cols.length === 0){
+        showInAppModal('刪除作業欄位', '目前沒有可刪除的作業欄位。');
+        return;
+      }
+      if(hw.cols.length <= 1){
+        showInAppModal('刪除作業欄位', '至少要保留一個作業欄位。');
+        return;
+      }
+      if(!Number.isInteger(colIndex) || colIndex < 0 || colIndex >= hw.cols.length){
+        showInAppModal('刪除作業欄位', '找不到要刪除的作業欄位。');
+        return;
+      }
+      hwColDelMask.dataset.cls = cls;
+      hwColDelMask.dataset.col = String(colIndex);
+      hwColDelClass.textContent = cls;
+      hwColDelName.textContent = hw.cols[colIndex] || `作業${colIndex+1}`;
+      hwColDelMask.classList.add('show');
+      hwColDelCancel?.focus();
+      if(_hwColDeleteKeyHandler) window.removeEventListener('keydown', _hwColDeleteKeyHandler);
+      _hwColDeleteKeyHandler = (e)=>{ if(e.key === 'Escape') closeHWColDeleteModal(); };
+      window.addEventListener('keydown', _hwColDeleteKeyHandler);
+    }
+    hwColDelMask?.addEventListener('click', (e)=>{ if(e.target === hwColDelMask) closeHWColDeleteModal(); });
+    hwColDelClose?.addEventListener('click', closeHWColDeleteModal);
+    hwColDelCancel?.addEventListener('click', closeHWColDeleteModal);
+    hwColDelConfirm?.addEventListener('click', ()=>{
+      const cls = hwColDelMask?.dataset.cls || '';
+      const colIndex = Number(hwColDelMask?.dataset.col);
+      const hw = ensureHWState(cls);
+      if(!cls || !Number.isInteger(colIndex) || !hwDeleteCol(hw, colIndex)){
+        closeHWColDeleteModal();
+        showInAppModal('刪除作業欄位', '找不到可刪除的作業欄位，或目前只剩最後一欄。');
+        return;
+      }
+      saveHWToLS(cls);
+      saveSession('hw col delete');
+      closeHWColDeleteModal();
+      renderHW(cls);
+    });
 
 
     // 學生備註彈窗（作業成績）
