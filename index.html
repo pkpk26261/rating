@@ -764,6 +764,7 @@
     body[data-mode="draw"] .controls-row{ display:none !important; }
     body[data-mode="violations"] .controls-row{ display:none !important; }
     body[data-mode="hw"] .controls-row{ display:none !important; }
+    body[data-mode="warning"] .controls-row{ display:none !important; }
     .seat-controls{ display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
     .seat-controls .input{ min-width:auto; width:70px; text-align:center; padding:8px 10px; }
 
@@ -1272,6 +1273,84 @@
     .hwtbl input[type="number"]{ width:76px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px 8px; text-align:center; outline:none; }
     .hwtbl input[type="number"]:focus{ border-color: color-mix(in oklab, var(--accent) 60%, #000); box-shadow: 0 0 0 3px rgba(129,140,248,.18); }
     .pill{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--muted); }
+
+    /* ===== 成績預警模式 ===== */
+    #warning-pane{
+      display:flex; flex-direction:column; min-height:0; overflow:hidden;
+    }
+    .warn-threshold-wrap{
+      display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted);
+    }
+    .warn-threshold-input{
+      width:60px; background:var(--card); color:var(--fg);
+      border:1px solid var(--line); border-radius:8px; padding:5px 8px;
+      text-align:center; font-size:14px; font-weight:600; outline:none;
+    }
+    .warn-threshold-input:focus{
+      border-color:color-mix(in oklab, var(--accent) 60%, #000);
+      box-shadow:0 0 0 3px rgba(129,140,248,.18);
+    }
+    .warn-summary{
+      font-size:13px; color:var(--muted);
+    }
+    .warning-content{
+      margin-top:12px; overflow-y:auto; flex:1 1 auto;
+      display:flex; flex-direction:column; gap:18px;
+    }
+    .warning-class-group{
+      background:var(--card); border-radius:14px;
+      border:1px solid var(--line); overflow:hidden;
+      box-shadow:var(--shadow);
+      flex-shrink:0;
+    }
+    .warning-class-title{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 16px;
+      background:color-mix(in oklab, var(--accent) 8%, var(--card));
+      border-bottom:1px solid var(--line);
+      font-weight:700; font-size:14px;
+    }
+    .warning-count-badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:22px; height:22px; padding:0 7px;
+      background:var(--bad); color:#fff;
+      border-radius:999px; font-size:12px; font-weight:700;
+    }
+    .warning-table{
+      width:100%; border-collapse:separate; border-spacing:0;
+      font-size:13px;
+    }
+    .warning-table th, .warning-table td{
+      padding:7px 12px; border-bottom:1px solid var(--line);
+      white-space:nowrap; vertical-align:middle;
+    }
+    .warning-table tr:last-child td{ border-bottom:0; }
+    .warning-table th{
+      position:sticky; top:0; background:var(--card);
+      text-align:left; color:var(--muted); font-weight:600;
+    }
+    .warning-table tbody tr:hover td{ background:rgba(255,255,255,.03); }
+    :root[data-theme="light"] .warning-table tbody tr:hover td{ background:rgba(0,0,0,.03); }
+    .warning-table .num{ text-align:right; font-variant-numeric:tabular-nums; }
+    .warn-fail{ color:var(--bad); font-weight:700; }
+    .warn-pass{ color:var(--ok); }
+    .warn-gap{ font-size:11px; color:var(--muted); margin-left:4px; }
+    .warn-pos{ color:var(--ok); }
+    .warn-neg{ color:var(--bad); }
+    .warn-viol{ color:var(--bronze); }
+    .warn-sub{ font-size:11px; color:var(--muted); }
+    .warning-empty{
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:10px; padding:64px 32px;
+      color:var(--muted); text-align:center;
+    }
+    .warning-empty .warn-empty-icon{ font-size:48px; }
+    .warning-empty .warn-empty-msg{ font-size:16px; font-weight:600; color:var(--ok); }
+    .warning-empty .warn-empty-sub{ font-size:13px; }
+    :root[data-theme="light"] .warning-table th{ background:#fff; }
+    :root[data-theme="light"] .warning-class-title{
+      background:color-mix(in oklab, var(--accent) 5%, #fff);
+    }
 
     .hw-col{ position:relative; white-space:nowrap; }
     .hw-col .hw-col-head{
@@ -4556,6 +4635,7 @@
         <div class="modebar">
           <div class="seg" role="tablist" aria-label="顯示模式">
                                 <button id="mode-manage" class="seg-btn" data-mode="manage" data-icon="📋">學生管理</button>
+                                <button id="mode-warning" class="seg-btn" data-mode="warning" data-icon="⚠️">成績預警</button>
                                 <button id="mode-progress" class="seg-btn" data-mode="progress" data-icon="📖">教學進度</button>
                                 <button id="mode-list" class="seg-btn active" data-mode="list" data-icon="⭐">加扣分</button>
                                 <button id="mode-violations" class="seg-btn" data-mode="violations" data-icon="🚨">違規記錄</button>
@@ -4849,6 +4929,18 @@
           <div class="hwtbl-wrap">
             <table class="hwtbl" id="viol-table" role="grid"></table>
           </div>
+        </section>
+        <section id="warning-pane" class="hidden" aria-label="成績預警頁">
+          <div class="hw-bar">
+            <span class="hw-bar-label">⚠️ 成績預警</span>
+            <select id="warning-class-select" class="hw-class-select" title="選擇班級"><option value="">所有班級</option></select>
+            <span class="warn-threshold-wrap">
+              不及格門檻：<input id="warning-threshold-input" type="number" class="warn-threshold-input" min="0" max="100" value="60" />分
+            </span>
+            <span class="spacer"></span>
+            <span id="warning-summary" class="warn-summary"></span>
+          </div>
+          <div id="warning-content" class="warning-content"></div>
         </section>
         <!-- 🎲 抽號模式（新版：抽籤動畫） -->
         <section id="draw-pane" class="hidden" aria-label="抽號模式">
@@ -5404,6 +5496,7 @@
       hw:{}, savedHW:{}, draw:{}, showStageInList: true,
       group:{},
       cadreOptions:{},
+      warningThreshold: 60,
       // ★ 新增：教學進度（跨班勾選）與倒數計時
       progress:{ pages:{}, order:[], active:'' },
       timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
@@ -5645,6 +5738,7 @@
         selectedClass: elSelect?.value || '',
         mode: state.mode,
         showStageInList: state.showStageInList,
+        warningThreshold: state.warningThreshold ?? 60,
         ts: Date.now()
       };
     }
@@ -5709,6 +5803,7 @@
         state.mode       = s.mode       || 'list';
 
         state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
+        state.warningThreshold = (typeof s.warningThreshold === 'number') ? s.warningThreshold : 60;
 
         if(state.classOrder.length){
           renderClassOptions(state.classOrder);
@@ -5770,6 +5865,8 @@
     const elModeGroup=document.getElementById('mode-group');
     const elModeManage=document.getElementById('mode-manage');
     const elModeViolations=document.getElementById('mode-violations');
+    const elModeWarning=document.getElementById('mode-warning');
+    const elWarningPane=document.getElementById('warning-pane');
     const elGroupPane=document.getElementById('group-pane');
     const elManagePane=document.getElementById('manage-pane');
     const elManageClassList=document.getElementById('manage-class-list');
@@ -10965,7 +11062,7 @@ function onTimerDone(){
       document.body.dataset.mode = m;
       // ★ list / violations 模式顯示 sidebar
       document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list' && m!=='violations');
-      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw' || m==='violations');
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw' || m==='violations' || m==='warning');
 
       // 模式按鈕狀態
       elModeManage?.classList.toggle('active', m==='manage');
@@ -10974,6 +11071,7 @@ function onTimerDone(){
       elModeViolations?.classList.toggle('active', m==='violations');
       elModeSeat.classList.toggle('active', m==='seat');
       elModeHW.classList.toggle('active', m==='hw');
+      elModeWarning?.classList.toggle('active', m==='warning');
       elModeDraw.classList.toggle('active', m==='draw');
       elModeTimer?.classList.toggle('active', m==='timer');
       elModeGroup?.classList.toggle('active', m==='group');
@@ -11012,6 +11110,7 @@ function onTimerDone(){
       elProgressPane?.classList.toggle('hidden', m!=='progress');
       elViolationsPane?.classList.toggle('hidden', m!=='violations');
       elHWPane.classList.toggle('hidden', m!=='hw');
+      elWarningPane?.classList.toggle('hidden', m!=='warning');
       elDrawPane.classList.toggle('hidden', m!=='draw');
       elTimerPane?.classList.toggle('hidden', m!=='timer');
       elGroupPane?.classList.toggle('hidden', m!=='group');
@@ -11023,6 +11122,7 @@ function onTimerDone(){
       else if(m==='progress'){ renderProgress(); }
       else if(m==='violations'){ renderViolations?.(cls); }
       else if(m==='hw'){ renderHW(cls); }
+      else if(m==='warning'){ renderWarning(); }
       else if(m==='draw'){ renderDraw(cls); }
       else if(m==='timer'){ renderTimerUI(); }
       else if(m==='group'){ renderGroup(cls); }
@@ -11040,6 +11140,15 @@ function onTimerDone(){
     document.getElementById('mode-timer')?.addEventListener('click', ()=> setMode('timer'));
     document.getElementById('mode-group')?.addEventListener('click', ()=> setMode('group'));
     document.getElementById('mode-manage')?.addEventListener('click', ()=> setMode('manage'));
+    document.getElementById('mode-warning')?.addEventListener('click', ()=> setMode('warning'));
+    document.getElementById('warning-class-select')?.addEventListener('change', ()=> renderWarning());
+    document.getElementById('warning-threshold-input')?.addEventListener('change', e => {
+      const v = Math.max(0, Math.min(100, Number(e.target.value) || 60));
+      e.target.value = v;
+      state.warningThreshold = v;
+      saveSession('warning threshold change');
+      renderWarning();
+    });
     // ★ 更多選單：滑鼠懸停開/關，觸控點擊開/關
     (()=>{
       const menu = document.getElementById('more-menu');
@@ -12431,6 +12540,123 @@ elProgAdd?.addEventListener('click', ()=>{
       const list=(state.classMap[cls]||[]).slice();
       list.sort((a,b)=>{ const na=Number(a.seat), nb=Number(b.seat); if(!Number.isNaN(na)&&!Number.isNaN(nb)&&na!==nb) return na-nb; return a.name.localeCompare(b.name,'zh-Hant'); });
       return list;
+    }
+
+    /* ===== ⚠️ 成績預警 ===== */
+    function renderWarning(){
+      const content = document.getElementById('warning-content');
+      const summaryEl = document.getElementById('warning-summary');
+      const threshInput = document.getElementById('warning-threshold-input');
+      const clsSelect = document.getElementById('warning-class-select');
+      if(!content) return;
+
+      const threshold = state.warningThreshold ?? 60;
+      if(threshInput) threshInput.value = threshold;
+
+      // 若無任何班級資料
+      if(!state.classOrder || state.classOrder.length === 0){
+        content.innerHTML = '<div class="warning-empty"><span class="warn-empty-icon">📋</span><span class="warn-empty-msg">尚未載入名單</span><span class="warn-empty-sub">請先匯入學生名單</span></div>';
+        if(summaryEl) summaryEl.textContent = '';
+        return;
+      }
+
+      // 同步 select 選項
+      if(clsSelect){
+        const selectedVal = clsSelect.value;
+        clsSelect.innerHTML = '<option value="">所有班級</option>';
+        state.classOrder.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          if(c === selectedVal) o.selected = true;
+          clsSelect.appendChild(o);
+        });
+      }
+
+      // 選定班級濃縮範圍
+      const filterCls = clsSelect ? clsSelect.value : '';
+      const targetOrder = filterCls ? [filterCls] : state.classOrder;
+
+      let totalFailing = 0;
+      const fragments = [];
+
+      for(const cls of targetOrder){
+        const hw = state.hw[cls];
+        const students = getSortedList(cls);
+        if(!students.length) continue;
+
+        const cols = (hw && hw.cols) ? hw.cols : [];
+        const failing = [];
+
+        for(const stu of students){
+          const scores = (hw && hw.data && hw.data[stu.id]) ? hw.data[stu.id] : [];
+          // 取有效分數（非空字串、非 null、是數字）
+          const valid = [];
+          for(let i = 0; i < cols.length; i++){
+            const v = scores[i];
+            const n = Number(v);
+            if(v !== '' && v !== null && v !== undefined && Number.isFinite(n)){
+              valid.push(n);
+            }
+          }
+          if(valid.length === 0) continue; // 無任何成績→排除
+          const avg = valid.reduce((a,b)=>a+b, 0) / valid.length;
+          if(avg < threshold){
+            failing.push({ stu, avg, valid, scores, cols });
+          }
+        }
+
+        if(failing.length === 0) continue;
+        totalFailing += failing.length;
+
+        // 組 table rows
+        let colHeaders = cols.map(c => `<th class="num">${escapeHTML(c)}</th>`).join('');
+        let rows = failing.map(({ stu, avg, valid, scores, cols: hwCols }) => {
+          const gap = (threshold - avg).toFixed(1);
+          const avgCell = `<td class="num warn-fail">${avg.toFixed(1)}<span class="warn-gap">(-${gap})</span></td>`;
+          const subCells = hwCols.map((_, i) => {
+            const v = scores[i];
+            const n = Number(v);
+            if(v === '' || v === null || v === undefined || !Number.isFinite(n)){
+              return `<td class="num warn-sub">—</td>`;
+            }
+            const cls2 = n < threshold ? 'warn-fail' : '';
+            return `<td class="num ${cls2}">${n}</td>`;
+          }).join('');
+          const sc = getScore(cls, stu.id);
+          const scoreCell = sc > 0
+            ? `<td class="num warn-pos">+${sc}</td>`
+            : sc < 0
+            ? `<td class="num warn-neg">${sc}</td>`
+            : `<td class="num">0</td>`;
+          const viol = getViolationTotal(cls, stu.id);
+          const violCell = viol > 0
+            ? `<td class="num warn-viol">${viol}</td>`
+            : `<td class="num">0</td>`;
+          return `<tr><td>${escapeHTML(String(stu.seat ?? ''))}</td><td>${escapeHTML(stu.name)}</td>${avgCell}${subCells}${scoreCell}${violCell}</tr>`;
+        }).join('');
+
+        fragments.push(`
+          <div class="warning-class-group">
+            <div class="warning-class-title">
+              <span>${escapeHTML(cls)}</span>
+              <span class="warning-count-badge">${failing.length} 人</span>
+            </div>
+            <table class="warning-table">
+              <thead><tr>
+                <th>座號</th><th>姓名</th><th class="num">作業平均</th>${colHeaders}<th class="num">加扣分</th><th class="num">違規</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`);
+      }
+
+      if(totalFailing === 0){
+        content.innerHTML = '<div class="warning-empty"><span class="warn-empty-icon">🎉</span><span class="warn-empty-msg">目前全部及格！</span><span class="warn-empty-sub">所有有作業成績的學生皆高於門檻</span></div>';
+        if(summaryEl) summaryEl.textContent = '';
+      } else {
+        content.innerHTML = fragments.join('');
+        if(summaryEl) summaryEl.textContent = `共 ${totalFailing} 位學生低於 ${threshold} 分`;
+      }
     }
 
     function renderHW(cls){
