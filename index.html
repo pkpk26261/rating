@@ -6977,7 +6977,7 @@
             const groupIdx = header.findIndex(h => /^分組$/i.test(String(h||"").trim()));
             const violLateIdx = header.findIndex(h => /^遲到$/i.test(String(h||"").trim()));
             const violMissingIdx = header.findIndex(h => /^缺交$/i.test(String(h||"").trim()));
-            const violClassroomIdx = header.findIndex(h => /^上課違規$/i.test(String(h||"").trim()));
+            const violClassroomIdx = header.findIndex(h => /^吵鬧$/i.test(String(h||"").trim()));
             const violOtherIdx = header.findIndex(h => /^其他$/i.test(String(h||"").trim()));
             const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
             const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
@@ -7442,7 +7442,7 @@
         });
       }
 
-      const header = ['學號','座號','姓名','幹部職稱','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '上課違規', '其他', '違規記事', '特殊記事', '待處理'];
+      const header = ['學號','座號','姓名','幹部職稱','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '吵鬧', '其他', '違規記事', '特殊記事', '待處理'];
       const aoa = [buildClassMetaRow(cls), header];
 
       for (const s of list){
@@ -8404,7 +8404,7 @@ function jsonOut(obj) {
     const VIOLATION_FIELDS = Object.freeze([
       { key:'late', label:'遲到' },
       { key:'missing', label:'缺交' },
-      { key:'classroom', label:'上課違規' },
+      { key:'classroom', label:'吵鬧' },
       { key:'other', label:'其他' }
     ]);
     const VIOLATION_NOTE_KEYS = Object.freeze(['entries', 'specialEntries']);
@@ -12824,7 +12824,7 @@ elProgAdd?.addEventListener('click', ()=>{
             short: '匯入後就開始記錄',
             eyebrow: 'Step 4 · 開始使用',
             title: imported ? '現在就可以開始記錄' : '匯入後就可以開始記錄',
-            desc: imported ? '你現在可以開始加扣分、記作業和記違規。要複習流程時，再打開右上角導覽。' : '先匯入一份名單，畫面就會切到正式使用狀態。之後要複習流程，再打開右上角導覽。',
+            desc: imported ? '你現在可以開始加扣分、記作業和記違規。要複習流程時，再打開右上角導覽。' : '先匯入一份名單，畫面就會切到正式使用狀態。',
             features: [
               { icon:'⭐', title:'先從加扣分開始', text:'匯入後可先用最常用的加扣分與排行榜。' },
               { icon:'🧭', title:'導覽可重開', text:'之後隨時都能再看，不只第一次出現。' }
