@@ -620,6 +620,7 @@
     }
 
     /* 匯出 / 清除按鈕隱藏 */
+    body.no-data #btn-onboarding,
     body.no-data #btn-manual-sync,
     body.no-data #btn-reset{
       display:none !important;
@@ -637,6 +638,11 @@
 
     /* 控制列（班級選擇、搜尋、新增/刪除學生）整條隱藏 */
     body.no-data .controls-row{
+      display:none !important;
+    }
+
+    /* 空資料時不顯示空白學生區塊 */
+    body.no-data #students{
       display:none !important;
     }
 
@@ -670,27 +676,689 @@
 
     /* ===== 空狀態歡迎引導 ===== */
     .welcome-guide{
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:24px; padding:60px 32px; text-align:center;
-      flex:1; min-height:0;
+      display:flex;
+      align-items:stretch;
+      justify-content:flex-start;
+      padding:22px 22px 30px;
+      text-align:left;
+      flex:1;
+      min-height:0;
       animation: welcomeFadeIn .45s ease both;
     }
     @keyframes welcomeFadeIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
-    .welcome-icon{ font-size:56px; line-height:1; filter:drop-shadow(0 4px 14px rgba(129,140,248,.2)); }
-    .welcome-title{ font-size:24px; font-weight:900; letter-spacing:.03em; background:linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin:0; }
-    .welcome-sub{ font-size:14px; color:var(--muted); line-height:1.6; max-width:400px; margin:0; }
-    .welcome-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
-    .welcome-actions .btn{ font-size:15px; padding:12px 28px; border-radius:14px; font-weight:800; }
-    .welcome-actions .btn.primary{
-      background:linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent-2) 60%, var(--accent)));
-      border-color:rgba(129,140,248,.5); color:#fff;
-      box-shadow:0 6px 24px rgba(129,140,248,.3);
+    .welcome-shell{
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(300px, .96fr) minmax(380px, 1.34fr);
+      gap:20px;
+      width:100%;
+      min-height:100%;
+      padding:6px 0;
+      border:none;
+      background:none;
+      box-shadow:none;
+      overflow:visible;
+      isolation:isolate;
     }
-    .welcome-actions .btn.primary:hover{ box-shadow:0 8px 32px rgba(129,140,248,.4); filter:brightness(1.08); }
-    .welcome-hint{ font-size:12px; color:var(--muted); opacity:.7; }
-    .welcome-formats{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
-    .welcome-fmt{ padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--muted); }
-    :root[data-theme="light"] .welcome-fmt{ background:rgba(0,0,0,.03); }
+    .welcome-shell::before,
+    .welcome-shell::after{
+      content:none;
+      position:absolute;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:0;
+      opacity:.5;
+    }
+    .welcome-shell::before{
+      width:320px;
+      height:320px;
+      top:-180px;
+      right:-120px;
+      background:radial-gradient(circle, rgba(129,140,248,.32), transparent 68%);
+    }
+    .welcome-shell::after{
+      width:260px;
+      height:260px;
+      bottom:-150px;
+      left:-90px;
+      background:radial-gradient(circle, rgba(52,211,153,.18), transparent 70%);
+    }
+    .welcome-rail,
+    .welcome-stage{
+      position:relative;
+      z-index:1;
+      min-width:0;
+    }
+    .welcome-rail{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+      padding:8px 4px 8px 2px;
+      min-height:100%;
+    }
+    .welcome-hero{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+      width:100%;
+      margin-block:auto;
+    }
+    .welcome-kicker{
+      display:inline-flex;
+      align-self:center;
+      align-items:center;
+      gap:8px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(129,140,248,.28);
+      background:rgba(129,140,248,.1);
+      color:#c7d2fe;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
+    .welcome-mark{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+      width:100%;
+      max-width:640px;
+      margin:0 auto;
+      text-align:center;
+    }
+    .welcome-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:108px;
+      height:108px;
+      overflow:hidden;
+      border-radius:30px;
+      font-size:34px;
+      background:linear-gradient(145deg, rgba(129,140,248,.18), rgba(52,211,153,.14));
+      border:1px solid rgba(148,163,184,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 30px rgba(4,8,20,.18);
+      filter:drop-shadow(0 8px 18px rgba(129,140,248,.16));
+    }
+    .welcome-icon img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;
+      border-radius:inherit;
+    }
+    .welcome-copy{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      width:100%;
+      max-width:620px;
+      text-align:center;
+    }
+    .welcome-title{
+      margin:0;
+      font-size:clamp(28px, 3vw, 38px);
+      line-height:1.08;
+      font-weight:900;
+      letter-spacing:.01em;
+    }
+    .welcome-title strong{
+      display:block;
+      background:linear-gradient(135deg, #eef2ff, #a5f3fc 45%, #86efac);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .welcome-sub{
+      margin:0;
+      max-width:520px;
+      color:color-mix(in oklab, var(--fg) 78%, var(--muted));
+      font-size:15px;
+      line-height:1.75;
+    }
+    .welcome-quick-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+      width:100%;
+    }
+    .welcome-quick-actions .btn{
+      min-width:160px;
+      height:auto;
+      padding:12px 18px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:800;
+    }
+    .welcome-quick-actions .btn.primary,
+    .onboarding-cta--primary{
+      background:linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent-2) 74%, var(--accent)));
+      border-color:rgba(129,140,248,.48);
+      color:#fff;
+      box-shadow:0 12px 28px rgba(79,70,229,.28);
+    }
+    .welcome-quick-actions .btn.primary:hover,
+    .onboarding-cta--primary:hover{
+      box-shadow:0 16px 34px rgba(79,70,229,.32);
+      filter:brightness(1.04);
+    }
+    .welcome-trust-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-top:0;
+      width:100%;
+    }
+    .welcome-mini-card{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:6px;
+      min-height:92px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.16);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .welcome-mini-card--green{
+      border-color:rgba(74,222,128,.34);
+      background:linear-gradient(180deg, #86efac, #4ade80);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 18px rgba(34,197,94,.14);
+    }
+    .welcome-mini-card--red{
+      border-color:rgba(251,113,133,.34);
+      background:linear-gradient(180deg, #fda4af, #fb7185);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 18px rgba(239,68,68,.14);
+    }
+    .welcome-mini-card--yellow{
+      border-color:rgba(250,204,21,.4);
+      background:linear-gradient(180deg, #fef08a, #fde047);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 8px 18px rgba(245,158,11,.14);
+    }
+    .welcome-mini-card strong{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#cbd5e1;
+    }
+    .welcome-mini-card span{
+      color:var(--fg);
+      font-size:13px;
+      line-height:1.55;
+    }
+    .welcome-mini-card--green strong,
+    .welcome-mini-card--green span{
+      color:#14532d;
+    }
+    .welcome-mini-card--red strong,
+    .welcome-mini-card--red span{
+      color:#7f1d1d;
+    }
+    .welcome-mini-card--yellow strong,
+    .welcome-mini-card--yellow span{
+      color:#78350f;
+    }
+    .welcome-stage{
+      display:flex;
+      min-width:0;
+    }
+    .onboarding-surface{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+      padding:20px;
+      border-radius:24px;
+      border:1px solid rgba(148,163,184,.15);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 18px 48px rgba(4,8,20,.16);
+      backdrop-filter:blur(10px);
+    }
+    .onboarding-surface__head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .onboarding-eyebrow{
+      margin:0 0 6px;
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .onboarding-heading{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      line-height:1.2;
+    }
+    .onboarding-open-modal{
+      flex:0 0 auto;
+      padding-inline:16px;
+      white-space:nowrap;
+    }
+    .onboarding-root{
+      display:flex;
+      flex-direction:column;
+      flex:1 1 auto;
+      min-height:0;
+    }
+    .onboarding-root--loading{
+      align-items:center;
+      justify-content:center;
+      border-radius:20px;
+      border:1px dashed rgba(148,163,184,.2);
+      background:rgba(15,23,42,.24);
+      color:var(--muted);
+      font-size:14px;
+    }
+    .onboarding-progress{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .onboarding-step-chip{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(15,23,42,.28);
+      color:var(--fg);
+      text-align:left;
+      cursor:pointer;
+      transition:transform .12s ease, border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+    }
+    .onboarding-step-chip:hover{
+      transform:translateY(-1px);
+      border-color:rgba(129,140,248,.32);
+      box-shadow:0 10px 24px rgba(4,8,20,.18);
+    }
+    .onboarding-step-chip.is-active{
+      background:linear-gradient(135deg, rgba(99,102,241,.24), rgba(16,185,129,.18));
+      border-color:rgba(129,140,248,.48);
+      box-shadow:0 12px 30px rgba(79,70,229,.18);
+    }
+    .onboarding-step-chip__index{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+      font-size:13px;
+      font-weight:900;
+      color:#e0e7ff;
+      flex:0 0 auto;
+    }
+    .onboarding-step-chip.is-active .onboarding-step-chip__index{
+      background:rgba(255,255,255,.18);
+      color:#fff;
+    }
+    .onboarding-step-chip__label{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .onboarding-step-chip__label strong{
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.01em;
+    }
+    .onboarding-step-chip__label span{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.4;
+    }
+    .onboarding-body{
+      display:grid;
+      grid-template-columns:minmax(0, 1.12fr) minmax(260px, .88fr);
+      gap:16px;
+      flex:1 1 auto;
+      min-height:0;
+    }
+    .onboarding-column{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      min-width:0;
+    }
+    .onboarding-card{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-width:0;
+      padding:18px;
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.14);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .onboarding-card--hero{
+      background:linear-gradient(145deg, rgba(244,63,94,.2), rgba(244,114,182,.12));
+      border-color:rgba(244,114,182,.26);
+    }
+    .onboarding-card--spotlight{
+      background:linear-gradient(180deg, rgba(8,15,32,.52), rgba(8,15,32,.3));
+    }
+    .onboarding-card--note.is-warn{
+      border-color:rgba(251,191,36,.24);
+      background:linear-gradient(180deg, rgba(245,158,11,.1), rgba(15,23,42,.3));
+    }
+    .onboarding-card--note.is-success{
+      border-color:rgba(74,222,128,.24);
+      background:linear-gradient(180deg, rgba(34,197,94,.1), rgba(15,23,42,.28));
+    }
+    .onboarding-card__eyebrow{
+      margin:0;
+      color:#bfdbfe;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .onboarding-card__title{
+      margin:0;
+      font-size:24px;
+      line-height:1.18;
+      font-weight:900;
+    }
+    .onboarding-card__desc,
+    .onboarding-card__text{
+      margin:0;
+      color:color-mix(in oklab, var(--fg) 78%, var(--muted));
+      font-size:14px;
+      line-height:1.72;
+    }
+    .onboarding-section-title{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+      line-height:1.35;
+    }
+    .onboarding-section-text{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.72;
+    }
+    .onboarding-feature-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    .onboarding-feature{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+      padding:16px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.12);
+      background:rgba(8,15,32,.28);
+    }
+    .onboarding-feature__icon{
+      font-size:20px;
+      line-height:1;
+    }
+    .onboarding-feature__title{
+      margin:0;
+      font-size:15px;
+      font-weight:900;
+      line-height:1.35;
+    }
+    .onboarding-feature__text{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.65;
+    }
+    .onboarding-micro-list{
+      display:grid;
+      gap:10px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+    .onboarding-micro-list li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:var(--fg);
+      font-size:13px;
+      line-height:1.65;
+    }
+    .onboarding-micro-list li::before{
+      content:'•';
+      color:#67e8f9;
+      font-size:18px;
+      line-height:1;
+      margin-top:1px;
+      flex:0 0 auto;
+    }
+    .onboarding-status-pill{
+      display:inline-flex;
+      align-items:center;
+      align-self:flex-start;
+      gap:8px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.3);
+      font-size:12px;
+      font-weight:800;
+      color:#dbeafe;
+    }
+    .onboarding-status-pill.is-success{
+      border-color:rgba(74,222,128,.3);
+      background:rgba(34,197,94,.12);
+      color:#dcfce7;
+    }
+    .onboarding-status-pill.is-warn{
+      border-color:rgba(251,191,36,.28);
+      background:rgba(245,158,11,.12);
+      color:#fef3c7;
+    }
+    .onboarding-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:auto;
+    }
+    .onboarding-actions .btn{
+      min-width:140px;
+      height:auto;
+      padding:11px 16px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:800;
+    }
+    .onboarding-footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-top:18px;
+      padding-top:18px;
+      border-top:1px solid rgba(148,163,184,.12);
+    }
+    .onboarding-footer__hint{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+    .onboarding-nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .onboarding-nav .btn{
+      min-width:124px;
+      border-radius:14px;
+      font-weight:800;
+    }
+    .onboarding-modal{
+      width:min(1040px, 96vw);
+      max-height:min(90vh, 940px);
+      overflow:auto;
+      border-radius:24px;
+    }
+    .onboarding-modal header{
+      align-items:flex-start;
+      gap:12px;
+    }
+    .onboarding-modal__eyebrow{
+      margin:0 0 6px;
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .onboarding-modal__title{
+      margin:0;
+      font-size:24px;
+      font-weight:900;
+      line-height:1.2;
+    }
+    .onboarding-root--modal .onboarding-body{
+      grid-template-columns:minmax(0, 1.05fr) minmax(290px, .95fr);
+    }
+    :root[data-theme="light"] .welcome-shell{
+      background:none;
+      box-shadow:none;
+    }
+    :root[data-theme="light"] .welcome-kicker,
+    :root[data-theme="light"] .onboarding-card__eyebrow,
+    :root[data-theme="light"] .onboarding-eyebrow,
+    :root[data-theme="light"] .onboarding-modal__eyebrow{
+      color:#4338ca;
+    }
+    :root[data-theme="light"] .welcome-title strong{
+      background:linear-gradient(135deg, #4338ca, #0369a1 45%, #047857);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      color:#4338ca;
+    }
+    :root[data-theme="light"] .welcome-mini-card,
+    :root[data-theme="light"] .onboarding-surface,
+    :root[data-theme="light"] .onboarding-card,
+    :root[data-theme="light"] .onboarding-feature,
+    :root[data-theme="light"] .onboarding-step-chip{
+      background:rgba(255,255,255,.78);
+      box-shadow:0 8px 24px rgba(15,23,42,.05);
+    }
+    :root[data-theme="light"] .welcome-mini-card--green{
+      border-color:rgba(74,222,128,.34);
+      background:linear-gradient(180deg, #86efac, #4ade80);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 18px rgba(34,197,94,.14);
+    }
+    :root[data-theme="light"] .welcome-mini-card--red{
+      border-color:rgba(251,113,133,.34);
+      background:linear-gradient(180deg, #fda4af, #fb7185);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 18px rgba(239,68,68,.14);
+    }
+    :root[data-theme="light"] .welcome-mini-card--yellow{
+      border-color:rgba(250,204,21,.4);
+      background:linear-gradient(180deg, #fef08a, #fde047);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 8px 18px rgba(245,158,11,.14);
+    }
+    :root[data-theme="light"] .welcome-sub,
+    :root[data-theme="light"] .welcome-mini-card strong,
+    :root[data-theme="light"] .onboarding-feature__text,
+    :root[data-theme="light"] .onboarding-section-text,
+    :root[data-theme="light"] .onboarding-footer__hint,
+    :root[data-theme="light"] .onboarding-step-chip__label span{
+      color:#475569;
+    }
+    :root[data-theme="light"] .onboarding-card--hero{
+      background:linear-gradient(145deg, rgba(251,113,133,.18), rgba(244,114,182,.12));
+      border-color:rgba(244,114,182,.34);
+      box-shadow:0 10px 28px rgba(244,114,182,.14);
+    }
+    :root[data-theme="light"] .onboarding-card--spotlight{
+      background:linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.88));
+    }
+    :root[data-theme="light"] .onboarding-status-pill{
+      border-color:rgba(99,102,241,.22);
+      background:rgba(99,102,241,.08);
+      color:#3730a3;
+    }
+    :root[data-theme="light"] .onboarding-status-pill.is-success{
+      border-color:rgba(34,197,94,.28);
+      background:rgba(34,197,94,.14);
+      color:#166534;
+    }
+    :root[data-theme="light"] .onboarding-status-pill.is-warn{
+      border-color:rgba(217,119,6,.28);
+      background:rgba(245,158,11,.18);
+      color:#92400e;
+    }
+    :root[data-theme="light"] .onboarding-root--loading{
+      background:rgba(255,255,255,.65);
+    }
+    @media (max-width: 1180px){
+      .welcome-shell{
+        grid-template-columns:minmax(0, 1fr);
+      }
+      .welcome-trust-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 900px){
+      .onboarding-progress,
+      .onboarding-body,
+      .onboarding-root--modal .onboarding-body,
+      .onboarding-feature-grid{
+        grid-template-columns:minmax(0, 1fr);
+      }
+      .onboarding-surface__head,
+      .onboarding-footer{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .onboarding-open-modal,
+      .onboarding-nav .btn,
+      .onboarding-actions .btn{
+        width:100%;
+      }
+    }
+    @media (max-width: 720px){
+      .welcome-guide{
+        padding:14px 14px 22px;
+      }
+      .welcome-shell,
+      .onboarding-surface{
+        padding:16px;
+      }
+      .welcome-icon{
+        width:92px;
+        height:92px;
+        border-radius:26px;
+      }
+      .welcome-trust-grid{
+        grid-template-columns:minmax(0, 1fr);
+      }
+    }
 
     /* ===== 新手引導 Tour ===== */
     .tour-overlay{
@@ -1177,6 +1845,42 @@
     .divider{ height:1px; background:var(--line); margin:10px 0; }
     .help-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .note{ font-size:13px; color:var(--muted); }
+    .gs-setup-callout{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(248,113,113,.34);
+      background:linear-gradient(180deg, rgba(127,29,29,.34), rgba(69,10,10,.2));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(69,10,10,.16);
+    }
+    .gs-setup-callout summary{
+      cursor:pointer;
+      font-weight:800;
+      font-size:14px;
+      color:#fee2e2;
+    }
+    .gs-setup-callout ol,
+    .gs-setup-callout li,
+    .gs-setup-callout span{
+      color:#fee2e2;
+    }
+    .gs-setup-callout code{
+      color:#fecaca;
+    }
+    :root[data-theme="light"] .gs-setup-callout{
+      border-color:rgba(239,68,68,.28);
+      background:linear-gradient(180deg, rgba(254,226,226,.96), rgba(254,242,242,.9));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(239,68,68,.08);
+    }
+    :root[data-theme="light"] .gs-setup-callout summary,
+    :root[data-theme="light"] .gs-setup-callout ol,
+    :root[data-theme="light"] .gs-setup-callout li,
+    :root[data-theme="light"] .gs-setup-callout span{
+      color:#7f1d1d;
+    }
+    :root[data-theme="light"] .gs-setup-callout code{
+      color:#b91c1c;
+    }
 
     /* ===== ☁️ Google 試算表載入中遮罩 ===== */
     .gs-loading-mask{
@@ -4675,6 +5379,7 @@
         <!-- ★ 新增主題切換按鈕 -->
         <!-- ★ 日期時間（民國年 + 24 小時） -->
         <div class="topbar__right-actions">
+            <button id="btn-onboarding" class="btn" title="開啟使用導覽">🧭 導覽</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
           <button id="btn-manual-sync" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
         </div>
@@ -4747,21 +5452,52 @@
 
         <!-- ★ 空狀態歡迎引導 -->
         <div id="welcome-guide" class="welcome-guide">
-          <div class="welcome-icon">📊</div>
-          <h2 class="welcome-title">成績管理系統</h2>
-          <p class="welcome-sub">匯入學生名單，即可開始使用。<br>支援直接拖放檔案到頁面。</p>
-          <div class="welcome-actions">
-            <label class="btn primary" for="file-input" style="cursor:pointer;">📂 匯入學生名單</label>
-            <button class="btn" id="btn-welcome-sample">📥 下載範例檔</button>
-            <button class="btn" id="btn-welcome-tour" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:rgba(129,140,248,.5);color:#fff;font-weight:800;">🚀 新手導覽</button>
+          <div class="welcome-shell">
+            <aside class="welcome-rail" aria-label="開始使用說明">
+              <div class="welcome-hero">
+                <span class="welcome-kicker">Start Here</span>
+                <div class="welcome-mark">
+                  <div class="welcome-icon"><img src="icon.png" alt="成績系統圖示"></div>
+                  <div class="welcome-copy">
+                    <h2 class="welcome-title">先匯入名單<br><strong>再開始記錄</strong></h2>
+                    <p class="welcome-sub">照著 4 步做就能開始使用：先匯入名單，沒有名單就先用範例檔，需要備份時再設定 Google 同步。</p>
+                  </div>
+                </div>
+                <div class="welcome-quick-actions">
+                  <button class="btn primary" type="button" data-onboarding-action="import">📂 立即匯入名單</button>
+                  <button class="btn" id="btn-welcome-sample" type="button">📥 下載範例檔</button>
+                </div>
+              </div>
+              <div class="welcome-trust-grid" aria-label="快速重點">
+                <article class="welcome-mini-card welcome-mini-card--green">
+                  <strong>支援格式</strong>
+                  <span>Excel、CSV 都能匯入，也可直接拖放。</span>
+                </article>
+                <article class="welcome-mini-card welcome-mini-card--red">
+                  <strong>資料位置</strong>
+                  <span>沒設定同步前，資料只留在這台瀏覽器。</span>
+                </article>
+                <article class="welcome-mini-card welcome-mini-card--yellow">
+                  <strong>Google 同步</strong>
+                  <span>要備份或換電腦時，再來設定就可以。</span>
+                </article>
+              </div>
+            </aside>
+
+            <section class="welcome-stage" aria-label="新手導覽內容">
+              <div class="onboarding-surface">
+                <div class="onboarding-surface__head">
+                  <div>
+                    <p class="onboarding-eyebrow">首次使用流程</p>
+                    <h3 class="onboarding-heading">照順序做，就能開始使用</h3>
+                  </div>
+                </div>
+                <div id="onboarding-inline-root" class="onboarding-root onboarding-root--loading" data-onboarding-context="inline">
+                  <p>正在準備新的導覽內容…</p>
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="welcome-formats">
-            <span class="welcome-fmt">.xlsx</span>
-            <span class="welcome-fmt">.xls</span>
-            <span class="welcome-fmt">.ods</span>
-            <span class="welcome-fmt">.csv</span>
-          </div>
-          <div class="welcome-hint">💡 資料僅儲存於本機，不會上傳</div>
         </div>
 
         <!-- 列表（座位鏡像） -->
@@ -5318,7 +6054,7 @@
       </header>
       <div class="content">
         <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
-          把你的 Google 試算表部署成「網頁應用程式」後，貼上網址與密碼，即可雙向同步全部班級資料（每個班級一個分頁）。完全免費，不需要 Google Cloud。
+          要同步時，先在 Google 試算表做一次設定，再把網址和同步密碼貼回來就可以了。
         </p>
 
         <!-- 網址 -->
@@ -5350,24 +6086,24 @@
         </div>
         <div id="gs-status" style="font-size:13px; min-height:20px; color:var(--muted);"></div>
 
-        <div style="height:1px; background:var(--line); margin:14px 0;"></div>
-
         <!-- 設定說明 -->
-        <details>
-          <summary style="cursor:pointer; font-weight:700; font-size:14px;">📖 第一次使用：如何設定（點此展開）</summary>
-          <ol style="font-size:13px; line-height:1.7; padding-left:20px; margin-top:10px;">
-            <li>開啟你的 Google 試算表 →上方選單「擴充功能」→「Apps Script」。</li>
-            <li>刪除原本的內容，貼上下方程式碼，並把 <code>SECRET_TOKEN</code> 改成你自己的密碼。</li>
-            <li>點右上角「部署」→「新增部署作業」→ 類型選「網頁應用程式」。</li>
-            <li>「執行身分」選<b>你自己</b>；「誰可以存取」選<b>「任何人」</b>，然後按「部署」並完成授權。</li>
-            <li>複製產生的「網頁應用程式」網址，連同剛剛設定的密碼貼到上面欄位。</li>
-          </ol>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 4px;">
-            <span style="font-size:13px; font-weight:700;">Apps Script 程式碼</span>
-            <button id="gs-copy-code" class="btn" style="font-size:12px; padding:3px 10px;">📋 複製程式碼</button>
-          </div>
-          <pre id="gs-code" style="font-size:11px; line-height:1.5; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
-        </details>
+        <div class="gs-setup-callout">
+          <details>
+            <summary>📖 第一次設定（點此展開）</summary>
+            <ol style="font-size:13px; line-height:1.7; padding-left:20px; margin-top:10px;">
+              <li>開啟 Google 試算表，進入「擴充功能」→「Apps Script」。</li>
+              <li>貼上下面的程式碼，並把 <code>SECRET_TOKEN</code> 改成你的同步密碼。</li>
+              <li>點「部署」→「新增部署作業」→「網頁應用程式」。</li>
+              <li>執行身分選<b>你自己</b>，誰可以存取選<b>任何人</b>，然後完成部署。</li>
+              <li>把產生的網址貼回上方，再填入同一組同步密碼。</li>
+            </ol>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 4px;">
+              <span style="font-size:13px; font-weight:700;">Apps Script 程式碼</span>
+              <button id="gs-copy-code" class="btn" style="font-size:12px; padding:3px 10px;">📋 複製程式碼</button>
+            </div>
+            <pre id="gs-code" style="font-size:11px; line-height:1.5; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
+          </details>
+        </div>
       </div>
     </div>
   </div>
@@ -5377,6 +6113,23 @@
       <div class="gs-loading-spinner" aria-hidden="true"></div>
       <h3 id="gs-loading-title" class="gs-loading-title">正在從 Google 試算表載入最新資料…</h3>
       <p id="gs-loading-desc" class="gs-loading-desc">載入完成前將暫停操作，請稍候。</p>
+    </div>
+  </div>
+
+  <div id="onboarding-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="modal onboarding-modal" role="document">
+      <header>
+        <div>
+          <p class="onboarding-modal__eyebrow">新手導覽</p>
+          <h3 id="onboarding-title" class="onboarding-modal__title">成績管理系統上手流程</h3>
+        </div>
+        <button id="onboarding-close" class="close" aria-label="關閉導覽">✕</button>
+      </header>
+      <div class="content">
+        <div id="onboarding-modal-root" class="onboarding-root onboarding-root--loading onboarding-root--modal" data-onboarding-context="modal">
+          <p>正在準備新的導覽內容…</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -6787,6 +7540,7 @@
     function gsSaveConfig(){
       try{ localStorage.setItem(GS_CFG_KEY, JSON.stringify(gsConfig)); }catch(e){}
       resetManualSyncButton();
+      window._refreshOnboarding?.();
     }
     function gsReady(){
       return !!(gsConfig.url && /^https:\/\/script\.google\.com\//i.test(gsConfig.url) && gsConfig.token);
@@ -11931,412 +12685,373 @@ elProgAdd?.addEventListener('click', ()=>{
     function hideWelcomeGuide(){
       const g = document.getElementById('welcome-guide');
       if(g) g.style.display = 'none';
+      window._closeOnboarding?.();
     }
     function showWelcomeGuide(){
       const g = document.getElementById('welcome-guide');
       if(g) g.style.display = '';
+      window._refreshOnboarding?.({ resetForEmpty:true });
     }
 
-    /* ===== 新手引導 Tour（依當前模式動態產生步驟） ===== */
-    (function initTour(){
+    /* ===== 全新新手導覽（空狀態 + 可重開教學視窗） ===== */
+    (function initOnboarding(){
+      const inlineRoot = document.getElementById('onboarding-inline-root');
+      const modalRoot = document.getElementById('onboarding-modal-root');
+      const onboardingMask = document.getElementById('onboarding-mask');
+      const onboardingClose = document.getElementById('onboarding-close');
+      const onboardingBtn = document.getElementById('btn-onboarding');
+      const fileInput = document.getElementById('file-input');
+      const onboardingState = { step:0 };
 
-      /* ── 通用步驟（頂部工具列，各模式共用） ── */
-      const COMMON_TOP = [
-        {
-          target: '.topbar__left .import-block',
-          title: '匯入學生名單',
-          desc: '點擊「📂 匯入」按鈕上傳 Excel / ODS / CSV 檔案，也可以<b>直接將檔案拖放</b>到頁面任意位置。支援一次匯入多個檔案，每個檔案代表一個班級。',
-          pos: 'bottom'
+      function hasImportedData(){
+        return !!(state.classOrder && state.classOrder.length);
+      }
+
+      function currentSyncInfo(){
+        if(gsReady()){
+          return {
+            tone: 'success',
+            label: '已設定同步',
+            text: gsConfig.lastSync ? `上次同步：${gsFormatTime(gsConfig.lastSync)}` : '已可開始同步'
+          };
         }
-      ];
-
-      const COMMON_BOTTOM = [
-        {
-          target: '.topbar__right-actions',
-          title: '同步、匯出與主題',
-          desc: '點擊「☁️ 手動同步」可將目前電腦上的資料手動上傳到 Google 試算表。點擊「💾 匯出」將所有班級成績輸出為 Excel / CSV / ODS 檔案，可隨時再匯入繼續使用。點擊主題按鈕切換<b>深色 / 淺色</b>模式。',
-          pos: 'bottom'
-        },
-        {
-          target: '.topbar__left .import-block div:first-child',
-          title: '工具列按鈕',
-          desc: '「🧹 清除」可選擇性清除各類資料（分數、座位、作業等）。<br><br>💡 <b>所有資料儲存在本機瀏覽器</b>，關閉頁面後仍會保留，不會上傳至伺服器。',
-          pos: 'bottom'
-        }
-      ];
-
-      /* ── 歡迎頁面（無資料） ── */
-      const STEPS_WELCOME = [
-        ...COMMON_TOP,
-        {
-          target: '#welcome-guide',
-          title: '歡迎畫面',
-          desc: '這是首次使用的歡迎畫面。你可以在這裡<b>匯入學生名單</b>或<b>下載範例檔</b>快速體驗。匯入後會自動進入加扣分模式。',
-          pos: 'top'
-        },
-        {
-          target: '#btn-welcome-sample',
-          desc: '點擊下載一份包含「班級A / 班級B」各 30 位學生的 Excel 範例檔，<b>方便快速體驗</b>各項功能。',
-          pos: 'bottom'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 加扣分模式 ── */
-      const STEPS_LIST = [
-        ...COMMON_TOP,
-        {
-          target: '.modebar .seg',
-          title: '功能模式切換',
-          desc: '在此切換不同功能：<b>學生管理</b>、<b>教學進度</b>、<b>加扣分</b>、<b>違規記錄</b>、<b>作業成績</b>，以及「更多」選單中的<b>座位</b>、<b>分組</b>、<b>抽號</b>、<b>倒數計時</b>。',
-          pos: 'bottom'
-        },
-        {
-          target: '#class-select',
-          title: '班級選擇',
-          desc: '匯入名單後在此切換班級。每個班級的成績、座位等資料<b>各自獨立儲存</b>。',
-          pos: 'bottom'
-        },
-        {
-          target: '#students',
-          title: '學生卡片',
-          desc: '每位學生顯示為一張卡片，點擊 <b>＋ / −</b> 按鈕即可即時加扣分。分數變動會立即反映在左側雙排行榜中。',
-          pos: 'top'
-        },
-        {
-          target: '#board-score',
-          title: '加分排行榜',
-          desc: '左側欄即時顯示目前班級的<b>加分排名</b>，方便掌握學生表現。前五名會顯示獎牌圖示。',
-          pos: 'right'
-        },
-        {
-          target: '#board-deduct',
-          title: '扣分排行榜',
-          desc: '下方會另外顯示<b>累計扣分最多</b>的學生，方便快速掌握需要提醒或追蹤的對象。尚未有扣分紀錄時會顯示空狀態。',
-          pos: 'right'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 座位模式 ── */
-      const STEPS_SEAT = [
-        ...COMMON_TOP,
-        {
-          target: '#seat-controls',
-          title: '座位設定列',
-          desc: '設定教室的<b>列數 × 欄數</b>（最大 9×9）。可以按「自動排位」依座號自動填入、「隨機入座」打亂座位，或「清空」重新安排。',
-          pos: 'bottom'
-        },
-        {
-          target: '#seatboard',
-          title: '座位表',
-          desc: '將右側未安排名單中的學生<b>拖放</b>到格子中安排座位。也可以在格子之間互換位置。座位安排會自動儲存。',
-          pos: 'top'
-        },
-        {
-          target: '#unassigned',
-          title: '未安排名單',
-          desc: '尚未安排座位的學生會顯示在這裡。將學生<b>拖曳</b>到左側座位格即可完成安排。',
-          pos: 'left'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 作業成績模式 ── */
-      const STEPS_HW = [
-        ...COMMON_TOP,
-        {
-          target: '.hw-bar',
-          title: '作業工具列',
-          desc: '可以「＋新增作業」動態增加欄位，或「刪除最後作業」移除。也可在此切換班級。',
-          pos: 'bottom'
-        },
-        {
-          target: '#hw-table',
-          title: '作業成績表',
-          desc: '直接<b>點擊數字格</b>輸入成績。<b>雙擊欄位名稱</b>可重新命名作業欄。需要大量輸入時請按欄位標題旁的「⚡」使用<b>批次輸入</b>（整欄同分 或 貼上多筆）。',
-          pos: 'top'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 違規記錄模式 ── */
-      const STEPS_VIOLATIONS = [
-        ...COMMON_TOP,
-        {
-          target: '#violations-pane .hw-bar',
-          title: '違規記錄工具列',
-          desc: '可在此切換班級，並用「清空本班紀錄」快速重置本班所有違規次數。',
-          pos: 'bottom'
-        },
-        {
-          target: '#viol-table',
-          title: '違規記錄',
-          desc: '表格會顯示每位學生的<b>總違規次數</b>與四種固定類型：<b>遲到</b>、<b>缺交</b>、<b>上課違規</b>、<b>其他</b>。可直接用各欄位的 <b>＋ / −</b> 按鈕增減。',
-          pos: 'top'
-        },
-        {
-          target: '#board-violations',
-          title: '違規排行榜',
-          desc: '左側會依<b>總違規次數</b>即時排序，方便快速掌握需要優先關注的學生。',
-          pos: 'right'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 抽號模式 ── */
-      const STEPS_DRAW = [
-        ...COMMON_TOP,
-        {
-          target: '.controls-card',
-          title: '抽號控制面板',
-          desc: '設定<b>抽選人數</b>（1～6）、序列模式、是否不重覆抽取。可開啟「抽到即 +1 分」自動加分，以及「緩停效果」增加氣氛。',
-          pos: 'right'
-        },
-        {
-          target: '#btn-draw',
-          title: '開始抽籤',
-          desc: '點擊此按鈕開始<b>滾動抽籤動畫</b>！結果會顯示在右側聚光區，歷史紀錄也會自動保留。',
-          pos: 'bottom'
-        },
-        {
-          target: '.spotlight-card',
-          title: '抽籤結果區',
-          desc: '顯示<b>本次結果</b>與<b>歷史紀錄</b>。上方的徽章顯示剩餘人數與全班人數。可使用「↩️ 撤銷」或「🔄 重置」管理紀錄。',
-          pos: 'left'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 分組模式 ── */
-      const STEPS_GROUP = [
-        ...COMMON_TOP,
-        {
-          target: '.grp-toolbar',
-          title: '分組工具列',
-          desc: '選擇班級、設定<b>分組數量</b>（2～20 組）。點擊「🎲 隨機分組」自動分配，或「🗑 清空」重來。',
-          pos: 'bottom'
-        },
-        {
-          target: '#grp-board',
-          title: '分組看板',
-          desc: '每個組別顯示為一張卡片，可以<b>拖放學生</b>在組別之間移動。分組名稱可自訂，組別資料會隨班級儲存。',
-          pos: 'top'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 倒數計時模式 ── */
-      const STEPS_TIMER = [
-        ...COMMON_TOP,
-        {
-          target: '.timer-ring-box',
-          title: '計時器',
-          desc: '圓形進度環顯示剩餘時間。可使用下方的<b>快速預設</b>（1 / 2 / 3 / 5 / 10 / 15 分鐘）或自訂分鐘與秒數。',
-          pos: 'bottom'
-        },
-        {
-          target: '.timer-presets',
-          title: '快速預設',
-          desc: '點擊任一預設按鈕即可<b>立即設定</b>倒數時間，省去手動輸入。',
-          pos: 'top'
-        },
-        {
-          target: '.timer-actions',
-          title: '計時控制',
-          desc: '按「▶ 開始」開始倒數、「⏸ 暫停」暫停、「↺ 重置」歸零。計時結束會<b>彈出提醒</b>。',
-          pos: 'top'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 教學進度模式 ── */
-      const STEPS_PROGRESS = [
-        ...COMMON_TOP,
-        {
-          target: '.prog-bar',
-          title: '進度工具列',
-          desc: '選擇分頁、管理分頁（新增、重新命名、刪除）、管理班級。可新增<b>主題</b>和<b>進度列</b>，進度統計即時更新。',
-          pos: 'bottom'
-        },
-        {
-          target: '#prog-table',
-          title: '進度表格',
-          desc: '各班級以欄位顯示，每列代表一個教學進度。<b>點擊勾選框</b>標記完成狀態，上方統計會即時更新各班的完成比率。',
-          pos: 'top'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 學生管理模式 ── */
-      const STEPS_MANAGE = [
-        ...COMMON_TOP,
-        {
-          target: '.manage-left',
-          title: '班級列表',
-          desc: '左側顯示所有班級。點擊切換班級，下方可<b>新增</b>、<b>命名</b>、<b>刪除</b>班級。',
-          pos: 'right'
-        },
-        {
-          target: '.manage-right',
-          title: '學生名單',
-          desc: '右側顯示所選班級的<b>完整名單</b>（座號、姓名、學號、各科作業、分數、作業平均）。可新增或刪除個別學生。',
-          pos: 'left'
-        },
-        ...COMMON_BOTTOM
-      ];
-
-      /* ── 根據目前 state.mode 選取步驟 ── */
-      function getSteps(){
-        const hasData = state.classOrder && state.classOrder.length > 0;
-        if(!hasData) return STEPS_WELCOME;
-        switch(state.mode){
-          case 'list':     return STEPS_LIST;
-          case 'seat':     return STEPS_SEAT;
-          case 'violations': return STEPS_VIOLATIONS;
-          case 'hw':       return STEPS_HW;
-          case 'draw':     return STEPS_DRAW;
-          case 'group':    return STEPS_GROUP;
-          case 'timer':    return STEPS_TIMER;
-          case 'progress': return STEPS_PROGRESS;
-          case 'manage':   return STEPS_MANAGE;
-          default:         return STEPS_LIST;
-        }
+        return {
+          tone: 'warn',
+          label: '未設定同步',
+          text: '要備份或換電腦時，再回來設定即可。'
+        };
       }
 
-      let currentStep = -1;
-      let steps = [];
-      let overlayEl = null, highlightEl = null, tooltipEl = null;
+      function buildOnboardingSteps(){
+        const imported = hasImportedData();
+        const syncInfo = currentSyncInfo();
 
-      function startTour(){
-        if(overlayEl) return;
-        steps = getSteps();
-        currentStep = -1;
-        overlayEl = document.createElement('div');
-        overlayEl.className = 'tour-overlay';
-        overlayEl.style.background = 'transparent';
-        overlayEl.addEventListener('click', e => { if(e.target === overlayEl) endTour(); });
-        document.body.appendChild(overlayEl);
-        highlightEl = document.createElement('div');
-        highlightEl.className = 'tour-highlight tour-pulse';
-        document.body.appendChild(highlightEl);
-        tooltipEl = document.createElement('div');
-        tooltipEl.className = 'tour-tooltip';
-        document.body.appendChild(tooltipEl);
-        nextStep();
+        return [
+          {
+            label: '匯入名單',
+            short: '先把名單帶進來',
+            eyebrow: 'Step 1 · 匯入名單',
+            title: '有名單就先匯入',
+            desc: '有 Excel 或 CSV 就直接匯入。還沒準備好名單時，先用範例檔也可以。',
+            features: [
+              { icon:'📂', title:'直接匯入', text:'支援 Excel、CSV，也可以直接拖放。' },
+              { icon:'💾', title:'先存在本機', text:'沒設定同步前，資料只留在這台瀏覽器。' }
+            ],
+            spotlight: {
+              pill: { tone:'success', label:'最快開始方式' },
+              title: '先做這個最快',
+              text: '有正式名單就直接匯入；沒有的話先用範例檔。',
+              bullets: [
+                '多個檔案可以一次匯入。',
+                '匯入後就能開始記錄。'
+              ]
+            },
+            note: {
+              tone: 'info',
+              title: '匯入後',
+              text: '空白畫面會消失，系統會直接切到可操作狀態。'
+            },
+            actionHint: '現在匯入正式名單，或先下載範例檔。',
+            actions: [
+              { label:'📂 立即匯入名單', action:'import', primary:true },
+              { label:'📥 下載範例檔', action:'sample' }
+            ],
+            footer: '先把資料帶進來，後面的功能才會開始顯示。'
+          },
+          {
+            label: '先試跑',
+            short: '先用範例檔看畫面',
+            eyebrow: 'Step 2 · 先試跑',
+            title: '沒有名單就先用範例檔',
+            desc: '先下載範例檔，再匯入回系統，就能直接看到完整畫面。',
+            features: [
+              { icon:'📥', title:'先下載範例檔', text:'範例檔內有兩個班級，可直接測試。' },
+              { icon:'👀', title:'先看畫面', text:'可以先看班級切換、排行榜和基本操作。' }
+            ],
+            spotlight: {
+              pill: imported ? { tone:'success', label:'目前已有班級資料' } : { tone:'warn', label:'尚未匯入任何班級' },
+              title: imported ? '這一步可跳過' : '先下載，再匯入',
+              text: imported ? '你已經有資料，可以直接進下一步。' : '下載範例檔後，再用匯入功能帶回系統。',
+              bullets: [
+                '下載後要再匯入一次。',
+                '範例檔不會自動同步到 Google。'
+              ]
+            },
+            note: {
+              tone: imported ? 'success' : 'info',
+              title: '重點',
+              text: '這一步只是先看流程，不是一定要做。'
+            },
+            actionHint: imported ? '已有資料可直接略過，或用範例檔做展示。' : '先下載範例檔，再按匯入看畫面。',
+            actions: [
+              { label:'📥 下載範例檔', action:'sample', primary:true },
+              { label:'📂 匯入正式名單', action:'import' }
+            ],
+            footer: '想先看畫面，用範例檔最快。'
+          },
+          {
+            label: 'Google 同步',
+            short: '要備份再設定',
+            eyebrow: 'Step 3 · Google 試算表同步',
+            title: '要備份時，再開同步',
+            desc: '不急著同步可以先略過。需要時再照這 4 步做：開試算表、開 Apps Script、部署、貼回網址和密碼。',
+            features: [
+              { icon:'1', title:'先開 Apps Script', text:'在 Google 試算表上方選單打開 Apps Script。' },
+              { icon:'2', title:'部署後貼回來', text:'部署完成後，把網址和同步密碼貼回這裡。' }
+            ],
+            spotlight: {
+              pill: syncInfo,
+              title: gsReady() ? '同步已可用' : '設定一次就好',
+              text: gsReady() ? '你已設定好同步，需要時可手動上傳，或開啟自動同步。' : '設定完成後，就能把資料備份到 Google 試算表。',
+              bullets: [
+                '上傳：把本機資料送到試算表。',
+                '下載：會用試算表覆蓋本機資料。'
+              ]
+            },
+            note: {
+              tone: 'warn',
+              title: '先記住這件事',
+              text: '從試算表下載，會覆蓋目前這台電腦上的資料。'
+            },
+            actionHint: '要備份時，再打開同步設定填網址與密碼。',
+            actions: [
+              { label:'☁️ 打開同步設定', action:'open-gsheet', primary:true }
+            ],
+            footer: '先在單一電腦使用也沒問題，之後再補同步即可。'
+          },
+          {
+            label: '開始使用',
+            short: '匯入後就開始記錄',
+            eyebrow: 'Step 4 · 開始使用',
+            title: imported ? '現在就可以開始記錄' : '匯入後就可以開始記錄',
+            desc: imported ? '你現在可以開始加扣分、記作業和記違規。要複習流程時，再打開右上角導覽。' : '先匯入一份名單，畫面就會切到正式使用狀態。之後要複習流程，再打開右上角導覽。',
+            features: [
+              { icon:'⭐', title:'先從加扣分開始', text:'匯入後可先用最常用的加扣分與排行榜。' },
+              { icon:'🧭', title:'導覽可重開', text:'之後隨時都能再看，不只第一次出現。' }
+            ],
+            spotlight: {
+              pill: imported ? { tone:'success', label:'已可開始正式使用' } : { tone:'warn', label:'尚未匯入班級資料' },
+              title: imported ? '可以直接開始' : '下一步就是匯入',
+              text: imported ? '如果之後要備份或換電腦，再回來設定 Google 同步。' : '有名單先匯入；沒有名單就先用範例檔。',
+              bullets: [
+                '匯入後就能開始記錄。',
+                '需要時再回來設定同步。'
+              ]
+            },
+            note: {
+              tone: imported ? 'success' : 'info',
+              title: imported ? '小提醒' : '開始前',
+              text: imported ? '如果已設定同步，建議先手動上傳一次確認沒問題。' : '同步不是前置條件，可以晚一點再設定。'
+            },
+            actionHint: imported ? '可以直接開始工作，或先去看 Google 同步設定。' : '現在先匯入名單，之後再決定要不要同步。',
+            actions: imported
+              ? [
+                  { label:'✅ 關閉導覽', action:'close-onboarding', primary:true },
+                  { label:'☁️ Google 同步設定', action:'open-gsheet' }
+                ]
+              : [
+                  { label:'📂 現在匯入名單', action:'import', primary:true },
+                  { label:'📥 先試範例檔', action:'sample' }
+                ],
+            footer: imported ? '要複習流程時，右上角的導覽按鈕都在。' : '先匯入，再開始記錄；同步可以之後再設。'
+          }
+        ];
       }
 
-      function endTour(){
-        overlayEl?.remove(); highlightEl?.remove(); tooltipEl?.remove();
-        overlayEl = highlightEl = tooltipEl = null;
-        currentStep = -1; steps = [];
+      function escapeAttr(value){
+        return String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       }
 
-      function nextStep(){
-        currentStep++;
-        if(currentStep >= steps.length){ endTour(); return; }
-        showStep(currentStep);
+      function renderStatusPill(pill){
+        if(!pill || !pill.label) return '';
+        const toneClass = pill.tone === 'success' ? ' is-success' : pill.tone === 'warn' ? ' is-warn' : '';
+        return `<div class="onboarding-status-pill${toneClass}">${escapeAttr(pill.label)}</div>`;
       }
 
-      function prevStep(){
-        if(currentStep <= 0) return;
-        currentStep--;
-        showStep(currentStep);
+      function renderMicroList(items){
+        if(!Array.isArray(items) || !items.length) return '';
+        return `<ul class="onboarding-micro-list">${items.map(item => `<li>${escapeAttr(item)}</li>`).join('')}</ul>`;
       }
 
-      function showStep(idx){
-        const step = steps[idx];
-        const el = document.querySelector(step.target);
-        if(!el || el.offsetParent === null){ nextStep(); return; }
+      function renderActions(actions){
+        if(!Array.isArray(actions) || !actions.length) return '';
+        return actions.map(action => {
+          const extraClass = action.primary ? ' onboarding-cta--primary' : '';
+          return `<button class="btn${extraClass}" type="button" data-onboarding-action="${escapeAttr(action.action)}">${escapeAttr(action.label)}</button>`;
+        }).join('');
+      }
 
-        // 先確保目標元素在可視範圍
-        el.scrollIntoView?.({ behavior:'smooth', block:'nearest', inline:'nearest' });
+      function renderFeatures(features){
+        return features.map(feature => `
+          <article class="onboarding-feature">
+            <div class="onboarding-feature__icon">${escapeAttr(feature.icon)}</div>
+            <h5 class="onboarding-feature__title">${escapeAttr(feature.title)}</h5>
+            <p class="onboarding-feature__text">${escapeAttr(feature.text)}</p>
+          </article>
+        `).join('');
+      }
 
-        requestAnimationFrame(()=>{
-          const r = el.getBoundingClientRect();
-          const pad = 8;
+      function renderRoot(root, steps){
+        if(!root || !steps.length) return;
+        const currentStep = steps[onboardingState.step];
+        const noteToneClass = currentStep.note?.tone === 'warn' ? ' is-warn' : currentStep.note?.tone === 'success' ? ' is-success' : '';
+        const isLastStep = onboardingState.step === steps.length - 1;
+        const primaryNavLabel = isLastStep ? (hasImportedData() ? '完成導覽' : '回到第 1 步') : '下一步 →';
 
-          highlightEl.style.left   = (r.left - pad) + 'px';
-          highlightEl.style.top    = (r.top - pad) + 'px';
-          highlightEl.style.width  = (r.width + pad*2) + 'px';
-          highlightEl.style.height = (r.height + pad*2) + 'px';
+        root.classList.remove('onboarding-root--loading');
+        root.innerHTML = `
+          <div class="onboarding-progress" role="tablist" aria-label="新手導覽步驟">
+            ${steps.map((step, index) => `
+              <button class="onboarding-step-chip${index===onboardingState.step ? ' is-active' : ''}" type="button" data-onboarding-step="${index}" aria-selected="${index===onboardingState.step ? 'true' : 'false'}">
+                <span class="onboarding-step-chip__index">${index + 1}</span>
+                <span class="onboarding-step-chip__label">
+                  <strong>${escapeAttr(step.label)}</strong>
+                  <span>${escapeAttr(step.short)}</span>
+                </span>
+              </button>
+            `).join('')}
+          </div>
 
-          // mode label for tooltip header
-          const modeLabels = { list:'加扣分', seat:'座位', violations:'違規記錄', hw:'作業成績', draw:'抽號', group:'分組', timer:'倒數計時', progress:'教學進度', manage:'學生管理' };
-          const hasData = state.classOrder && state.classOrder.length > 0;
-          const modeLabel = hasData ? (modeLabels[state.mode] || '') : '歡迎';
-
-          const dots = steps.map((_,i)=> `<div class="tour-dot${i===idx?' active':''}"></div>`).join('');
-
-          // 決定最佳顯示方向
-          const tw = 360;
-          let th;
-          let posOrder = [step.pos, 'bottom', 'top', 'right', 'left'];
-          posOrder = posOrder.filter((v,i,a)=>a.indexOf(v)===i); // 去重
-          let tx=0, ty=0, bestPos=step.pos;
-          for(const pos of posOrder){
-            // 先預設內容
-            tooltipEl.innerHTML = `
-              <div class="tour-tooltip-arrow ${pos==='bottom'?'top':pos==='top'?'bottom':pos==='right'?'left':'right'}"></div>
-              <div class="tour-title"><span class="tour-step-badge">${idx+1}</span>${step.title}</div>
-              <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;opacity:.7;">📍 ${modeLabel}模式 • 步驟 ${idx+1} / ${steps.length}</div>
-              <div class="tour-desc">${step.desc}</div>
-              <div class="tour-footer">
-                <div class="tour-dots">${dots}</div>
-                <div class="tour-btns">
-                  ${idx > 0 ? '<button class="btn tour-prev">← 上一步</button>' : '<button class="tour-skip" id="tour-skip-btn">跳過導覽</button>'}
-                  <button class="btn tour-next">${idx < steps.length - 1 ? '下一步 →' : '✓ 完成'}</button>
-                </div>
+          <div class="onboarding-body">
+            <div class="onboarding-column">
+              <article class="onboarding-card onboarding-card--hero">
+                <p class="onboarding-card__eyebrow">${escapeAttr(currentStep.eyebrow)}</p>
+                <h4 class="onboarding-card__title">${escapeAttr(currentStep.title)}</h4>
+                <p class="onboarding-card__desc">${escapeAttr(currentStep.desc)}</p>
+              </article>
+              <div class="onboarding-feature-grid">
+                ${renderFeatures(currentStep.features)}
               </div>
-            `;
-            th = tooltipEl.offsetHeight;
-            if(pos === 'bottom'){
-              tx = r.left; ty = r.bottom + pad + 14;
-              if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
-              if(tx < 8) tx = 8;
-              if(ty + th <= window.innerHeight - 8) { bestPos = pos; break; }
-            } else if(pos === 'top'){
-              tx = r.left; ty = r.top - pad - th - 14;
-              if(tx + tw > window.innerWidth - 16) tx = window.innerWidth - tw - 16;
-              if(tx < 8) tx = 8;
-              if(ty >= 8) { bestPos = pos; break; }
-            } else if(pos === 'right'){
-              tx = r.right + pad + 14; ty = r.top;
-              if(tx + tw > window.innerWidth - 16) { tx = r.left - tw - pad - 14; }
-              if(tx >= 8 && tx + tw <= window.innerWidth - 8) { bestPos = pos; break; }
-            } else if(pos === 'left'){
-              tx = r.left - tw - pad - 14; ty = r.top;
-              if(tx < 8) tx = 8;
-              if(tx + tw <= window.innerWidth - 8) { bestPos = pos; break; }
+            </div>
+
+            <div class="onboarding-column">
+              <article class="onboarding-card onboarding-card--spotlight">
+                ${renderStatusPill(currentStep.spotlight?.pill)}
+                <h5 class="onboarding-section-title">${escapeAttr(currentStep.spotlight?.title || '')}</h5>
+                <p class="onboarding-section-text">${escapeAttr(currentStep.spotlight?.text || '')}</p>
+                ${renderMicroList(currentStep.spotlight?.bullets)}
+              </article>
+
+              <article class="onboarding-card onboarding-card--note${noteToneClass}">
+                <h5 class="onboarding-section-title">${escapeAttr(currentStep.note?.title || '')}</h5>
+                <p class="onboarding-section-text">${escapeAttr(currentStep.note?.text || '')}</p>
+              </article>
+
+              <article class="onboarding-card">
+                <h5 class="onboarding-section-title">現在就做</h5>
+                <p class="onboarding-section-text">${escapeAttr(currentStep.actionHint || '')}</p>
+                <div class="onboarding-actions">
+                  ${renderActions(currentStep.actions)}
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="onboarding-footer">
+            <p class="onboarding-footer__hint">${escapeAttr(currentStep.footer || '')}</p>
+            <div class="onboarding-nav">
+              <button class="btn" type="button" data-onboarding-nav="prev" ${onboardingState.step === 0 ? 'disabled' : ''}>← 上一步</button>
+              <button class="btn onboarding-cta--primary" type="button" data-onboarding-nav="next">${escapeAttr(primaryNavLabel)}</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderOnboarding(){
+        const steps = buildOnboardingSteps();
+        const maxStep = Math.max(0, steps.length - 1);
+        onboardingState.step = Math.min(Math.max(onboardingState.step, 0), maxStep);
+        renderRoot(inlineRoot, steps);
+        renderRoot(modalRoot, steps);
+      }
+
+      function setOnboardingStep(nextStep){
+        onboardingState.step = Number.isFinite(nextStep) ? nextStep : onboardingState.step;
+        renderOnboarding();
+      }
+
+      function openOnboardingModal(stepIndex = onboardingState.step){
+        setOnboardingStep(stepIndex);
+        onboardingMask?.classList.add('show');
+      }
+
+      function closeOnboardingModal(){
+        onboardingMask?.classList.remove('show');
+      }
+
+      function openFilePickerFromOnboarding(){
+        closeOnboardingModal();
+        fileInput?.click();
+      }
+
+      function handleOnboardingAction(action){
+        switch(action){
+          case 'import':
+            openFilePickerFromOnboarding();
+            return;
+          case 'sample':
+            closeOnboardingModal();
+            downloadSampleWorkbook();
+            return;
+          case 'open-gsheet':
+            closeOnboardingModal();
+            openGsheetModal();
+            return;
+          case 'open-modal':
+            openOnboardingModal(onboardingState.step);
+            return;
+          case 'close-onboarding':
+            closeOnboardingModal();
+            return;
+        }
+      }
+
+      document.addEventListener('click', (e)=>{
+        const stepBtn = e.target?.closest?.('[data-onboarding-step]');
+        if(stepBtn){
+          const nextStep = Number(stepBtn.getAttribute('data-onboarding-step'));
+          if(Number.isFinite(nextStep)) setOnboardingStep(nextStep);
+          return;
+        }
+
+        const navBtn = e.target?.closest?.('[data-onboarding-nav]');
+        if(navBtn){
+          const act = navBtn.getAttribute('data-onboarding-nav');
+          const steps = buildOnboardingSteps();
+          if(act === 'prev') setOnboardingStep(Math.max(0, onboardingState.step - 1));
+          if(act === 'next'){
+            if(onboardingState.step >= steps.length - 1){
+              if(hasImportedData()) closeOnboardingModal();
+              else setOnboardingStep(0);
+            }else{
+              setOnboardingStep(onboardingState.step + 1);
             }
           }
-          // 若還是超出，強制貼齊螢幕
-          if(ty < 8) ty = 8;
-          if(ty + th > window.innerHeight - 8) ty = window.innerHeight - th - 8;
-          if(tx < 8) tx = 8;
-          if(tx + tw > window.innerWidth - 8) tx = window.innerWidth - tw - 8;
+          return;
+        }
 
-          tooltipEl.style.left = tx + 'px';
-          tooltipEl.style.top  = ty + 'px';
-          tooltipEl.style.width = tw + 'px';
-          tooltipEl.style.animation = 'none';
-          tooltipEl.offsetHeight;
-          tooltipEl.style.animation = '';
-
-          tooltipEl.querySelector('.tour-next')?.addEventListener('click', nextStep);
-          tooltipEl.querySelector('.tour-prev')?.addEventListener('click', prevStep);
-          tooltipEl.querySelector('#tour-skip-btn')?.addEventListener('click', endTour);
-        });
-      }
-
-      window._startTour = startTour;
-
-      document.getElementById('btn-welcome-tour')?.addEventListener('click', startTour);
-      document.getElementById('btn-tour')?.addEventListener('click', startTour);
-
-      window.addEventListener('resize', ()=>{
-        if(overlayEl && currentStep >= 0) showStep(currentStep);
+        const actionBtn = e.target?.closest?.('[data-onboarding-action]');
+        if(actionBtn){
+          e.preventDefault();
+          handleOnboardingAction(actionBtn.getAttribute('data-onboarding-action'));
+        }
       });
+
+      onboardingBtn?.addEventListener('click', ()=>{ openOnboardingModal(); });
+      onboardingClose?.addEventListener('click', closeOnboardingModal);
+      onboardingMask?.addEventListener('click', (e)=>{ if(e.target === onboardingMask) closeOnboardingModal(); });
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && onboardingMask && onboardingMask.classList.contains('show')) closeOnboardingModal();
+      });
+
+      window._refreshOnboarding = function(opts={}){
+        if(opts?.resetForEmpty && !hasImportedData()) onboardingState.step = 0;
+        renderOnboarding();
+      };
+      window._openOnboarding = openOnboardingModal;
+      window._closeOnboarding = closeOnboardingModal;
+
+      renderOnboarding();
     })();
 
 
