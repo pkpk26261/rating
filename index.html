@@ -608,7 +608,6 @@
 
     /* 匯出 / 清除按鈕隱藏 */
     body.no-data #btn-manual-sync,
-    body.no-data #btn-export,
     body.no-data #btn-reset{
       display:none !important;
     }
@@ -4659,8 +4658,7 @@
         <!-- ★ 日期時間（民國年 + 24 小時） -->
         <div class="topbar__right-actions">
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
-          <button id="btn-manual-sync" class="btn" title="手動上傳目前資料至 Google 試算表">☁️ 手動同步</button>
-          <button id="btn-export" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
+          <button id="btn-manual-sync" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
         </div>
         <div id="dt-display" class="dt-display" aria-label="日期與時間">
           <div id="dt-date">114年12月16日</div>
@@ -6765,6 +6763,7 @@
     }
     function gsSaveConfig(){
       try{ localStorage.setItem(GS_CFG_KEY, JSON.stringify(gsConfig)); }catch(e){}
+      resetManualSyncButton();
     }
     function gsReady(){
       return !!(gsConfig.url && /^https:\/\/script\.google\.com\//i.test(gsConfig.url) && gsConfig.token);
@@ -7013,12 +7012,6 @@
     exportMask.addEventListener('click', e=>{ if(e.target===exportMask) closeExportModal(); });
     window.addEventListener('keydown', e=>{ if(e.key==='Escape' && exportMask.classList.contains('show')) closeExportModal(); });
 
-    // 點選匯出按鈕 → 打開模態框
-    document.getElementById('btn-export').addEventListener('click', ()=>{
-      if(state.classOrder.length===0){ alert('尚未載入任何班級資料'); return; }
-      openExportModal();
-    });
-
     /* ===== Google 試算表同步：UI 串接 ===== */
     const GS_APPS_SCRIPT_CODE = `/**
  * 成績系統 ←→ Google 試算表 同步用 Apps Script
@@ -7124,8 +7117,13 @@ function jsonOut(obj) {
       if(!manualSyncBtn) return;
       manualSyncBtn.disabled = false;
       manualSyncBtn.classList.remove('sync-busy','sync-ok');
-      manualSyncBtn.textContent = '☁️ 手動同步';
-      manualSyncBtn.title = '手動上傳目前資料至 Google 試算表';
+      if(gsReady()){
+        manualSyncBtn.textContent = '☁️ 手動同步';
+        manualSyncBtn.title = '手動上傳目前資料至 Google 試算表';
+      } else {
+        manualSyncBtn.textContent = '💾 匯出';
+        manualSyncBtn.title = '匯出目前所有班級的成績';
+      }
     }
     function setManualSyncButtonState(state){
       if(!manualSyncBtn) return;
@@ -7146,12 +7144,11 @@ function jsonOut(obj) {
       }
       resetManualSyncButton();
     }
+    resetManualSyncButton();
     document.getElementById('btn-manual-sync')?.addEventListener('click', async ()=>{
       if(!gsReady()){
-        resetManualSyncButton();
-        openGsheetModal();
-        gsSetSyncStatus('請先填寫正確的網頁應用程式網址與密碼。', 'error');
-        setStatus('請先完成 Google 試算表設定。');
+        if(state.classOrder.length === 0){ alert('尚未載入任何班級資料'); return; }
+        openExportModal();
         return;
       }
       setManualSyncButtonState('busy');
