@@ -943,6 +943,88 @@
     .pick-bar.show{ display:flex; }
     @keyframes pickBarSlideUp{ from{ transform:translateY(100%); } to{ transform:translateY(0); } }
 
+    /* ===== ★ 平板：作業欄位底部操作列 ===== */
+    .hw-col-bar{
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 56;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(10,14,26,.95);
+      backdrop-filter: blur(16px) saturate(1.3);
+      border-top: 1px solid rgba(129,140,248,.38);
+      box-shadow: 0 -8px 30px rgba(0,0,0,.38);
+      animation: pickBarSlideUp .2s ease;
+      flex-wrap: wrap;
+    }
+    :root[data-theme="light"] .hw-col-bar{
+      background: rgba(255,255,255,.95);
+      border-top-color: rgba(99,102,241,.25);
+      box-shadow: 0 -8px 24px rgba(0,0,0,.1);
+    }
+    .hw-col-bar.show{ display:flex; }
+    .hw-col-bar__label{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--fg);
+      flex-shrink: 0;
+    }
+    .hw-col-bar__label-icon{ opacity:.65; }
+    #hw-col-bar-name{
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--accent-2);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .hw-col-bar__actions{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1 1 auto;
+      flex-wrap: wrap;
+    }
+    .hw-col-bar-btn{
+      font-size: 13px;
+      padding: 7px 13px;
+      border-radius: 10px;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .hw-col-bar-btn--del{
+      background: color-mix(in oklab, var(--card) 72%, var(--bad) 28%);
+      border-color: color-mix(in oklab, var(--bad) 48%, var(--line));
+      color: var(--bad);
+    }
+    .hw-col-bar-btn--del:hover{
+      background: color-mix(in oklab, var(--card) 55%, var(--bad) 45%);
+    }
+    :root[data-theme="light"] .hw-col-bar-btn--del{
+      background: color-mix(in oklab, white 75%, var(--bad) 25%);
+    }
+    .hw-col-bar__cancel{
+      margin-left: auto;
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+    }
+    .hw-col-bar__cancel:hover{ background: rgba(255,255,255,.07); color: var(--fg); }
+    :root[data-theme="light"] .hw-col-bar__cancel:hover{ background: rgba(0,0,0,.06); }
+
     .pick-bar__label{
       font-size: 15px;
       font-weight: 700;
@@ -1323,9 +1405,7 @@
     .hw-drag-ghost .hw-drag-ghost-icon{ opacity:.7; font-size:14px; }
     body.hw-dragging{ cursor:grabbing; }
     body.hw-dragging *{ user-select:none; }
-    @media (pointer:fine){
-      .hw-col .hw-move-btns{ display:none !important; }
-    }
+    .hw-col .hw-move-btns{ display:none !important; }
     .viol-cell{ min-width:126px; text-align:center; }
     #viol-table thead th{ z-index:3; }
     /* ★ 待處理欄位 */
@@ -5300,6 +5380,21 @@
       <button id="pick-bar-go" class="btn">放入</button>
     </div>
     <button id="pick-bar-cancel" class="pick-bar__cancel">✕ 取消</button>
+  </div>
+
+  <!-- ★ 平板：作業欄位底部操作列 -->
+  <div id="hw-col-action-bar" class="hw-col-bar" aria-hidden="true">
+    <div class="hw-col-bar__label">
+      <span class="hw-col-bar__label-icon">📋</span>
+      <span id="hw-col-bar-name"></span>
+    </div>
+    <div class="hw-col-bar__actions">
+      <button id="hw-col-bar-left"  class="btn hw-col-bar-btn" type="button">← 左移</button>
+      <button id="hw-col-bar-right" class="btn hw-col-bar-btn" type="button">→ 右移</button>
+      <button id="hw-col-bar-rename" class="btn hw-col-bar-btn" type="button">✏️ 改名</button>
+      <button id="hw-col-bar-delete" class="btn hw-col-bar-btn hw-col-bar-btn--del" type="button">🗑️ 刪除</button>
+    </div>
+    <button id="hw-col-bar-cancel" class="hw-col-bar__cancel" type="button">✕</button>
   </div>
 
   <script>
@@ -12326,6 +12421,7 @@ elProgAdd?.addEventListener('click', ()=>{
       return fromIdx < targetIdx ? targetIdx : targetIdx + 1;
     }
     var _cleanupHWPointerDrag = null;
+    var _dismissHWColBar = ()=>{};
     var _hwDragJustEnded = false;
     function markHWDragJustEnded(){
       _hwDragJustEnded = true;
@@ -12339,6 +12435,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
     function renderHW(cls){
       if(_cleanupHWPointerDrag){ _cleanupHWPointerDrag(); _cleanupHWPointerDrag = null; }
+      _dismissHWColBar();
       if(!cls){ elHWTable.innerHTML=''; elHWClassPill.textContent='未選擇'; syncHWClassSelect(cls); return; }
       const hw=ensureHWState(cls);
       const hwWrap = elHWTable.closest('.hwtbl-wrap');
@@ -12649,11 +12746,78 @@ elProgAdd?.addEventListener('click', ()=>{
         }
       };
 
+      // ★ 平板：作業欄位底部操作列
+      const elHWColBar    = document.getElementById('hw-col-action-bar');
+      const elHWColBarName= document.getElementById('hw-col-bar-name');
+      const elHWBarLeft   = document.getElementById('hw-col-bar-left');
+      const elHWBarRight  = document.getElementById('hw-col-bar-right');
+      const elHWBarRename = document.getElementById('hw-col-bar-rename');
+      const elHWBarDelete = document.getElementById('hw-col-bar-delete');
+      const elHWBarCancel = document.getElementById('hw-col-bar-cancel');
+
+      let _hwColBarOutsideHandler = null;
+
+      const dismissHWColBar = ()=>{
+        if(!elHWColBar.classList.contains('show')) return;
+        elHWColBar.classList.remove('show');
+        elHWColBar.setAttribute('aria-hidden', 'true');
+        if(_hwColBarOutsideHandler){
+          document.removeEventListener('click', _hwColBarOutsideHandler);
+          _hwColBarOutsideHandler = null;
+        }
+      };
+
+      const showHWColBar = (ci)=>{
+        dismissHWColBar();
+        elHWColBarName.textContent = hw.cols[ci] || `欄 ${ci+1}`;
+        elHWBarLeft.disabled  = (ci === 0);
+        elHWBarRight.disabled = (ci === hw.cols.length - 1);
+
+        // 移除舊 onclick，綁定新的
+        elHWBarLeft.onclick = ()=>{
+          const moved = commitHWMove(ci, ci - 1);
+          if(moved){ showHWColBar(ci - 1); }
+        };
+        elHWBarRight.onclick = ()=>{
+          const moved = commitHWMove(ci, ci + 1);
+          if(moved){ showHWColBar(ci + 1); }
+        };
+        elHWBarRename.onclick = ()=>{
+          dismissHWColBar();
+          openHWColEditor(ci);
+        };
+        elHWBarDelete.onclick = ()=>{
+          dismissHWColBar();
+          openHWColDeleteModal(cls, ci);
+        };
+        elHWBarCancel.onclick = dismissHWColBar;
+
+        elHWColBar.classList.add('show');
+        elHWColBar.setAttribute('aria-hidden', 'false');
+
+        // 點列外部自動關閉
+        setTimeout(()=>{
+          _hwColBarOutsideHandler = (e)=>{
+            if(!elHWColBar.contains(e.target)){ dismissHWColBar(); }
+          };
+          document.addEventListener('click', _hwColBarOutsideHandler);
+        }, 0);
+      };
+
+      // 暴露給模組層級，讓下次 renderHW 時可以清除
+      _dismissHWColBar = dismissHWColBar;
+
       elHWTable.querySelectorAll('.hw-col-head[data-col]').forEach(head=>{
         head.addEventListener('click', (e)=>{
           if(e.target.closest('.hw-del-btn, .mini-btn, .hw-move-btn')) return;
           const ci = Number(head.getAttribute('data-col'));
           if(!Number.isInteger(ci)) return;
+          // 平板/觸控：開底部操作列
+          if(IS_COARSE || HAS_TOUCH){
+            e.stopPropagation();
+            showHWColBar(ci);
+            return;
+          }
           const clickedName = !!e.target.closest('.hw-col-name[data-col]');
           if(!clickedName && pendingHWNameEditCol !== ci) return;
           pendingHWNameEditCol = null;
