@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- 深色圓角方形底色（配合網站主題 --card:#111827） -->
+  <rect width="180" height="180" rx="40" ry="40" fill="#111827"/>
+  <!-- 📊 emoji 置中顯示 -->
+  <text x="90" y="132" font-size="96" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">📊</text>
+</svg>

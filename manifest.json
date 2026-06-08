@@ -1,0 +1,18 @@
+{
+  "name": "成績管理系統",
+  "short_name": "成績系統",
+  "description": "班級加扣分、作業成績、違規記錄、座位管理整合系統",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0a0e1a",
+  "background_color": "#111827",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
