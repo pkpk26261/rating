@@ -4719,7 +4719,10 @@
             <input id="chk-show-stage" type="checkbox" checked>
             <span>顯示講台</span>
           </label>
-          
+          <div id="list-view-seg" class="seg hidden" role="group" aria-label="排列方式" style="margin-left:auto;">
+            <button id="btn-view-seat" class="seg-btn active" title="依座位圖排列">🗺️ 座位圖</button>
+            <button id="btn-view-order" class="seg-btn" title="依座號排列">🔢 座號</button>
+          </div>
         </div>
 
         <!-- 安排座位 -->
@@ -5509,7 +5512,7 @@
     /* ====== 全域狀態 ====== */
     const state={
       classMap:{}, classOrder:[], scores:{}, deductions:{}, violations:{}, sidMap:{}, filter:"", savedScores:{}, seating:{}, mode:'list',
-      hw:{}, savedHW:{}, draw:{}, showStageInList: true,
+      hw:{}, savedHW:{}, draw:{}, showStageInList: true, listViewMode: 'seat',
       group:{},
       cadreOptions:{},
       warningThreshold: 60,
@@ -5754,6 +5757,7 @@
         selectedClass: elSelect?.value || '',
         mode: state.mode,
         showStageInList: state.showStageInList,
+        listViewMode: state.listViewMode,
         warningThreshold: state.warningThreshold ?? 60,
         ts: Date.now()
       };
@@ -5819,6 +5823,7 @@
         state.mode       = s.mode       || 'list';
 
         state.showStageInList = (typeof s.showStageInList === 'boolean') ? s.showStageInList : true;
+        state.listViewMode = (s.listViewMode === 'order') ? 'order' : 'seat';
         state.warningThreshold = (typeof s.warningThreshold === 'number') ? s.warningThreshold : 60;
 
         if(state.classOrder.length){
@@ -8167,6 +8172,32 @@ function jsonOut(obj) {
       const {rows, cols} = getCurrentRowsCols(cls);
       elStudents.style.setProperty('--list-cols', cols);
 
+      // ★ 座號順序模式
+      if(state.listViewMode === 'order'){
+        const q = state.filter.trim().toLowerCase();
+        const frag2 = document.createDocumentFragment();
+        const sorted = list
+          .filter(s => !q || matchFilter(s, q))
+          .slice()
+          .sort((a, b) => {
+            const sa = parseInt(a.seat, 10) || 9999;
+            const sb = parseInt(b.seat, 10) || 9999;
+            return sa - sb;
+          });
+        for(const stu of sorted){
+          frag2.appendChild(buildStudentCard(cls, stu, q && matchFilter(stu, q) ? q : ''));
+        }
+        elStudents.innerHTML = '';
+        elStudents.appendChild(frag2);
+        elStudents.querySelectorAll('.card').forEach(c=> io.observe(c));
+        requestAnimationFrame(()=> setupAutoFitForNames(elStudents));
+        if(q){
+          const first = elStudents.querySelector('.card.match');
+          if(first){ first.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' }); }
+        }
+        return;
+      }
+
       const byId = new Map(list.map(s=>[s.id, s]));
       const frag = document.createDocumentFragment();
       const q = state.filter.trim().toLowerCase();
@@ -9065,6 +9096,36 @@ function jsonOut(obj) {
       if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
       saveSession('toggle stage (checkbox)');
     });
+
+    /* ===== 座號/座位圖 切換 ===== */
+    const elBtnViewSeat  = document.getElementById('btn-view-seat');
+    const elBtnViewOrder = document.getElementById('btn-view-order');
+
+    function applyListViewUI(){
+      const isSeat = state.listViewMode !== 'order';
+      elBtnViewSeat?.classList.toggle('active', isSeat);
+      elBtnViewOrder?.classList.toggle('active', !isSeat);
+      // 座號模式下隱藏「顯示講台」（講台是座位圖概念）
+      if(elToggleStageWrap) elToggleStageWrap.classList.toggle('hidden', !isSeat);
+    }
+
+    elBtnViewSeat?.addEventListener('click', ()=>{
+      if(state.listViewMode === 'seat') return;
+      state.listViewMode = 'seat';
+      applyListViewUI();
+      renderStudents(elSelect.value);
+      saveSession('list view: seat');
+    });
+
+    elBtnViewOrder?.addEventListener('click', ()=>{
+      if(state.listViewMode === 'order') return;
+      state.listViewMode = 'order';
+      applyListViewUI();
+      renderStudents(elSelect.value);
+      saveSession('list view: order');
+    });
+
+    applyListViewUI();
 
 
     
@@ -11105,6 +11166,7 @@ function onTimerDone(){
 
       // 只在「座位」模式顯示「顯示講台」勾選
       elToggleStageWrap.classList.toggle('hidden', m!=='list');
+      document.getElementById('list-view-seg')?.classList.toggle('hidden', m!=='list');
       applyStageToggleUI();
 
       document.getElementById('board-score')?.classList.toggle('hidden', m!=='list');
@@ -11835,6 +11897,8 @@ elProgAdd?.addEventListener('click', ()=>{
       document.body.classList.add('no-data');
       setMode('list');
     }
+    // ★ 還原後同步 listViewMode 按鈕 active 狀態
+    applyListViewUI();
 
     // ★ 啟動多分頁單一寫入鎖（同一瀏覽器同時只允許一個分頁寫入）
     try{ TabLock.init(); }catch(e){ console.warn('TabLock 初始化失敗', e); }
