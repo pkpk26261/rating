@@ -7727,9 +7727,9 @@
         const arr = (hwSt.data[id] || []).slice(0, hwSt.cols.length);
         while (arr.length < hwSt.cols.length) arr.push('');
 
-        const sum = arr.reduce((t,v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
-        const cnt = arr.filter(v => v!=='' && v!=null && Number.isFinite(Number(v))).length;
-        const avg = cnt ? Math.round((sum / cnt) * 100) / 100 : 0;
+        const hwSummary = calcHWSummary(arr, hwSt.cols.length);
+        const sum = hwSummary.sum;
+        const avg = Math.round(hwSummary.avg * 100) / 100;
 
         const groupLabel = idToGroup.get(id) || '';
         const viol = getViolationRecord(cls, id);
@@ -11923,9 +11923,7 @@ function onTimerDone(){
             const titles = s.titles || [];
             const score = getScore(cls, s.id);
             const hwArr = Array.isArray(hw.data?.[s.id]) ? hw.data[s.id].slice(0, hw.cols.length) : [];
-            const hwNums = hwArr.filter(v=> v !== '' && v != null && String(v).trim() !== '');
-            const hwSum = hwNums.reduce((t, v)=> t + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
-            const hwAvg = hwNums.length ? (hwSum / hwNums.length).toFixed(2) : '—';
+            const hwAvg = calcHWSummary(hwArr, hw.cols.length).avg.toFixed(2);
             return `<tr data-stu-id="${escapeHTML(s.id)}">
               <td class="col-cadre">${manageEditMode
                 ? renderManageCadreEditor(cls, s, cadreOptions)
@@ -13588,6 +13586,18 @@ elProgAdd?.addEventListener('click', ()=>{
       if(nextRow.length > colCount) nextRow.length = colCount;
       return nextRow;
     }
+    function hwScoreForAverage(value){
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function calcHWSummary(row, colCount){
+      const count = Math.max(0, Number(colCount) || 0);
+      let sum = 0;
+      for(let i = 0; i < count; i++){
+        sum += hwScoreForAverage(Array.isArray(row) ? row[i] : undefined);
+      }
+      return { sum, avg: count ? (sum / count) : 0, count };
+    }
     function hwMoveCol(hw, fromIdx, toIdx){
       if(!hw || !Array.isArray(hw.cols)) return false;
       const colCount = hw.cols.length;
@@ -13687,19 +13697,9 @@ elProgAdd?.addEventListener('click', ()=>{
 
         for(const stu of students){
           const scores = (hw && hw.data && hw.data[stu.id]) ? hw.data[stu.id] : [];
-          // 取有效分數（非空字串、非 null、是數字）
-          const valid = [];
-          for(let i = 0; i < cols.length; i++){
-            const v = scores[i];
-            const n = Number(v);
-            if(v !== '' && v !== null && v !== undefined && Number.isFinite(n)){
-              valid.push(n);
-            }
-          }
-          if(valid.length === 0) continue; // 無任何成績→排除
-          const avg = valid.reduce((a,b)=>a+b, 0) / valid.length;
+          const avg = calcHWSummary(scores, cols.length).avg;
           if(avg < threshold){
-            failing.push({ stu, avg, valid, scores, cols });
+            failing.push({ stu, avg, scores, cols });
           }
         }
 
@@ -13708,14 +13708,14 @@ elProgAdd?.addEventListener('click', ()=>{
 
         // 組 table rows
         let colHeaders = cols.map(c => `<th class="num">${escapeHTML(c)}</th>`).join('');
-        let rows = failing.map(({ stu, avg, valid, scores, cols: hwCols }) => {
+        let rows = failing.map(({ stu, avg, scores, cols: hwCols }) => {
           const gap = (threshold - avg).toFixed(1);
           const avgCell = `<td class="num warn-fail">${avg.toFixed(1)}<span class="warn-gap">(-${gap})</span></td>`;
           const subCells = hwCols.map((_, i) => {
             const v = scores[i];
             const n = Number(v);
             if(v === '' || v === null || v === undefined || !Number.isFinite(n)){
-              return `<td class="num warn-sub">—</td>`;
+              return `<td class="num warn-fail">0</td>`;
             }
             const cls2 = n < threshold ? 'warn-fail' : '';
             return `<td class="num ${cls2}">${n}</td>`;
@@ -13966,9 +13966,9 @@ elProgAdd?.addEventListener('click', ()=>{
       const rows = list.map(s=>{
         const arr=(hw.data[s.id]||[]).slice(0, hw.cols.length);
         while(arr.length<hw.cols.length) arr.push('');
-        const sum=arr.reduce((t,v)=> t + (Number.isFinite(Number(v))?Number(v):0), 0);
-        const cnt=arr.filter(v=> v!=='' && v!=null).length;
-        const avg=cnt? (sum/cnt) : 0;
+        const hwSummary = calcHWSummary(arr, hw.cols.length);
+        const sum = hwSummary.sum;
+        const avg = hwSummary.avg;
         const isHit = q && matchFilter(s, q);
         const noteVal = getNote(cls, s.id);
         const noteTag = noteVal
@@ -13995,10 +13995,9 @@ elProgAdd?.addEventListener('click', ()=>{
             const raw=inp.value.trim(); const val=raw===''? '' : Number(raw);
             const arr=hw.data[id] || (hw.data[id]=[]);
             arr[col]= (raw==='' ? '' : (Number.isFinite(val)?val:''));
-            const sum = (arr.slice(0, hw.cols.length)).reduce((t,v)=> t + (Number.isFinite(Number(v))? Number(v):0), 0);
-            const cnt = arr.slice(0, hw.cols.length).filter(v=> v!=='' && v!=null).length;
-            tr.querySelector('[data-sum]').textContent = sum;
-            tr.querySelector('[data-avg]').textContent = (cnt? (sum/cnt):0).toFixed(2);
+            const hwSummary = calcHWSummary(arr, hw.cols.length);
+            tr.querySelector('[data-sum]').textContent = hwSummary.sum;
+            tr.querySelector('[data-avg]').textContent = hwSummary.avg.toFixed(2);
             saveHWToLS(cls);
           });
         });
