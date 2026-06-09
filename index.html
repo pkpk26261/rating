@@ -2223,7 +2223,10 @@
     .viol-pending-col{ min-width:56px; text-align:center; }
     .viol-pending-cell{ text-align:center; vertical-align:middle; }
     .viol-pending-cb{ display:block; width:18px; height:18px; margin:0 auto; cursor:pointer; accent-color:#e5a000; }
-    #viol-table tbody tr.viol-pending-row{ background:rgba(255, 196, 0, .14); }
+    #viol-table tbody tr.viol-pending-row,
+    #viol-table tbody tr.viol-pending-row td{
+      background:rgba(255, 196, 0, .14) !important;
+    }
     #viol-table thead th.num:not(:last-child),
     #viol-table tbody td.num:not(:last-child){ text-align:center; }
     .viol-student-cell{ text-align:left; }
@@ -13361,14 +13364,22 @@ elProgAdd?.addEventListener('click', ()=>{
 
       elViolTable.innerHTML = th + `<tbody>${rows || '<tr><td colspan="999" class="hint">尚無學生資料</td></tr>'}</tbody>`;
 
+      function syncPendingCheckbox(cb){
+        if(!(cb instanceof HTMLInputElement)) return;
+        const id = cb.getAttribute('data-id') || '';
+        if(!id) return;
+        const checked = !!cb.checked;
+        const tr = cb.closest('tr');
+        if(tr) tr.classList.toggle('viol-pending-row', checked);
+        if(getViolationRecord(cls, id).pending !== checked){
+          setViolationPending(cls, id, checked);
+        }
+      }
+
       elViolTable.querySelectorAll('.viol-pending-cb[data-id]').forEach(cb=>{
-        cb.addEventListener('change', ()=>{
-          const id = cb.getAttribute('data-id') || '';
-          if(!id) return;
-          setViolationPending(cls, id, cb.checked);
-          const tr = cb.closest('tr');
-          if(tr) tr.classList.toggle('viol-pending-row', cb.checked);
-        });
+        cb.addEventListener('input', ()=> syncPendingCheckbox(cb));
+        cb.addEventListener('click', ()=> syncPendingCheckbox(cb));
+        cb.addEventListener('change', ()=> syncPendingCheckbox(cb));
       });
 
       elViolTable.querySelectorAll('.viol-btn[data-id][data-kind][data-delta]').forEach(btn=>{
