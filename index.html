@@ -2188,6 +2188,43 @@
       background:color-mix(in oklab, white 68%, var(--accent) 32%);
       box-shadow:0 2px 10px rgba(15,23,42,.08);
     }
+    #hw-pane .hwtbl-wrap,
+    #hw-pane .hwtbl-wrap.grabbing,
+    #hw-pane .hwtbl,
+    #hw-pane .hwtbl th,
+    #hw-pane .hwtbl td,
+    #hw-pane .hw-col .hw-col-head,
+    #hw-pane .hw-col .hw-col-head.hw-head-grabbable,
+    #hw-pane .hw-col .hw-col-head.hw-head-dragging,
+    #hw-pane .hw-col .hw-del-btn,
+    #hw-pane .hw-col .mini-btn,
+    #hw-pane .note-btn,
+    #hw-pane .btn,
+    #hw-pane .hw-class-select,
+    #hw-pane input,
+    #hw-col-action-bar,
+    #hw-col-action-bar .btn,
+    #hw-col-action-bar .hw-col-bar__cancel{
+      cursor:default;
+    }
+    #hw-pane .hw-col .hw-col-name{
+      cursor:pointer;
+    }
+    #hw-pane,
+    #hw-pane .hw-bar-label,
+    #hw-pane .hwtbl,
+    #hw-pane .hwtbl th,
+    #hw-pane .hwtbl td,
+    #hw-pane .hw-seattext{
+      -webkit-user-select:text;
+      user-select:text;
+    }
+    #hw-pane .hw-col .hw-col-head,
+    #hw-pane .hw-col .hw-col-head *,
+    #hw-pane .hw-col .hw-col-name{
+      -webkit-user-select:none;
+      user-select:none;
+    }
     .hwtbl th.hw-col.hw-dragging{ opacity:.45; }
     .hwtbl th.hw-col.hw-drag-over-before{ box-shadow: inset 3px 0 0 0 var(--accent); }
     .hwtbl th.hw-col.hw-drag-over-after{ box-shadow: inset -3px 0 0 0 var(--accent); }
