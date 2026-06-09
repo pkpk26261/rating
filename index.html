@@ -6915,6 +6915,7 @@
         const hadExistingClasses = existingOrder.length > 0;
         const prevSelectedClass = elSelect?.value || '';
         const existingClassNames = new Set(existingOrder.map(v=>String(v||'').trim()).filter(Boolean));
+        const allowSyncBootstrap = isSyncImport && existingClassNames.size === 0;
         if(!state.cadreOptions || typeof state.cadreOptions !== 'object') state.cadreOptions = {};
 
         // ★ 延遲清空進度：等確認有班級資料時才重設，避免純進度檔匯入時清掉原有班級
@@ -6986,7 +6987,18 @@
               const requested = String(rawName || className || '').trim();
               if(!requested) return '';
               if(isSyncImport){
-                return existingClassNames.has(requested) ? requested : '';
+                if(existingClassNames.has(requested)) return requested;
+                if(!allowSyncBootstrap) return '';
+                if(classNameByRaw.has(requested)) return classNameByRaw.get(requested);
+                let nextName = requested;
+                if(map[nextName]){
+                  const baseClassName = nextName;
+                  let suffix=2;
+                  while(map[baseClassName+'_'+suffix]) suffix++;
+                  nextName = baseClassName+'_'+suffix;
+                }
+                classNameByRaw.set(requested, nextName);
+                return nextName;
               }
               if(classNameByRaw.has(requested)) return classNameByRaw.get(requested);
               let nextName = requested;
@@ -7209,7 +7221,7 @@
         // 解析完後：確保進度物件結構正確
         ensureProgressState(true);
 
-        if(!hasClassData && !importedProgress && isSyncImport){
+        if(!hasClassData && !importedProgress && isSyncImport && !allowSyncBootstrap){
           throw new Error('試算表沒有符合本機既有班級的資料；同步載入不會新增班級。請先手動匯入乾淨名單建立班級。');
         }
         if(!hasClassData && !importedProgress){
@@ -7262,8 +7274,8 @@
           if(state.mode==='timer')    { try{ renderTimerUI?.(); }catch(e){} }
           saveNotes();
           const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
-          const importVerb = isSyncImport ? '已同步更新' : '已匯入';
-          const importTail = isSyncImport ? '，未新增班級。' : '，並加入班級列表。';
+          const importVerb = isSyncImport ? (allowSyncBootstrap ? '已從試算表載入' : '已同步更新') : '已匯入';
+          const importTail = isSyncImport ? (allowSyncBootstrap ? '。' : '，未新增班級。') : '，並加入班級列表。';
           setStatus(`${importVerb} ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案）${importTail}`);
           saveSession('after import');
         }
@@ -7911,6 +7923,7 @@
         const data = await gsParseResponse(res);
         if(!data.ok) throw new Error(data.error || '下載失敗');
         const sheetsObj = data.sheets || {};
+        const hadLocalClassesBeforeDownload = !!(state.classOrder && state.classOrder.length);
         // ★ 先從 __CLASS_META__ 分頁還原幹部選項
         const metaRows = sheetsObj['__CLASS_META__'];
         const syncNameMap = {};
@@ -7958,7 +7971,12 @@
         gsConfig.lastSync = Date.now();
         gsSaveConfig();
         gsUpdateLastSyncLabel();
-        gsSetSyncStatus('已從試算表下載並更新既有班級，未新增班級。', 'ok');
+        gsSetSyncStatus(
+          hadLocalClassesBeforeDownload
+            ? '已從試算表下載並更新既有班級，未新增班級。'
+            : '已從試算表下載並載入班級資料。',
+          'ok'
+        );
         return true;
       }catch(err){
         gsSetSyncStatus('下載失敗：' + gsFriendlyError(err), 'error');
