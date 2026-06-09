@@ -6882,10 +6882,30 @@
       return 0; // 找不到就退回第一列
     }
 
+    function findClassColumnIndex(header){
+      return header.findIndex(h => /^班級$|^class$|^班級名稱$|^class\s*name$/i.test(String(h||'').trim()));
+    }
+
+    function validateCleanRosterHeader(header){
+      const allowed = new Set(['班級', '座號', '姓名']);
+      const nonEmpty = header.map(v=>String(v||'').trim()).filter(Boolean);
+      const unknown = nonEmpty.filter(h => !allowed.has(h));
+      const hasName = nonEmpty.includes('姓名');
+      const hasSeat = nonEmpty.includes('座號');
+      return {
+        ok: unknown.length === 0 && hasName && hasSeat,
+        unknown,
+        hasClass: nonEmpty.includes('班級')
+      };
+    }
+
     /* ★ 多檔匯入入口 */
-    async function handleFiles(fileList){
+    async function handleFiles(fileList, opts={}){
       const files = Array.from(fileList);
       if(files.length === 0) return;
+      const importSource = opts.source === 'sync' ? 'sync' : 'manual';
+      const isSyncImport = importSource === 'sync';
+      const isManualImport = !isSyncImport;
       // 只有一個檔案且其中有多個工作表→沿用原本「每個工作表＝一個班級」邏輯
       // 多個檔案→每個檔案的第一個資料工作表＝一個班級，用檔名命名
       try{
@@ -6931,7 +6951,12 @@
 
             // ★ 智慧標頭偵測（自動跳過標題列）
             const headerRowIdx = detectHeaderRow(rows);
-            const header=rows[headerRowIdx].map(v=>String(v||'').trim());
+            const header=rows[headerRowIdx].map(v=>String(v||'').replace(/^\uFEFF/, '').trim());
+            const cleanRoster = validateCleanRosterHeader(header);
+            if(isManualImport && !cleanRoster.ok){
+              const extra = cleanRoster.unknown.length ? `多出的欄位：${cleanRoster.unknown.join('、')}` : '必須包含「座號」與「姓名」欄位';
+              throw new Error(`手動匯入檔案需要是乾淨名單，只能包含「班級、座號、姓名」欄位。${extra}`);
+            }
 
             // ★ 決定班級名稱
             let className;
@@ -6950,17 +6975,27 @@
               // 單檔匯入：工作表名稱即班級名稱（原始行為）
               className = sheetName;
             }
-            // 避免班級名稱重複
-            if(map[className] || existingClassNames.has(className)){
-              const baseClassName = className;
-              let suffix=2;
-              while(map[baseClassName+'_'+suffix] || existingClassNames.has(baseClassName+'_'+suffix)) suffix++;
-              className = baseClassName+'_'+suffix;
-            }
+
+            const classIdx = findClassColumnIndex(header);
+            const classNameByRaw = new Map();
+            const resolveClassName = (rawName)=>{
+              const requested = String(rawName || className || '').trim();
+              if(!requested) return '';
+              if(isSyncImport){
+                return existingClassNames.has(requested) ? requested : '';
+              }
+              if(classNameByRaw.has(requested)) return classNameByRaw.get(requested);
+              let nextName = requested;
+              if(map[nextName] || existingClassNames.has(nextName)){
+                const baseClassName = nextName;
+                let suffix=2;
+                while(map[baseClassName+'_'+suffix] || existingClassNames.has(baseClassName+'_'+suffix)) suffix++;
+                nextName = baseClassName+'_'+suffix;
+              }
+              classNameByRaw.set(requested, nextName);
+              return nextName;
+            };
             const classMeta = parseClassMetaRows(rows, headerRowIdx);
-            if(Array.isArray(classMeta.cadreOptions)){
-              state.cadreOptions[className] = uniqCadreTitles(classMeta.cadreOptions);
-            }
 
             const idIdx=findIdColumnIndex(header);
             const seatIdx=findSeatColumnIndex(header);
@@ -7005,69 +7040,87 @@
               header.forEach((h,i)=>{ if(/^(作業)\s*(\d+)$/i.test(h) || /^HW\s*(\d+)$/i.test(h)) hwCols.push({name:h, idx:i}); });
             }
 
-            const pendingCoords=[]; let maxR=0, maxC=0;
-            const list=[];
-            const pendingGroups = new Map(); // id => groupName
-            if(!state.hw[className]) state.hw[className]={ cols: hwCols.map(c=>c.name), data:{} };
-            // ★ 若匯入的作業欄數 > 現有欄數，則同步更新欄位名稱
-            if(hwCols.length > 0){
-              const existing = state.hw[className];
-              if(hwCols.length >= existing.cols.length){
-                existing.cols = hwCols.map(c=>c.name);
+            const importClassData = new Map();
+            function ensureImportClassData(targetClassName){
+              if(!importClassData.has(targetClassName)){
+                importClassData.set(targetClassName, {
+                  pendingCoords: [],
+                  maxR: 0,
+                  maxC: 0,
+                  list: [],
+                  pendingGroups: new Map()
+                });
+                if(Array.isArray(classMeta.cadreOptions)){
+                  state.cadreOptions[targetClassName] = uniqCadreTitles(classMeta.cadreOptions);
+                }
+                if(!state.hw[targetClassName]) state.hw[targetClassName]={ cols: hwCols.map(c=>c.name), data:{} };
+                // ★ 若匯入的作業欄數 > 現有欄數，則同步更新欄位名稱
+                if(hwCols.length > 0){
+                  const existing = state.hw[targetClassName];
+                  if(hwCols.length >= existing.cols.length){
+                    existing.cols = hwCols.map(c=>c.name);
+                  }
+                }
+                ensureCadreOptions(targetClassName);
               }
+              return importClassData.get(targetClassName);
             }
-            ensureCadreOptions(className);
 
             for(let r=headerRowIdx+1; r<rows.length; r++){
               const row=rows[r]; if(!row||row.length===0) continue;
+              const targetClassName = resolveClassName(classIdx >= 0 ? row[classIdx] : className);
+              if(!targetClassName) continue;
+              const classData = ensureImportClassData(targetClassName);
               const name=String(row[nameIdx]??'').trim(); if(!name) continue;
               const seat=seatIdx>=0?String(row[seatIdx]??'').trim():'';
               const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
-              const id = sid ? `SID__${sid}` : makeFallbackId(className, seat, name);
+              const id = sid ? `SID__${sid}` : makeFallbackId(targetClassName, seat, name);
               const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
-              list.push({id,sid,name, seat, titles, row:r+1, sheet:className});
+              classData.list.push({id,sid,name, seat, titles, row:r+1, sheet:targetClassName});
 
               // 備註（可選）：不論是否為空都更新，確保在試算表刪除備註後能同步清除
               if(noteIdx>=0){
                 const note = String(row[noteIdx]??'').trim();
-                setNote(className, id, note);
+                setNote(targetClassName, id, note);
               }
 
               if(seatRIdx>=0 && seatCIdx>=0){
                 const rr=Number(row[seatRIdx]); const cc=Number(row[seatCIdx]);
                 if(Number.isFinite(rr)&&Number.isFinite(cc)&&rr>=1&&rr<=9&&cc>=1&&cc<=9){
-                  pendingCoords.push({rr,cc,id}); maxR=Math.max(maxR,rr); maxC=Math.max(maxC,cc);
+                  classData.pendingCoords.push({rr,cc,id});
+                  classData.maxR=Math.max(classData.maxR,rr);
+                  classData.maxC=Math.max(classData.maxC,cc);
                 }
               }
 
               if (scoreIdx >= 0){
                 const sc = Number(row[scoreIdx]);
                 if (Number.isFinite(sc)){
-                  setScore(className, id, sc);
-                }else if (!hasScore(className, id)){
+                  setScore(targetClassName, id, sc);
+                }else if (!hasScore(targetClassName, id)){
                   const legacy = Number(state.legacyScores?.[id]);
-                  if (Number.isFinite(legacy)) setScore(className, id, legacy);
-                  else setScore(className, id, 0);
+                  if (Number.isFinite(legacy)) setScore(targetClassName, id, legacy);
+                  else setScore(targetClassName, id, 0);
                 }
               }else{
-                if (!hasScore(className, id)){
+                if (!hasScore(targetClassName, id)){
                   const legacy = Number(state.legacyScores?.[id]);
-                  if (Number.isFinite(legacy)) setScore(className, id, legacy);
-                  else setScore(className, id, 0);
+                  if (Number.isFinite(legacy)) setScore(targetClassName, id, legacy);
+                  else setScore(targetClassName, id, 0);
                 }
               }
 
-              if(sid) state.sidMap[id]={sid, sheet:className, seat, name};
+              if(sid) state.sidMap[id]={sid, sheet:targetClassName, seat, name};
 
               // 分組資料
               if(groupIdx >= 0){
                 const gLabel = String(row[groupIdx]??"").trim();
-                if(gLabel) pendingGroups.set(id, gLabel);
+                if(gLabel) classData.pendingGroups.set(id, gLabel);
               }
 
               if(hwCols.length){
                 const arr=[]; hwCols.forEach((c,ci)=>{ const v=row[c.idx]; const n=(v===''||v==null)?'':Number(v); arr[ci]=(Number.isFinite(n)?n:''); });
-                state.hw[className].data[id]=arr;
+                state.hw[targetClassName].data[id]=arr;
               }
 
               if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0 || violSpecialEntriesIdx >= 0 || violPendingIdx >= 0){
@@ -7107,33 +7160,35 @@
                   }
                 }
 
-                setViolationRecord(className, id, rec);
+                setViolationRecord(targetClassName, id, rec);
               }
             }
 
-            if(!hwCols.length){ loadHWFromLS(className); }
+            for(const [targetClassName, classData] of importClassData){
+              if(!hwCols.length){ loadHWFromLS(targetClassName); }
 
-            const rowsCnt=clampSize(maxR||6); const colsCnt=clampSize(maxC||6);
-            const seatMapForSheet={};
-            for(const {rr,cc,id} of pendingCoords){
-              const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1; seatMapForSheet[rTop+'-'+cLeft]=id;
-            }
-            if(Object.keys(seatMapForSheet).length){ state.seating[className]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet}; }
-
-            if(list.length){ map[className]=list; order.push(className); }
-
-            // ★ 重建分組資料
-            if(pendingGroups.size > 0){
-              const groupNameOrder = [];
-              const groupMap = new Map(); // groupName => [id, ...]
-              for(const [id, gName] of pendingGroups){
-                if(!groupMap.has(gName)){ groupNameOrder.push(gName); groupMap.set(gName, []); }
-                groupMap.get(gName).push(id);
+              const rowsCnt=clampSize(classData.maxR||6); const colsCnt=clampSize(classData.maxC||6);
+              const seatMapForSheet={};
+              for(const {rr,cc,id} of classData.pendingCoords){
+                const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1; seatMapForSheet[rTop+'-'+cLeft]=id;
               }
-              state.group[className] = {
-                groups: groupNameOrder.map(n => groupMap.get(n)),
-                groupNames: groupNameOrder
-              };
+              if(Object.keys(seatMapForSheet).length){ state.seating[targetClassName]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet}; }
+
+              if(classData.list.length){ map[targetClassName]=classData.list; order.push(targetClassName); }
+
+              // ★ 重建分組資料
+              if(classData.pendingGroups.size > 0){
+                const groupNameOrder = [];
+                const groupMap = new Map(); // groupName => [id, ...]
+                for(const [id, gName] of classData.pendingGroups){
+                  if(!groupMap.has(gName)){ groupNameOrder.push(gName); groupMap.set(gName, []); }
+                  groupMap.get(gName).push(id);
+                }
+                state.group[targetClassName] = {
+                  groups: groupNameOrder.map(n => groupMap.get(n)),
+                  groupNames: groupNameOrder
+                };
+              }
             }
           });
         }
@@ -7150,6 +7205,9 @@
         // 解析完後：確保進度物件結構正確
         ensureProgressState(true);
 
+        if(!hasClassData && !importedProgress && isSyncImport){
+          throw new Error('試算表沒有符合本機既有班級的資料；同步載入不會新增班級。請先手動匯入乾淨名單建立班級。');
+        }
         if(!hasClassData && !importedProgress){
           throw new Error('沒有偵測到任何班級或教學進度資料');
         }
@@ -7200,10 +7258,17 @@
           if(state.mode==='timer')    { try{ renderTimerUI?.(); }catch(e){} }
           saveNotes();
           const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
-          setStatus(`已匯入 ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案），並加入班級列表。`);
+          const importVerb = isSyncImport ? '已同步更新' : '已匯入';
+          const importTail = isSyncImport ? '，未新增班級。' : '，並加入班級列表。';
+          setStatus(`${importVerb} ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案）${importTail}`);
           saveSession('after import');
         }
-      }catch(err){ alert('解析失敗：'+err.message); setStatus('解析失敗'); }
+        return true;
+      }catch(err){
+        alert('解析失敗：'+err.message);
+        setStatus('解析失敗');
+        return false;
+      }
     }
 
     /* ★ 保留單檔相容入口 */
@@ -7796,7 +7861,7 @@
           sheets[name] = buildProgressAOA(pageName);
         }
       }catch(e){ console.warn('上傳教學進度失敗', e); }
-      const payload = { token: gsConfig.token, action: 'upload', sheets };
+      const payload = { token: gsConfig.token, action: 'upload', sheets, replaceManagedSheets: true };
       if(!silent) gsSetSyncStatus('上傳中…', '');
       try{
         const res = await fetch(gsConfig.url, {
@@ -7869,13 +7934,17 @@
         const buf = XLSX.write(wb, { type:'array', bookType:'xlsx' });
         const file = new File([buf], 'GoogleSheets.xlsx',
           { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        await handleFiles([file]);
+        const imported = await handleFiles([file], { source: 'sync' });
+        if(!imported){
+          gsSetSyncStatus('下載未完成：試算表沒有符合本機既有班級的資料，未新增班級。', 'error');
+          return false;
+        }
         // 匯入後立刻持久化，避免重新整理時還原到舊的作業欄名。
         saveSessionNow();
         gsConfig.lastSync = Date.now();
         gsSaveConfig();
         gsUpdateLastSyncLabel();
-        gsSetSyncStatus(`已從試算表下載 ${names.length} 個班級。`, 'ok');
+        gsSetSyncStatus('已從試算表下載並更新既有班級，未新增班級。', 'ok');
         return true;
       }catch(err){
         gsSetSyncStatus('下載失敗：' + gsFriendlyError(err), 'error');
@@ -8011,6 +8080,26 @@ function doPost(e) {
     }
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheets = payload.sheets || {};
+    if (payload.replaceManagedSheets === true) {
+      const keepNames = Object.keys(sheets);
+      const keep = {};
+      keepNames.forEach(function (name) { keep[name] = true; });
+      const deletable = ss.getSheets().filter(function (sh) {
+        if (keep[sh.getName()]) return false;
+        const values = sh.getDataRange().getValues();
+        if (!values || !values.length) return false;
+        const first = String(values[0][0] || '').trim();
+        const header = (values[0] || []).map(function (v) { return String(v || '').trim(); });
+        const isManaged =
+          first === '__CLASS_META__' ||
+          first.replace(/\s+/g, '') === '教學進度' ||
+          (header.indexOf('姓名') >= 0 && header.indexOf('座號') >= 0);
+        return isManaged;
+      });
+      deletable.forEach(function (sh) {
+        if (ss.getSheets().length > 1) ss.deleteSheet(sh);
+      });
+    }
     Object.keys(sheets).forEach(function (name) {
       const aoa = sheets[name];
       if (!aoa || !aoa.length) return;
@@ -13235,20 +13324,18 @@ elProgAdd?.addEventListener('click', ()=>{
 
     /* ===== ★ 產生範例 Excel：2 個班級 × 各 30 位 ===== */
     function buildSampleSheet(classKey, sheetName){
-      // 使用系統既有的欄位名稱常數，避免打錯
-      const header = ['學號','座號','姓名','加扣分','座位列','座位欄','作業1','備註'];
+      // 手動匯入範例維持乾淨名單，只放班級、座號、姓名。
+      const header = ['班級','座號','姓名'];
       const aoa = [header];
 
       for(let i=1;i<=30;i++){
         const seat = i;                                    // 座號 1~30
-        const sid  = `${classKey}${String(i).padStart(3,'0')}`; // 學號：A001/B001...，跨班不會重複
         const name = `學生${String(i).padStart(2,'0')}`;        // 姓名：學生01 ~ 學生30
-        // 分數/作業/座位列/座位欄 先留空，使用者可自行填
-        aoa.push([sid, seat, name, '', '', '', '', '']);
+        aoa.push([sheetName, seat, name]);
       }
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols'] = [{wch:12},{wch:6},{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+      ws['!cols'] = [{wch:12},{wch:6},{wch:12}];
       return { ws, sheetName };
     }
 
