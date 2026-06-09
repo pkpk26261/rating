@@ -6906,6 +6906,7 @@
       const importSource = opts.source === 'sync' ? 'sync' : 'manual';
       const isSyncImport = importSource === 'sync';
       const isManualImport = !isSyncImport;
+      const syncNameMap = (opts.syncNameMap && typeof opts.syncNameMap === 'object') ? opts.syncNameMap : {};
       // 只有一個檔案且其中有多個工作表→沿用原本「每個工作表＝一個班級」邏輯
       // 多個檔案→每個檔案的第一個資料工作表＝一個班級，用檔名命名
       try{
@@ -6974,6 +6975,9 @@
             }else{
               // 單檔匯入：工作表名稱即班級名稱（原始行為）
               className = sheetName;
+            }
+            if(isSyncImport && syncNameMap[className]){
+              className = syncNameMap[className];
             }
 
             const classIdx = findClassColumnIndex(header);
@@ -7909,17 +7913,27 @@
         const sheetsObj = data.sheets || {};
         // ★ 先從 __CLASS_META__ 分頁還原幹部選項
         const metaRows = sheetsObj['__CLASS_META__'];
+        const syncNameMap = {};
         if(Array.isArray(metaRows)){
           metaRows.slice(1).forEach(row=>{
             const cls = String(row[0] || '').trim();
             const raw = String(row[1] || '').trim();
-            if(!cls || !raw) return;
+            if(!cls) return;
+            syncNameMap[safeSheetName(cls)] = cls;
+            syncNameMap[cls] = cls;
+            if(!raw) return;
             try{
               const opts = JSON.parse(raw);
               if(Array.isArray(opts)) state.cadreOptions[cls] = uniqCadreTitles(opts);
             }catch(e){}
           });
         }
+        (state.classOrder || []).forEach(cls=>{
+          const name = String(cls || '').trim();
+          if(!name) return;
+          if(!syncNameMap[safeSheetName(name)]) syncNameMap[safeSheetName(name)] = name;
+          if(!syncNameMap[name]) syncNameMap[name] = name;
+        });
         const names = Object.keys(sheetsObj).filter(n => n !== '__CLASS_META__' && Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
         if(names.length === 0){
           gsSetSyncStatus('試算表沒有可匯入的班級資料。', 'error');
@@ -7934,7 +7948,7 @@
         const buf = XLSX.write(wb, { type:'array', bookType:'xlsx' });
         const file = new File([buf], 'GoogleSheets.xlsx',
           { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const imported = await handleFiles([file], { source: 'sync' });
+        const imported = await handleFiles([file], { source: 'sync', syncNameMap });
         if(!imported){
           gsSetSyncStatus('下載未完成：試算表沒有符合本機既有班級的資料，未新增班級。', 'error');
           return false;
