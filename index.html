@@ -620,7 +620,6 @@
     }
 
     /* 匯出 / 清除按鈕隱藏 */
-    body.no-data #btn-onboarding,
     body.no-data #btn-manual-sync,
     body.no-data #btn-reset{
       display:none !important;
@@ -689,7 +688,8 @@
     .welcome-shell{
       position:relative;
       display:grid;
-      grid-template-columns:minmax(300px, .96fr) minmax(380px, 1.34fr);
+      grid-template-columns:minmax(0, 760px);
+      justify-content:center;
       gap:20px;
       width:100%;
       min-height:100%;
@@ -820,6 +820,11 @@
       color:color-mix(in oklab, var(--fg) 78%, var(--muted));
       font-size:15px;
       line-height:1.75;
+    }
+    .welcome-sub__sync{
+      display:block;
+      color:#facc15;
+      font-weight:800;
     }
     .welcome-quick-actions{
       display:flex;
@@ -965,7 +970,7 @@
     }
     .onboarding-progress{
       display:grid;
-      grid-template-columns:repeat(4, minmax(0, 1fr));
+      grid-template-columns:repeat(3, minmax(0, 1fr));
       gap:10px;
       margin-bottom:18px;
     }
@@ -5379,7 +5384,6 @@
         <!-- ★ 新增主題切換按鈕 -->
         <!-- ★ 日期時間（民國年 + 24 小時） -->
         <div class="topbar__right-actions">
-            <button id="btn-onboarding" class="btn" title="開啟使用導覽">🧭 導覽</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
           <button id="btn-manual-sync" class="btn" title="匯出目前所有班級的成績">💾 匯出</button>
         </div>
@@ -5459,12 +5463,12 @@
                 <div class="welcome-mark">
                   <div class="welcome-icon"><img src="icon.png" alt="成績系統圖示"></div>
                   <div class="welcome-copy">
-                    <h2 class="welcome-title">先匯入檔案<br><strong>再開始記錄</strong></h2>
-                    <p class="welcome-sub">匯入檔案後，會直接新增到班級列表。沒有檔案時，先用範例檔也可以；需要備份時再設定 Google 同步。</p>
+                    <h2 class="welcome-title">先匯入名單<br><strong>再開始記錄</strong></h2>
+                    <p class="welcome-sub">有 Excel/CSV 就直接匯入；沒有名單可先用範例檔試試。<span class="welcome-sub__sync">同步是備份功能，需要時再設定。</span></p>
                   </div>
                 </div>
                 <div class="welcome-quick-actions">
-                  <button class="btn primary" type="button" data-onboarding-action="import">📂 立即匯入檔案</button>
+                  <button class="btn primary" id="btn-welcome-import" type="button">📂 立即匯入檔案</button>
                   <button class="btn" id="btn-welcome-sample" type="button">📥 下載範例檔</button>
                 </div>
               </div>
@@ -5484,19 +5488,6 @@
               </div>
             </aside>
 
-            <section class="welcome-stage" aria-label="新手導覽內容">
-              <div class="onboarding-surface">
-                <div class="onboarding-surface__head">
-                  <div>
-                    <p class="onboarding-eyebrow">首次使用流程</p>
-                    <h3 class="onboarding-heading">照順序做，就能開始使用</h3>
-                  </div>
-                </div>
-                <div id="onboarding-inline-root" class="onboarding-root onboarding-root--loading" data-onboarding-context="inline">
-                  <p>正在準備新的導覽內容…</p>
-                </div>
-              </div>
-            </section>
           </div>
         </div>
 
@@ -6113,23 +6104,6 @@
       <div class="gs-loading-spinner" aria-hidden="true"></div>
       <h3 id="gs-loading-title" class="gs-loading-title">正在從 Google 試算表載入最新資料…</h3>
       <p id="gs-loading-desc" class="gs-loading-desc">載入完成前將暫停操作，請稍候。</p>
-    </div>
-  </div>
-
-  <div id="onboarding-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-    <div class="modal onboarding-modal" role="document">
-      <header>
-        <div>
-          <p class="onboarding-modal__eyebrow">新手導覽</p>
-          <h3 id="onboarding-title" class="onboarding-modal__title">成績管理系統上手流程</h3>
-        </div>
-        <button id="onboarding-close" class="close" aria-label="關閉導覽">✕</button>
-      </header>
-      <div class="content">
-        <div id="onboarding-modal-root" class="onboarding-root onboarding-root--loading onboarding-root--modal" data-onboarding-context="modal">
-          <p>正在準備新的導覽內容…</p>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -7291,10 +7265,13 @@
 
       if(hasClasses){
         renderStudents(activeClass);
-      }else if(state.mode === 'list'){
-        renderStudents('');
-      }else if(typeof hideWelcomeGuide === 'function'){
-        hideWelcomeGuide();
+      }else{
+        if(typeof setMode === 'function'){
+          setMode('list');
+        }else{
+          renderStudents('');
+        }
+        return activeClass;
       }
 
       renderLeaderboard(activeClass);
@@ -8383,7 +8360,7 @@ function jsonOut(obj) {
 
     elReset?.addEventListener('click', openClearModal);
 
-    clearGo.addEventListener('click', ()=>{
+    clearGo.addEventListener('click', async ()=>{
       const picked = [...clearMask.querySelectorAll('.clear-cb:checked')].map(cb=>cb.value);
       if(!picked.length){ alert('請至少勾選一個要清除的項目'); return; }
 
@@ -8403,7 +8380,13 @@ function jsonOut(obj) {
           confirmMsg += `\n（已開啟自動載入，下次開啟頁面可能會從試算表重新下載這些資料。）`;
         }
       }
-      if(!confirm(confirmMsg)){ return; }
+      const ok = await safeConfirmDialog({
+        title: '確認清除資料',
+        message: confirmMsg,
+        okText: '確認清除',
+        cancelText: '取消'
+      });
+      if(!ok){ return; }
 
       // ★ 清除期間暫停自動上傳，並取消已排程的上傳，避免把清空資料覆蓋到 Google 試算表
       _gsSuppressAutoUpload = true;
@@ -12865,26 +12848,28 @@ elProgAdd?.addEventListener('click', ()=>{
 
 
     /* ★ 歡迎引導按鈕 */
+    document.getElementById('btn-welcome-import')?.addEventListener('click', ()=>{
+      document.getElementById('file-input')?.click();
+    });
     document.getElementById('btn-welcome-sample')?.addEventListener('click', ()=>{ downloadSampleWorkbook(); });
 
     function hideWelcomeGuide(){
       const g = document.getElementById('welcome-guide');
       if(g) g.style.display = 'none';
-      window._closeOnboarding?.();
     }
     function showWelcomeGuide(){
       const g = document.getElementById('welcome-guide');
       if(g) g.style.display = '';
-      window._refreshOnboarding?.({ resetForEmpty:true });
     }
 
-    /* ===== 全新新手導覽（空狀態 + 可重開教學視窗） ===== */
+    /* ===== 舊導覽已停用，保留空狀態匯入入口即可 ===== */
     (function initOnboarding(){
+      return;
       const inlineRoot = document.getElementById('onboarding-inline-root');
       const modalRoot = document.getElementById('onboarding-modal-root');
-      const onboardingMask = document.getElementById('onboarding-mask');
+      const onboardingMask = document.getElementById('disabled-guide-mask');
       const onboardingClose = document.getElementById('onboarding-close');
-      const onboardingBtn = document.getElementById('btn-onboarding');
+      const onboardingBtn = document.getElementById('disabled-onboarding-button');
       const fileInput = document.getElementById('file-input');
       const onboardingState = { step:0 };
 
@@ -12892,153 +12877,139 @@ elProgAdd?.addEventListener('click', ()=>{
         return !!(state.classOrder && state.classOrder.length);
       }
 
-      function currentSyncInfo(){
-        if(gsReady()){
-          return {
-            tone: 'success',
-            label: '已設定同步',
-            text: gsConfig.lastSync ? `上次同步：${gsFormatTime(gsConfig.lastSync)}` : '已可開始同步'
-          };
-        }
-        return {
-          tone: 'warn',
-          label: '未設定同步',
-          text: '要備份或換電腦時，再回來設定即可。'
-        };
-      }
-
       function buildOnboardingSteps(){
         const imported = hasImportedData();
-        const syncInfo = currentSyncInfo();
+        const selectedClass = imported ? (elSelect?.value || state.classOrder?.[0] || '') : '';
+        const syncReminder = gsReady()
+          ? `Google 同步已設定${gsConfig.lastSync ? `，上次同步：${gsFormatTime(gsConfig.lastSync)}` : '，需要時可手動上傳。'}`
+          : '資料預設只存在這台瀏覽器；需要備份或換電腦時，再設定 Google 試算表同步。';
 
         return [
           {
-            label: '匯入檔案',
-            short: '直接加入班級列表',
-            eyebrow: 'Step 1 · 匯入檔案',
-            title: '匯入後會直接加入班級列表',
-            desc: '有 Excel 或 CSV 就直接匯入。系統會把檔案直接加到班級列表；還沒準備好檔案時，先用範例檔也可以。',
-            features: [
-              { icon:'📂', title:'匯入檔案', text:'支援 Excel、CSV，也可以直接拖放。' },
-              { icon:'📋', title:'直接加入列表', text:'每個匯入的檔案會直接出現在班級列表。' }
-            ],
+            label: '準備名單',
+            short: '有名單就匯入',
+            eyebrow: 'Step 1 · 準備名單',
+            title: imported ? '名單已匯入，也能再加入其他班級' : '先準備班級名單',
+            desc: imported
+              ? '目前已經有班級資料。若還有其他班級，可以繼續匯入 Excel 或 CSV。'
+              : '有正式 Excel/CSV 就直接匯入；沒有名單時，可以先下載範例檔試試看。',
+            features: imported
+              ? [
+                  { icon:'✅', title:'已有資料', text:`目前共有 ${state.classOrder.length} 個班級。` },
+                  { icon:'📂', title:'可再匯入', text:'其他班級檔案也可以繼續加入列表。' }
+                ]
+              : [
+                  { icon:'📂', title:'正式名單', text:'支援 Excel、CSV，也可以直接拖放到頁面。' },
+                  { icon:'📥', title:'沒有名單', text:'先下載範例檔，再匯入回系統看畫面。' }
+                ],
             spotlight: {
-              pill: { tone:'success', label:'最快開始方式' },
-              title: '先把檔案匯進來',
-              text: '有正式檔案就直接匯入；沒有的話先用範例檔。',
+              pill: imported ? { tone:'success', label:'已有班級資料' } : { tone:'success', label:'第一件事' },
+              title: imported ? '這一步已完成' : '先從名單開始',
+              text: imported ? '你可以直接到下一步確認目前要操作的班級。' : '正式名單優先；範例檔只是讓你先熟悉畫面。',
               bullets: [
-                '多個檔案可以一次匯入。',
-                '匯入後會直接新增到班級列表。'
-              ]
-            },
-            note: {
-              tone: 'info',
-              title: '匯入後',
-              text: '班級列表會更新，系統也會直接切到可操作狀態。'
-            },
-            actionHint: '現在匯入檔案，或先下載範例檔。',
-            actions: [
-              { label:'📂 立即匯入檔案', action:'import', primary:true },
-              { label:'📥 下載範例檔', action:'sample' }
-            ],
-            footer: '先把資料帶進來，後面的功能才會開始顯示。'
-          },
-          {
-            label: '先試跑',
-            short: '先用範例檔看畫面',
-            eyebrow: 'Step 2 · 先試跑',
-            title: '沒有名單就先用範例檔',
-            desc: '先下載範例檔，再匯入回系統，就能直接看到完整畫面。',
-            features: [
-              { icon:'📥', title:'先下載範例檔', text:'範例檔內有兩個班級，可直接測試。' },
-              { icon:'👀', title:'先看畫面', text:'可以先看班級切換、排行榜和基本操作。' }
-            ],
-            spotlight: {
-              pill: imported ? { tone:'success', label:'目前已有班級資料' } : { tone:'warn', label:'尚未匯入任何班級' },
-              title: imported ? '這一步可跳過' : '先下載，再匯入',
-              text: imported ? '你已經有資料，可以直接進下一步。' : '下載範例檔後，再用匯入功能帶回系統。',
-              bullets: [
-                '下載後要再匯入一次。',
-                '範例檔不會自動同步到 Google。'
-              ]
-            },
-            note: {
-              tone: imported ? 'success' : 'info',
-              title: '重點',
-              text: '這一步只是先看流程，不是一定要做。'
-            },
-            actionHint: imported ? '已有資料可直接略過，或用範例檔做展示。' : '先下載範例檔，再按匯入看畫面。',
-            actions: [
-              { label:'📥 下載範例檔', action:'sample', primary:true },
-              { label:'📂 匯入正式名單', action:'import' }
-            ],
-            footer: '想先看畫面，用範例檔最快。'
-          },
-          {
-            label: 'Google 同步',
-            short: '要備份再設定',
-            eyebrow: 'Step 3 · Google 試算表同步',
-            title: '要備份時，再開同步',
-            desc: '不急著同步可以先略過。需要時再照這 4 步做：開試算表、開 Apps Script、部署、貼回網址和密碼。',
-            features: [
-              { icon:'1', title:'先開 Apps Script', text:'在 Google 試算表上方選單打開 Apps Script。' },
-              { icon:'2', title:'部署後貼回來', text:'部署完成後，把網址和同步密碼貼回這裡。' }
-            ],
-            spotlight: {
-              pill: syncInfo,
-              title: gsReady() ? '同步已可用' : '設定一次就好',
-              text: gsReady() ? '你已設定好同步，需要時可手動上傳，或開啟自動同步。' : '設定完成後，就能把資料備份到 Google 試算表。',
-              bullets: [
-                '上傳：把本機資料送到試算表。',
-                '下載：會用試算表覆蓋本機資料。'
+                '匯入後，班級會直接出現在列表。',
+                '範例檔下載後，也要再匯入一次。'
               ]
             },
             note: {
               tone: 'warn',
-              title: '先記住這件事',
-              text: '從試算表下載，會覆蓋目前這台電腦上的資料。'
+              title: '資料位置',
+              text: '資料預設只存在這台瀏覽器；需要備份或換電腦時，再設定 Google 試算表同步。'
             },
-            actionHint: '要備份時，再打開同步設定填網址與密碼。',
+            actionHint: imported ? '要加入其他班級，可以繼續匯入。' : '先匯入正式名單；只是想看畫面，就下載範例檔。',
             actions: [
-              { label:'☁️ 打開同步設定', action:'open-gsheet', primary:true }
+              { label:'📂 立即匯入檔案', action:'import', primary:true },
+              { label:'📥 下載範例檔', action:'sample' }
             ],
-            footer: '先在單一電腦使用也沒問題，之後再補同步即可。'
+            footer: syncReminder
           },
           {
-            label: '開始使用',
-            short: '匯入後就開始記錄',
-            eyebrow: 'Step 4 · 開始使用',
-            title: imported ? '現在就可以開始記錄' : '匯入後就可以開始記錄',
-            desc: imported ? '你現在可以開始加扣分、記作業和記違規。要複習流程時，再打開右上角導覽。' : '先匯入一份名單，畫面就會切到正式使用狀態。',
-            features: [
-              { icon:'⭐', title:'先從加扣分開始', text:'匯入後可先用最常用的加扣分與排行榜。' },
-              { icon:'🧭', title:'導覽可重開', text:'之後隨時都能再看，不只第一次出現。' }
-            ],
-            spotlight: {
-              pill: imported ? { tone:'success', label:'已可開始正式使用' } : { tone:'warn', label:'尚未匯入班級資料' },
-              title: imported ? '可以直接開始' : '下一步就是匯入',
-              text: imported ? '如果之後要備份或換電腦，再回來設定 Google 同步。' : '有名單先匯入；沒有名單就先用範例檔。',
-              bullets: [
-                '匯入後就能開始記錄。',
-                '需要時再回來設定同步。'
-              ]
-            },
-            note: {
-              tone: imported ? 'success' : 'info',
-              title: imported ? '小提醒' : '開始前',
-              text: imported ? '如果已設定同步，建議先手動上傳一次確認沒問題。' : '同步不是前置條件，可以晚一點再設定。'
-            },
-            actionHint: imported ? '可以直接開始工作，或先去看 Google 同步設定。' : '現在先匯入檔案，之後再決定要不要同步。',
-            actions: imported
+            label: '選班級',
+            short: imported ? (selectedClass || '確認班級列表') : '匯入後再選',
+            eyebrow: 'Step 2 · 選班級',
+            title: imported ? `目前選擇：${selectedClass || '尚未選擇班級'}` : '匯入後，先選一個班級',
+            desc: imported
+              ? '班級列表已有資料。開始記錄前，先確認現在選到的是正確班級。'
+              : '現在還沒有班級資料。先回到第 1 步匯入正式名單，或用範例檔試跑。',
+            features: imported
               ? [
-                  { label:'✅ 關閉導覽', action:'close-onboarding', primary:true },
-                  { label:'☁️ Google 同步設定', action:'open-gsheet' }
+                  { icon:'🔁', title:'切換班級', text:'如果匯入多個班級，可以用班級列表切換。' },
+                  { icon:'👀', title:'確認學生', text:'看到學生卡片或表格，就代表這個班級可以操作。' }
                 ]
               : [
-                  { label:'📂 現在匯入檔案', action:'import', primary:true },
-                  { label:'📥 先試範例檔', action:'sample' }
+                  { icon:'📂', title:'先匯入', text:'班級進列表後，這一步才有東西可以選。' },
+                  { icon:'📥', title:'可用範例檔', text:'沒有正式名單時，下載範例檔再匯入。' }
                 ],
-            footer: imported ? '要複習流程時，右上角的導覽按鈕都在。' : '先匯入，再開始記錄；同步可以之後再設。'
+            spotlight: {
+              pill: imported ? { tone:'success', label:'已匯入' } : { tone:'warn', label:'尚未匯入' },
+              title: imported ? '選好班級再操作' : '先完成第 1 步',
+              text: imported
+                ? (selectedClass ? `現在會操作「${selectedClass}」。` : '先在班級列表選一個班級。')
+                : '匯入成功後，班級名稱會出現在列表裡。',
+              bullets: imported
+                ? ['匯入多班時，先確認選到正確班級。']
+                : ['點第 1 步的「立即匯入檔案」。', '範例檔下載後，也要匯入回系統。']
+            },
+            note: {
+              tone: imported ? 'success' : 'warn',
+              title: imported ? '確認完成' : '還沒名單',
+              text: imported ? '看到班級和學生名單，就可以往下一步。' : '先有班級資料，才會進入正式操作。'
+            },
+            actionHint: imported ? '' : '還沒資料時，先匯入或下載範例檔。',
+            actions: imported ? [] : [
+              { label:'📂 立即匯入檔案', action:'import', primary:true },
+              { label:'📥 下載範例檔', action:'sample' }
+            ],
+            footer: imported ? syncReminder : '完成匯入後，這裡會顯示目前選擇的班級。'
+          },
+          {
+            label: '開始記錄',
+            short: '切換模式開始用',
+            eyebrow: 'Step 3 · 開始記錄',
+            title: imported ? '可以開始記錄了' : '先匯入名單再開始',
+            desc: imported
+              ? '確認班級後，用左上角的模式按鈕切換加扣分、作業、座位、抽號等功能。'
+              : '還沒有班級資料。先完成第 1 步匯入，才會有學生可以記錄。',
+            features: imported
+              ? [
+                  { icon:'⭐', title:'加扣分', text:'點學生卡片的 ＋／－ 即時加扣分，左側排行榜同步更新。' },
+                  { icon:'📝', title:'作業成績', text:'切到「作業成績」模式，直接在表格裡輸入分數。' },
+                  { icon:'🪑', title:'座位', text:'切到「座位」模式，拖放學生安排座位。' },
+                  { icon:'🎲', title:'抽號', text:'切到「抽號」模式，設定人數後開始抽選。' }
+                ]
+              : [
+                  { icon:'📂', title:'先匯入名單', text:'先把 Excel 或 CSV 匯進來，班級才會出現在列表。' },
+                  { icon:'📥', title:'沒有名單', text:'先下載範例檔，再匯入回系統試用。' }
+                ],
+            spotlight: {
+              pill: imported ? { tone:'success', label:'可以開始了' } : { tone:'warn', label:'尚未匯入班級' },
+              title: imported ? '常用功能都從模式切換' : '先完成第 1 步',
+              text: imported
+                ? '加扣分、作業成績、違規記錄、抽號、座位等，都用左上角模式按鈕切換。'
+                : '有了班級資料後，這一步才有東西可以操作。',
+              bullets: imported
+                ? [
+                    '先選班級，再切換要用的功能。',
+                    '變更會先存在這台瀏覽器。'
+                  ]
+                : [
+                    '點上方「1 準備名單」跳回第 1 步。',
+                    '匯入成功後再回到這裡。'
+                  ]
+            },
+            note: {
+              tone: 'warn',
+              title: '備份提醒',
+              text: syncReminder
+            },
+            actionHint: imported ? '關閉導覽後就可以直接操作。' : '先匯入班級名單，再回來開始記錄。',
+            actions: imported
+              ? [{ label:'✅ 關閉導覽，開始使用', action:'close-onboarding', primary:true }]
+              : [
+                  { label:'📂 立即匯入檔案', action:'import', primary:true },
+                  { label:'📥 下載範例檔', action:'sample' }
+                ],
+            footer: imported ? '需要備份或換電腦時，再設定 Google 試算表同步。' : '匯入後，最後一步會變成可以開始使用。'
           }
         ];
       }
@@ -13062,7 +13033,7 @@ elProgAdd?.addEventListener('click', ()=>{
         if(!Array.isArray(actions) || !actions.length) return '';
         return actions.map(action => {
           const extraClass = action.primary ? ' onboarding-cta--primary' : '';
-          return `<button class="btn${extraClass}" type="button" data-onboarding-action="${escapeAttr(action.action)}">${escapeAttr(action.label)}</button>`;
+          return `<button class="btn${extraClass}" type="button" data-disabled-onboarding-action="${escapeAttr(action.action)}">${escapeAttr(action.label)}</button>`;
         }).join('');
       }
 
@@ -13079,13 +13050,18 @@ elProgAdd?.addEventListener('click', ()=>{
       function renderRoot(root, steps){
         if(!root || !steps.length) return;
         const currentStep = steps[onboardingState.step];
+        const hasNote = !!(currentStep.note && (currentStep.note.title || currentStep.note.text));
+        const hasActionCard = !!(
+          (currentStep.actionHint && String(currentStep.actionHint).trim()) ||
+          (Array.isArray(currentStep.actions) && currentStep.actions.length)
+        );
         const noteToneClass = currentStep.note?.tone === 'warn' ? ' is-warn' : currentStep.note?.tone === 'success' ? ' is-success' : '';
         const isLastStep = onboardingState.step === steps.length - 1;
         const primaryNavLabel = isLastStep ? (hasImportedData() ? '完成導覽' : '回到第 1 步') : '下一步 →';
 
         root.classList.remove('onboarding-root--loading');
         root.innerHTML = `
-          <div class="onboarding-progress" role="tablist" aria-label="新手導覽步驟">
+          <div class="onboarding-progress" role="tablist" aria-label="已停用步驟">
             ${steps.map((step, index) => `
               <button class="onboarding-step-chip${index===onboardingState.step ? ' is-active' : ''}" type="button" data-onboarding-step="${index}" aria-selected="${index===onboardingState.step ? 'true' : 'false'}">
                 <span class="onboarding-step-chip__index">${index + 1}</span>
@@ -13117,18 +13093,20 @@ elProgAdd?.addEventListener('click', ()=>{
                 ${renderMicroList(currentStep.spotlight?.bullets)}
               </article>
 
+              ${hasNote ? `
               <article class="onboarding-card onboarding-card--note${noteToneClass}">
                 <h5 class="onboarding-section-title">${escapeAttr(currentStep.note?.title || '')}</h5>
                 <p class="onboarding-section-text">${escapeAttr(currentStep.note?.text || '')}</p>
-              </article>
+              </article>` : ''}
 
+              ${hasActionCard ? `
               <article class="onboarding-card">
                 <h5 class="onboarding-section-title">現在就做</h5>
-                <p class="onboarding-section-text">${escapeAttr(currentStep.actionHint || '')}</p>
-                <div class="onboarding-actions">
+                ${currentStep.actionHint ? `<p class="onboarding-section-text">${escapeAttr(currentStep.actionHint)}</p>` : ''}
+                ${Array.isArray(currentStep.actions) && currentStep.actions.length ? `<div class="onboarding-actions">
                   ${renderActions(currentStep.actions)}
-                </div>
-              </article>
+                </div>` : ''}
+              </article>` : ''}
             </div>
           </div>
 
@@ -13215,10 +13193,10 @@ elProgAdd?.addEventListener('click', ()=>{
           return;
         }
 
-        const actionBtn = e.target?.closest?.('[data-onboarding-action]');
+        const actionBtn = e.target?.closest?.('[data-disabled-onboarding-action]');
         if(actionBtn){
           e.preventDefault();
-          handleOnboardingAction(actionBtn.getAttribute('data-onboarding-action'));
+          handleOnboardingAction(actionBtn.getAttribute('data-disabled-onboarding-action'));
         }
       });
 
