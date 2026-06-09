@@ -5336,10 +5336,10 @@
         <div class="import-block">
           <div style="display:flex; gap:8px; align-items:center;">
             <div class="data-menu" id="data-menu">
-              <button id="btn-data" class="btn data-toggle" type="button" aria-haspopup="true" aria-expanded="false" title="匯入檔案或與 Google 試算表同步">📂 匯入 / 同步 ▾</button>
+              <button id="btn-data" class="btn data-toggle" type="button" aria-haspopup="true" aria-expanded="false" title="匯入檔案後會直接新增到班級列表，或與 Google 試算表同步">📂 匯入 / 同步 ▾</button>
               <div class="data-dropdown" id="data-dropdown" hidden>
                 <div class="data-inner">
-                  <label class="data-item" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案">📂 從檔案匯入</label>
+                  <label class="data-item" for="file-input" title="上傳一或多個 Excel / ODS / CSV 檔案，直接新增到班級列表">📂 從檔案匯入</label>
                   <button type="button" class="data-item" id="btn-gsheet" title="與 Google 試算表雙向同步">☁️ Google 試算表</button>
                 </div>
               </div>
@@ -5417,7 +5417,7 @@
         <div class="controls-row">
           <label for="class-select">班級</label>
           <select id="class-select" class="select" disabled>
-            <option value="" selected>請先上傳學生名單</option>
+            <option value="" selected>請先匯入班級檔案</option>
           </select>
           <input id="search-input" class="input" type="search" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
           <label id="toggle-stage-wrap" class="hidden" style="display:flex;gap:6px;align-items:center;">
@@ -5459,12 +5459,12 @@
                 <div class="welcome-mark">
                   <div class="welcome-icon"><img src="icon.png" alt="成績系統圖示"></div>
                   <div class="welcome-copy">
-                    <h2 class="welcome-title">先匯入名單<br><strong>再開始記錄</strong></h2>
-                    <p class="welcome-sub">照著 4 步做就能開始使用：先匯入名單，沒有名單就先用範例檔，需要備份時再設定 Google 同步。</p>
+                    <h2 class="welcome-title">先匯入檔案<br><strong>再開始記錄</strong></h2>
+                    <p class="welcome-sub">匯入檔案後，會直接新增到班級列表。沒有檔案時，先用範例檔也可以；需要備份時再設定 Google 同步。</p>
                   </div>
                 </div>
                 <div class="welcome-quick-actions">
-                  <button class="btn primary" type="button" data-onboarding-action="import">📂 立即匯入名單</button>
+                  <button class="btn primary" type="button" data-onboarding-action="import">📂 立即匯入檔案</button>
                   <button class="btn" id="btn-welcome-sample" type="button">📥 下載範例檔</button>
                 </div>
               </div>
@@ -6901,6 +6901,13 @@
       // 只有一個檔案且其中有多個工作表→沿用原本「每個工作表＝一個班級」邏輯
       // 多個檔案→每個檔案的第一個資料工作表＝一個班級，用檔名命名
       try{
+        const existingMap = (state.classMap && typeof state.classMap === 'object') ? state.classMap : {};
+        const existingOrder = Array.isArray(state.classOrder) ? state.classOrder.slice() : [];
+        const hadExistingClasses = existingOrder.length > 0;
+        const prevSelectedClass = elSelect?.value || '';
+        const existingClassNames = new Set(existingOrder.map(v=>String(v||'').trim()).filter(Boolean));
+        if(!state.cadreOptions || typeof state.cadreOptions !== 'object') state.cadreOptions = {};
+
         // ★ 延遲清空進度：等確認有班級資料時才重設，避免純進度檔匯入時清掉原有班級
         let pendingProgressSheets = [];   // 暫存進度工作表，稍後統一解析
         const map={}; const order=[];
@@ -6956,10 +6963,11 @@
               className = sheetName;
             }
             // 避免班級名稱重複
-            if(map[className]){
+            if(map[className] || existingClassNames.has(className)){
+              const baseClassName = className;
               let suffix=2;
-              while(map[className+'_'+suffix]) suffix++;
-              className = className+'_'+suffix;
+              while(map[baseClassName+'_'+suffix] || existingClassNames.has(baseClassName+'_'+suffix)) suffix++;
+              className = baseClassName+'_'+suffix;
             }
             const classMeta = parseClassMetaRows(rows, headerRowIdx);
             if(Array.isArray(classMeta.cadreOptions)){
@@ -7146,16 +7154,9 @@
 
         // ★ 統一解析教學進度工作表
         if(hasProgressData){
-          // 有班級資料時重設進度；純進度檔則保留現有進度再合併
-          if(hasClassData){
-            state.progress = { pages:{}, order:[], active:'' };
-          }
           for(const { ws, sheetName } of pendingProgressSheets){
             try{ parseProgressSheet(ws, sheetName); importedProgress = true; }catch(e){ console.warn('教學進度解析失敗', e); }
           }
-        }else if(hasClassData){
-          // 有班級但沒進度：重設進度
-          state.progress = { pages:{}, order:[], active:'' };
         }
 
         // 解析完後：確保進度物件結構正確
@@ -7172,12 +7173,24 @@
           setStatus(`已匯入 ${pgCount} 個教學進度分頁。`);
           saveSession('after import progress only');
         }else{
-          // 有班級資料：正常流程
-          state.classMap=map; state.classOrder=order;
-          state.cadreOptions = {};
+          // 有班級資料：附加到既有班級列表
+          const mergedMap = { ...existingMap };
+          const mergedOrder = existingOrder.slice();
+          order.forEach(cls => {
+            mergedMap[cls] = map[cls];
+            if(!mergedOrder.includes(cls)) mergedOrder.push(cls);
+          });
+
+          state.classMap = mergedMap;
+          state.classOrder = mergedOrder;
           order.forEach(cls => ensureCadreOptions(cls));
-          renderClassOptions(order);
-          elSelect.disabled=true; elSelect.disabled=false; elSelect.value=order[0];
+
+          renderClassOptions(state.classOrder);
+          const nextSelectedClass = (hadExistingClasses && prevSelectedClass && state.classOrder.includes(prevSelectedClass))
+            ? prevSelectedClass
+            : (order[0] || state.classOrder[0]);
+
+          elSelect.disabled=true; elSelect.disabled=false; elSelect.value=nextSelectedClass;
           elSearch.disabled=false; elSearch.value=""; state.filter="";
           if(elAddStudent) elAddStudent.disabled=false;
           if(elDelStudent) elDelStudent.disabled=false;
@@ -7188,18 +7201,18 @@
           if(elManageDel) elManageDel.disabled=false;
           // ★ 移除無資料狀態
           document.body.classList.remove('no-data');
-          renderStudents(order[0]); renderLeaderboard(order[0]); renderViolations(order[0]); renderHW(order[0]);
+          renderStudents(nextSelectedClass); renderLeaderboard(nextSelectedClass); renderViolations(nextSelectedClass); renderHW(nextSelectedClass);
           // ★ 匯入後立即刷新學生管理名單（不論目前模式）
           try{ renderManage(); }catch(e){}
           // ★ 匯入後立即依當前模式刷新所有資訊
-          if(state.mode==='seat')     { try{ renderSeatUI(order[0]); }catch(e){} }
-          if(state.mode==='draw')     { try{ renderDraw(order[0]); }catch(e){} }
-          if(state.mode==='group')    { try{ renderGroup(order[0]); }catch(e){} }
+          if(state.mode==='seat')     { try{ renderSeatUI(nextSelectedClass); }catch(e){} }
+          if(state.mode==='draw')     { try{ renderDraw(nextSelectedClass); }catch(e){} }
+          if(state.mode==='group')    { try{ renderGroup(nextSelectedClass); }catch(e){} }
           if(state.mode==='progress') { try{ renderProgress(); }catch(e){} }
           if(state.mode==='timer')    { try{ renderTimerUI?.(); }catch(e){} }
           saveNotes();
           const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
-          setStatus(`已載入 ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案）。`);
+          setStatus(`已匯入 ${order.length} 個班級${progMsg}（來自 ${files.length} 個檔案），並加入班級列表。`);
           saveSession('after import');
         }
       }catch(err){ alert('解析失敗：'+err.message); setStatus('解析失敗'); }
@@ -7220,86 +7233,271 @@
       saveSession('class change');   // ★ 新增
     });
 
-    // ★ 班級重新命名
-    elRenameClass?.addEventListener('click', ()=>{
-      const oldName = elSelect.value;
-      if(!oldName){ alert('請先選擇班級'); return; }
-      const newName = (prompt(`請輸入「${oldName}」的新班級名稱：`, oldName) || '').trim();
-      if(!newName || newName === oldName) return;
-      if(state.classOrder.includes(newName)){ alert('此班級名稱已存在！'); return; }
+    function syncClassSelectionAfterMutation(nextClass){
+      const classes = state.classOrder || [];
+      const hasClasses = classes.length > 0;
+      const prevSelectedClass = manageSelectedClass || elSelect?.value || '';
+      let activeClass = '';
 
-      // 更新 classOrder
+      document.body.classList.toggle('no-data', !hasClasses);
+      if(elManageAddClass) elManageAddClass.disabled = false;
+
+      if(hasClasses){
+        renderClassOptions(classes);
+        activeClass = classes.includes(nextClass)
+          ? nextClass
+          : (classes.includes(prevSelectedClass) ? prevSelectedClass : classes[0]);
+
+        if(elSelect){
+          elSelect.disabled = false;
+          elSelect.value = activeClass;
+        }
+        manageSelectedClass = activeClass;
+
+        if(elSearch) elSearch.disabled = false;
+        if(elAddStudent) elAddStudent.disabled = false;
+        if(elDelStudent) elDelStudent.disabled = false;
+        if(elRenameClass) elRenameClass.disabled = false;
+        if(elManageRename) elManageRename.disabled = false;
+        if(elManageDelClass) elManageDelClass.disabled = false;
+        if(elManageAdd) elManageAdd.disabled = false;
+        if(elManageDel) elManageDel.disabled = false;
+        if(elManageEdit) elManageEdit.disabled = false;
+      }else{
+        if(elSelect){
+          elSelect.innerHTML = '<option value="" selected>請先上傳學生名單</option>';
+          elSelect.value = '';
+          elSelect.disabled = true;
+        }
+        manageSelectedClass = '';
+        manageEditMode = false;
+        state.filter = '';
+
+        if(elSearch){
+          elSearch.value = '';
+          elSearch.disabled = true;
+        }
+        if(elAddStudent) elAddStudent.disabled = true;
+        if(elDelStudent) elDelStudent.disabled = true;
+        if(elRenameClass) elRenameClass.disabled = true;
+        if(elManageRename) elManageRename.disabled = true;
+        if(elManageDelClass) elManageDelClass.disabled = true;
+        if(elManageAdd) elManageAdd.disabled = true;
+        if(elManageDel) elManageDel.disabled = true;
+        if(elManageEdit) elManageEdit.disabled = true;
+      }
+
+      renderManage();
+
+      if(hasClasses){
+        renderStudents(activeClass);
+      }else if(state.mode === 'list'){
+        renderStudents('');
+      }else if(typeof hideWelcomeGuide === 'function'){
+        hideWelcomeGuide();
+      }
+
+      renderLeaderboard(activeClass);
+      if(typeof renderViolations === 'function') renderViolations(activeClass);
+      if(typeof renderHW === 'function') renderHW(activeClass);
+      if(state.mode==='seat') renderSeatUI(activeClass);
+      if(state.mode==='draw') renderDraw(activeClass);
+      if(state.mode==='group') renderGroup(activeClass);
+      if(state.mode==='progress'){ try{ renderProgress(); }catch(_){} }
+
+      return activeClass;
+    }
+
+    function showProgClassDialog(options){
+      return new Promise(resolve => {
+        ensureProgClassModal();
+        const mask = __progClassMask;
+        if(!mask){ resolve(null); return; }
+
+        let settled = false;
+        const finish = (value)=>{
+          if(settled) return;
+          settled = true;
+          cleanup();
+          resolve(value);
+        };
+
+        const onCancel = ()=> finish(null);
+        const onMaskClick = (e)=>{ if(e.target === mask) finish(null); };
+        const onEsc = (e)=>{
+          if(e.key === 'Escape' && mask.classList.contains('show')) finish(null);
+        };
+
+        const cleanup = ()=>{
+          mask.removeEventListener('click', onMaskClick);
+          window.removeEventListener('keydown', onEsc);
+          mask.querySelector('#progclass-close')?.removeEventListener('click', onCancel);
+          mask.querySelector('#progclass-cancel')?.removeEventListener('click', onCancel);
+        };
+
+        showProgClassModal({
+          ...options,
+          onOpen: (progMask)=>{
+            try{ options.onOpen?.(progMask); }catch(e){ console.warn(e); }
+            progMask.querySelector('#progclass-close')?.addEventListener('click', onCancel);
+            progMask.querySelector('#progclass-cancel')?.addEventListener('click', onCancel);
+            progMask.addEventListener('click', onMaskClick);
+            window.addEventListener('keydown', onEsc);
+          },
+          onOk: (progMask)=>{
+            try{
+              const result = options.onOk ? options.onOk(progMask) : true;
+              if(result === false) return false;
+              hideProgClassModal();
+              finish(result);
+              return result;
+            }catch(e){
+              console.warn(e);
+              return false;
+            }
+          }
+        });
+      });
+    }
+
+    async function safePromptText({ title, label, defaultValue='', placeholder='', okText='確定' }){
+      return showProgClassDialog({
+        title: title || '輸入',
+        okText,
+        html: `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <label for="progclass-text-input" style="font-weight:700; font-size:14px;">${escapeHTML(label || title || '請輸入內容')}</label>
+            <input id="progclass-text-input" class="input" type="text" value="${escapeHTML(defaultValue)}" placeholder="${escapeHTML(placeholder)}" style="height:38px; width:100%;">
+          </div>
+        `,
+        onOpen: (mask)=>{
+          const input = mask.querySelector('#progclass-text-input');
+          setTimeout(()=>{
+            input?.focus();
+            try{ input?.select(); }catch(_){ }
+          }, 0);
+          input?.addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter') mask.querySelector('#progclass-ok')?.click();
+          });
+        },
+        onOk: (mask)=> String(mask.querySelector('#progclass-text-input')?.value ?? '')
+      });
+    }
+
+    async function safeConfirmDialog({ title, message, okText='確定', cancelText='取消' }){
+      const result = await showProgClassDialog({
+        title: title || '確認',
+        okText,
+        html: `<div style="font-size:14px; line-height:1.7; white-space:pre-wrap;">${escapeHTML(message || '')}</div>`,
+        onOpen: (mask)=>{
+          const cancelBtn = mask.querySelector('#progclass-cancel');
+          if(cancelBtn) cancelBtn.textContent = cancelText;
+        },
+        onOk: ()=> true
+      });
+      return result === true;
+    }
+
+    function renameClassState(oldName, newName){
+      if(!oldName){ alert('請先選擇班級'); return false; }
+      if(!newName || newName === oldName) return false;
+      if(state.classOrder.includes(newName)){ alert('此班級名稱已存在！'); return false; }
+
       const idx = state.classOrder.indexOf(oldName);
-      if(idx >= 0) state.classOrder[idx] = newName;
+      if(idx < 0){
+        alert('找不到目前班級，請重新選擇後再試一次。');
+        return false;
+      }
 
-      // 更新 classMap
-      if(state.classMap[oldName]){
+      const oldPrefix = scoreKey(oldName, '');
+      const newPrefix = scoreKey(newName, '');
+      const renamePrefixedStore = (store)=>{
+        if(!store || typeof store !== 'object') return;
+        for(const key of Object.keys(store)){
+          if(!key.startsWith(oldPrefix)) continue;
+          const nextKey = newPrefix + key.slice(oldPrefix.length);
+          store[nextKey] = store[key];
+          delete store[key];
+        }
+      };
+      const renameClassBucket = (store)=>{
+        if(!store || typeof store !== 'object') return;
+        if(!Object.prototype.hasOwnProperty.call(store, oldName)) return;
+        store[newName] = store[oldName];
+        delete store[oldName];
+      };
+
+      state.classOrder[idx] = newName;
+
+      if(state.classMap && state.classMap[oldName]){
         state.classMap[newName] = state.classMap[oldName];
-        // 更新每個學生的 sheet 欄位
-        state.classMap[newName].forEach(s => { if(s.sheet === oldName) s.sheet = newName; });
+        state.classMap[newName].forEach(student => {
+          if(student && student.sheet === oldName) student.sheet = newName;
+        });
         delete state.classMap[oldName];
       }
 
-      // 更新 scores（複合鍵包含班級名）
-      const oldPrefix = scoreKey(oldName, '');
-      const newPrefix = scoreKey(newName, '');
-      const scoreKeys = Object.keys(state.scores);
-      for(const k of scoreKeys){
-        if(k.startsWith(oldPrefix)){ 
-          const newKey = newPrefix + k.slice(oldPrefix.length);
-          state.scores[newKey] = state.scores[k];
-          delete state.scores[k];
+      renamePrefixedStore(state.scores);
+      renamePrefixedStore(state.deductions);
+      renamePrefixedStore(state.violations);
+
+      renameClassBucket(state.seating);
+      renameClassBucket(state.hw);
+      renameClassBucket(state.group);
+      renameClassBucket(state.notes);
+      renameClassBucket(state.cadreOptions);
+
+      if(typeof ensureProgressState === 'function'){
+        const prog = ensureProgressState(false);
+        if(prog && prog.pages && typeof prog.pages === 'object'){
+          const pageNames = Array.isArray(prog.order) && prog.order.length ? prog.order : Object.keys(prog.pages);
+          pageNames.forEach(pageName => {
+            const page = prog.pages[pageName];
+            if(!page || typeof page !== 'object') return;
+            if(Array.isArray(page.classes)){
+              page.classes = page.classes.map(cls => cls === oldName ? newName : cls);
+            }
+            if(Array.isArray(page.items)){
+              page.items = page.items.map(item => {
+                if(!item || typeof item !== 'object') return item;
+                if(item.checked && typeof item.checked === 'object' && Object.prototype.hasOwnProperty.call(item.checked, oldName)){
+                  item.checked[newName] = item.checked[oldName];
+                  delete item.checked[oldName];
+                }
+                return item;
+              });
+            }
+          });
         }
       }
 
-      for(const k of Object.keys(state.deductions)){
-        if(k.startsWith(oldPrefix)){
-          const newKey = newPrefix + k.slice(oldPrefix.length);
-          state.deductions[newKey] = state.deductions[k];
-          delete state.deductions[k];
+      if(state.sidMap && typeof state.sidMap === 'object'){
+        for(const id of Object.keys(state.sidMap)){
+          const entry = state.sidMap[id];
+          if(entry && typeof entry === 'object' && entry.sheet === oldName) entry.sheet = newName;
         }
       }
 
-      for(const k of Object.keys(state.violations)){
-        if(k.startsWith(oldPrefix)){
-          const newKey = newPrefix + k.slice(oldPrefix.length);
-          state.violations[newKey] = state.violations[k];
-          delete state.violations[k];
-        }
-      }
+      syncClassSelectionAfterMutation(newName);
 
-      // 更新 seating
-      if(state.seating[oldName]){ state.seating[newName] = state.seating[oldName]; delete state.seating[oldName]; }
-
-      // 更新 hw
-      if(state.hw[oldName]){ state.hw[newName] = state.hw[oldName]; delete state.hw[oldName]; }
-
-      // 更新 group
-      if(state.group[oldName]){ state.group[newName] = state.group[oldName]; delete state.group[oldName]; }
-
-      // 更新 notes
-      if(state.notes && state.notes[oldName]){ state.notes[newName] = state.notes[oldName]; delete state.notes[oldName]; }
-      if(state.cadreOptions && state.cadreOptions[oldName]){ state.cadreOptions[newName] = state.cadreOptions[oldName]; delete state.cadreOptions[oldName]; }
-
-      // 更新 sidMap
-      for(const id of Object.keys(state.sidMap)){
-        if(state.sidMap[id].sheet === oldName) state.sidMap[id].sheet = newName;
-      }
-
-      // 重新繪製 UI
-      renderClassOptions(state.classOrder);
-      elSelect.value = newName;
-      renderStudents(newName);
-      renderLeaderboard(newName);
-      renderViolations(newName);
-      if(state.mode==='seat') renderSeatUI(newName);
-      if(state.mode==='hw') renderHW(newName);
-      if(state.mode==='draw') renderDraw(newName);
-      if(state.mode==='group') renderGroup(newName);
-      if(state.mode==='progress'){ try{ renderProgress(); }catch(e){} }
       saveSession('rename class');
-      saveNotes();
+      if(typeof saveNotes === 'function') saveNotes();
       setStatus(`班級已重新命名：${oldName} → ${newName}`);
+      return true;
+    }
+
+    // ★ 班級重新命名
+    elRenameClass?.addEventListener('click', async ()=>{
+      const oldName = elSelect.value;
+      if(!oldName){ alert('請先選擇班級'); return; }
+      const newName = (await safePromptText({
+        title: '重新命名班級',
+        label: `請輸入「${oldName}」的新班級名稱：`,
+        defaultValue: oldName,
+        placeholder: '班級名稱',
+        okText: '儲存'
+      }) || '').trim();
+      renameClassState(oldName, newName);
     });
 
     // ➕ 新增轉學生
@@ -11539,6 +11737,7 @@ function onTimerDone(){
           if(!manageSelectedClass || !classes.includes(manageSelectedClass)){
             manageSelectedClass = elSelect.value && classes.includes(elSelect.value) ? elSelect.value : classes[0];
           }
+          if(elSelect && classes.includes(manageSelectedClass)) elSelect.value = manageSelectedClass;
           elManageClassList.innerHTML = classes.map(c=>{
             const count = (state.classMap[c]||[]).length;
             const active = c === manageSelectedClass ? ' active' : '';
@@ -11713,6 +11912,9 @@ function onTimerDone(){
       if(!item) return;
       if(manageEditMode) applyManageEdits();
       manageSelectedClass = item.dataset.cls;
+      if(elSelect && Array.from(elSelect.options).some(opt => opt.value === manageSelectedClass)){
+        elSelect.value = manageSelectedClass;
+      }
       renderManage();
     });
 
@@ -11759,78 +11961,48 @@ function onTimerDone(){
     });
 
     // ＋ 新增班級（管理模式）
-    elManageAddClass?.addEventListener('click', ()=>{
-      const name = (prompt('請輸入新班級名稱：') || '').trim();
+    elManageAddClass?.addEventListener('click', async ()=>{
+      const name = (await safePromptText({
+        title: '新增班級',
+        label: '請輸入新班級名稱：',
+        placeholder: '例如：一年甲班',
+        okText: '新增'
+      }) || '').trim();
       if(!name) return;
       if(state.classOrder.includes(name)){ alert('此班級名稱已存在！'); return; }
       state.classOrder.push(name);
       state.classMap[name] = [];
       ensureCadreOptions(name);
-      renderClassOptions(state.classOrder);
-      document.body.classList.remove('no-data');
-      manageSelectedClass = name;
-      renderManage();
+      syncClassSelectionAfterMutation(name);
       saveSession('add class');
       setStatus(`已新增班級「${name}」`);
     });
 
     // ✏️ 重新命名班級
-    elManageRename?.addEventListener('click', ()=>{
-      const cls = manageSelectedClass || elSelect.value;
-      if(!cls){ alert('請先選擇班級'); return; }
-      const oldName = cls;
-      const newName = (prompt(`請輸入「${oldName}」的新班級名稱：`, oldName) || '').trim();
-      if(!newName || newName === oldName) return;
-      if(state.classOrder.includes(newName)){ alert('此班級名稱已存在！'); return; }
-      const idx = state.classOrder.indexOf(oldName);
-      if(idx >= 0) state.classOrder[idx] = newName;
-      if(state.classMap[oldName]){
-        state.classMap[newName] = state.classMap[oldName];
-        state.classMap[newName].forEach(s => { if(s.sheet === oldName) s.sheet = newName; });
-        delete state.classMap[oldName];
-      }
-      const oldPrefix = scoreKey(oldName, '');
-      const newPrefix = scoreKey(newName, '');
-      for(const k of Object.keys(state.scores)){
-        if(k.startsWith(oldPrefix)){
-          state.scores[newPrefix + k.slice(oldPrefix.length)] = state.scores[k];
-          delete state.scores[k];
-        }
-      }
-      for(const k of Object.keys(state.deductions)){
-        if(k.startsWith(oldPrefix)){
-          state.deductions[newPrefix + k.slice(oldPrefix.length)] = state.deductions[k];
-          delete state.deductions[k];
-        }
-      }
-      for(const k of Object.keys(state.violations)){
-        if(k.startsWith(oldPrefix)){
-          state.violations[newPrefix + k.slice(oldPrefix.length)] = state.violations[k];
-          delete state.violations[k];
-        }
-      }
-      if(state.seating[oldName]){ state.seating[newName] = state.seating[oldName]; delete state.seating[oldName]; }
-      if(state.hw[oldName]){ state.hw[newName] = state.hw[oldName]; delete state.hw[oldName]; }
-      if(state.group[oldName]){ state.group[newName] = state.group[oldName]; delete state.group[oldName]; }
-      if(state.notes && state.notes[oldName]){ state.notes[newName] = state.notes[oldName]; delete state.notes[oldName]; }
-      if(state.cadreOptions && state.cadreOptions[oldName]){ state.cadreOptions[newName] = state.cadreOptions[oldName]; delete state.cadreOptions[oldName]; }
-      for(const id of Object.keys(state.sidMap)){
-        if(state.sidMap[id].sheet === oldName) state.sidMap[id].sheet = newName;
-      }
-      renderClassOptions(state.classOrder);
-      elSelect.value = newName;
-      manageSelectedClass = newName;
-      renderManage();
-      saveSession('rename class');
-      if(typeof saveNotes === 'function') saveNotes();
-      setStatus(`班級已重新命名：${oldName} → ${newName}`);
+    elManageRename?.addEventListener('click', async ()=>{
+      const oldName = manageSelectedClass;
+      if(!oldName){ alert('請先在班級列表選擇班級'); return; }
+      const newName = (await safePromptText({
+        title: '重新命名班級',
+        label: `請輸入「${oldName}」的新班級名稱：`,
+        defaultValue: oldName,
+        placeholder: '班級名稱',
+        okText: '儲存'
+      }) || '').trim();
+      renameClassState(oldName, newName);
     });
 
     // 🗑 刪除整個班級
-    elManageDelClass?.addEventListener('click', ()=>{
-      const cls = manageSelectedClass || elSelect.value;
+    elManageDelClass?.addEventListener('click', async ()=>{
+      const cls = manageSelectedClass;
       if(!cls){ alert('請先選擇班級'); return; }
-      if(!confirm(`確定要刪除整個班級「${cls}」嗎？\n（此操作無法復原，將刪除該班所有學生、成績、座位和作業資料）`)) return;
+      const ok = await safeConfirmDialog({
+        title: '刪除班級',
+        message: `確定要刪除整個班級「${cls}」嗎？\n（此操作無法復原，將刪除該班所有學生、成績、座位和作業資料）`,
+        okText: '刪除',
+        cancelText: '取消'
+      });
+      if(!ok) return;
       state.classOrder = state.classOrder.filter(c => c !== cls);
       delete state.classMap[cls];
       const prefix = scoreKey(cls, '');
@@ -11848,17 +12020,30 @@ function onTimerDone(){
       delete state.group[cls];
       if(state.cadreOptions) delete state.cadreOptions[cls];
       if(state.notes) delete state.notes[cls];
+      if(typeof ensureProgressState === 'function'){
+        const prog = ensureProgressState(false);
+        if(prog && prog.pages && typeof prog.pages === 'object'){
+          const pageNames = Array.isArray(prog.order) && prog.order.length ? prog.order : Object.keys(prog.pages);
+          pageNames.forEach(pageName => {
+            const page = prog.pages[pageName];
+            if(!page || typeof page !== 'object') return;
+            if(Array.isArray(page.classes)){
+              page.classes = page.classes.filter(name => name !== cls);
+            }
+            if(Array.isArray(page.items)){
+              page.items = page.items.map(item => {
+                if(!item || typeof item !== 'object') return item;
+                if(item.checked && typeof item.checked === 'object') delete item.checked[cls];
+                return item;
+              });
+            }
+          });
+        }
+      }
       for(const id of Object.keys(state.sidMap)){
         if(state.sidMap[id].sheet === cls) delete state.sidMap[id];
       }
-      renderClassOptions(state.classOrder);
-      manageSelectedClass = '';
-      if(state.classOrder.length){
-        elSelect.value = state.classOrder[0];
-      } else {
-        document.body.classList.add('no-data');
-      }
-      renderManage();
+      syncClassSelectionAfterMutation('');
       saveSession('delete class');
       if(typeof saveNotes === 'function') saveNotes();
       setStatus(`已刪除班級「${cls}」`);
@@ -12728,32 +12913,32 @@ elProgAdd?.addEventListener('click', ()=>{
 
         return [
           {
-            label: '匯入名單',
-            short: '先把名單帶進來',
-            eyebrow: 'Step 1 · 匯入名單',
-            title: '有名單就先匯入',
-            desc: '有 Excel 或 CSV 就直接匯入。還沒準備好名單時，先用範例檔也可以。',
+            label: '匯入檔案',
+            short: '直接加入班級列表',
+            eyebrow: 'Step 1 · 匯入檔案',
+            title: '匯入後會直接加入班級列表',
+            desc: '有 Excel 或 CSV 就直接匯入。系統會把檔案直接加到班級列表；還沒準備好檔案時，先用範例檔也可以。',
             features: [
-              { icon:'📂', title:'直接匯入', text:'支援 Excel、CSV，也可以直接拖放。' },
-              { icon:'💾', title:'先存在本機', text:'沒設定同步前，資料只留在這台瀏覽器。' }
+              { icon:'📂', title:'匯入檔案', text:'支援 Excel、CSV，也可以直接拖放。' },
+              { icon:'📋', title:'直接加入列表', text:'每個匯入的檔案會直接出現在班級列表。' }
             ],
             spotlight: {
               pill: { tone:'success', label:'最快開始方式' },
-              title: '先做這個最快',
-              text: '有正式名單就直接匯入；沒有的話先用範例檔。',
+              title: '先把檔案匯進來',
+              text: '有正式檔案就直接匯入；沒有的話先用範例檔。',
               bullets: [
                 '多個檔案可以一次匯入。',
-                '匯入後就能開始記錄。'
+                '匯入後會直接新增到班級列表。'
               ]
             },
             note: {
               tone: 'info',
               title: '匯入後',
-              text: '空白畫面會消失，系統會直接切到可操作狀態。'
+              text: '班級列表會更新，系統也會直接切到可操作狀態。'
             },
-            actionHint: '現在匯入正式名單，或先下載範例檔。',
+            actionHint: '現在匯入檔案，或先下載範例檔。',
             actions: [
-              { label:'📂 立即匯入名單', action:'import', primary:true },
+              { label:'📂 立即匯入檔案', action:'import', primary:true },
               { label:'📥 下載範例檔', action:'sample' }
             ],
             footer: '先把資料帶進來，後面的功能才會開始顯示。'
@@ -12843,14 +13028,14 @@ elProgAdd?.addEventListener('click', ()=>{
               title: imported ? '小提醒' : '開始前',
               text: imported ? '如果已設定同步，建議先手動上傳一次確認沒問題。' : '同步不是前置條件，可以晚一點再設定。'
             },
-            actionHint: imported ? '可以直接開始工作，或先去看 Google 同步設定。' : '現在先匯入名單，之後再決定要不要同步。',
+            actionHint: imported ? '可以直接開始工作，或先去看 Google 同步設定。' : '現在先匯入檔案，之後再決定要不要同步。',
             actions: imported
               ? [
                   { label:'✅ 關閉導覽', action:'close-onboarding', primary:true },
                   { label:'☁️ Google 同步設定', action:'open-gsheet' }
                 ]
               : [
-                  { label:'📂 現在匯入名單', action:'import', primary:true },
+                  { label:'📂 現在匯入檔案', action:'import', primary:true },
                   { label:'📥 先試範例檔', action:'sample' }
                 ],
             footer: imported ? '要複習流程時，右上角的導覽按鈕都在。' : '先匯入，再開始記錄；同步可以之後再設。'
