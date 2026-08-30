@@ -3940,6 +3940,47 @@
       background:rgba(129,140,248,.06);
     }
 
+    /* ── 姓名標注顏色選擇器 ── */
+    .name-color-picker{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:5px;
+      margin-top:6px;
+    }
+    .name-color-swatch{
+      width:20px;
+      height:20px;
+      padding:0;
+      border-radius:50%;
+      border:2px solid transparent;
+      box-shadow:0 0 0 1px rgba(0,0,0,.25);
+      cursor:pointer;
+      transition:transform .12s ease, border-color .12s ease;
+    }
+    .name-color-swatch:hover{ transform:scale(1.18); }
+    .name-color-swatch.is-active{
+      border-color:var(--fg);
+      box-shadow:0 0 0 2px var(--card), 0 0 6px rgba(255,255,255,.5);
+      transform:scale(1.12);
+    }
+    .name-color-clear{
+      border:1px solid var(--line);
+      background:var(--card);
+      color:var(--muted);
+      border-radius:999px;
+      padding:2px 9px;
+      font-size:11px;
+      font-weight:700;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .name-color-clear.is-active{
+      border-color:var(--accent);
+      color:var(--fg);
+      background:rgba(129,140,248,.12);
+    }
+
     /* ── 中間作業欄（可捲動） ── */
     .manage-tbl .col-hw{ min-width:92px; text-align:center; font-variant-numeric:tabular-nums; }
     /* 無作業時的佔位欄 */
@@ -7088,7 +7129,8 @@
     }
 
     function validateCleanRosterHeader(header){
-      const allowed = new Set(['班級', '座號', '姓名']);
+      // 乾淨名單允許的欄位：班級、座號、姓名（必要）＋學號、性別（選填，常見於全校名條）
+      const allowed = new Set(['班級', '座號', '姓名', '學號', '性別']);
       const nonEmpty = header.map(v=>String(v||'').trim()).filter(Boolean);
       const unknown = nonEmpty.filter(h => !allowed.has(h));
       const hasName = nonEmpty.includes('姓名');
@@ -7158,7 +7200,7 @@
             const cleanRoster = validateCleanRosterHeader(header);
             if(isManualImport && !cleanRoster.ok){
               const extra = cleanRoster.unknown.length ? `多出的欄位：${cleanRoster.unknown.join('、')}` : '必須包含「座號」與「姓名」欄位';
-              throw new Error(`手動匯入檔案需要是乾淨名單，只能包含「班級、座號、姓名」欄位。${extra}`);
+              throw new Error(`手動匯入檔案需要是乾淨名單，只能包含「班級、座號、學號、性別、姓名」欄位。${extra}`);
             }
 
             // ★ 決定班級名稱
@@ -7231,6 +7273,7 @@
             const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
             const violPendingIdx = header.findIndex(h => /^待處理$/i.test(String(h||"").trim()));
             const titleIdx = header.findIndex(h => /^幹部職稱$|^幹部$|^職稱$|^cadres?$|^titles?$/i.test(String(h||"").trim()));
+            const nameColorIdx = header.findIndex(h => /^姓名顏色$|^名字顏色$|^name\s*colou?r$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -7239,7 +7282,7 @@
             const hwCols=[];
             if(scoreIdx >= 0){
               const reserved = new Set([
-                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, titleIdx, seatRIdx, seatCIdx, groupIdx,
+                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, titleIdx, nameColorIdx, seatRIdx, seatCIdx, groupIdx,
                 violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx, violPendingIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
@@ -7293,7 +7336,8 @@
               const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
               const id = sid ? `SID__${sid}` : makeFallbackId(targetClassName, seat, name);
               const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
-              classData.list.push({id,sid,name, seat, titles, row:r+1, sheet:targetClassName});
+              const nameColor = nameColorIdx >= 0 ? normalizeNameColor(row[nameColorIdx]) : '';
+              classData.list.push({id,sid,name, seat, titles, nameColor, row:r+1, sheet:targetClassName});
 
               // 備註（可選）：不論是否為空都更新，確保在試算表刪除備註後能同步清除
               if(noteIdx>=0){
@@ -7913,7 +7957,7 @@
         });
       }
 
-      const header = ['學號','座號','姓名','幹部職稱','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '吵鬧', '其他', '違規記事', '特殊記事', '待處理'];
+      const header = ['學號','座號','姓名','幹部職稱','姓名顏色','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '吵鬧', '其他', '違規記事', '特殊記事', '待處理'];
       const aoa = [buildClassMetaRow(cls), header];
 
       for (const s of list){
@@ -7942,6 +7986,7 @@
           s.seat ?? '',
           s.name ?? '',
           (s.titles || []).join('、'),
+          getStudentNameColor(s),
           getNote(cls, id),
           sc,
           ...arr,
@@ -7969,7 +8014,7 @@
       const aoa = buildClassAoA(cls);
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
-      const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:8}];
+      const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:10},{wch:8}];
       const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
       ws['!cols'] = [
         ...baseCols,
@@ -9317,6 +9362,19 @@ function jsonOut(obj) {
 
     const DEFAULT_CADRE_OPTIONS = Object.freeze(['班長','副班長','學藝','風紀','衛生','總務','康樂','資訊','輔導','圖書']);
     const CLASS_META_MARKER = '__CLASS_META__';
+
+    /* ★ 姓名標注顏色：明亮顯眼的預設色盤 */
+    const NAME_COLOR_PRESETS = Object.freeze([
+      '#ff3b30','#ff9500','#ffcc00','#34c759','#00e5ff','#0a84ff','#bf5af2','#ff2d95'
+    ]);
+    function normalizeNameColor(color){
+      const t = String(color ?? '').trim().toLowerCase();
+      if(!t) return '';
+      return /^#([0-9a-f]{6}|[0-9a-f]{3})$/.test(t) ? t : '';
+    }
+    function getStudentNameColor(stu){
+      return stu ? normalizeNameColor(stu.nameColor) : '';
+    }
     function normalizeCadreTitle(v){ return String(v ?? '').trim().replace(/\s+/g, ' '); }
     function uniqCadreTitles(list){
       const seen = new Set();
@@ -9532,6 +9590,8 @@ function jsonOut(obj) {
         : '';
 
       const nameHTML = isHighlight ? highlightHTML(s.name, qForHighlight) : escapeHTML(s.name);
+      const nameColor = getStudentNameColor(s);
+      const nameColorStyle = nameColor ? ` style="color:${nameColor}"` : '';
       const score = getScore(cls, s.id);   // ★
       const note = getNote(cls, s.id);
       const noteAttr = note ? ` data-note="${escapeHTML(note)}"` : '';
@@ -9539,7 +9599,7 @@ function jsonOut(obj) {
 
       card.innerHTML=`
         <div class="score-chip" id="score-${s.id}">${score}</div>
-        <div class="name"${noteAttr}>${seatText}<span class="student-name">${nameHTML}</span>${noteDot}</div>
+        <div class="name"${noteAttr}>${seatText}<span class="student-name"${nameColorStyle}>${nameHTML}</span>${noteDot}</div>
         <div class="actions">
           <button class="btn add">+1分</button>
           <button class="btn sub">-1分</button>
@@ -10088,7 +10148,7 @@ function jsonOut(obj) {
       tile.dataset.id=s.id;
       tile.dataset.hit = isHit ? '1' : '0';
       const seatNow=s.seat; 
-      tile.innerHTML=`${seatNow?`<span class="seat-badge">${highlightSeat(seatNow, qForHighlight)}</span>`:''}<span class="student-name">${isHit?highlightHTML(s.name, qForHighlight):escapeHTML(s.name)}</span>`;
+      tile.innerHTML=`${seatNow?`<span class="seat-badge">${highlightSeat(seatNow, qForHighlight)}</span>`:''}<span class="student-name"${getStudentNameColor(s)?` style="color:${getStudentNameColor(s)}"`:''}>${isHit?highlightHTML(s.name, qForHighlight):escapeHTML(s.name)}</span>`;
 
       // ★ 自訂 pointer 拖曳（取代原生 HTML5 DnD）
       tile.addEventListener('pointerdown', (e)=>{
@@ -12133,8 +12193,8 @@ function onTimerDone(){
                 ? `<input class="edit-input" data-field="seat" data-id="${escapeHTML(s.id)}" value="${escapeHTML(String(seat))}" />`
                 : (seat ? escapeHTML(String(seat)) : '-')}</td>
               <td class="col-name">${manageEditMode
-                ? `<input class="edit-input" data-field="name" data-id="${escapeHTML(s.id)}" value="${escapeHTML(s.name)}" />`
-                : escapeHTML(s.name)}</td>
+                ? renderManageNameEditor(cls, s)
+                : `<span class="student-name"${getStudentNameColor(s)?` style="color:${getStudentNameColor(s)}"`:''}>${escapeHTML(s.name)}</span>`}</td>
               <td class="col-sid">${manageEditMode
                 ? `<input class="edit-input" data-field="sid" data-id="${escapeHTML(s.id)}" value="${escapeHTML(sid)}" />`
                 : escapeHTML(sid)}</td>
@@ -12151,6 +12211,20 @@ function onTimerDone(){
       const list = uniqCadreTitles(titles);
       if(!list.length) return '<span class="manage-cadre-empty">未設定</span>';
       return `<div class="manage-cadre-list">${list.map(title=>`<span class="manage-cadre-chip">${escapeHTML(title)}</span>`).join('')}</div>`;
+    }
+
+    function renderManageNameEditor(cls, stu){
+      const color = getStudentNameColor(stu);
+      const inputStyle = color ? ` style="color:${color};font-weight:700"` : '';
+      const swatches = NAME_COLOR_PRESETS.map(c=>{
+        const active = c === color ? ' is-active' : '';
+        return `<button type="button" class="name-color-swatch${active}" data-id="${escapeHTML(stu.id)}" data-color="${c}" style="background:${c}" aria-label="標注顏色 ${c}" title="標注 ${c}"></button>`;
+      }).join('');
+      return `<input class="edit-input" data-field="name" data-id="${escapeHTML(stu.id)}" value="${escapeHTML(stu.name)}"${inputStyle} />
+        <div class="name-color-picker" data-id="${escapeHTML(stu.id)}">
+          ${swatches}
+          <button type="button" class="name-color-clear${color ? '' : ' is-active'}" data-id="${escapeHTML(stu.id)}" title="使用預設顏色">預設</button>
+        </div>`;
     }
 
     function renderManageCadreEditor(cls, stu, options){
@@ -12185,6 +12259,23 @@ function onTimerDone(){
       saveSession('edit student cadres');
       setStatus(`已更新「${stu.name}」的幹部職稱`);
       renderManageStudents();
+      return true;
+    }
+
+    function updateManageStudentNameColor(cls, id, color){
+      const list = state.classMap[cls] || [];
+      const stu = list.find(item => item.id === id);
+      if(!stu) return false;
+      applyManageEdits(); // 先保存已輸入的文字，避免重繪時遺失
+      const requested = normalizeNameColor(color);
+      const current = getStudentNameColor(stu);
+      const next = (requested && requested === current) ? '' : requested; // 點同色可取消標注
+      stu.nameColor = next;
+      if(stu.row && typeof stu.row === 'object') stu.row['姓名顏色'] = next;
+      saveSession('edit student name color');
+      setStatus(next ? `已標注「${stu.name}」姓名顏色` : `已清除「${stu.name}」姓名顏色`);
+      renderManageStudents();
+      if(state.mode === 'list') renderStudents(cls);
       return true;
     }
 
@@ -12237,6 +12328,18 @@ function onTimerDone(){
 
     elManageTable?.addEventListener('click', (e)=>{
       if(!manageEditMode || !manageSelectedClass) return;
+
+      const colorSwatch = e.target.closest('.name-color-swatch[data-id][data-color]');
+      if(colorSwatch){
+        updateManageStudentNameColor(manageSelectedClass, colorSwatch.dataset.id, colorSwatch.dataset.color);
+        return;
+      }
+
+      const colorClear = e.target.closest('.name-color-clear[data-id]');
+      if(colorClear){
+        updateManageStudentNameColor(manageSelectedClass, colorClear.dataset.id, '');
+        return;
+      }
 
       const removeBtn = e.target.closest('.manage-cadre-remove[data-id][data-title]');
       if(removeBtn){

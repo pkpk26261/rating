@@ -40,31 +40,25 @@
 
 - **多檔匯入**：每個檔案 = 一個班級（檔名自動作為班級名稱）
 - **單檔多工作表**：每個工作表 = 一個班級
-- 匯出的檔案可直接再匯入回來
-- 匯出後的班級工作表會一併保留四類違規次數、違規記事 JSON 與特殊記事 JSON，重新匯入時可完整還原違規狀態
+- **手動匯入只接受乾淨名單**：欄位只能是「班級、座號、姓名」，另可選填「學號、性別」（若用檔名或工作表當班級，可省略「班級」欄）。可直接匯入全校班級名條（班級／座號／學號／性別／姓名），系統會依「班級」欄自動分班。
+- 匯出的完整成績檔保留分數、作業、座位、違規與記事資料，適合備份查看，不作為新增班級的手動匯入格式。
+- Google 試算表同步載入：本機沒有班級時可作為初次載入；本機已有班級時只更新既有班級，不會新增試算表裡多出來的班級。
 
 ### 欄位對應
 
 | 欄位 | 必要 | 說明 |
 |------|:----:|------|
+| 班級 | 選填 | 同一張表有多班時使用；也可用檔名或工作表名稱當班級 |
 | 姓名 | ✅ | 學生姓名 |
-| 座號 | 選填 | 學生座號 |
-| 學號 | 選填 | 學生學號（用於跨檔案識別） |
-| 加扣分 | 選填 | 初始分數 |
-| 座位列 / 座位欄 | 選填 | 座位位置（列 1～9、欄 1～9） |
-| 作業 N | 選填 | 作業成績欄位（可多欄） |
-| 備註 | 選填 | 學生備註文字 |
-| 分組 | 選填 | 分組名稱 |
-| 遲到 / 缺交 / 上課違規 / 其他 | 選填 | 四類違規次數（由系統匯出，用於再次匯入還原） |
-| 違規記事 | 選填 | JSON 格式記事清單（由系統匯出，用於再次匯入還原） |
-| 特殊記事 | 選填 | JSON 格式特殊記事清單（由系統匯出，用於再次匯入還原） |
-| 待處理 | 選填 | 違規記錄簿的待處理勾選（1=待處理；由系統匯出，用於再次匯入還原） |
+| 座號 | ✅ | 學生座號 |
+| 學號 | 選填 | 學生學號，作為唯一識別碼 |
+| 性別 | 選填 | 全校名條常見欄位；匯入時會被略過（目前不儲存） |
 
 ## 匯出
 
 右上角「💾 匯出」可將資料輸出為 Excel / CSV / ODS，支援選擇匯出項目（分數、作業、座位、進度、分組等）。
 
-若匯出的是班級工作表，檔內也會包含違規資料，方便日後直接重新匯入。
+若匯出的是班級工作表，檔內也會包含違規資料，方便日後直接重新匯入。匯出時也會保留「姓名顏色」欄（學生管理裡替姓名設定的標注顏色），重新匯入或 Google 同步後仍會還原。
 
 ## ☁️ Google 試算表同步
 
@@ -86,6 +80,7 @@
 ### 使用方式
 
 - **⬆️ 上傳到試算表**：把目前所有班級寫入試算表（每班一個分頁，會覆蓋同名分頁）。
+- **同步會移除舊班級分頁**：本機已刪除的班級，在下次上傳同步後，也會從試算表刪除。
 - **⬇️ 從試算表下載**：把試算表內容讀回系統（會覆蓋目前的本機班級資料）。
 - **變更後自動上傳**：勾選後，資料一有變動就會在約 3.5 秒後自動上傳。
 - **開啟網頁時自動載入**：勾選後（預設開啟），每次打開網頁會優先從試算表下載最新資料；若載入失敗會自動沿用本機暫存資料。
@@ -131,6 +126,26 @@ function doPost(e) {
     }
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheets = payload.sheets || {};
+    if (payload.replaceManagedSheets === true) {
+      const keepNames = Object.keys(sheets);
+      const keep = {};
+      keepNames.forEach(function (name) { keep[name] = true; });
+      const deletable = ss.getSheets().filter(function (sh) {
+        if (keep[sh.getName()]) return false;
+        const values = sh.getDataRange().getValues();
+        if (!values || !values.length) return false;
+        const first = String(values[0][0] || '').trim();
+        const header = (values[0] || []).map(function (v) { return String(v || '').trim(); });
+        const isManaged =
+          first === '__CLASS_META__' ||
+          first.replace(/\s+/g, '') === '教學進度' ||
+          (header.indexOf('姓名') >= 0 && header.indexOf('座號') >= 0);
+        return isManaged;
+      });
+      deletable.forEach(function (sh) {
+        if (ss.getSheets().length > 1) ss.deleteSheet(sh);
+      });
+    }
     Object.keys(sheets).forEach(function (name) {
       const aoa = sheets[name];
       if (!aoa || !aoa.length) return;
