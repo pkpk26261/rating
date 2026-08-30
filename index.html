@@ -9381,9 +9381,20 @@ function jsonOut(obj) {
       const track = elStatus.querySelector('.status-track');
       const textEl = elStatus.querySelector('.status-text');
       if(!track || !textEl) return;
-      // 限制寬度不超過上方按鈕列（🧹 清除按鈕）的右側邊界
+      // 限制寬度不超過上方「🧹 清除」按鈕的右側邊界
       const btnRow = elStatus.previousElementSibling;
-      if(btnRow && btnRow.offsetWidth) elStatus.style.maxWidth = btnRow.offsetWidth + 'px';
+      const ib = elStatus.parentElement;
+      const clearBtn = document.getElementById('btn-reset');
+      let capW = 0;
+      if(ib){
+        const ibLeft = ib.getBoundingClientRect().left;
+        if(clearBtn && clearBtn.offsetParent !== null){
+          capW = Math.round(clearBtn.getBoundingClientRect().right - ibLeft);
+        }else if(btnRow && btnRow.offsetWidth){
+          capW = btnRow.offsetWidth;
+        }
+      }
+      if(capW > 0) elStatus.style.maxWidth = capW + 'px';
       const isMarquee = elStatus.classList.contains('is-marquee');
       const MARQUEE_GAP = 48; // 跑馬燈時每份文字的右側間隔（見 CSS padding-right）
       const naturalTextW = textEl.scrollWidth - (isMarquee ? MARQUEE_GAP : 0);
