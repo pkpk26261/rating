@@ -9368,10 +9368,11 @@ function jsonOut(obj) {
       setTimeout(applyStatusMarquee, 150);
       setTimeout(applyStatusMarquee, 450);
       // 觀察容器寬度變化（視窗縮放、版面重排）時重新判定跑馬燈
+      // 觀察上方按鈕列而非狀態列本身，避免下方調整狀態列寬度時觸發迴圈
       if(!setStatus._ro && typeof ResizeObserver !== 'undefined'){
         let _raf = 0;
         setStatus._ro = new ResizeObserver(()=>{ cancelAnimationFrame(_raf); _raf = requestAnimationFrame(applyStatusMarquee); });
-        setStatus._ro.observe(elStatus);
+        setStatus._ro.observe(elStatus.previousElementSibling || elStatus);
       }
     }
     // 文字寬度超過容器時，改用跑馬燈捲動顯示完整訊息
@@ -9380,6 +9381,9 @@ function jsonOut(obj) {
       const track = elStatus.querySelector('.status-track');
       const textEl = elStatus.querySelector('.status-text');
       if(!track || !textEl) return;
+      // 限制寬度不超過上方按鈕列（🧹 清除按鈕）的右側邊界
+      const btnRow = elStatus.previousElementSibling;
+      if(btnRow && btnRow.offsetWidth) elStatus.style.maxWidth = btnRow.offsetWidth + 'px';
       const isMarquee = elStatus.classList.contains('is-marquee');
       const MARQUEE_GAP = 48; // 跑馬燈時每份文字的右側間隔（見 CSS padding-right）
       const naturalTextW = textEl.scrollWidth - (isMarquee ? MARQUEE_GAP : 0);
