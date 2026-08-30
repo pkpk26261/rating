@@ -9592,8 +9592,8 @@ function jsonOut(obj) {
       // ✅ 有班級資料→隱藏歡迎引導
       hideWelcomeGuide();
 
-      // ✅ 座位未安排提示（僅加扣分模式）
-      if(state.mode === 'list'){
+      // ✅ 座位未安排提示（僅加扣分模式且為座位圖排列，座號排列不顯示）
+      if(state.mode === 'list' && state.listViewMode !== 'order'){
         const _stChk = ensureSeatState(cls);
         const _listChk = state.classMap[cls] || [];
         const _assignedSet = new Set(Object.values(_stChk.map || {}));
