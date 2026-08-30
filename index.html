@@ -205,12 +205,30 @@
       font-size:12px;
       line-height:1.2;
       opacity:.88;
-      max-width: 340px;
+      max-width: clamp(160px, 40vw, 340px);
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       padding:0;
       margin:0 0 0 2px;
+    }
+    /* 跑馬燈：文字過長時自動水平捲動，避免撐開版面 */
+    .status-inline .status-track{ display:inline-flex; white-space:nowrap; }
+    .status-inline.is-marquee{
+      text-overflow:clip;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+    }
+    .status-inline.is-marquee .status-track{
+      animation: statusMarquee var(--marquee-duration, 12s) linear infinite;
+    }
+    .status-inline.is-marquee .status-text{ padding-right:48px; }
+    @keyframes statusMarquee{
+      from{ transform:translateX(0); }
+      to{ transform:translateX(-50%); }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .status-inline.is-marquee .status-track{ animation:none; }
     }
 .topbar__left{ justify-self:start; }
     .topbar__right{ justify-self:end; }
@@ -6779,6 +6797,7 @@
 
         state.classMap   = s.classMap   || {};
         state.classOrder = s.classOrder || [];
+        sortClassOrderByGrade();
         state.scores     = s.scores     || {};
         state.deductions = s.deductions || {};
         state.violations = s.violations || {};
@@ -7490,6 +7509,7 @@
 
           state.classMap = mergedMap;
           state.classOrder = mergedOrder;
+          sortClassOrderByGrade();
           order.forEach(cls => ensureCadreOptions(cls));
 
           renderClassOptions(state.classOrder);
@@ -7546,6 +7566,57 @@
       if(state.mode==='group') renderGroup(cls);
       saveSession('class change');   // ★ 新增
     });
+
+    /* ★ 依年級分類排序班級（七年→八年→九年…，同年級再依班號） */
+    function chineseNumToInt(s){
+      const map = {零:0,〇:0,一:1,二:2,兩:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10};
+      s = String(s ?? '').trim();
+      if(!s) return NaN;
+      if(/^\d+$/.test(s)) return parseInt(s, 10);
+      if(s.indexOf('十') >= 0){
+        const [t, o] = s.split('十');
+        const tens = t === '' ? 1 : (map[t] ?? NaN);
+        const ones = (o == null || o === '') ? 0 : (map[o] ?? NaN);
+        if(Number.isNaN(tens) || Number.isNaN(ones)) return NaN;
+        return tens * 10 + ones;
+      }
+      return s.length === 1 ? (map[s] ?? NaN) : NaN;
+    }
+    function parseClassSortKey(name){
+      const raw = String(name ?? '');
+      let grade = Infinity, num = Infinity;
+      const gm = raw.match(/(?:高中|國中|國小|高|國|初)?\s*([一二三四五六七八九十]+|\d+)\s*年/);
+      if(gm){
+        const g = chineseNumToInt(gm[1]);
+        if(Number.isFinite(g)) grade = g;
+      }
+      const after = gm ? raw.slice(raw.indexOf(gm[0]) + gm[0].length) : raw;
+      const nm = after.match(/\d+/) || raw.match(/\d+/);
+      if(nm){
+        num = parseInt(nm[0], 10);
+      }else{
+        const stems = '甲乙丙丁戊己庚辛壬癸';
+        const cm = after.match(/[甲乙丙丁戊己庚辛壬癸]/) || (!gm && raw.match(/[甲乙丙丁戊己庚辛壬癸]/));
+        if(cm){
+          num = stems.indexOf(cm[0]) + 1;
+        }else{
+          const cnm = after.match(/[一二三四五六七八九十]+/);
+          const cn = cnm ? chineseNumToInt(cnm[0]) : NaN;
+          if(Number.isFinite(cn)) num = cn;
+        }
+      }
+      return { grade, num, raw };
+    }
+    function compareClassByGrade(a, b){
+      const ka = parseClassSortKey(a), kb = parseClassSortKey(b);
+      if(ka.grade !== kb.grade) return ka.grade - kb.grade;
+      if(ka.num !== kb.num) return ka.num - kb.num;
+      return ka.raw.localeCompare(kb.raw, 'zh-Hant');
+    }
+    function sortClassOrderByGrade(){
+      if(Array.isArray(state.classOrder)) state.classOrder.sort(compareClassByGrade);
+      return state.classOrder;
+    }
 
     function syncClassSelectionAfterMutation(nextClass){
       const classes = state.classOrder || [];
@@ -7795,6 +7866,7 @@
         }
       }
 
+      sortClassOrderByGrade();
       syncClassSelectionAfterMutation(newName);
 
       saveSession('rename class');
@@ -8846,17 +8918,8 @@ function jsonOut(obj) {
 
 
     function renderClassOptions(order){
-      // ★ 依班級名稱中的數字由小到大排序（低年級優先）
-      const extractNums = s => (s.match(/\d+/g)||[]).map(Number);
-      const sorted = [...order].sort((a,b)=>{
-        const na=extractNums(a), nb=extractNums(b);
-        const len=Math.max(na.length, nb.length);
-        for(let i=0;i<len;i++){
-          const va=na[i]??0, vb=nb[i]??0;
-          if(va!==vb) return va-vb;
-        }
-        return a.localeCompare(b,'zh-Hant');
-      });
+      // ★ 依年級（支援中文數字：七/八/九年…）再依班號排序
+      const sorted = [...order].sort(compareClassByGrade);
       // 同步更新 state.classOrder 的順序
       order.length=0; order.push(...sorted);
       elSelect.innerHTML='';
@@ -9292,7 +9355,51 @@ function jsonOut(obj) {
       const ns = normalizeSeatForSearch(s.seat);
       return nameHit || ns.raw.includes(q) || ns.pad.includes(q) || ns.hashRaw.includes(q) || ns.hashPad.includes(q);
     }
-    function setStatus(text){ elStatus.textContent=text; }
+    function setStatus(text){
+      if(!elStatus) return;
+      const msg = String(text ?? '');
+      elStatus.classList.remove('is-marquee');
+      elStatus.style.removeProperty('--marquee-duration');
+      elStatus.innerHTML = `<div class="status-track"><span class="status-text"></span></div>`;
+      elStatus.querySelector('.status-text').textContent = msg;
+      elStatus.title = msg; // 滑鼠停留可看完整訊息（跑馬燈之外的後備）
+      // rAF＋延遲多次判定，確保版面重排（如匯入後）穩定後仍能正確套用跑馬燈
+      requestAnimationFrame(applyStatusMarquee);
+      setTimeout(applyStatusMarquee, 150);
+      setTimeout(applyStatusMarquee, 450);
+      // 觀察容器寬度變化（視窗縮放、版面重排）時重新判定跑馬燈
+      if(!setStatus._ro && typeof ResizeObserver !== 'undefined'){
+        let _raf = 0;
+        setStatus._ro = new ResizeObserver(()=>{ cancelAnimationFrame(_raf); _raf = requestAnimationFrame(applyStatusMarquee); });
+        setStatus._ro.observe(elStatus);
+      }
+    }
+    // 文字寬度超過容器時，改用跑馬燈捲動顯示完整訊息
+    function applyStatusMarquee(){
+      if(!elStatus) return;
+      const track = elStatus.querySelector('.status-track');
+      const textEl = elStatus.querySelector('.status-text');
+      if(!track || !textEl) return;
+      const isMarquee = elStatus.classList.contains('is-marquee');
+      const MARQUEE_GAP = 48; // 跑馬燈時每份文字的右側間隔（見 CSS padding-right）
+      const naturalTextW = textEl.scrollWidth - (isMarquee ? MARQUEE_GAP : 0);
+      const boxW = elStatus.clientWidth;
+      // 遲滯：避免容器寬度在臨界值附近時反覆切換
+      const shouldMarquee = isMarquee ? (naturalTextW > boxW - 6) : (naturalTextW > boxW + 2);
+      if(shouldMarquee === isMarquee) return; // 狀態未變則不動 DOM，避免動畫被重置
+      if(shouldMarquee){
+        const dup = textEl.cloneNode(true);
+        dup.setAttribute('aria-hidden', 'true');
+        track.appendChild(dup);
+        const dur = Math.max(6, Math.min(30, (naturalTextW + MARQUEE_GAP) / 55)); // 約 55px/秒
+        elStatus.style.setProperty('--marquee-duration', dur.toFixed(1) + 's');
+        elStatus.classList.add('is-marquee');
+      }else{
+        elStatus.classList.remove('is-marquee');
+        track.querySelectorAll('.status-text').forEach((n, i)=>{ if(i > 0) n.remove(); });
+        elStatus.style.removeProperty('--marquee-duration');
+      }
+    }
     function escapeHTML(str){ return String(str).replace(/[&<>]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s])); }
 
     // 🔎 將文字中符合 q 的部分加上 .hl（不分大小寫）
@@ -9360,7 +9467,7 @@ function jsonOut(obj) {
     function makeFallbackId(sheet, seat, name){ const norm=(v)=>String(v??'').trim().replace(/\s+/g,'_').replace(/[^\w\u4e00-\u9fa5\-]/g,''); return `FALLBACK__${norm(sheet)}__${norm(seat)}__${norm(name)}`; }
     function safeSheetName(name){ return String(name).slice(0,31).replace(/[\\\/?*\[\]:]/g,'-') || 'Sheet'; }
 
-    const DEFAULT_CADRE_OPTIONS = Object.freeze(['班長','副班長','學藝','風紀','衛生','總務','康樂','資訊','輔導','圖書']);
+    const DEFAULT_CADRE_OPTIONS = Object.freeze(['班長','副班長','學藝','風紀','衛生','總務','康樂','資訊','輔導','圖書','小老師']);
     const CLASS_META_MARKER = '__CLASS_META__';
 
     /* ★ 姓名標注顏色：明亮顯眼的預設色盤 */
@@ -12392,6 +12499,7 @@ function onTimerDone(){
       if(state.classOrder.includes(name)){ alert('此班級名稱已存在！'); return; }
       state.classOrder.push(name);
       state.classMap[name] = [];
+      sortClassOrderByGrade();
       ensureCadreOptions(name);
       syncClassSelectionAfterMutation(name);
       saveSession('add class');
