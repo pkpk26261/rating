@@ -6122,7 +6122,8 @@
     #hw-table th,#hw-table td{padding:9px 12px;border-right:1px solid var(--line);}
     #hw-table th.hw-col{width:180px;min-width:180px;max-width:180px;vertical-align:top;}
     #hw-table th.hw-total{width:120px;min-width:120px;text-align:right;}
-    #hw-table .hw-table-spacer{border:0!important;background:var(--bg)!important;padding:0;min-width:24px;}
+    /* 留白欄沿用表格底色與格線，讓每位學生的列線連續到小計及平均。 */
+    #hw-table .hw-table-spacer{padding:0;min-width:24px;}
     #hw-table td[data-sum],#hw-table td[data-avg]{text-align:right;color:var(--muted);}
     #hw-pane #hw-table .hw-col-name{cursor:pointer!important;min-height:32px;max-width:156px;line-height:1.4;}
     #hw-table .hw-col-name .hw-title-text{color:var(--fg);overflow-wrap:anywhere;}
@@ -6426,7 +6427,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <button id="mode-warning" class="seg-btn" data-mode="warning" data-icon="⚠️">成績預警</button>
                 <button id="mode-violations" class="seg-btn" data-mode="violations" data-icon="🚨">違規記錄</button>
             <div class="more-menu" id="more-menu">
-              <button id="mode-more" class="seg-btn more-toggle" type="button" aria-expanded="false" aria-controls="more-dropdown">課堂工具 ▾</button>
+              <button id="mode-more" class="seg-btn more-toggle" type="button" aria-expanded="false" aria-controls="more-dropdown">
+                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4h8v3M3 12h18M10 12v3h4v-3"/></svg>
+                <span>課堂工具 ▾</span>
+              </button>
               <div class="more-dropdown" id="more-dropdown" hidden>
                 <span class="menu-section-label">課堂活動</span>
                 <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
@@ -14304,7 +14308,7 @@ function onTimerDone(){
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
-        _moreBtn.textContent = '課堂工具 ▾';
+        // 名稱與 SVG 固定留在按鈕內，切換功能只更新選取狀態。
       }
       // 關閉下拉
       const _dd = document.getElementById('more-dropdown');
