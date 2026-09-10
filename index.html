@@ -4485,7 +4485,7 @@
     /* 座號排列固定列高，不因學生人數或搜尋結果較少而拉伸。 */
     body[data-mode="list"] #students.grid.is-order{
       align-content: start;
-      grid-auto-rows: 120px;
+      grid-auto-rows: minmax(0, 1fr);
     }
     body[data-mode="list"] #students.grid .card{
       box-shadow: none !important;
@@ -6360,6 +6360,16 @@
 .app-message-dialog p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;}
 .app-message-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
 .app-message-actions [hidden]{display:none;}
+/* 加扣分卡片依內容區高度平均分配，卡片中間留白可收縮。 */
+body[data-mode="list"] #students.grid{flex:1 1 0;min-height:0;align-content:stretch;gap:6px;}
+body[data-mode="list"] #students.grid .card{min-height:0;box-sizing:border-box;padding:6px !important;gap:3px;container-type:size;}
+body[data-mode="list"] #students.grid .card .name{flex-shrink:0;padding-right:30px;}
+body[data-mode="list"] #students.grid .card .actions{flex-shrink:0;margin-top:auto;}
+body[data-mode="list"] #students.grid .card .actions .btn{height:clamp(22px,30cqh,38px);min-height:0;padding:2px 0 !important;}
+body[data-mode="list"] #students.grid .stage{height:auto;min-height:0;box-sizing:border-box;position:static;padding:0;display:flex;align-items:center;justify-content:center;}
+/* 頂部功能導覽：縮短按鈕間距與左右留白。 */
+body .app .topbar.topbar--compact .modebar > .seg{gap:2px;}
+body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;padding-right:8px !important;gap:4px;}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -11061,6 +11071,7 @@ function jsonOut(obj) {
       const list = state.classMap[cls] || [];
       const {rows, cols} = getCurrentRowsCols(cls);
       elStudents.style.setProperty('--list-cols', cols);
+      elStudents.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))${state.showStageInList && state.listViewMode !== 'order' ? ' 32px' : ''}`;
 
       // ★ 座號順序模式
       if(state.listViewMode === 'order'){
@@ -11074,6 +11085,7 @@ function jsonOut(obj) {
             const sb = parseInt(b.seat, 10) || 9999;
             return sa - sb;
           });
+        elStudents.style.gridTemplateRows = `repeat(${Math.max(1, Math.ceil(sorted.length / cols))}, minmax(0, 1fr))`;
         for(const stu of sorted){
           frag2.appendChild(buildStudentCard(cls, stu, q && matchFilter(stu, q) ? q : ''));
         }
