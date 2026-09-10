@@ -1953,6 +1953,16 @@
       background: var(--card);
       padding:22px 20px; text-align:center;
     }
+
+    .gs-progress{margin:12px 0 6px;}
+    .gs-progress[hidden]{display:none;}
+    .gs-progress-label{display:block;font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:6px;}
+    .gs-progress-track{height:7px;overflow:hidden;border-radius:99px;background:var(--line);}
+    .gs-progress-fill{width:36%;height:100%;border-radius:inherit;background:var(--accent);animation:gs-progress-flow 1.5s ease-in-out infinite;}
+    .gs-progress[data-phase="done"] .gs-progress-fill{width:100%;animation:none;transform:none;background:var(--ok,#30a46c);}
+    .gs-progress[data-phase="error"] .gs-progress-fill{width:100%;animation:none;transform:none;background:var(--muted);opacity:.45;}
+    @keyframes gs-progress-flow{from{transform:translateX(-110%);}to{transform:translateX(290%);}}
+    @media(prefers-reduced-motion:reduce){.gs-progress-fill{animation:none;width:100%;opacity:.5;}}
     .gs-loading-spinner{
       width:54px; height:54px; margin:0 auto 14px; border-radius:999px;
       border:4px solid rgba(129,140,248,.18); border-top-color:var(--accent);
@@ -7194,6 +7204,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <button id="gs-download" class="btn">⬇️ 從試算表下載</button>
           <span id="gs-last-sync" style="font-size:12px; color:var(--muted);">尚未同步</span>
         </div>
+        <div id="gs-progress" class="gs-progress" hidden><span id="gs-progress-label" class="gs-progress-label" role="status" aria-live="polite"></span><div id="gs-progress-bar" class="gs-progress-track" role="progressbar" aria-label="Google 同步進度" aria-describedby="gs-progress-label"><div class="gs-progress-fill"></div></div></div>
         <div id="gs-status" style="font-size:13px; min-height:20px; color:var(--muted);"></div>
 
         <!-- 設定說明 -->
@@ -7224,6 +7235,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     <div class="gs-loading-panel" id="gs-loading-panel" tabindex="-1">
       <div class="gs-loading-spinner" aria-hidden="true"></div>
       <h3 id="gs-loading-title" class="gs-loading-title">正在從 Google 試算表載入最新資料…</h3>
+      <div id="gs-loading-progress" class="gs-progress" hidden><span id="gs-loading-progress-label" class="gs-progress-label" role="status" aria-live="polite"></span><div id="gs-loading-progress-bar" class="gs-progress-track" role="progressbar" aria-label="Google 同步進度" aria-describedby="gs-loading-progress-label"><div class="gs-progress-fill"></div></div></div>
       <p id="gs-loading-desc" class="gs-loading-desc">載入完成前將暫停操作，請稍候。</p>
     </div>
   </div>
@@ -7684,7 +7696,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     function markCloudFailure(operation, error){
       saveHealth.cloud = 'error';
       saveHealth.operation = operation;
-      saveHealth.cloudError = `${operation === 'download' ? '雲端載入' : '上傳'}失敗：${gsFriendlyError(error)}`;
+      saveHealth.cloudError = error?.code === 'UPLOAD_UNCONFIRMED'
+        ? `上傳結果尚未確認：${gsFriendlyError(error)}`
+        : `${operation === 'download' ? '雲端載入' : '上傳'}失敗：${gsFriendlyError(error)}`;
       gsSetSyncStatus(saveHealth.cloudError, 'error');
       renderSaveHealth();
     }
@@ -9424,6 +9438,22 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(!el) return;
       el.textContent = msg || '';
       el.dataset.kind = kind || '';
+      const phase = kind === 'error' ? 'error' : kind === 'ok' ? 'done' : 'running';
+      for(const id of ['gs-progress','gs-loading-progress']){
+        const panel = document.getElementById(id);
+        const label = document.getElementById(id+'-label');
+        const bar = document.getElementById(id+'-bar');
+        if(!panel || !label || !bar) continue;
+        panel.hidden = !msg;
+        panel.dataset.phase = phase;
+        label.textContent = phase === 'done' ? '同步作業完成' : phase === 'error' ? '同步已停止，請查看下方說明' : saveHealth.operation === 'download' ? '下載處理中' : '上傳處理中';
+        bar.setAttribute('aria-label', phase === 'done' ? '同步作業完成' : phase === 'error' ? '同步已停止' : 'Google 同步進行中');
+        if(phase === 'done') bar.setAttribute('aria-valuenow','100');
+        else bar.removeAttribute('aria-valuenow');
+        bar.setAttribute('aria-valuemin','0');
+        bar.setAttribute('aria-valuemax','100');
+      }
+
       el.style.color = kind==='error' ? 'var(--danger, #e5484d)'
                      : kind==='ok'    ? 'var(--ok, #30a46c)'
                      : 'var(--muted)';
@@ -9447,7 +9477,14 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         if(!response.ok) throw new Error(`伺服器回應錯誤（HTTP ${response.status}）`);
         return await gsParseResponse(response);
       }catch(error){
-        if(controller.signal.aborted) throw new Error(`雲端回應逾時（已等待 ${timeoutMs/1000} 秒），請稍候重試，並檢查網路及 Google Apps Script 部署狀態。`);
+        if(controller.signal.aborted){
+          const upload = options?.method === 'POST';
+          const timeoutError = new Error(upload
+            ? `雲端回應逾時（已等待 ${timeoutMs/1000} 秒）。Google 可能仍在處理，或已完成寫入但回應未送達。本機資料仍保留，請先開啟 Google 試算表核對，勿立即重複上傳。`
+            : `雲端回應逾時（已等待 ${timeoutMs/1000} 秒），請稍候重試，並檢查網路及 Google Apps Script 部署狀態。`);
+          if(upload) timeoutError.code = 'UPLOAD_UNCONFIRMED';
+          throw timeoutError;
+        }
         throw error;
       }finally{ clearTimeout(timeout); }
     }
@@ -9468,7 +9505,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       saveHealth.busy = true;
       saveHealth.operation = 'upload';
       saveHealth.cloudError = '';
-      gsSetSyncStatus('上傳中…', '');
+      gsSetSyncStatus('正在準備上傳資料…', '');
       renderSaveHealth();
       if(!saveHealth.revision){
         saveHealth.revision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -9478,6 +9515,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       const uploadedUrl = gsConfig.url;
       const uploadedToken = gsConfig.token;
       let succeeded = false;
+      let slowUploadTimer = setTimeout(()=>{
+        gsSetSyncStatus('仍在等待 Google 完成備份與上傳，最多等待 90 秒。請勿重複上傳。', '');
+      },20000);
       try{
         const sheets = {};
         // ★ 幹部選項集中寫入獨立的 __CLASS_META__ 分頁，班級分頁本身不含 metadata 列
@@ -9506,12 +9546,14 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           }
         }
         const payload = { token: gsConfig.token, action: 'upload', sheets, replaceManagedSheets: true };
+        gsSetSyncStatus('正在上傳，等待 Google 完成備份與寫入…', '');
         const data = await gsRequest(uploadedUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload),
           redirect: 'follow'
-        });
+        },90000);
+        clearTimeout(slowUploadTimer); slowUploadTimer = null;
         if(!data.ok) throw new Error(data.error || '上傳失敗');
         // 回應只代表這一版與這組連線設定成功，不能替後續編輯背書。
         if(uploadedUrl !== gsConfig.url || uploadedToken !== gsConfig.token){
@@ -9534,6 +9576,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         markCloudFailure('upload', err);
         return false;
       }finally{
+        clearTimeout(slowUploadTimer);
         saveHealth.busy = false;
         renderSaveHealth();
         if(succeeded && saveHealth.revision !== uploadedRevision) gsScheduleAutoUpload();
@@ -9562,7 +9605,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         title: '正在從 Google 試算表載入最新資料…',
         desc: '載入完成前將暫停操作，請稍候。'
       });
-      gsSetSyncStatus('下載中…', '');
+      gsSetSyncStatus('正在下載，等待 Google 傳回資料…', '');
       // 下載多個分頁時允許 Google 完成回應；等待期間不重送請求。
       let slowDownloadTimer=setTimeout(()=>{
         gsSetLoadingMask(true,{
@@ -9578,6 +9621,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         clearTimeout(slowDownloadTimer);slowDownloadTimer=null;
         gsSetLoadingMask(true,{title:'正在整理下載的班級資料…',desc:'已收到雲端回應，正在整理名單與成績，請稍候。'});
         if(!data.ok) throw new Error(data.error || '下載失敗');
+        gsSetSyncStatus('已收到雲端資料，正在整理名單與成績…', '');
         const sheetsObj = data.sheets || {};
         const hadLocalClassesBeforeDownload = !!(state.classOrder && state.classOrder.length);
         // ★ 先從 __CLASS_META__ 分頁還原幹部選項
@@ -9632,7 +9676,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           !localSaved ? '雲端資料已載入，但本機儲存失敗，請重試儲存。' : hadLocalClassesBeforeDownload
             ? '已以雲端資料覆蓋本機班級、名單與紀錄。'
             : '已從試算表下載並載入班級資料。',
-          'ok'
+          localSaved ? 'ok' : 'error'
         );
         return true;
       }catch(err){

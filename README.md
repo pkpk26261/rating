@@ -135,11 +135,15 @@
 ### 一次性設定
 
 1. 開啟（或新建）一個 Google 試算表 → 上方選單「**擴充功能**」→「**Apps Script**」。
-2. 刪除編輯器內原本的內容，貼上下方「Apps Script 程式碼」，並把 `SECRET_TOKEN` 改成你自己的密碼。
+2. 刪除編輯器內原本的內容，貼上下方「Apps Script 程式碼」。找到最上方引號內的「**在這裡填入你的密碼**」，換成自己設定的密碼，**保留左右引號**。整份程式只需修改這一行，其他地方不用改。
 3. 先在 Apps Script 左側「**服務 → ＋**」新增 **Google Sheets API**（識別名稱 `Sheets`）。若使用自訂 Google Cloud 專案，也需在該專案啟用 Sheets API。再點右上角「**部署**」→「**新增部署作業**」→ 齒輪選「**網頁應用程式**」。
 4. 設定「**執行身分**」為**你自己**、「**誰可以存取**」為「**任何人**」，按「部署」並完成授權。
 5. 複製產生的「網頁應用程式」網址（形如 `https://script.google.com/macros/s/.../exec`）。
 6. 回到成績系統，點右上「**資料與同步 → Google 同步設定與下載**」，貼上網址與剛剛設定的密碼。雲端寫入保護必須更新下方 Apps Script 並重新部署新版本；編輯既有部署可沿用原網址與密碼。
+
+上傳與下載提供流動進度條及處理階段提示，Google 等待期間不顯示估算百分比；成功後填滿，錯誤或逾時停止。下載遮罩內也顯示進度條，並支援系統減少動畫設定。
+
+上傳最多等待 90 秒，20 秒後顯示仍在等待 Google 完成備份與上傳。等待期間不重複送出請求；逾時顯示「上傳結果尚未確認」，保留本機資料且不自動重傳。Google 可能仍在處理或已完成寫入，請先開啟試算表核對，勿立即重複上傳。此期限修改在網站端，不需再次更新 Apps Script。
 
 雲端下載最多等待 90 秒；超過 20 秒會顯示仍在等待的提示，不會重複送出下載。若逾時，原有本機資料保持不變，可稍候按「重試」。逾時表示未在期限內收到完整回應，不一定是網路斷線，也可能是 Google 端處理較久；若持續發生，請檢查 Apps Script 部署與執行記錄。
 
@@ -180,11 +184,16 @@
 > 系統內的「資料與同步 → Google 同步設定與下載 → 第一次設定」也提供同一份程式碼與「複製程式碼」按鈕。
 
 ```javascript
+// 請把下一行的「在這裡填入你的密碼」換成自己的密碼，保留左右引號。
+// 整份程式只需修改這一行，其他地方不用改。
+const SECRET_TOKEN = '在這裡填入你的密碼';
+
+// ── 以下程式不用修改 ──
 /** 成績系統同步：先驗證，再以單一 Sheets API batchUpdate 備份及寫入。
  * 啟用 Apps Script「服務 → Google Sheets API」後，設定密碼並更新部署。
  * 隱藏備份只保留最近一次上傳前的同步分頁；不是整份試算表的歷史封存。
  */
-const SECRET_TOKEN = '請改成你自己的密碼';
+
 const BACKUP_SHEET = '__GRADE_SYNC_BACKUP__';
 const BACKUP_PREFIX = '__GRADE_SYNC_COPY_';
 const BACKUP_MARKER = 'grade-sync-backup-v1';
@@ -193,7 +202,8 @@ function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 function authorized(token) {
-  return SECRET_TOKEN !== '請改成你自己的密碼' && token === SECRET_TOKEN;
+  return typeof SECRET_TOKEN === 'string' && SECRET_TOKEN.trim().length > 0 &&
+    SECRET_TOKEN !== ['在這裡', '填入你的密碼'].join('') && token === SECRET_TOKEN;
 }
 function withSyncLock(action) {
   const lock = LockService.getScriptLock();
