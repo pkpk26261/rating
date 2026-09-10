@@ -6454,8 +6454,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             </button>
             <div class="data-dropdown" id="data-dropdown" hidden>
               <div class="data-inner">
-        <time id="dt-display" class="dt-display" aria-label="目前日期與時間">
-          <span id="dt-date"></span> <span id="dt-time"></span>
+        <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
+          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
         </time>
                 <div id="save-health" class="save-health" aria-label="儲存與同步狀態">
                   <div class="save-health-summary">
@@ -6612,7 +6612,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div class="prog-filters" role="search" aria-label="搜尋與篩選教學進度">
             <label class="prog-search"><input id="prog-search" type="search" placeholder="搜尋進度…" aria-label="搜尋進度或主題"></label>
             <label class="prog-filter-toggle"><input id="prog-pending" type="checkbox">只看未完成</label>
-            <button id="btn-prog-reset" class="btn" type="button" hidden>清除篩選</button>
           </div>
             <button id="btn-prog-collapse" class="btn" type="button">收合主題</button>
             <button id="btn-prog-edit" class="btn" type="button" aria-pressed="false">編輯內容</button>
@@ -6910,7 +6909,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
   <div id="hw-column-menu" class="hw-column-menu" aria-label="作業欄操作" hidden>
     <strong id="hw-column-label"></strong>
-    <button type="button" data-hw-action="batch">批次輸入</button><button type="button" data-hw-action="copy">複製整欄</button><button type="button" data-hw-action="rename">改名</button><button type="button" data-hw-action="left">前移</button><button type="button" data-hw-action="right">後移</button><button type="button" data-hw-action="delete" class="danger">刪除作業…</button>
+    <button type="button" data-hw-action="copy">複製整欄</button><button type="button" data-hw-action="rename">改名</button><button type="button" data-hw-action="left">前移</button><button type="button" data-hw-action="right">後移</button><button type="button" data-hw-action="delete" class="danger">刪除作業…</button>
   </div>
   <div id="hw-range-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="hw-range-title">
     <div class="modal hw-range-dialog"><header><h3 id="hw-range-title">貼上成績</h3><button id="hw-range-close" class="close" type="button" aria-label="關閉">✕</button></header>
@@ -6926,7 +6925,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
   <div id="bulk-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="bulk-title">
     <div class="modal" role="document">
       <header>
-        <h3 id="bulk-title">⚡ 批次輸入 — <span id="bulk-colname"></span></h3>
+        <h3 id="bulk-title">⚡ 整批登錄 — <span id="bulk-colname"></span></h3>
         <button id="bulk-close" class="close" aria-label="關閉">✕</button>
       </header>
       <div class="content">
@@ -8126,13 +8125,16 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       const dd = pad2(now.getDate());
       const hh = pad2(now.getHours());
       const mi = pad2(now.getMinutes());
-      const dateText = `${year}/${mm}/${dd}`, timeText = `${hh}:${mi}`;
+      const dateText = `${year}/${mm}/${dd}`, timeText = `${hh}:${mi}:${pad2(now.getSeconds())}`;
       if(dtDateEl.textContent !== dateText) dtDateEl.textContent = dateText;
       if(dtTimeEl.textContent !== timeText) dtTimeEl.textContent = timeText;
     }
     updateDateTime();
-    setInterval(updateDateTime, 1000);
+    setInterval(updateDateTime, 250);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateDateTime();});
+    window.addEventListener('focus',updateDateTime);
+    window.addEventListener('pageshow',updateDateTime);
+    document.getElementById('btn-data')?.addEventListener('click',updateDateTime);
 
 
 
@@ -12022,7 +12024,7 @@ function jsonOut(obj) {
       elBtnViewSeat?.classList.toggle('active', isSeat);
       elBtnViewOrder?.classList.toggle('active', !isSeat);
       // 座號模式下隱藏「顯示講台」（講台是座位圖概念）
-      if(elToggleStageWrap) elToggleStageWrap.classList.toggle('hidden', !isSeat);
+      if(elToggleStageWrap) elToggleStageWrap.classList.toggle('hidden', state.mode !== 'list' || !isSeat);
     }
 
     elBtnViewSeat?.addEventListener('click', ()=>{
@@ -12518,11 +12520,10 @@ function jsonOut(obj) {
       if(empty){
         empty.hidden = visible > 0 || !searching;
         empty.firstElementChild.colSpan = 1 + (progView.className ? 1 : classes.length);
-        empty.firstElementChild.textContent = progView.pending && !progView.query.trim() ? '這個範圍的進度已全部完成。' : '沒有符合的進度。可清除篩選，或新增進度。';
+        empty.firstElementChild.textContent = progView.pending && !progView.query.trim() ? '這個範圍的進度已全部完成。' : '沒有符合的進度。請調整搜尋文字或「只看未完成」條件。';
       }
       const total = pg.items.filter(it=>it.type !== 'topic').length;
       status.textContent = `${progView.className || '全部班級'} · 顯示 ${visible} / ${total} 項進度`;
-      document.getElementById('btn-prog-reset').hidden = !searching && !progView.className;
       document.getElementById('btn-prog-collapse').disabled = searching || !pg.items.some(it=>it.type==='topic');
     }
 
@@ -12543,14 +12544,9 @@ function jsonOut(obj) {
       const collapse = document.getElementById('btn-prog-collapse');
       collapse.textContent = topics.length && topics.every(it=>it.collapsed) ? '展開主題' : '收合主題';
       collapse.disabled = !topics.length;
-      document.getElementById('btn-prog-reset').hidden = !progView.query && !progView.pending && !progView.className;
       applyProgressFilters();
     }
 
-    function resetProgressFilters(){
-      progView.query=''; progView.className=''; progView.pending=false;
-      syncProgressView();
-    }
     function prepareProgressAdd(pg){
       progView.editing = true;
       progView.query=''; progView.className=''; progView.pending=false;
@@ -12972,7 +12968,7 @@ classes.forEach((cls, idx)=>{
       noResults.hidden = true;
       const message = document.createElement('td');
       message.colSpan = colCount;
-      message.textContent = '沒有符合的進度。可清除篩選，或新增進度。';
+      message.textContent = '沒有符合的進度。請調整搜尋文字或「只看未完成」條件。';
       noResults.appendChild(message);
       tbody.appendChild(noResults);
       elProgTable.appendChild(thead);
@@ -14316,8 +14312,8 @@ function onTimerDone(){
       if(_dd){ _dd.hidden = true; }
       _moreBtn?.setAttribute('aria-expanded','false');
 
-      // 只在「座位」模式顯示「顯示講台」勾選
-      elToggleStageWrap.classList.toggle('hidden', m!=='list');
+      // 講台選項只適用於加扣分的座位圖，切頁時也同步排列狀態。
+      applyListViewUI();
       document.getElementById('list-view-seg')?.classList.toggle('hidden', m!=='list');
       applyStageToggleUI();
 
@@ -14813,7 +14809,6 @@ function openDelProgressClass(){
 function bindProgressPageUI(){
       document.getElementById('prog-search').addEventListener('input', e=>{ progView.query=e.target.value; applyProgressFilters(); });
       document.getElementById('prog-pending').addEventListener('change', e=>{ progView.pending=e.target.checked; applyProgressFilters(); });
-      document.getElementById('btn-prog-reset').addEventListener('click', resetProgressFilters);
       document.getElementById('btn-prog-edit').addEventListener('click', ()=>{ progView.editing=!progView.editing; renderProgress(); });
       document.getElementById('btn-prog-collapse').addEventListener('click', ()=>{
         const pg=state.progress.pages[state.progress.active];
@@ -15213,7 +15208,7 @@ elProgAdd?.addEventListener('click', ()=>{
       menu.querySelector('[data-hw-action="left"]').disabled=col===0;
       menu.querySelector('[data-hw-action="right"]').disabled=col===hw.cols.length-1;
       menu.querySelector('[data-hw-action="delete"]').disabled=hw.cols.length<=1;
-      for(const action of ['batch','copy'])menu.querySelector(`[data-hw-action="${action}"]`).disabled=!hwGrid.selection;
+      menu.querySelector('[data-hw-action="copy"]').disabled=!hwGrid.selection;
       const r=button.getBoundingClientRect();menu.style.left=Math.max(12,Math.min(innerWidth-menu.offsetWidth-12,r.left))+'px';menu.style.top=Math.max(12,Math.min(r.bottom+6,innerHeight-menu.offsetHeight-12))+'px';
       menu.querySelector('button:not(:disabled)')?.focus();
     }
@@ -15291,7 +15286,6 @@ elProgAdd?.addEventListener('click', ()=>{
       const action=button.dataset.hwAction,col=hwGrid.menuCol,cls=hwView.cls,hw=ensureHWState(cls);closeHWColumnMenu();
       if(action==='copy'){copyHWRange();return;}
       if(!hwCanWrite()){hwMessage('目前無法修改成績。',true);return;}
-      if(action==='batch')openBulkModal(cls,col);
       if(action==='rename')openHWRangeDialog('rename',{cls,c0:col,signature:hwStructure(cls),hw,revision:saveHealth.revision},hw.cols[col]);
       if(action==='delete')openHWColDeleteModal(cls,col);
       if(action==='left'||action==='right'){hwMoveCol(hw,col,col+(action==='left'?-1:1));saveHWToLS(cls);renderHW(cls);hwMessage('已調整作業順序，成績跟隨原作業保留。');}
