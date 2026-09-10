@@ -6445,6 +6445,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       <div class="topbar__right">
         <div class="topbar__right-actions">
+          <button id="btn-install-app" class="btn" type="button" aria-haspopup="dialog" aria-controls="webapp-guide" hidden>安裝 App</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
             <button id="mode-manage" class="btn" data-mode="manage" data-icon="📋">學生管理</button>
           <div class="data-menu" id="data-menu">
@@ -17614,21 +17615,33 @@ noteSave?.addEventListener('click', ()=>{
 
 </script>
 
-<dialog id="webapp-guide" aria-labelledby="webapp-guide-title">
+<dialog id="webapp-guide" aria-labelledby="webapp-guide-title" aria-describedby="webapp-guide-description">
   <img src="icon-192.png" width="56" height="56" alt="">
-  <h2 id="webapp-guide-title">將成績系統加入應用程式</h2>
-  <p>從主畫面或應用程式圖示開啟，使用獨立視窗管理班級。</p>
-  <p id="webapp-guide-steps"></p>
-  <div class="webapp-guide-actions"><button type="button" id="webapp-guide-later" class="btn">先使用網頁版</button><button type="button" id="webapp-guide-install" class="btn add" hidden>安裝 Web App</button></div>
+  <h2 id="webapp-guide-title">安裝成績系統</h2>
+  <p id="webapp-guide-description">下次直接點圖示，就能開啟成績系統</p>
+  <p id="webapp-guide-context"></p>
+  <ol id="webapp-guide-steps"></ol>
+  <details id="webapp-guide-alternatives"><summary>找不到安裝選項？</summary><p id="webapp-guide-help"></p></details>
+  <p id="webapp-guide-status" role="status" aria-live="polite" hidden></p>
+  <div class="webapp-guide-actions"><button type="button" id="webapp-guide-install" class="btn add" hidden>立即安裝</button><button type="button" id="webapp-guide-later" class="btn">稍後再說</button></div>
 </dialog>
 <style>
 #webapp-guide{width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;padding:28px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--fg);box-shadow:0 24px 80px #0005;}
 #webapp-guide::backdrop{background:#08111bb3;backdrop-filter:blur(4px);}
-#webapp-guide img{border-radius:12px;}#webapp-guide h2{font-size:21px;margin:16px 0 10px;}
-#webapp-guide p{font-size:14px;line-height:1.8;color:var(--muted);}
-#webapp-guide-steps{padding:14px;border-radius:10px;background:var(--bg);white-space:pre-line;}
-.webapp-guide-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:20px;}
-#webapp-guide button{min-height:44px;}#webapp-guide-install[hidden]{display:none;}
+#webapp-guide img{border-radius:12px;}#webapp-guide h2{font-size:23px;margin:16px 0 8px;}
+#webapp-guide p{font-size:14px;line-height:1.7;color:var(--muted);}
+#webapp-guide-context{margin-top:20px;}
+#webapp-guide-steps{list-style:none;padding:0;margin:16px 0;display:grid;gap:10px;counter-reset:install-step;}
+#webapp-guide-steps li{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);counter-increment:install-step;}
+#webapp-guide-steps li::before{content:counter(install-step);font-size:13px;font-weight:700;color:var(--fg);}
+#webapp-guide-steps svg{width:24px;height:24px;flex-shrink:0;color:var(--accent);}
+#webapp-guide-steps strong{display:block;font-size:16px;}#webapp-guide-steps small{display:block;margin-top:3px;font-size:13px;line-height:1.5;color:var(--muted);}
+#webapp-guide summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;color:var(--fg);text-decoration:underline;text-underline-offset:4px;}
+#webapp-guide-status{padding:12px;border:1px solid var(--line);border-radius:10px;}
+.webapp-guide-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+#webapp-guide button{min-height:48px;width:100%;}#webapp-guide-install{font-weight:700;}
+#btn-install-app[hidden],#webapp-guide [hidden]{display:none!important;}
+@media(max-width:600px){#webapp-guide{padding:22px;}body .app .topbar__right-actions{flex-wrap:wrap;}}
 </style>
 <script>
 // BEGIN WEB APP GUIDE
@@ -17637,45 +17650,75 @@ function webAppGuideKind(protocol, standalone, userAgent, touchPoints){
   if(protocol==='file:') return 'file';
   if(/iPad|iPhone|iPod/.test(userAgent)||(/Macintosh/.test(userAgent)&&touchPoints>1)) return 'ios';
   if(/Macintosh/.test(userAgent)&&/Safari/.test(userAgent)&&!/Chrome|Chromium|Edg/.test(userAgent)) return 'safari';
-  return 'browser';
+  if(/Android/.test(userAgent)) return /Chrome|Chromium|EdgA/.test(userAgent)?'android':'other';
+  if(/Edg\//.test(userAgent)) return 'edge';
+  return /Chrome|Chromium/.test(userAgent)?'browser':'other';
 }
-// END WEB APP GUIDE
-(()=>{
-  const dialog=document.getElementById('webapp-guide');
-  const steps=document.getElementById('webapp-guide-steps');
-  const install=document.getElementById('webapp-guide-install');
-  const standalone=window.matchMedia('(display-mode: standalone)');
-  const overlay=window.matchMedia('(display-mode: window-controls-overlay)');
-  let deferredPrompt=null, dismissed=false;
+function webAppGuideContent(mode){
+  const more=['menu','開啟瀏覽器選單','點選右上角的 ⋮ 或 ⋯'];
+  const confirm=['check','確認加入','完成後，從新圖示開啟成績系統'];
+  const help='若選單沒有安裝選項，可改用最新版 Chrome 或 Edge 開啟同一網址。已安裝者可從應用程式圖示開啟；網站無法確定一般分頁是否已安裝。';
+  if(mode==='file')return {context:'目前開啟的是本機 HTML，無法直接安裝。',steps:[['save','先下載完整備份','從「資料與同步」下載完整備份'],['link','開啟系統 HTTPS 網址','在新網址還原備份後，再點「安裝 App」']],help:''};
+  if(mode==='ios')return {context:'請在 Safari 依序操作：',steps:[['share','點選「分享」','開啟 Safari 的分享選單'],['plus','選擇「加入主畫面」','若沒有看到，向下捲動分享選單'],['check','點選「加入」','若有「以 Web App 開啟」，請保持開啟']],help:'請確認使用 Safari；若在其他 App 內開啟，先將網址複製到 Safari，再開啟分享選單。'};
+  if(mode==='safari')return {context:'在 Mac 的 Safari 依序操作：',steps:[['menu','開啟「檔案」選單','位於螢幕上方的選單列'],['plus','選擇「加入 Dock 中」','也可以從 Safari 的分享選單尋找'],confirm],help:'「加入 Dock 中」需要 macOS Sonoma 14 或更新版本。若沒有此選項，可改用 Chrome 或 Edge。'};
+  if(mode==='android')return {context:'在手機瀏覽器依序操作：',steps:[more,['plus','選擇「安裝應用程式」','也可能顯示「加入主畫面」'],confirm],help};
+  if(mode==='edge')return {context:'在電腦 Edge 依序操作：',steps:[more,['plus','選擇「應用程式」','再選「將此網站安裝為應用程式」'],confirm],help};
+  if(mode==='browser')return {context:'在電腦 Chrome 依序操作：',steps:[more,['plus','開啟「投放、儲存及分享」','選擇「將網頁安裝為應用程式」'],confirm],help:'也可查看網址列右側是否有安裝圖示。選單名稱可能因版本而不同。'+help};
+  return {context:'請改用支援安裝的瀏覽器：',steps:[['link','複製目前網址','在 Chrome、Edge 或 Safari 開啟'],['plus','點選「安裝 App」','依該瀏覽器顯示的步驟加入']],help:''};
+}
+function initWebAppGuide(){
+  const get=id=>document.getElementById(id);
+  const dialog=get('webapp-guide'),steps=get('webapp-guide-steps'),install=get('webapp-guide-install'),entry=get('btn-install-app'),status=get('webapp-guide-status');
+  const standalone=window.matchMedia('(display-mode: standalone)'),overlay=window.matchMedia('(display-mode: window-controls-overlay)');
+  const seenKey='pscore_webapp_guide_seen_v1';
+  let deferredPrompt=null,busy=false,installed=false;
   const isApp=()=>standalone.matches||overlay.matches||navigator.standalone===true;
   const kind=()=>webAppGuideKind(location.protocol,isApp(),navigator.userAgent,navigator.maxTouchPoints||0);
+  const icons={menu:'M5 6h14M5 12h14M5 18h14',share:'M12 15V3m-4 4 4-4 4 4M5 11v10h14V11',plus:'M5 5h14v14H5zM12 8v8m-4-4h8',check:'m5 12 4 4L19 6',save:'M5 3h14v18H5zM8 3v6h8V3M8 21v-7h8v7',link:'m10 14 4-4M8 16l-2 2a3 3 0 0 1-4-4l5-5a3 3 0 0 1 4 0m2 6a3 3 0 0 0 4 0l5-5a3 3 0 0 0-4-4l-2 2'};
+  function setStatus(message){status.textContent=message;status.hidden=!message;}
   function render(){
-    const mode=kind();
-    if(mode==='none'){dialog.close();return;}
-    install.hidden=!deferredPrompt||mode==='file';
-    steps.textContent=mode==='file'?'目前是直接開啟本機 HTML，無法從這個檔案安裝 Web App。請改用系統的 HTTPS 網址，再依提示安裝。切換網址前，請先下載完整備份，於新網址還原資料。':
-      mode==='ios'?'在 Safari 開啟本網站，點選「分享」→「加入主畫面」。若顯示「以 Web App 開啟」，請保持開啟，再點「加入」。完成後從主畫面圖示開啟。':
-      deferredPrompt?'點選下方「安裝 Web App」，再依瀏覽器提示確認。安裝後請從應用程式圖示開啟。':
-      mode==='safari'?'在 Safari 的「檔案」選單選擇「加入 Dock」，確認後從 Dock 圖示開啟。':
-      '請在瀏覽器選單尋找「安裝應用程式」或「加入主畫面」。若找不到，可改用 Chrome 或 Edge 開啟本網站；已安裝者請從應用程式圖示開啟。';
+    const mode=kind();entry.hidden=mode==='none'||installed;
+    if(entry.hidden){if(dialog.open)dialog.close();return;}
+    const content=webAppGuideContent(mode),canInstall=!!deferredPrompt&&mode!=='file';
+    install.hidden=!canInstall&&!busy;install.disabled=busy;
+    install.textContent=busy?'正在開啟安裝視窗…':'立即安裝';
+    get('webapp-guide-context').textContent=canInstall?'點選「立即安裝」，再於瀏覽器視窗確認。':content.context;
+    steps.hidden=canInstall;steps.replaceChildren();
+    for(const [icon,title,detail] of content.steps){
+      const row=document.createElement('li');
+      row.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+icons[icon]+'"/></svg>';
+      const text=document.createElement('span'),strong=document.createElement('strong'),small=document.createElement('small');
+      strong.textContent=title;small.textContent=detail;text.append(strong,small);row.append(text);steps.append(row);
+    }
+    get('webapp-guide-alternatives').hidden=canInstall||!content.help;get('webapp-guide-help').textContent=content.help;
   }
-  window.addEventListener('beforeinstallprompt',event=>{
-    event.preventDefault();deferredPrompt=event;render();
-  });
-  window.addEventListener('appinstalled',()=>{deferredPrompt=null;dialog.close();});
+  function open(){
+    render();if(entry.hidden||dialog.open)return;
+    setStatus('');get('webapp-guide-alternatives').open=false;dialog.showModal();
+    try{localStorage.setItem(seenKey,'1');}catch{}
+    if(!install.hidden)install.focus();else get('webapp-guide-later').focus();
+  }
+  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredPrompt=event;render();});
+  window.addEventListener('appinstalled',()=>{installed=true;deferredPrompt=null;render();});
   standalone.addEventListener('change',render);overlay.addEventListener('change',render);
-  document.getElementById('webapp-guide-later').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>{dismissed=true;});
+  entry.addEventListener('click',open);
+  get('webapp-guide-later').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>{if(!entry.hidden)entry.focus();});
   install.addEventListener('click',async()=>{
-    const prompt=deferredPrompt;if(!prompt)return;
-    deferredPrompt=null;install.disabled=true;
-    try{await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='accepted')dialog.close();}
-    catch(error){steps.textContent='未能開啟安裝視窗，請使用瀏覽器選單中的安裝功能。';}
-    finally{install.disabled=false;install.hidden=true;if(dialog.open)render();}
+    const prompt=deferredPrompt;if(!prompt||busy)return;
+    deferredPrompt=null;busy=true;setStatus('');render();
+    try{
+      await prompt.prompt();const choice=await prompt.userChoice;
+      if(choice.outcome==='accepted'){if(dialog.open)dialog.close();}
+      else setStatus('已取消安裝。你可以依上方步驟手動安裝，或稍後再試。');
+    }catch(error){setStatus('未能開啟安裝視窗，請依上方步驟使用瀏覽器選單安裝。');}
+    finally{busy=false;render();}
   });
-  render();
-  if(kind()!=='none'&&!dismissed&&!document.querySelector('.modal-mask.show'))dialog.showModal();
-})();
+  render();let seen=false;try{seen=localStorage.getItem(seenKey)==='1';}catch{}
+  if(!seen&&!document.querySelector('.modal-mask.show,dialog[open]'))open();
+}
+// END WEB APP GUIDE
+initWebAppGuide();
 </script>
 </body>
 </html>
