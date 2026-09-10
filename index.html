@@ -3637,10 +3637,10 @@
 
     /* 快速預設 */
     .timer-presets{
-      display:flex; gap:8px; align-items:center; flex-wrap:nowrap; justify-content:safe center; max-width:100%; min-width:0; overflow-x:auto;
+      display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; align-items:center; width:100%; max-width:100%; min-width:0;
     }
     .timer-presets .btn{
-      flex-shrink:0; white-space:nowrap;
+      white-space:nowrap;
       padding:6px 14px; font-weight:700; font-size:13px;
       border-radius:20px;
       background: rgba(129,140,248,.08);
@@ -5375,11 +5375,15 @@
 
     /* ===== 倒數計時按鈕預設與快捷按鈕間距 ===== */
     .timer-presets{
-      gap: 8px !important;
+      gap: 6px !important;
     }
     .timer-presets .btn{
-      min-width: 48px;
+      min-width:0; width:100%; padding:6px 2px; font-size:12px;
       font-weight: 800 !important;
+    }
+    @media(max-width:480px){
+      #timer-pane .timer-presets{gap:3px!important;}
+      #timer-pane .timer-presets .btn{font-size:10px;padding-inline:1px;}
     }
 
     /* ===== 搜尋命中動畫增強 ===== */
@@ -6279,7 +6283,73 @@
     @media(max-width:600px){
       body .app .topbar .topbar__right-actions{ flex-wrap:wrap; }
     }
-  </style>
+  
+    #export-mask .export-dialog{background:var(--card)!important;box-shadow:0 20px 64px #0005;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
+    #export-mask header{padding:20px 24px;align-items:flex-start;flex-shrink:0;}
+    #export-mask h3{margin:0;font-size:20px;}
+    #export-mask .export-subtitle{margin:6px 0 0;font-size:13px;color:var(--muted);line-height:1.5;}
+    #export-mask .close{width:36px;height:36px;flex-shrink:0;}
+    #export-mask .export-content{padding:20px 24px;display:flex;flex-direction:column;gap:24px;overflow-y:auto;min-height:0;}
+    #export-mask .export-section{border:0;padding:0;margin:0;min-width:0;}
+    #export-mask legend,#export-mask h4{font-size:14px;font-weight:700;margin:0 0 12px;padding:0;}
+    #export-format-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+    #export-format-group label{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--bg);}
+    #export-format-group strong{font-size:14px;display:block;}
+    #export-format-group small{display:block;font-size:12px;color:var(--muted);margin-top:3px;}
+    #export-mask input{width:17px;height:17px;margin:0;flex-shrink:0;accent-color:var(--accent);}
+    #export-format-group label:has(:checked),#export-class-list label:has(:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
+    #export-mask .export-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
+    #export-mask .export-section-head h4{margin:0;}
+    #export-mask .export-section-head > div{display:flex;gap:6px;}
+    #export-mask .export-section-head .btn{font-size:12px;min-height:34px;padding:6px 10px;}
+    #export-class-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:240px;overflow-y:auto;padding:2px;scrollbar-gutter:stable;}
+    #export-class-list .export-class-option{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);font-size:14px;cursor:pointer;overflow-wrap:anywhere;}
+    #export-mask .export-progress-option{padding:14px 16px;background:var(--bg);border-radius:10px;}
+    #export-prog-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;}
+    #export-prog-label small{font-size:12px;font-weight:400;color:var(--muted);margin-left:8px;}
+    #export-mask .export-help{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0 0;}
+    #export-mask #export-prog-hint{padding-left:27px;}
+    #export-mask .export-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-top:1px solid var(--line);flex-shrink:0;background:var(--card);}
+    #export-mask .export-footer .export-help{margin:0;}
+    #export-mask .export-footer > div{display:flex;gap:8px;flex-shrink:0;}
+    #export-mask .export-footer .btn{min-height:42px;min-width:72px;}
+    #export-mask :is(label,button):focus-within{outline:2px solid var(--accent);outline-offset:2px;}
+    @media(max-width:480px){
+      #export-mask header,#export-mask .export-content,#export-mask .export-footer{padding:16px;}
+      #export-format-group{gap:6px;}#export-format-group label{padding:10px 8px;gap:6px;}
+      #export-class-list{grid-template-columns:minmax(0,1fr);max-height:220px;}
+      #export-mask .export-footer{flex-wrap:wrap;}#export-mask .export-footer > div{margin-left:auto;}
+    }
+
+    #progress-pane .prog-toolbar{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);flex-shrink:0;overflow-x:auto;min-width:0;white-space:nowrap;}
+    #progress-pane .prog-toolbar .prog-heading{flex:none;min-width:0;}
+    #progress-pane .prog-toolbar h2{margin:0;font-size:20px;}
+    #progress-pane .prog-toolbar .prog-context,#progress-pane .prog-toolbar .prog-filters{display:contents;}
+    #progress-pane .prog-toolbar .prog-pagebox{display:flex;flex-wrap:nowrap;align-items:center;flex:none;margin:0;}
+    #progress-pane .prog-toolbar .prog-pagebox label{display:block;}
+    #progress-pane .prog-toolbar #prog-page-select{width:160px;}
+    #progress-pane .prog-toolbar .prog-search{flex:1 1 180px;min-width:140px;max-width:none;}
+    #progress-pane .prog-toolbar #prog-class-filter{width:130px;flex:none;}
+    #progress-pane .prog-toolbar .prog-filter-toggle{padding:0;flex:none;}
+    #progress-pane .prog-toolbar .btn{flex:none;min-height:40px;white-space:nowrap;}
+    #progress-pane .prog-toolbar .prog-stats{flex:none;margin-left:auto;padding:0 0 0 12px;font-size:11px;}
+    #progress-pane .prog-toolbar .prog-stats strong{font-size:20px;}
+    #progress-pane .prog-toolbar .prog-stats-bar{width:46px;}
+    #progress-pane .prog-toolbar .prog-pagebox{gap:8px;}
+    #progress-pane .prog-toolbar h2{font-size:18px;margin-right:6px;}
+    #progress-pane .prog-toolbar .prog-search{border-left:1px solid var(--line);padding-left:12px;}
+    #progress-pane .prog-toolbar #btn-prog-edit{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--card));}
+    #progress-pane .prog-toolbar .prog-filter-toggle{padding:0 8px;border-radius:8px;background:var(--bg);}
+    #progress-pane .prog-toolbar .prog-filter-toggle:has(:checked){color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--card));}
+    #progress-pane .prog-footer .prog-stats{border:0;padding:0;gap:8px;margin-right:8px;}
+    #progress-pane .prog-footer .prog-stats strong{font-size:16px;}
+    #progress-pane .prog-footer .prog-stats span{font-size:11px;}
+    #prog-page-menu[popover]:popover-open{display:flex;flex-direction:column;gap:4px;}
+    #prog-page-menu[popover] .menu-item{width:100%;flex:none;white-space:normal;}
+    #prog-page-menu[popover]{position:fixed;width:200px;max-width:calc(100vw - 16px);height:auto;inset:auto;margin:0;background:var(--card);color:var(--fg);max-height:calc(100dvh - 24px);overflow:auto;}
+    #mode-manage{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+    #mode-manage.active{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
+</style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="no-data">
@@ -6327,13 +6397,11 @@
             <button id="mode-hw" class="seg-btn" data-mode="hw" data-icon="📝">作業成績</button>
             <button id="mode-list" class="seg-btn active" data-mode="list" data-icon="⭐">加扣分</button>
             <button id="mode-progress" class="seg-btn" data-mode="progress" data-icon="📖">教學進度</button>
-            <button id="mode-manage" class="seg-btn" data-mode="manage" data-icon="📋">學生管理</button>
+                <button id="mode-warning" class="seg-btn" data-mode="warning" data-icon="⚠️">成績預警</button>
+                <button id="mode-violations" class="seg-btn" data-mode="violations" data-icon="🚨">違規記錄</button>
             <div class="more-menu" id="more-menu">
               <button id="mode-more" class="seg-btn more-toggle" type="button" aria-expanded="false" aria-controls="more-dropdown">課堂工具 ▾</button>
               <div class="more-dropdown" id="more-dropdown" hidden>
-                <span class="menu-section-label">學習與班級紀錄</span>
-                <button id="mode-warning" class="more-item" data-mode="warning" data-icon="⚠️">成績預警</button>
-                <button id="mode-violations" class="more-item" data-mode="violations" data-icon="🚨">違規記錄</button>
                 <span class="menu-section-label">課堂活動</span>
                 <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
                 <button id="mode-group" class="more-item" data-mode="group" data-icon="👥">分組</button>
@@ -6348,6 +6416,7 @@
       <div class="topbar__right">
         <div class="topbar__right-actions">
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
+            <button id="mode-manage" class="btn" data-mode="manage" data-icon="📋">學生管理</button>
           <div class="data-menu" id="data-menu">
             <button id="btn-data" class="btn data-toggle" type="button" aria-expanded="false" aria-controls="data-dropdown">
               <span>資料與同步</span><span id="data-status" role="status" aria-live="polite" aria-atomic="true">尚無資料</span><span aria-hidden="true">▾</span>
@@ -6491,34 +6560,32 @@
         
         <!-- 📚 教學進度 -->
         <section id="progress-pane" class="hidden" aria-label="教學進度">
-          <div class="prog-bar">
-            <div class="prog-heading"><h2>教學進度</h2><p>選好班級，輕鬆記錄每一堂課。</p></div>
-            <span id="prog-stats" class="prog-stats" aria-label="整個分頁完成統計"></span>
-          </div>
+          <div class="prog-toolbar" role="group" aria-label="教學進度操作列">
+            <div class="prog-heading"><h2>教學進度</h2></div>
           <div class="prog-context">
             <div class="prog-pagebox" aria-label="分頁管理">
               <label for="prog-page-select">課程</label>
               <select id="prog-page-select" class="select"></select>
               <div class="prog-page-menuwrap" aria-label="分頁選單">
                 <button id="btn-prog-page-menu" class="btn" type="button" aria-haspopup="menu" aria-expanded="false" title="分頁選單">課程設定 ▾</button>
-                <div id="prog-page-menu" class="menu hidden" role="menu">
+                <div id="prog-page-menu" popover="manual" class="menu hidden" role="menu">
                   <button type="button" class="menu-item" data-action="add" role="menuitem">新增分頁</button>
                   <button type="button" class="menu-item" data-action="ren" role="menuitem">重新命名分頁</button>
                   <button type="button" class="menu-item" data-action="cls" role="menuitem">管理班級</button>
                   <button type="button" class="menu-item danger" data-action="del" role="menuitem">刪除分頁</button>
                 </div>
               </div>
+
             </div>
-            <span class="spacer"></span>
-            <button id="btn-prog-collapse" class="btn" type="button">收合主題</button>
-            <button id="btn-prog-edit" class="btn" type="button" aria-pressed="false">編輯內容</button>
           </div>
           <div class="prog-filters" role="search" aria-label="搜尋與篩選教學進度">
-            <label class="prog-search"><input id="prog-search" type="search" placeholder="搜尋進度或主題…" aria-label="搜尋進度或主題"></label>
-            <label class="prog-class-label" for="prog-class-filter">班級</label>
-            <select id="prog-class-filter" class="select"><option value="">全部班級</option></select>
+            <label class="prog-search"><input id="prog-search" type="search" placeholder="搜尋進度…" aria-label="搜尋進度或主題"></label>
             <label class="prog-filter-toggle"><input id="prog-pending" type="checkbox">只看未完成</label>
             <button id="btn-prog-reset" class="btn" type="button" hidden>清除篩選</button>
+          </div>
+            <button id="btn-prog-collapse" class="btn" type="button">收合主題</button>
+            <button id="btn-prog-edit" class="btn" type="button" aria-pressed="false">編輯內容</button>
+
           </div>
           <div class="prog-edit-tools" id="prog-edit-tools" hidden>
             <span class="hint">可修改文字、拖曳排序，或使用上下箭頭移動。</span>
@@ -6530,7 +6597,7 @@
           <div class="progtbl-wrap">
             <table class="progtbl" id="prog-table" aria-label="各班教學進度"></table>
           </div>
-          <div class="prog-footer"><span id="prog-filter-status" role="status"></span><span>勾選即儲存 · 點主題箭頭可收合 · 表格可左右捲動</span></div>
+          <div class="prog-footer"><span id="prog-stats" class="prog-stats" aria-label="整個分頁完成統計"></span><span id="prog-filter-status" role="status"></span><span>勾選即儲存 · 點主題箭頭可收合 · 表格可左右捲動</span></div>
         </section>
 
         <!-- ⏳ 倒數計時 -->
@@ -7026,56 +7093,27 @@
 
   <!-- ★ 匯出設定彈窗 -->
   <div id="export-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="export-title">
-    <div class="modal" role="document" style="width:min(520px, 92vw);">
-      <header>
-        <h3 id="export-title">💾 匯出班級成績</h3>
-        <button id="export-close" class="close" aria-label="關閉">✕</button>
-      </header>
-      <div class="content">
-        <!-- 檔案格式 -->
-        <div style="margin-bottom:14px;">
-          <label style="font-weight:700; font-size:15px;">檔案格式</label>
-          <div id="export-format-group" style="display:flex; gap:12px; margin-top:8px; flex-wrap:wrap;">
-            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-              <input type="radio" name="export-format" value="xlsx" checked> Excel (.xlsx)
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-              <input type="radio" name="export-format" value="csv"> CSV (.csv)
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-              <input type="radio" name="export-format" value="ods"> ODS (.ods)
-            </label>
+    <div class="modal export-dialog" role="document">
+      <header><div><h3 id="export-title">匯出班級成績</h3><p class="export-subtitle">選擇班級與檔案格式，下載所需成績。</p></div><button id="export-close" class="close" aria-label="關閉">✕</button></header>
+      <div class="content export-content">
+        <fieldset class="export-section"><legend>檔案格式</legend>
+          <div id="export-format-group">
+            <label><input type="radio" name="export-format" value="xlsx" checked><span><strong>Excel</strong><small>.xlsx</small></span></label>
+            <label><input type="radio" name="export-format" value="csv"><span><strong>CSV</strong><small>.csv</small></span></label>
+            <label><input type="radio" name="export-format" value="ods"><span><strong>ODS</strong><small>.ods</small></span></label>
           </div>
-          <div id="export-csv-hint" style="font-size:12px; color:var(--muted); margin-top:4px; display:none;">
-            ⚠ CSV 格式每個班級會各產生一個檔案。
-          </div>
-        </div>
-        <div style="height:1px; background:var(--line); margin:10px 0;"></div>
-        <!-- 班級選擇 -->
-        <div>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-            <label style="font-weight:700; font-size:15px;">匯出班級</label>
-            <div style="display:flex; gap:8px;">
-              <button id="export-sel-all" class="btn" style="font-size:12px; padding:3px 10px;">全選</button>
-              <button id="export-sel-none" class="btn" style="font-size:12px; padding:3px 10px;">全不選</button>
-            </div>
-          </div>
-          <div id="export-class-list" style="display:flex; flex-wrap:wrap; gap:8px; max-height:200px; overflow-y:auto; padding:4px 0;"></div>
-        </div>
-        <div style="height:1px; background:var(--line); margin:14px 0 10px;"></div>
-        <!-- 教學進度 -->
-        <label id="export-prog-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px;">
-          <input type="checkbox" id="export-prog"> 另外匯出教學進度（獨立檔案）
-        </label>
-        <div id="export-prog-hint" style="font-size:12px; color:var(--muted); margin-top:2px; padding-left:22px;">
-          勾選：教學進度另存為獨立檔案；不勾選：教學進度放在匯出檔案的第一個工作表。
-        </div>
-        <!-- 動作列 -->
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
-          <button id="export-cancel" class="btn">取消</button>
-          <button id="export-go" class="btn add">匯出</button>
+          <p id="export-csv-hint" class="export-help" style="display:none">每個班級各產生一個 CSV 檔案。</p>
+        </fieldset>
+        <section class="export-section" aria-labelledby="export-classes-title">
+          <div class="export-section-head"><h4 id="export-classes-title">匯出班級</h4><div><button id="export-sel-all" class="btn">全選</button><button id="export-sel-none" class="btn">全不選</button></div></div>
+          <div id="export-class-list"></div>
+        </section>
+        <div class="export-progress-option">
+          <label id="export-prog-label"><input type="checkbox" id="export-prog"><span>另外匯出教學進度<small>獨立檔案</small></span></label>
+          <p id="export-prog-hint" class="export-help">勾選後另存教學進度；未勾選則只匯出成績。</p>
         </div>
       </div>
+      <footer class="export-footer"><p class="export-help">匯出檔可透過「匯入名單」重新匯入。</p><div><button id="export-cancel" class="btn">取消</button><button id="export-go" class="btn add">匯出</button></div></footer>
     </div>
   </div>
 
@@ -7101,8 +7139,11 @@
         <!-- 密碼 token -->
         <div style="margin-bottom:12px;">
           <label for="gs-token" style="font-weight:700; font-size:14px;">同步密碼（與 Apps Script 內設定的 SECRET_TOKEN 相同）</label>
-          <input id="gs-token" type="text" autocomplete="off" placeholder="自訂的密碼"
-            style="width:100%; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+          <input id="gs-token" type="password" autocomplete="off" placeholder="自訂的密碼"
+            style="width:100%; min-width:0; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
+          <button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" style="flex-shrink:0;margin-top:6px;min-height:38px;">顯示</button>
+          </div>
         </div>
 
         <!-- 自動同步 -->
@@ -8284,6 +8325,11 @@
           if(isManualImport&&!sheet.isProgress){
             const headerRowIdx=detectHeaderRow(rows);
             const header=rows[headerRowIdx].map(v=>String(v||'').replace(/^\uFEFF/,'').trim());
+            const exportedReport = rows.slice(0,headerRowIdx).some(row=>String(row?.[0]||'').trim()==='__CLASS_META__');
+            if(exportedReport){
+              if(findNameColumnIndex(header)<0 || findSeatColumnIndex(header)<0) throw new Error(`${file.name}／${sheetName}：匯出報表缺少姓名或座號欄位。`);
+              return [sheet];
+            }
             const cleanRoster=validateCleanRosterHeader(header);
             if(!cleanRoster.ok){
               const extra=cleanRoster.unknown.length?`多出的欄位：${cleanRoster.unknown.join('、')}`:'必須包含「座號」與「姓名」欄位';
@@ -9598,7 +9644,7 @@
       exportClassBox.innerHTML = '';
       for(const cls of state.classOrder){
         const lbl = document.createElement('label');
-        lbl.style.cssText = 'display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:14px; user-select:none; transition:border-color .15s;';
+        lbl.className = 'export-class-option';
         const cb = document.createElement('input');
         cb.type = 'checkbox'; cb.checked = cls === (elSelect.value || state.classOrder[0]); cb.value = cls;
         cb.className = 'export-cls-cb';
@@ -9740,7 +9786,16 @@ function jsonOut(obj) {
       if(active) gsLoadingPanel?.focus();
     }
 
+    function setGsheetTokenVisible(visible){
+      gsTokenInput.type = visible ? 'text' : 'password';
+      const button = document.getElementById('gs-token-toggle');
+      button.textContent = visible ? '隱藏' : '顯示';
+      button.setAttribute('aria-label', visible ? '隱藏同步密碼' : '顯示同步密碼');
+      button.setAttribute('aria-pressed', String(visible));
+    }
+    document.getElementById('gs-token-toggle').addEventListener('click',()=>setGsheetTokenVisible(gsTokenInput.type==='password'));
     function openGsheetModal(){
+      setGsheetTokenVisible(false);
       gsUrlInput.value   = gsConfig.url;
       gsTokenInput.value = gsConfig.token;
       gsAutoCb.checked   = gsConfig.autoSync;
@@ -9751,7 +9806,7 @@ function jsonOut(obj) {
       gsUpdateLastSyncLabel();
       gsheetMask.classList.add('show');
     }
-    function closeGsheetModal(){ gsheetMask.classList.remove('show'); }
+    function closeGsheetModal(){ setGsheetTokenVisible(false); gsheetMask.classList.remove('show'); }
 
     document.getElementById('btn-gsheet').addEventListener('click', openGsheetModal);
     document.getElementById('gsheet-close').addEventListener('click', closeGsheetModal);
@@ -9943,8 +9998,8 @@ function jsonOut(obj) {
             XLSX.utils.book_append_sheet(wb, ws, uniqueSheetName(wb, cls));
             csvFiles.push({ wb, name: `成績匯出_${cls}_${stamp}.csv`, bookType: 'csv' });
           }
-          // CSV 不支援多工作表，教學進度一律獨立匯出（有資料時）
-          if(hasProgressData){
+          // CSV 不支援多工作表，勾選時將教學進度另存為 XLSX。
+          if(includeProgress && hasProgressData){
             const wbProg = XLSX.utils.book_new();
             appendProgressSheet(wbProg);
             if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
@@ -9960,11 +10015,6 @@ function jsonOut(obj) {
         }else{
           // xlsx / ods：合併到同一個活頁簿
           const wb = XLSX.utils.book_new();
-
-          if(!includeProgress && hasProgressData){
-            // ★ 不勾選「獨立檔案」→ 教學進度放在主檔的第一個工作表
-            appendProgressSheet(wb);
-          }
 
           for(const cls of selectedClasses){
             const ws = buildClassSheet(cls);
@@ -11983,9 +12033,15 @@ function jsonOut(obj) {
 
       const classes = header.slice(1).map(v=>String(v||'').trim()).filter(Boolean);
       const items = [];
+      let originalPageName = '';
       for(let r=1;r<rows.length;r++){
         const row = rows[r] || [];
         const title = String(row[0]||'').trim();
+        if(title === '__PROGRESS_META__'){
+          const meta = JSON.parse(String(row[1]||'{}'));
+          if(typeof meta.pageName === 'string') originalPageName = meta.pageName;
+          continue;
+        }
 
         // ★ 匯入主題列
         const topicMatch = title.match(/^\[主題\]\s*(.*)/);
@@ -12004,7 +12060,7 @@ function jsonOut(obj) {
       }
 
       const prog = ensureProgressState(false);
-      const name = String(sheetName||'').trim() || `進度${(prog.order?.length||0)+1}`;
+      const name = originalPageName || String(sheetName||'').trim() || `進度${(prog.order?.length||0)+1}`;
       if(!prog.pages[name]){
         prog.order.push(name);
       }
@@ -12054,7 +12110,9 @@ function jsonOut(obj) {
         const prog = ensureProgressState();
         for(const pageName of (prog.order||[])){
           const aoa = buildProgressAOA(pageName);
+          aoa.splice(1,0,['__PROGRESS_META__',JSON.stringify({pageName})]);
           const ws = XLSX.utils.aoa_to_sheet(aoa);
+          ws['!rows'] = [{},{hidden:true}];
           const pg = prog.pages[pageName] || {};
           const classes = (pg.classes && pg.classes.length) ? pg.classes : (state.classOrder||[]);
           ws['!cols'] = [{wch:28}, ...classes.map(()=>({wch:10}))];
@@ -12351,6 +12409,7 @@ function jsonOut(obj) {
     // END PROGRESS FILTER MODEL
 
     function applyProgressFilters(){
+      progView.className = '';
       const pg = state.progress?.pages?.[state.progress.active];
       const status = document.getElementById('prog-filter-status');
       if(!pg){ status.textContent = ''; return; }
@@ -12397,12 +12456,7 @@ function jsonOut(obj) {
 
     function syncProgressView(){
       const pg = state.progress?.pages?.[state.progress.active];
-      const classes = pg?.classes || [];
-      if(!classes.includes(progView.className)) progView.className = '';
-      const select = document.getElementById('prog-class-filter');
-      select.innerHTML = '<option value="">全部班級</option>' + classes.map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-      select.value = progView.className;
-      select.disabled = !classes.length;
+      progView.className = '';
       document.getElementById('prog-search').disabled = !pg;
       document.getElementById('prog-pending').disabled = !pg;
       document.getElementById('prog-search').value = progView.query;
@@ -14140,7 +14194,7 @@ function onTimerDone(){
       elModeGroup?.classList.toggle('active', m==='group');
       // ★ 更多選單按鈕同步
       const _moreBtn = document.getElementById('mode-more');
-      const _moreModes = {warning:'⚠️ 成績預警', violations:'🚨 違規記錄', seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時'};
+      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時'};
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
@@ -14647,7 +14701,6 @@ function openDelProgressClass(){
     }
 function bindProgressPageUI(){
       document.getElementById('prog-search').addEventListener('input', e=>{ progView.query=e.target.value; applyProgressFilters(); });
-      document.getElementById('prog-class-filter').addEventListener('change', e=>{ progView.className=e.target.value; applyProgressFilters(); });
       document.getElementById('prog-pending').addEventListener('change', e=>{ progView.pending=e.target.checked; applyProgressFilters(); });
       document.getElementById('btn-prog-reset').addEventListener('click', resetProgressFilters);
       document.getElementById('btn-prog-edit').addEventListener('click', ()=>{ progView.editing=!progView.editing; renderProgress(); });
@@ -14673,6 +14726,7 @@ function bindProgressPageUI(){
 
       // 分頁選單：把「新增/刪除分頁」濃縮到同一個選單內
       function closeProgPageMenu(){
+        if(elProgPageMenu?.matches(':popover-open')) elProgPageMenu.hidePopover();
         elProgPageMenu?.classList.add('hidden');
         if(elProgPageMenuBtn) elProgPageMenuBtn.setAttribute('aria-expanded','false');
       }
@@ -14681,11 +14735,17 @@ function bindProgressPageUI(){
         const willOpen = elProgPageMenu.classList.contains('hidden');
         if(willOpen){
           elProgPageMenu.classList.remove('hidden');
+          elProgPageMenu.showPopover();
+          const rect=elProgPageMenuBtn.getBoundingClientRect();
+          elProgPageMenu.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-elProgPageMenu.offsetWidth-8))+'px';
+          elProgPageMenu.style.top=Math.max(8,Math.min(rect.bottom+6,window.innerHeight-elProgPageMenu.offsetHeight-8))+'px';
           elProgPageMenuBtn?.setAttribute('aria-expanded','true');
         }else{
           closeProgPageMenu();
         }
       }
+      document.querySelector('.prog-toolbar')?.addEventListener('scroll',closeProgPageMenu);
+      window.addEventListener('resize',closeProgPageMenu);
       elProgPageMenuBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggleProgPageMenu(); });
       elProgPageMenu?.addEventListener('click', (e)=>{
         const btn = e.target?.closest?.('[data-action]');
@@ -17410,6 +17470,70 @@ noteSave?.addEventListener('click', ()=>{
     })();
     // END SVG ICONS
 
+</script>
+
+<dialog id="webapp-guide" aria-labelledby="webapp-guide-title">
+  <img src="icon-192.png" width="56" height="56" alt="">
+  <h2 id="webapp-guide-title">將成績系統加入應用程式</h2>
+  <p>從主畫面或應用程式圖示開啟，使用獨立視窗管理班級。</p>
+  <p id="webapp-guide-steps"></p>
+  <div class="webapp-guide-actions"><button type="button" id="webapp-guide-later" class="btn">先使用網頁版</button><button type="button" id="webapp-guide-install" class="btn add" hidden>安裝 Web App</button></div>
+</dialog>
+<style>
+#webapp-guide{width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;padding:28px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--fg);box-shadow:0 24px 80px #0005;}
+#webapp-guide::backdrop{background:#08111bb3;backdrop-filter:blur(4px);}
+#webapp-guide img{border-radius:12px;}#webapp-guide h2{font-size:21px;margin:16px 0 10px;}
+#webapp-guide p{font-size:14px;line-height:1.8;color:var(--muted);}
+#webapp-guide-steps{padding:14px;border-radius:10px;background:var(--bg);white-space:pre-line;}
+.webapp-guide-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:20px;}
+#webapp-guide button{min-height:44px;}#webapp-guide-install[hidden]{display:none;}
+</style>
+<script>
+// BEGIN WEB APP GUIDE
+function webAppGuideKind(protocol, standalone, userAgent, touchPoints){
+  if(standalone) return 'none';
+  if(protocol==='file:') return 'file';
+  if(/iPad|iPhone|iPod/.test(userAgent)||(/Macintosh/.test(userAgent)&&touchPoints>1)) return 'ios';
+  if(/Macintosh/.test(userAgent)&&/Safari/.test(userAgent)&&!/Chrome|Chromium|Edg/.test(userAgent)) return 'safari';
+  return 'browser';
+}
+// END WEB APP GUIDE
+(()=>{
+  const dialog=document.getElementById('webapp-guide');
+  const steps=document.getElementById('webapp-guide-steps');
+  const install=document.getElementById('webapp-guide-install');
+  const standalone=window.matchMedia('(display-mode: standalone)');
+  const overlay=window.matchMedia('(display-mode: window-controls-overlay)');
+  let deferredPrompt=null, dismissed=false;
+  const isApp=()=>standalone.matches||overlay.matches||navigator.standalone===true;
+  const kind=()=>webAppGuideKind(location.protocol,isApp(),navigator.userAgent,navigator.maxTouchPoints||0);
+  function render(){
+    const mode=kind();
+    if(mode==='none'){dialog.close();return;}
+    install.hidden=!deferredPrompt||mode==='file';
+    steps.textContent=mode==='file'?'目前是直接開啟本機 HTML，無法從這個檔案安裝 Web App。請改用系統的 HTTPS 網址，再依提示安裝。切換網址前，請先下載完整備份，於新網址還原資料。':
+      mode==='ios'?'在 Safari 開啟本網站，點選「分享」→「加入主畫面」。若顯示「以 Web App 開啟」，請保持開啟，再點「加入」。完成後從主畫面圖示開啟。':
+      deferredPrompt?'點選下方「安裝 Web App」，再依瀏覽器提示確認。安裝後請從應用程式圖示開啟。':
+      mode==='safari'?'在 Safari 的「檔案」選單選擇「加入 Dock」，確認後從 Dock 圖示開啟。':
+      '請在瀏覽器選單尋找「安裝應用程式」或「加入主畫面」。若找不到，可改用 Chrome 或 Edge 開啟本網站；已安裝者請從應用程式圖示開啟。';
+  }
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault();deferredPrompt=event;render();
+  });
+  window.addEventListener('appinstalled',()=>{deferredPrompt=null;dialog.close();});
+  standalone.addEventListener('change',render);overlay.addEventListener('change',render);
+  document.getElementById('webapp-guide-later').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>{dismissed=true;});
+  install.addEventListener('click',async()=>{
+    const prompt=deferredPrompt;if(!prompt)return;
+    deferredPrompt=null;install.disabled=true;
+    try{await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='accepted')dialog.close();}
+    catch(error){steps.textContent='未能開啟安裝視窗，請使用瀏覽器選單中的安裝功能。';}
+    finally{install.disabled=false;install.hidden=true;if(dialog.open)render();}
+  });
+  render();
+  if(kind()!=='none'&&!dismissed&&!document.querySelector('.modal-mask.show'))dialog.showModal();
+})();
 </script>
 </body>
 </html>
