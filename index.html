@@ -6354,6 +6354,12 @@
     #viol-note-mask .viol-note-help{margin:0;color:var(--muted);line-height:1.6;}
     #viol-note-mask .modal{display:flex;flex-direction:column;overflow:hidden;}
     #viol-note-mask .content{overflow-y:auto;min-height:0;}
+.app-message-dialog{width:min(440px,calc(100vw - 32px));box-sizing:border-box;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--fg);box-shadow:0 20px 60px #0005;max-height:calc(100dvh - 32px);overflow:auto;}
+.app-message-dialog::backdrop{background:#0008;}
+.app-message-dialog h3{margin:0 0 16px;font-size:18px;}
+.app-message-dialog p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;}
+.app-message-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+.app-message-actions [hidden]{display:none;}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -7276,7 +7282,7 @@
             <span>記事內容</span>
             <input id="viol-note-item" class="viol-note-input" type="text" maxlength="120" placeholder="例如：上課聊天、未帶作業、遲到 10 分鐘">
           </label>
-          <button id="viol-note-add" class="btn add" type="button">新增記事</button>
+          <button id="viol-note-add" class="btn add" type="button" disabled>新增記事</button>
         </div>
 
         <div id="viol-note-list" class="viol-note-list"></div>
@@ -7663,7 +7669,7 @@
       if(retryingLocal && saveHealth.cloud !== 'error'){ renderSaveHealth(); return; }
       if(!gsReady()) return;
       if(saveHealth.cloud === 'error' && saveHealth.operation === 'download'){
-        if(state.classOrder.length && !confirm('從試算表下載會覆蓋目前的班級資料，確定要繼續嗎？')) return;
+        if(state.classOrder.length && !await appConfirm('從試算表下載會覆蓋目前的班級資料，確定要繼續嗎？')) return;
         await gsDownload();
       }else if(!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision || saveHealth.cloud === 'error'){
         await gsUpload();
@@ -8772,7 +8778,7 @@
         return true;
       }catch(err){
         if(originalCloudState) Object.assign(state,originalCloudState);
-        alert('解析失敗：'+err.message);
+        appAlert('解析失敗：'+err.message);
         setStatus('解析失敗');
         return false;
       }finally{
@@ -9016,13 +9022,13 @@
     }
 
     function renameClassState(oldName, newName){
-      if(!oldName){ alert('請先選擇班級'); return false; }
+      if(!oldName){ appAlert('請先選擇班級'); return false; }
       if(!newName || newName === oldName) return false;
-      if(state.classOrder.includes(newName)){ alert('此班級名稱已存在！'); return false; }
+      if(state.classOrder.includes(newName)){ appAlert('此班級名稱已存在！'); return false; }
 
       const idx = state.classOrder.indexOf(oldName);
       if(idx < 0){
-        alert('找不到目前班級，請重新選擇後再試一次。');
+        appAlert('找不到目前班級，請重新選擇後再試一次。');
         return false;
       }
 
@@ -9107,7 +9113,7 @@
     // ★ 班級重新命名
     elRenameClass?.addEventListener('click', async ()=>{
       const oldName = elSelect.value;
-      if(!oldName){ alert('請先選擇班級'); return; }
+      if(!oldName){ appAlert('請先選擇班級'); return; }
       const newName = (await safePromptText({
         title: '重新命名班級',
         label: `請輸入「${oldName}」的新班級名稱：`,
@@ -9122,7 +9128,7 @@
     elAddStudent?.addEventListener('click', ()=>{
       const cls = elSelect.value;
       if(!cls){
-        alert('請先選擇班級');
+        appAlert('請先選擇班級');
         return;
       }
       openAddStuModal(cls, 'list');
@@ -9132,7 +9138,7 @@
     elDelStudent?.addEventListener('click', ()=>{
       const cls = elSelect.value;
       if(!cls){
-        alert('請先選擇班級');
+        appAlert('請先選擇班級');
         return;
       }
       openDelModal(cls);
@@ -9825,7 +9831,7 @@ function jsonOut(obj) {
     }
     resetManualSyncButton();
     manualSyncBtn?.addEventListener('click', ()=>{
-      if(state.classOrder.length===0){ alert('尚未載入任何班級資料'); return; }
+      if(state.classOrder.length===0){ appAlert('尚未載入任何班級資料'); return; }
       openExportModal();
     });
 
@@ -9841,7 +9847,7 @@ function jsonOut(obj) {
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(()=>URL.revokeObjectURL(url),60000);
         setStatus('已開始下載完整備份，請確認檔案已保存在下載資料夾。');
-      }catch(error){ alert('備份未完成：'+error.message); }
+      }catch(error){ appAlert('備份未完成：'+error.message); }
     }
     const backupMask = document.getElementById('backup-mask');
     const backupFileInput = document.getElementById('backup-file-input');
@@ -9981,7 +9987,7 @@ function jsonOut(obj) {
         const selectedClasses = [...exportClassBox.querySelectorAll('.export-cls-cb:checked')].map(cb=>cb.value);
         const includeProgress = exportProgCb.checked;
 
-        if(selectedClasses.length===0){ alert('請至少選擇一個班級'); return; }
+        if(selectedClasses.length===0){ appAlert('請至少選擇一個班級'); return; }
 
         closeExportModal();
 
@@ -10045,7 +10051,7 @@ function jsonOut(obj) {
           }
         }
       }catch(err){
-        alert('匯出失敗：'+err.message);
+        appAlert('匯出失敗：'+err.message);
       }
     });
 
@@ -10182,7 +10188,7 @@ function jsonOut(obj) {
 
     clearGo.addEventListener('click', async ()=>{
       const picked = [...clearMask.querySelectorAll('.clear-cb:checked')].map(cb=>cb.value);
-      if(!picked.length){ alert('請至少勾選一個要清除的項目'); return; }
+      if(!picked.length){ appAlert('請至少勾選一個要清除的項目'); return; }
 
       const labels = {
         classMap: '學生名單', scores: '平時分數（含扣分統計）', hw: '作業成績',
@@ -13163,6 +13169,45 @@ classes.forEach((cls, idx)=>{
 
     
 
+// BEGIN APP MESSAGE DIALOG
+let appMessageQueue = Promise.resolve();
+function appAlert(message){ return appMessageDialog(message, false); }
+function appConfirm(message){ return appMessageDialog(message, true); }
+function appMessageDialog(message, confirmation){
+  const task = appMessageQueue.then(()=>new Promise(resolve=>{
+    const previousFocus = document.activeElement;
+    const dialog = document.createElement('dialog');
+    dialog.className = 'app-message-dialog';
+    dialog.setAttribute('aria-labelledby', 'app-message-title');
+    dialog.setAttribute('aria-describedby', 'app-message-body');
+    dialog.innerHTML = `<h3 id="app-message-title"></h3><p id="app-message-body"></p><div class="app-message-actions"><button type="button" class="btn" data-action="cancel">取消</button><button type="button" class="btn primary" data-action="ok">確定</button></div>`;
+    dialog.querySelector('h3').textContent = confirmation ? '請確認' : '提示';
+    dialog.querySelector('p').textContent = String(message || '');
+    const cancel = dialog.querySelector('[data-action="cancel"]');
+    const ok = dialog.querySelector('[data-action="ok"]');
+    cancel.hidden = !confirmation;
+    let finished = false;
+    function finish(value){
+      if(finished) return;
+      finished = true;
+      dialog.close();
+      dialog.remove();
+      if(previousFocus?.isConnected) previousFocus.focus();
+      resolve(value);
+    }
+    cancel.addEventListener('click', ()=>finish(false));
+    ok.addEventListener('click', ()=>finish(true));
+    dialog.addEventListener('cancel', e=>{ e.preventDefault(); finish(false); });
+    dialog.addEventListener('keydown', e=>e.stopPropagation());
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    (confirmation ? cancel : ok).focus();
+  }));
+  appMessageQueue = task.catch(()=>{});
+  return task;
+}
+// END APP MESSAGE DIALOG
+
 // ===== In-app Modal (避免瀏覽器 alert「這個網站」視窗) =====
 let __inAppMask = null;
 function ensureInAppModal(){
@@ -13180,7 +13225,7 @@ function ensureInAppModal(){
         <button id="inapp-close" class="close" aria-label="關閉">✕</button>
       </header>
       <div class="content">
-        <div id="inapp-body" class="hint" style="font-size:15px; line-height:1.6;"></div>
+        <div id="inapp-body" style="font-size:15px; line-height:1.6;"></div>
         <div class="divider"></div>
         <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
           <button id="inapp-ok" class="btn primary">停止提醒</button>
@@ -13707,7 +13752,7 @@ function onTimerDone(){
     function exportGroups(cls){
       if(!cls) return;
       const g = ensureGroupState(cls);
-      if(!g.groups.length){ alert('尚未建立分組'); return; }
+      if(!g.groups.length){ appAlert('尚未建立分組'); return; }
       const list = state.classMap[cls]||[];
       const byId = new Map(list.map(s=>[s.id, s]));
       const exportData = {
@@ -13738,7 +13783,7 @@ function onTimerDone(){
       reader.onload = ()=>{
         try{
           const data = JSON.parse(reader.result);
-          if(!data.groups || !Array.isArray(data.groups)){ alert('無效的分組檔案格式'); return; }
+          if(!data.groups || !Array.isArray(data.groups)){ appAlert('無效的分組檔案格式'); return; }
           const list = state.classMap[cls]||[];
           const byName = new Map(list.map(s=>[s.name, s.id]));
           const byId = new Set(list.map(s=>s.id));
@@ -13762,9 +13807,9 @@ function onTimerDone(){
           });
 
           saveGroupState(cls); renderGroup(cls);
-          alert(`已匯入 ${g.groups.length} 組`);
+          appAlert(`已匯入 ${g.groups.length} 組`);
         }catch(e){
-          alert('匯入失敗：' + e.message);
+          appAlert('匯入失敗：' + e.message);
         }
       };
       reader.readAsText(file);
@@ -14104,7 +14149,7 @@ function onTimerDone(){
         okText: '新增'
       }) || '').trim();
       if(!name) return;
-      if(state.classOrder.includes(name)){ alert('此班級名稱已存在！'); return; }
+      if(state.classOrder.includes(name)){ appAlert('此班級名稱已存在！'); return; }
       state.classOrder.push(name);
       state.classMap[name] = [];
       sortClassOrderByGrade();
@@ -14117,7 +14162,7 @@ function onTimerDone(){
     // ✏️ 重新命名班級
     elManageRename?.addEventListener('click', async ()=>{
       const oldName = manageSelectedClass;
-      if(!oldName){ alert('請先在班級列表選擇班級'); return; }
+      if(!oldName){ appAlert('請先在班級列表選擇班級'); return; }
       const newName = (await safePromptText({
         title: '重新命名班級',
         label: `請輸入「${oldName}」的新班級名稱：`,
@@ -14131,7 +14176,7 @@ function onTimerDone(){
     // 🗑 刪除整個班級
     elManageDelClass?.addEventListener('click', async ()=>{
       const cls = manageSelectedClass;
-      if(!cls){ alert('請先選擇班級'); return; }
+      if(!cls){ appAlert('請先選擇班級'); return; }
       const ok = await safeConfirmDialog({
         title: '刪除班級',
         message: `確定要刪除整個班級「${cls}」嗎？\n（此操作無法復原，將刪除該班所有學生、成績、座位和作業資料）`,
@@ -14188,14 +14233,14 @@ function onTimerDone(){
     // ＋ 新增學生（管理模式）
     elManageAdd?.addEventListener('click', ()=>{
       const cls = manageSelectedClass;
-      if(!cls){ alert('請先選擇班級'); return; }
+      if(!cls){ appAlert('請先選擇班級'); return; }
       openAddStuModal(cls, 'manage');
     });
 
     // － 刪除學生（管理模式 → 開啟原有刪除彈窗）
     elManageDel?.addEventListener('click', ()=>{
       const cls = manageSelectedClass;
-      if(!cls){ alert('請先選擇班級'); return; }
+      if(!cls){ appAlert('請先選擇班級'); return; }
       openDelModal(cls);
     });
 
@@ -14816,7 +14861,7 @@ function bindProgressPageUI(){
 
       function openProgClsModal(){
         const prog = ensureProgressState();
-        if(!prog.active){ alert('請先建立分頁'); return; }
+        if(!prog.active){ appAlert('請先建立分頁'); return; }
         const pg = prog.pages[prog.active];
         if(!pg) return;
         const allClasses = state.classOrder || [];
@@ -14867,7 +14912,7 @@ function bindProgressPageUI(){
         const pg = prog.pages[prog.active];
         if(!pg) return;
         const selected = [...progClsList.querySelectorAll('.prog-cls-cb:checked')].map(cb=>cb.value);
-        if(!selected.length){ alert('至少要保留一個班級'); return; }
+        if(!selected.length){ appAlert('至少要保留一個班級'); return; }
         // 更新 pg.classes，保留句選而且仍在 selected 中的；再加入新勾選的
         const oldOrder = pg.classes || [];
         const newSet = new Set(selected);
@@ -15865,10 +15910,10 @@ elProgAdd?.addEventListener('click', ()=>{
       renderViolationsLeaderboard(cls);
     }
 
-    elViolReset?.addEventListener('click', ()=>{
+    elViolReset?.addEventListener('click', async ()=>{
       const cls = elSelect.value;
       if(!cls) return;
-      if(!confirm(`確定要清空「${cls}」全班的違規紀錄嗎？`)) return;
+      if(!await appConfirm(`確定要清空「${cls}」全班的違規紀錄嗎？`)) return;
       const prefix = scoreKey(cls, '');
       for(const key of Object.keys(state.violations)){
         if(key.startsWith(prefix)) delete state.violations[key];
@@ -16563,11 +16608,11 @@ elProgAdd?.addEventListener('click', ()=>{
     elBtnDraw?.addEventListener('click', ()=>{
       if(_drawAnimating) return; // 防止連點
       const cls = elSelect.value;
-      if(!cls) return alert('請先選擇班級');
+      if(!cls) return appAlert('請先選擇班級');
       const d = ensureDrawState(cls);
 
       const list = (state.classMap[cls]||[]).slice();
-      if(!list.length) return alert('此班級沒有名單');
+      if(!list.length) return appAlert('此班級沒有名單');
 
       // 決定本次人數
       const seq = parseSeq(elDrawSeq.value);
@@ -16578,7 +16623,7 @@ elProgAdd?.addEventListener('click', ()=>{
         // 序列模式：不能超過班級人數的一半
         const halfClass = Math.max(1, Math.floor(list.length / 2));
         if(count > halfClass){
-          alert(`序列值 ${count} 超過班級人數的一半（${halfClass}），已自動調整。`);
+          appAlert(`序列值 ${count} 超過班級人數的一半（${halfClass}），已自動調整。`);
           count = halfClass;
         }
         d.seqPos++;
@@ -16591,7 +16636,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const drawnSet = new Set(d.drawn);
       const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
       if(candidates.length===0){
-        alert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
+        appAlert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
         return;
       }
       if(count>candidates.length) count = candidates.length;
@@ -16662,7 +16707,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
       const last = d.history.shift();
-      if(!last){ alert('沒有可撤銷的紀錄'); return; }
+      if(!last){ appAlert('沒有可撤銷的紀錄'); return; }
       if(d.unique && Array.isArray(last.ids)){
         const set = new Set(d.drawn);
         last.ids.forEach(id=> set.delete(id));
@@ -16938,6 +16983,10 @@ noteSave?.addEventListener('click', ()=>{
           return normalizeViolationNoteKey(_violNoteCtx.tab);
         }
 
+        function syncViolationNoteAddState(){
+          if(violNoteAdd) violNoteAdd.disabled = !String(violNoteItem?.value || '').trim() || !violNoteDate?.value;
+        }
+
         function renderViolationNoteTabs(){
           const counts = _violNoteCtx.cls && _violNoteCtx.id
             ? getViolationNoteCounts(_violNoteCtx.cls, _violNoteCtx.id)
@@ -16957,6 +17006,7 @@ noteSave?.addEventListener('click', ()=>{
           if(violNoteAdd) violNoteAdd.textContent = `新增${meta.label}`;
           if(violNoteClear) violNoteClear.textContent = `清空${meta.label}`;
           if(violNoteItem) violNoteItem.placeholder = meta.placeholder;
+          syncViolationNoteAddState();
         }
 
         function setActiveViolationNoteTab(tabKey){
@@ -17022,6 +17072,9 @@ noteSave?.addEventListener('click', ()=>{
         violNoteClose?.addEventListener('click', closeViolationNoteModal);
         violNoteDone?.addEventListener('click', closeViolationNoteModal);
         violNoteMask?.addEventListener('click', (e)=>{ if(e.target === violNoteMask) closeViolationNoteModal(); });
+        violNoteItem?.addEventListener('input', syncViolationNoteAddState);
+        violNoteDate?.addEventListener('input', syncViolationNoteAddState);
+        violNoteDate?.addEventListener('change', syncViolationNoteAddState);
         violNoteItem?.addEventListener('keydown', (e)=>{
           if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229){
             e.preventDefault();
@@ -17038,12 +17091,12 @@ noteSave?.addEventListener('click', ()=>{
           const date = normalizeViolationDateValue(violNoteDate?.value || '');
           const item = String(violNoteItem?.value || '').trim();
           if(!date){
-            showInAppModal(meta.label, '請先選擇日期。');
+            syncViolationNoteAddState();
             violNoteDate?.focus();
             return;
           }
           if(!item){
-            showInAppModal(meta.label, meta.missingItem);
+            syncViolationNoteAddState();
             violNoteItem?.focus();
             return;
           }
@@ -17053,6 +17106,7 @@ noteSave?.addEventListener('click', ()=>{
           renderViolationNoteList();
           if(violNoteItem) violNoteItem.value = '';
           if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
+          syncViolationNoteAddState();
           if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
           violNoteItem?.focus();
         });
@@ -17069,7 +17123,7 @@ noteSave?.addEventListener('click', ()=>{
           renderViolationNoteList();
           if(state.mode === 'violations') renderViolations(_violNoteCtx.cls);
         });
-        violNoteClear?.addEventListener('click', ()=>{
+        violNoteClear?.addEventListener('click', async ()=>{
           if(!_violNoteCtx.cls || !_violNoteCtx.id) return;
           const activeTab = getActiveViolationNoteTab();
           const meta = getViolationNoteMeta(activeTab);
@@ -17081,7 +17135,7 @@ noteSave?.addEventListener('click', ()=>{
           const clearConfirmText = activeTab === 'entries'
             ? '確定要清空這位學生的所有違規記事嗎？包含系統違規紀錄。'
             : meta.clearConfirm;
-          if(!confirm(clearConfirmText)) return;
+          if(!await appConfirm(clearConfirmText)) return;
           const nextEntries = activeTab === 'entries'
             ? []
             : [];
@@ -17093,8 +17147,8 @@ noteSave?.addEventListener('click', ()=>{
     // ★ 新增學生彈窗
     let _addStuSource = ''; // 'list' | 'manage'，用來判斷確認後要更新哪裡
     function openAddStuModal(cls, source){
-      if(!addStuMask){ alert('介面尚未準備完成'); return; }
-      if(!cls){ alert('請先選擇班級'); return; }
+      if(!addStuMask){ appAlert('介面尚未準備完成'); return; }
+      if(!cls){ appAlert('請先選擇班級'); return; }
       _addStuSource = source || 'list';
       addStuClass.textContent = cls;
       addStuSid.value = '';
@@ -17110,15 +17164,15 @@ noteSave?.addEventListener('click', ()=>{
     addStuClose?.addEventListener('click', closeAddStuModal);
     addStuConfirm?.addEventListener('click', ()=>{
       const cls = addStuClass.textContent || '';
-      if(!cls){ alert('請先選擇班級'); return; }
+      if(!cls){ appAlert('請先選擇班級'); return; }
 
       const sid = (addStuSid.value || '').trim();
-      if(!sid){ alert('請輸入學號'); addStuSid.focus(); return; }
+      if(!sid){ appAlert('請輸入學號'); addStuSid.focus(); return; }
 
       const id = `SID__${sid}`;
       const list = state.classMap[cls] || [];
       if(list.some(s => s.id === id)){
-        alert('這個學號在本班已經存在囉！');
+        appAlert('這個學號在本班已經存在囉！');
         addStuSid.focus();
         return;
       }
@@ -17151,16 +17205,16 @@ noteSave?.addEventListener('click', ()=>{
     // 刪除學生彈窗
     function openDelModal(cls){
       if(!delMask || !delSelect){
-        alert('介面尚未準備完成');
+        appAlert('介面尚未準備完成');
         return;
       }
       if(!cls){
-        alert('請先選擇班級');
+        appAlert('請先選擇班級');
         return;
       }
       const list = getSortedList(cls);
       if(!list || list.length===0){
-        alert('本班目前沒有學生可以刪除');
+        appAlert('本班目前沒有學生可以刪除');
         return;
       }
 
@@ -17213,25 +17267,25 @@ noteSave?.addEventListener('click', ()=>{
     }
     function closeDelModal(){ if(delMask) delMask.classList.remove('show'); }
     delClose?.addEventListener('click', closeDelModal);
-    delConfirm?.addEventListener('click', ()=>{
+    delConfirm?.addEventListener('click', async ()=>{
       const cls = delClass.textContent || elSelect.value || '';
       if(!cls){
-        alert('請先選擇班級');
+        appAlert('請先選擇班級');
         return;
       }
       if(!delSelect || !delSelect.value){
-        alert('請先選擇要刪除的學生');
+        appAlert('請先選擇要刪除的學生');
         return;
       }
       const id = delSelect.value;
       const list = state.classMap[cls] || [];
       const idx = list.findIndex(s=>s.id===id);
       if(idx<0){
-        alert('找不到這位學生（可能已被刪除）');
+        appAlert('找不到這位學生（可能已被刪除）');
         closeDelModal();
         return;
       }
-      if(!confirm('確定要刪除這位學生嗎？此動作無法復原。')) return;
+      if(!await appConfirm('確定要刪除這位學生嗎？此動作無法復原。')) return;
 
       // 從班級名單移除
       list.splice(idx,1);
@@ -17302,7 +17356,7 @@ noteSave?.addEventListener('click', ()=>{
       closeDelModal();
 
       if(!state.classMap[cls] || state.classMap[cls].length===0){
-        alert('此班級目前已沒有學生。');
+        appAlert('此班級目前已沒有學生。');
       }
     });
 
