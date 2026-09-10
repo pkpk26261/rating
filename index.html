@@ -6349,6 +6349,11 @@
     #prog-page-menu[popover]{position:fixed;width:200px;max-width:calc(100vw - 16px);height:auto;inset:auto;margin:0;background:var(--card);color:var(--fg);max-height:calc(100dvh - 24px);overflow:auto;}
     #mode-manage{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
     #mode-manage.active{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
+    #viol-note-mask .viol-note-meta{align-items:flex-start;flex-direction:column;gap:8px;}
+    #viol-note-mask .viol-note-identity{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:14px;font-weight:600;}
+    #viol-note-mask .viol-note-help{margin:0;color:var(--muted);line-height:1.6;}
+    #viol-note-mask .modal{display:flex;flex-direction:column;overflow:hidden;}
+    #viol-note-mask .content{overflow-y:auto;min-height:0;}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -7244,11 +7249,11 @@
       </header>
       <div class="content">
         <div class="viol-note-meta">
-          <div class="hint">
+          <div class="viol-note-identity">
             班級：<span id="viol-note-class" class="pill"></span>
             　學生：<span id="viol-note-student" class="pill"></span>
           </div>
-          <div id="viol-note-help" class="viol-note-help">可新增多筆違規日期與違規事項，新增後會立即儲存。</div>
+          <div id="viol-note-help" class="viol-note-help">依內容自動計入遲到、缺交或吵鬧；未符合則計入其他。同筆涉及多類時，各計 1 次。</div>
         </div>
 
         <div class="viol-note-tabs" role="tablist" aria-label="記事類型">
@@ -10399,7 +10404,7 @@ function jsonOut(obj) {
     const VIOLATION_NOTE_META = Object.freeze({
       entries: {
         label: '違規記事',
-        help: '可新增多筆違規日期與違規事項，新增後會立即儲存。',
+        help: '依內容自動計入遲到、缺交或吵鬧；未符合則計入其他。同筆涉及多類時，各計 1 次。',
         empty: '尚無違規記事，請先新增違規日期與違規事項。',
         placeholder: '例如：上課聊天、未帶作業、遲到 10 分鐘',
         missingItem: '請輸入違規事項。',
@@ -10414,6 +10419,29 @@ function jsonOut(obj) {
         clearConfirm: '確定要清空這位學生的所有特殊記事嗎？'
       }
     });
+
+    // 每筆記事每類最多計一次；特殊記事不參與違規計數。
+    function classifyViolationNote(item){
+      const text = String(item || '').normalize('NFKC');
+      const rules = [
+        ['late', /遲到|迟到|晚到|遲進教室|迟进教室|上課遲到|上课迟到|未準時到|未准时到|不準時到|不准时到/],
+        ['missing', /缺交|未交|沒交|没交|漏交|未繳|未缴|沒繳|没缴|未帶作業|未带作业|沒帶作業|没带作业|忘(?:記|记)?(?:帶|带|交|繳|缴)作業|忘(?:記|记)?(?:帶|带|交|繳|缴)作业|作業未完成|作业未完成|未完成作業|未完成作业/],
+        ['classroom', /吵鬧|吵闹|喧嘩|喧哗|聊天|講話|讲话|說話|说话|吵架|大聲|大声|嬉鬧|嬉闹|起鬨|起哄|喧鬧|喧闹|干擾上課|干扰上课/]
+      ];
+      const kinds = rules.filter(([, pattern]) => pattern.test(text)).map(([kind]) => kind);
+      return kinds.length ? kinds : ['other'];
+    }
+
+    function getNoteCountContributions(entries){
+      const counts = { late:0, missing:0, classroom:0, other:0 };
+      for(const entry of entries || []){
+        if(isSystemViolationEntry(entry)) continue;
+        for(const kind of new Set(entry.countedKinds || [])){
+          if(Object.hasOwn(counts, kind)) counts[kind]++;
+        }
+      }
+      return counts;
+    }
 
     function createEmptyViolationRecord(){
       return { late:0, missing:0, classroom:0, other:0, pending:false, entries:[], specialEntries:[] };
@@ -10505,8 +10533,8 @@ function jsonOut(obj) {
     function getTodayViolationCountFromEntries(entries, today=getTodayInputDateValue()){
       if(!Array.isArray(entries)) return 0;
       return entries.reduce((count, entry)=>{
-        if(!isSystemViolationEntry(entry)) return count;
         if(entry.date !== today) return count;
+        if(!isSystemViolationEntry(entry)) return count + (entry.countedKinds || []).length;
         if(entry.action !== 'increment') return count;
         return count + Math.max(1, Math.abs(Number(entry.delta) || 0));
       }, 0);
@@ -10515,7 +10543,7 @@ function jsonOut(obj) {
     function getLatestViolationLogDate(entries){
       if(!Array.isArray(entries)) return '';
       return entries.reduce((latest, entry)=>{
-        if(!isSystemViolationEntry(entry) || !entry.date) return latest;
+        if((!isSystemViolationEntry(entry) && !entry.countedKinds?.length) || !entry.date) return latest;
         return !latest || entry.date > latest ? entry.date : latest;
       }, '');
     }
@@ -10528,6 +10556,9 @@ function jsonOut(obj) {
         const date = normalizeViolationDateValue(entry.date) || getTodayInputDateValue();
         if(!item) return null;
         const next = { date, item };
+        if(!isSystemViolationEntry(entry) && Array.isArray(entry.countedKinds)){
+          next.countedKinds = [...new Set(entry.countedKinds.filter(kind => VIOLATION_FIELDS.some(field => field.key === kind)))];
+        }
         if(isSystemViolationEntry(entry)){
           const action = normalizeViolationEntryAction(entry.action);
           const kind = normalizeViolationEntryKind(entry.kind) || 'all';
@@ -10648,7 +10679,16 @@ function jsonOut(obj) {
 
     function setViolationEntriesByType(cls, id, noteKey, entries){
       const rec = getViolationRecord(cls, id);
-      rec[normalizeViolationNoteKey(noteKey)] = normalizeViolationEntries(entries);
+      const key = normalizeViolationNoteKey(noteKey);
+      const next = normalizeViolationEntries(entries);
+      if(key === 'entries'){
+        const before = getNoteCountContributions(rec.entries);
+        const after = getNoteCountContributions(next);
+        VIOLATION_FIELDS.forEach(({key: kind}) => {
+          rec[kind] = Math.max(0, rec[kind] + after[kind] - before[kind]);
+        });
+      }
+      rec[key] = next;
       setViolationRecord(cls, id, rec);
     }
 
@@ -10677,6 +10717,7 @@ function jsonOut(obj) {
       const totalBefore = getViolationRecordTotal(rec);
       if(totalBefore <= 0) return false;
       VIOLATION_FIELDS.forEach(({ key })=>{ rec[key] = 0; });
+      rec.entries.forEach(entry => { if(Array.isArray(entry.countedKinds)) entry.countedKinds = []; });
       appendViolationSystemEntry(rec, {
         kind: 'all',
         delta: -totalBefore,
@@ -16913,6 +16954,8 @@ noteSave?.addEventListener('click', ()=>{
             if(countEl) countEl.textContent = String(counts[tabKey] || 0);
           });
           if(violNoteHelp) violNoteHelp.textContent = meta.help;
+          if(violNoteAdd) violNoteAdd.textContent = `新增${meta.label}`;
+          if(violNoteClear) violNoteClear.textContent = `清空${meta.label}`;
           if(violNoteItem) violNoteItem.placeholder = meta.placeholder;
         }
 
@@ -16940,7 +16983,7 @@ noteSave?.addEventListener('click', ()=>{
           const frag = document.createDocumentFragment();
           entries.forEach((entry, idx)=>{
             const isSystem = isSystemViolationEntry(entry);
-            const tagText = getViolationSystemEntryTag(entry);
+            const tagText = getViolationSystemEntryTag(entry) || (entry.countedKinds || []).map(kind => `${getViolationFieldLabel(kind)} +1`).join(' · ');
             const row = document.createElement('div');
             row.className = `viol-note-entry${isSystem ? ' is-system' : ''}`;
             row.innerHTML = `
@@ -16980,7 +17023,7 @@ noteSave?.addEventListener('click', ()=>{
         violNoteDone?.addEventListener('click', closeViolationNoteModal);
         violNoteMask?.addEventListener('click', (e)=>{ if(e.target === violNoteMask) closeViolationNoteModal(); });
         violNoteItem?.addEventListener('keydown', (e)=>{
-          if(e.key === 'Enter'){
+          if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229){
             e.preventDefault();
             violNoteAdd?.click();
           }
@@ -17005,7 +17048,7 @@ noteSave?.addEventListener('click', ()=>{
             return;
           }
           const entries = getViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab);
-          entries.push({ date, item });
+          entries.push({ date, item, ...(activeTab === 'entries' ? { countedKinds: classifyViolationNote(item) } : {}) });
           setViolationEntriesByType(_violNoteCtx.cls, _violNoteCtx.id, activeTab, entries);
           renderViolationNoteList();
           if(violNoteItem) violNoteItem.value = '';
