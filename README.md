@@ -154,19 +154,25 @@
 - **⬆️ 上傳到試算表**：把目前所有班級寫入試算表（每班一個分頁，會覆蓋同名分頁）。
 - **同步會移除舊班級分頁**：本機已刪除的班級，在下次上傳同步後，也會從試算表刪除。
 - **⬇️ 從試算表下載**：把試算表內容讀回系統（會覆蓋目前的本機班級資料）。
-- **變更後自動上傳**：勾選後，資料一有變動就會在約 3.5 秒後自動上傳。
+- **變更後自動上傳**：勾選後，停止編輯約 1 秒後自動上傳；連續修改會合併送出，上傳中有新修改則待本次完成後接續同步。此時間是送出前等待，不含 Google 處理時間。
 - **開啟網頁時自動載入**：勾選後（預設開啟），每次打開網頁會優先從試算表下載最新資料；若載入失敗會自動沿用本機暫存資料。
 
 > ⚠️ 設定視窗會提醒這件事：**從試算表下載會覆蓋目前這台裝置上的班級資料**。若你剛做完大量修改，建議先手動上傳一次再下載或切換裝置。
 
 同步的欄位與 Excel 匯出完全相同（含分數、作業、座位、分組、四類違規次數與違規/特殊記事 JSON）。
 
+### 同步讀取加速
+
+新版 Apps Script 上傳以一次批次請求讀取目前資料並精確比對，只備份、寫入有變動的分頁；完全相同時不寫入、不推進復原點。下載以一次批次請求取得全部非備份分頁的資料；每次同步只取得一次分頁清單。保留原子寫入與上傳前備份。數字使用未格式化原值（不四捨五入成績），人工設定為日期／時間的儲存格使用試算表顯示的日期／時間字串。
+
+這項加速需要更新 Apps Script 並部署新版本，原網址與密碼可沿用。尚未量測真實 Google 執行時間；Google 啟動、網路及備份寫入耗時仍會影響等待。設計依據：[Google 建議使用批次操作減少服務呼叫](https://developers.google.com/apps-script/guides/support/best-practices)。
+
 ### 雲端寫入保護與復原
 
 - 上傳先檢查全部分頁名稱、資料列及儲存格格式；空內容、保留名稱、重複名稱、非同步分頁及無效值不會寫入。零分、空白、缺交與免交保持原值。
 - 備份、更新、新增及刪除舊同步分頁合併為單一 Sheets API `batchUpdate`。任何子請求無效時整筆不套用，既有資料和上一份備份均保留；容量不足、權限不足或 API 未啟用不會降級為逐頁覆寫。
 - 同一份 Apps Script 的上傳、下載及復原使用同一把鎖，避免互相穿插。這不是跨裝置版本衝突偵測，也無法鎖住直接在 Google 試算表上的人工編輯或其他腳本。
-- `__GRADE_SYNC_BACKUP__` 與 `__GRADE_SYNC_COPY_` 開頭的隱藏分頁是系統保留區，不能手動編輯、刪除或作為班級名稱。下載會排除它們。只保留最近一次成功上傳前的同步分頁，下一次成功上傳會更新此復原點；不會在 Drive 不斷建立檔案。
+- `__GRADE_SYNC_BACKUP__` 與 `__GRADE_SYNC_COPY_` 開頭的隱藏分頁是系統保留區，不能手動編輯、刪除或作為班級名稱。下載會排除它們。只保留最近一次實際寫入前受影響的同步分頁，下一次有變更的成功上傳才更新此復原點；不會在 Drive 不斷建立檔案。
 - 備份固定當下的儲存格值（人工公式保留計算結果，不保留公式）。復原涵蓋同步資料與儲存格格式，恢復已移除分頁、移除該次新增分頁，既有分頁保留原 ID。這不是整份試算表封存：已刪分頁的欄寬、圖表、篩選器等額外設定不在自動復原範圍。長期留存請另下載完整 JSON 備份或複製試算表。
 - 若網路逾時或回應遺失，整筆更新可能已成功，不能宣稱未寫入。先下載核對再決定是否重試，避免新一次上傳推進復原點。
 
@@ -213,10 +219,10 @@ function withSyncLock(action) {
 function requireSheetsAPI() {
   if (typeof Sheets === 'undefined') throw new Error('請先在 Apps Script「服務」新增 Google Sheets API，再更新部署。尚未寫入。');
 }
-function readBackup(ss) {
-  const sh = ss.getSheetByName(BACKUP_SHEET);
+function readBackup(ss, sheets = ss.getSheets()) {
+  const sh = sheets.find(s => s.getName() === BACKUP_SHEET);
   if (!sh) {
-    if (ss.getSheets().some(s => s.getName().startsWith(BACKUP_PREFIX))) throw new Error('備份索引遺失，請先檢查隱藏備份分頁。');
+    if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX))) throw new Error('備份索引遺失，請先檢查隱藏備份分頁。');
     return null;
   }
   const values = sh.getDataRange().getValues();
@@ -225,7 +231,7 @@ function readBackup(ss) {
   if (!record || record.version !== 1 || !Array.isArray(record.copies) || !Array.isArray(record.created)) throw new Error('備份索引損壞，尚未寫入。');
   const ids = new Set(), sourceIds = new Set();
   record.copies.forEach(c => {
-    const copy = ss.getSheets().find(s => s.getSheetId() === c.backupId);
+    const copy = sheets.find(s => s.getSheetId() === c.backupId);
     if (!Number.isInteger(c.sourceId) || !Number.isInteger(c.backupId) || ids.has(c.backupId) || sourceIds.has(c.sourceId) || !copy || copy.getName() !== BACKUP_PREFIX + c.backupId || typeof c.name !== 'string' || c.name === BACKUP_SHEET || c.name.startsWith(BACKUP_PREFIX)) throw new Error('備份分頁不完整，尚未寫入。');
     ids.add(c.backupId); sourceIds.add(c.sourceId);
   });
@@ -233,8 +239,19 @@ function readBackup(ss) {
     if (!Number.isInteger(c.id) || typeof c.name !== 'string' || sourceIds.has(c.id) || ids.has(c.id)) throw new Error('備份索引損壞，尚未寫入。');
     sourceIds.add(c.id);
   });
-  if (ss.getSheets().some(s => s.getName().startsWith(BACKUP_PREFIX) && !ids.has(s.getSheetId()))) throw new Error('發現未登錄的備份分頁，尚未寫入。');
+  if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX) && !ids.has(s.getSheetId()))) throw new Error('發現未登錄的備份分頁，尚未寫入。');
   return {sheetId:sh.getSheetId(), record};
+}
+// 一次取得多個範圍，避免每個班級分別往返 Google。
+function readSheetValues(ss, sheets, headerOnly = false) {
+  if (!sheets.length) return [];
+  requireSheetsAPI();
+  const ranges = sheets.map(s => "'" + s.getName().replace(/'/g, "''") + "'" + (headerOnly ? '!1:1' : ''));
+  const result = Sheets.Spreadsheets.Values.batchGet(ss.getId(), {
+    ranges, majorDimension:'ROWS', valueRenderOption:'UNFORMATTED_VALUE', dateTimeRenderOption:'FORMATTED_STRING'
+  });
+  if (!Array.isArray(result.valueRanges) || result.valueRanges.length !== sheets.length) throw new Error('雲端資料不完整，請稍候再試。');
+  return result.valueRanges.map(r => r.values || []);
 }
 function isManaged(name, rows) {
   const header = (rows[0] || []).map(v => String(v).trim());
@@ -269,17 +286,34 @@ function valueRows(rows) {
 function writeCells(id, rows) {
   return {updateCells:{range:{sheetId:id}, rows:valueRows(rows), fields:'userEnteredValue'}};
 }
-function uploadPlan(ss, payload, entries, previous) {
-  const sheets = ss.getSheets(), requests = [], used = new Set(sheets.map(s => s.getSheetId()));
+// 只忽略 Sheets API 省略的尾端空白，不轉型、不四捨五入、不移動中間空列。
+function comparableRows(rows) {
+  const result = rows.map(row => {
+    const cells = row.map(v => v === null || v === undefined ? '' : v);
+    while (cells.length && cells[cells.length - 1] === '') cells.pop();
+    return cells;
+  });
+  while (result.length && !result[result.length - 1].length) result.pop();
+  return JSON.stringify(result);
+}
+function uploadPlan(ss, payload, entries, previous, sheets = ss.getSheets()) {
+  const requests = [], used = new Set(sheets.map(s => s.getSheetId()));
   let nextId = 1;
   const allocate = () => { while (used.has(nextId)) nextId++; used.add(nextId); return nextId++; };
   const incoming = new Map(entries.map(e => [e.name, e]));
   const active = sheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
+  const currentRows = readSheetValues(ss, active);
+  const current = new Map(active.map((s,i) => [s.getName(), comparableRows(currentRows[i])]));
+  const managed = new Set(active.filter((s,i) => isManaged(s.getName(), currentRows[i])).map(s => s.getSheetId()));
   entries.forEach(e => {
     const collision = active.find(s => s.getName().toLowerCase() === e.name.toLowerCase());
-    if (collision && (collision.getName() !== e.name || !isManaged(collision.getName(), collision.getDataRange().getValues()))) throw new Error('同名分頁不是可覆寫的同步分頁：' + e.name);
+    if (collision && (collision.getName() !== e.name || !managed.has(collision.getSheetId()))) throw new Error('同名分頁不是可覆寫的同步分頁：' + e.name);
   });
-  const affected = active.filter(s => incoming.has(s.getName()) || (payload.replaceManagedSheets && isManaged(s.getName(), s.getDataRange().getValues())));
+  const changedEntries = entries.filter(e => current.get(e.name) !== comparableRows(e.rows));
+  const changedNames = new Set(changedEntries.map(e => e.name));
+  const affected = active.filter(s => changedNames.has(s.getName()) || (!incoming.has(s.getName()) && payload.replaceManagedSheets && managed.has(s.getSheetId())));
+  if (!changedEntries.length && !affected.length) return []; // 不推進既有復原點。
+
   const record = {version:1, createdAt:new Date().toISOString(), copies:[], created:[]};
   affected.forEach(s => {
     const backupId = allocate();
@@ -289,7 +323,7 @@ function uploadPlan(ss, payload, entries, previous) {
     requests.push({copyPaste:{source:{sheetId:s.getSheetId()}, destination:{sheetId:backupId}, pasteType:'PASTE_VALUES'}});
     requests.push({updateSheetProperties:{properties:{sheetId:backupId, hidden:true}, fields:'hidden'}});
   });
-  entries.forEach(e => {
+  changedEntries.forEach(e => {
     const existing = active.find(s => s.getName() === e.name);
     const id = existing ? existing.getSheetId() : allocate();
     if (!existing) {
@@ -314,10 +348,13 @@ function doGet(e) {
   try {
     return jsonOut(withSyncLock(() => {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
-      readBackup(ss);
+      const allSheets = ss.getSheets();
+      readBackup(ss, allSheets);
       const sheets = Object.create(null);
-      ss.getSheets().filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX)).forEach(s => {
-        const values = s.getDataRange().getValues();
+      const active = allSheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
+      const rows = readSheetValues(ss, active);
+      active.forEach((s, i) => {
+        const values = rows[i];
         if (values.length) sheets[s.getName()] = values;
       });
       return {ok:true, sheets};
@@ -333,7 +370,9 @@ function doPost(e) {
     requireSheetsAPI();
     return jsonOut(withSyncLock(() => {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
-      const requests = uploadPlan(ss, payload, entries, readBackup(ss));
+      const allSheets = ss.getSheets();
+      const requests = uploadPlan(ss, payload, entries, readBackup(ss, allSheets), allSheets);
+      if (!requests.length) return {ok:true, unchanged:true};
       submitted = true;
       Sheets.Spreadsheets.batchUpdate({requests}, ss.getId());
       return {ok:true, backupAvailable:true};
