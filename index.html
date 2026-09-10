@@ -1886,6 +1886,11 @@
       .seatwrap{ grid-template-columns: 1fr; }
     }
 
+    /* 同步視窗只捲動內容，標題與關閉按鈕保留在獨立區域。 */
+    #gsheet-mask > .modal{display:flex;flex-direction:column;overflow:hidden;}
+    #gsheet-mask > .modal > header{position:static;flex:0 0 auto;}
+    #gsheet-mask > .modal > .content{min-height:0;overflow:auto;overscroll-behavior:contain;}
+
     /* ===== 🔍 說明彈窗 ===== */
     .modal-mask{ position:fixed; inset:0; z-index:60; display:none; background: rgba(10,14,26,.62); backdrop-filter: blur(8px); }
     .modal-mask.show{ display:flex; align-items:center; justify-content:center; animation: fadeIn .12s ease; }
@@ -14009,7 +14014,7 @@ function onTimerDone(){
       const chips = titles.length
         ? titles.map(title=>`<span class="manage-cadre-chip is-edit">${escapeHTML(title)}<button type="button" class="manage-cadre-remove" data-id="${escapeHTML(stu.id)}" data-title="${escapeHTML(title)}" aria-label="移除 ${escapeHTML(title)}">×</button></span>`).join('')
         : '<span class="manage-cadre-empty">未設定</span>';
-      return `<div class="manage-cadre-editor" data-id="${escapeHTML(stu.id)}" data-cls="${escapeHTML(cls)}">
+      return `<div class="manage-cadre-editor" tabindex="-1" role="group" aria-label="${escapeHTML(stu.name)}的幹部職稱" data-id="${escapeHTML(stu.id)}" data-cls="${escapeHTML(cls)}">
         <div class="manage-cadre-controls">
           <select class="manage-cadre-select" aria-label="${escapeHTML(stu.name)}的新增職稱" data-id="${escapeHTML(stu.id)}">
             <option value="">新增職稱…</option>
@@ -14133,13 +14138,16 @@ function onTimerDone(){
 
     elManageTable?.addEventListener('change', async (e)=>{
       const select = e.target.closest('.manage-cadre-select');
-      if(!select || !manageEditMode || !manageSelectedClass) return;
+      if(!select || !select.isConnected || !manageEditMode || !manageSelectedClass) return;
       const cls = manageSelectedClass;
       const id = select.dataset.id;
       const stu = (state.classMap[cls] || []).find(item => item.id === id);
       if(!stu) return;
       let title = select.value;
       const custom = select.selectedOptions[0]?.dataset.custom === 'true';
+      if(!title && !custom) return;
+      // iPad 原生選單結束後，焦點留在職稱區域，不重新開啟 select。
+      select.closest('.manage-cadre-editor')?.focus({preventScroll:true});
       select.value = '';
       if(custom){
         const raw = await safePromptText({title:'自訂職稱', label:'職稱名稱', placeholder:'例如：設備長', okText:'加入職稱'});
@@ -14148,7 +14156,7 @@ function onTimerDone(){
       }
       if(!title) return;
       updateManageStudentCadres(cls, id, [...(stu.titles || []), title]);
-      [...elManageTable.querySelectorAll('.manage-cadre-select')].find(el=>el.dataset.id === id)?.focus();
+      [...elManageTable.querySelectorAll('.manage-cadre-editor')].find(el=>el.dataset.id === id && el.dataset.cls === cls)?.focus({preventScroll:true});
     });
 
     // ＋ 新增班級（管理模式）
