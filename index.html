@@ -5672,7 +5672,7 @@
     #progress-pane .progtbl th:first-child, #progress-pane .progtbl td:first-child { width:var(--prog-first-col); min-width:var(--prog-first-col); max-width:var(--prog-first-col); position:sticky; }
     #progress-pane .progtbl th { background:var(--card); font-size:14px; }
     #progress-pane .prog-th-count { font-size:11px; opacity:1; color:var(--muted); font-weight:400; }
-    #progress-pane .prog-th-class { cursor:default; }
+    #progress-pane .prog-th-class { cursor:default; white-space:normal; overflow-wrap:anywhere; }
     #progress-pane.prog-editing .prog-th-class { cursor:grab; }
     #progress-pane .prog-title { display:block; flex:1; min-width:0; white-space:normal; overflow-wrap:anywhere; font-size:14px; line-height:1.65; padding:4px 6px; }
     #progress-pane .prog-topic-title { font-weight:750; font-size:13px; }
@@ -6614,6 +6614,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <label class="prog-search"><input id="prog-search" type="search" placeholder="搜尋進度…" aria-label="搜尋進度或主題"></label>
             <label class="prog-filter-toggle"><input id="prog-pending" type="checkbox">只看未完成</label>
           </div>
+            <button id="btn-prog-subject" class="btn" type="button" title="切換是否在表頭顯示科目名稱">顯示科目</button>
             <button id="btn-prog-collapse" class="btn" type="button">收合主題</button>
             <button id="btn-prog-edit" class="btn" type="button" aria-pressed="false">編輯內容</button>
 
@@ -6622,7 +6623,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <span class="hint">可修改文字、拖曳排序，或使用上下箭頭移動。</span>
             <button id="btn-prog-add" class="btn prog-primary" type="button">＋ 新增進度</button>
             <button id="btn-prog-add-topic" class="btn" type="button">＋ 新增主題</button>
-            <button id="btn-prog-subject" class="btn" type="button" title="切換是否在表頭顯示科目名稱">顯示科目</button>
             <button id="btn-prog-del" class="btn danger" type="button">刪除最後一列</button>
           </div>
           <div class="progtbl-wrap">
@@ -8760,7 +8760,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           order.forEach(cls => ensureCadreOptions(cls));
 
           renderClassOptions(state.classOrder);
-          const nextSelectedClass = (hadExistingClasses && prevSelectedClass && state.classOrder.includes(prevSelectedClass))
+          const nextSelectedClass = (isSyncImport && hadExistingClasses && prevSelectedClass && state.classOrder.includes(prevSelectedClass))
             ? prevSelectedClass
             : (order[0] || state.classOrder[0]);
 
@@ -12200,26 +12200,19 @@ function jsonOut(obj) {
       }
     }
 
-    // ★ 教學進度表頭：依設定決定是否顯示科目
-    //   關閉時："712資訊科技" → "712"、"721國文" → "721"、"社會831" → "831"
-    //   開啟時：班級代號 + 換行 + 科目名稱
+    // 完整保留班級名稱；僅分離可辨識的班級後綴科目。
     function progDisplayName(cls, asHTML){
-      const prog = state.progress;
-      const s = String(cls||'');
-      const m = s.match(/\d+/);
-      if(prog && prog.showSubject){
-        // 拆成班級代號與科目兩部分，換行顯示
-        if(m){
-          const num = m[0];
-          const subject = s.replace(num, '').trim();
-          if(subject){
-            if(asHTML) return `${escapeHTML(num)}<br><span class="prog-th-subject">${escapeHTML(subject)}</span>`;
-            return `${num}\n${subject}`;
-          }
-        }
-        return asHTML ? escapeHTML(cls) : cls;
+      const s=String(cls||'').trim();
+      const explicit=s.match(/^((?:(?:國小|國中|高中|小|國|初|高)\s*)?(?:[零〇一二兩三四五六七八九十]+|[0-9０-９]+)\s*年(?:級)?\s*(?:[零〇一二兩三四五六七八九十甲乙丙丁戊己庚辛壬癸]+|[0-9０-９]+)\s*班)(.*)$/);
+      const compact=s.match(/^([0-9０-９]{3}(?:班)?)([^0-9０-９].*)?$/);
+      const trailing=s.match(/^([^0-9０-９]+?)([0-9０-９]{3})$/);
+      let name=s,subject='';
+      if(explicit||compact){const match=explicit||compact;name=match[1];subject=(match[2]||'').trim();}
+      else if(trailing){name=trailing[2];subject=trailing[1].trim();}
+      if(state.progress?.showSubject && subject){
+        return asHTML ? `${escapeHTML(name)}<br><span class="prog-th-subject">${escapeHTML(subject)}</span>` : `${name}\n${subject}`;
       }
-      return m ? m[0] : cls;
+      return asHTML ? escapeHTML(name) : name;
     }
 
     /* ★ 教學進度：移動項目的工具函式 */
@@ -12558,6 +12551,7 @@ function jsonOut(obj) {
 
       // ★ 更新「顯示科目」按鈕狀態
       if(elProgSubjectBtn){
+        elProgSubjectBtn.setAttribute('aria-pressed',String(!!prog.showSubject));
         if(prog.showSubject){
           elProgSubjectBtn.textContent = '隱藏科目';
           elProgSubjectBtn.style.opacity = '1';
@@ -14611,15 +14605,30 @@ function openDelProgressClass(){
     }
   });
 }
+    // BEGIN PROGRESS GRADE DETECTION
+    function progressClassGrade(name){
+      const text=String(name ?? '').normalize('NFKC').trim();
+      const explicit=text.match(/([零〇一二兩三四五六七八九十]+|\d+)\s*年/);
+      if(explicit){
+        const grade=chineseNumToInt(explicit[1]);
+        return Number.isInteger(grade)&&grade>0 ? grade : null;
+      }
+      const school=text.match(/^(?:國小|國中|高中|小|國|初|高)\s*([一二兩三四五六七八九十]+|\d+)(?=班|\s|$)/);
+      if(school){const grade=chineseNumToInt(school[1]);return grade>0 ? grade : null;}
+      // 三碼班級代碼：首位年級、後兩位班號；不將 01 班或任意數字當成年級。
+      const code=text.match(/^([1-9])\d{2}(?!\d)/);
+      return code ? Number(code[1]) : null;
+    }
+    // END PROGRESS GRADE DETECTION
     function openAddProgressPage(){
       const prog = ensureProgressState();
       const allClasses = (state.classOrder||[]).slice();
 
-      // ★ 依年級分組（取班級名第一組數字的首位）
+      // 依現有班級名稱辨識年級，中文與阿拉伯數字歸入同一組。
       const gradeMap = {};
       for(const cls of allClasses){
-        const m = cls.match(/(\d+)/);
-        const grade = m ? String(m[1])[0] : '?';
+        const detected = progressClassGrade(cls);
+        const grade = detected === null ? '?' : String(detected);
         if(!gradeMap[grade]) gradeMap[grade] = [];
         gradeMap[grade].push(cls);
       }
