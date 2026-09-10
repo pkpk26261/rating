@@ -2827,7 +2827,6 @@
       cursor: pointer;
       outline: none;
       transition: all .15s;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237c3aed'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 10px center;
       background-size: 10px 6px;
@@ -3780,6 +3779,11 @@
       transition: background .12s ease;
       border-left:3px solid transparent;
     }
+    .manage-class-label{min-width:0;overflow-wrap:anywhere;color:var(--fg);}
+    .manage-class-subject,.class-subject{color:#83c5ff;margin-left:.4em;}
+    .class-label{overflow-wrap:anywhere;}
+    .class-subject.prog-th-subject{margin-left:0;}
+    :root[data-theme="light"] :is(.manage-class-subject,.class-subject){color:#175a9c;}
     .manage-class-item:hover{ background:rgba(129,140,248,.06); }
     :root[data-theme="light"] .manage-class-item:hover{ background:rgba(129,140,248,.04); }
     .manage-class-item.active{
@@ -4800,7 +4804,7 @@
       border-radius: 8px !important;
       font-weight: 800 !important;
       font-size: 11px !important;
-      height: 26px !important;
+      height: 26px;
       padding: 3px 0 !important;
       transition: transform .08s ease, box-shadow .12s ease !important;
     }
@@ -6368,9 +6372,9 @@ body[data-mode="list"] #students.grid .card{--score-scale:1;transform:none;opaci
 body[data-mode="list"] #students.grid .card .name{flex-shrink:0;padding-right:calc(36px * var(--score-scale));gap:calc(6px * var(--score-scale));line-height:1.2;letter-spacing:0;}
 body[data-mode="list"] #students.grid .card .student-name{font-size:calc(16px * var(--score-scale)) !important;line-height:1.2;min-width:0;flex-shrink:1;}
 body[data-mode="list"] #students.grid .card .seat-badge{font-size:calc(11px * var(--score-scale)) !important;padding:calc(1px * var(--score-scale)) calc(5px * var(--score-scale));}
-body[data-mode="list"] #students.grid .card .score-chip{font-size:min(24px,calc(14px * var(--score-scale))) !important;min-width:0;top:calc(5px * var(--score-scale));right:calc(5px * var(--score-scale));padding:calc(2px * var(--score-scale)) calc(5px * var(--score-scale));line-height:1.2;}
+body[data-mode="list"] #students.grid .card .score-chip{font-size:min(24px,calc(14px * var(--score-scale))) !important;min-width:0;top:var(--score-chip-top,calc(8px * var(--score-scale)));right:calc(8px * var(--score-scale));padding:calc(2px * var(--score-scale)) calc(5px * var(--score-scale));line-height:1.2;}
 body[data-mode="list"] #students.grid .card .actions{flex-shrink:0;margin-top:auto;gap:calc(4px * var(--score-scale));}
-body[data-mode="list"] #students.grid .card .actions .btn{height:var(--score-button-height,calc(27px * var(--score-scale)));min-height:0;padding:0 !important;font-size:min(22px,calc(13px * var(--score-scale))) !important;line-height:1.2;border-radius:calc(7px * var(--score-scale));}
+body[data-mode="list"] #students.grid .card .actions .btn{height:var(--score-button-height,calc(27px * var(--score-scale))) !important;min-height:0;padding:0 !important;font-size:min(22px,calc(13px * var(--score-scale))) !important;line-height:1.2;border-radius:calc(7px * var(--score-scale));}
 body[data-mode="list"] #students.grid .card .empty-text{font-size:calc(14px * var(--score-scale)) !important;}
 body[data-mode="list"] #students.grid .card .note-dot{width:calc(6px * var(--score-scale));height:calc(6px * var(--score-scale));flex-shrink:0;}
 body[data-mode="list"] #students.grid .stage{height:auto;min-height:0;box-sizing:border-box;position:static;padding:0;display:flex;align-items:center;justify-content:center;}
@@ -9030,6 +9034,32 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       });
     }
 
+    async function promptRenameClass(oldName){
+      const parts=splitClassSubject(oldName);
+      const previousFocus=document.activeElement;
+      try{return await showProgClassDialog({
+        title:'重新命名班級',okText:'儲存',
+        html:`<div style="display:grid;gap:14px;">
+          <label for="rename-class-name">班級（必填）<input id="rename-class-name" class="input" type="text" required value="${escapeHTML(parts.name)}" placeholder="例如：七年12班" style="display:block;width:100%;margin-top:6px;"></label>
+          <label for="rename-class-subject">科目（選填）<input id="rename-class-subject" class="input" type="text" value="${escapeHTML(parts.subject)}" placeholder="例如：資訊科技" style="display:block;width:100%;margin-top:6px;"></label>
+        </div>`,
+        onOpen:mask=>{
+          const input=mask.querySelector('#rename-class-name');input.focus();input.select();
+          mask.querySelectorAll('input').forEach(el=>{
+            el.addEventListener('input',()=>input.setCustomValidity(''));
+            el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();mask.querySelector('#progclass-ok').click();}});
+          });
+        },
+        onOk:mask=>{
+          const input=mask.querySelector('#rename-class-name'),name=input.value.trim(),subject=mask.querySelector('#rename-class-subject').value.trim();
+          if(!name){input.setCustomValidity('請填寫班級');input.reportValidity();return false;}
+          const result=subject ? `${name} ${subject}` : name;
+          if(result!==oldName&&state.classOrder.includes(result)){input.setCustomValidity('此班級名稱已存在');input.reportValidity();return false;}
+          return result;
+        }
+      });}finally{if(previousFocus?.isConnected)previousFocus.focus();}
+    }
+
     async function safeConfirmDialog({ title, message, okText='確定', cancelText='取消' }){
       const result = await showProgClassDialog({
         title: title || '確認',
@@ -9137,13 +9167,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     elRenameClass?.addEventListener('click', async ()=>{
       const oldName = elSelect.value;
       if(!oldName){ appAlert('請先選擇班級'); return; }
-      const newName = (await safePromptText({
-        title: '重新命名班級',
-        label: `請輸入「${oldName}」的新班級名稱：`,
-        defaultValue: oldName,
-        placeholder: '班級名稱',
-        okText: '儲存'
-      }) || '').trim();
+      const newName = await promptRenameClass(oldName);
       renameClassState(oldName, newName);
     });
 
@@ -9683,7 +9707,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         cb.type = 'checkbox'; cb.checked = cls === (elSelect.value || state.classOrder[0]); cb.value = cls;
         cb.className = 'export-cls-cb';
         lbl.appendChild(cb);
-        lbl.appendChild(document.createTextNode(cls));
+        const classText=document.createElement('span');classText.innerHTML=renderClassLabel(cls);lbl.appendChild(classText);
         exportClassBox.appendChild(lbl);
       }
       // 格式提示
@@ -11302,7 +11326,7 @@ function jsonOut(obj) {
       } = options;
       const today = getTodayInputDateValue();
 
-      if(elClass) elClass.textContent = cls || '未選擇';
+      if(elClass) elClass.innerHTML = cls ? renderClassLabel(cls) : '未選擇';
       let list = buildLeaderboardEntries(cls);
       if(typeof filter === 'function') list = list.filter(filter);
 
@@ -12201,7 +12225,7 @@ function jsonOut(obj) {
     }
 
     // 完整保留班級名稱；僅分離可辨識的班級後綴科目。
-    function progDisplayName(cls, asHTML){
+    function splitClassSubject(cls){
       const s=String(cls||'').trim();
       const explicit=s.match(/^((?:(?:國小|國中|高中|小|國|初|高)\s*)?(?:[零〇一二兩三四五六七八九十]+|[0-9０-９]+)\s*年(?:級)?\s*(?:[零〇一二兩三四五六七八九十甲乙丙丁戊己庚辛壬癸]+|[0-9０-９]+)\s*班)(.*)$/);
       const compact=s.match(/^([0-9０-９]{3}(?:班)?)([^0-9０-９].*)?$/);
@@ -12209,8 +12233,16 @@ function jsonOut(obj) {
       let name=s,subject='';
       if(explicit||compact){const match=explicit||compact;name=match[1];subject=(match[2]||'').trim();}
       else if(trailing){name=trailing[2];subject=trailing[1].trim();}
+      return {name,subject};
+    }
+    function renderClassLabel(cls){
+      const {name,subject}=splitClassSubject(cls);
+      return `<span class="class-label">${escapeHTML(name)}${subject ? `<span class="class-subject">${escapeHTML(subject)}</span>` : ''}</span>`;
+    }
+    function progDisplayName(cls, asHTML){
+      const {name,subject}=splitClassSubject(cls);
       if(state.progress?.showSubject && subject){
-        return asHTML ? `${escapeHTML(name)}<br><span class="prog-th-subject">${escapeHTML(subject)}</span>` : `${name}\n${subject}`;
+        return asHTML ? `${escapeHTML(name)}<br><span class="prog-th-subject class-subject">${escapeHTML(subject)}</span>` : `${name}\n${subject}`;
       }
       return asHTML ? escapeHTML(name) : name;
     }
@@ -13892,8 +13924,9 @@ function onTimerDone(){
           elManageClassList.innerHTML = classes.map(c=>{
             const count = (state.classMap[c]||[]).length;
             const active = c === manageSelectedClass ? ' active' : '';
+            const {name,subject}=splitClassSubject(c);
             return `<div class="manage-class-item${active}" data-cls="${escapeHTML(c)}">
-              <span>${escapeHTML(c)}</span>
+              <span class="manage-class-label"><span>${escapeHTML(name)}</span>${subject ? `<span class="manage-class-subject">${escapeHTML(subject)}</span>` : ''}</span>
               <span class="cls-count">${count} 人</span>
             </div>`;
           }).join('');
@@ -13940,7 +13973,7 @@ function onTimerDone(){
         return;
       }
       const list = state.classMap[cls] || [];
-      if(elManageRightTitle) elManageRightTitle.innerHTML = `📋 ${escapeHTML(cls)} <span class="pill" style="font-weight:400;font-size:12px;">${list.length} 人</span>`;
+      if(elManageRightTitle) elManageRightTitle.innerHTML = `📋 ${renderClassLabel(cls)} <span class="pill" style="font-weight:400;font-size:12px;">${list.length} 人</span>`;
       if(tbody){
         if(!list.length){
           tbody.innerHTML = `<tr><td colspan="${6 + hwCols.length}" class="manage-empty">此班級沒有學生</td></tr>`;
@@ -14173,13 +14206,7 @@ function onTimerDone(){
     elManageRename?.addEventListener('click', async ()=>{
       const oldName = manageSelectedClass;
       if(!oldName){ appAlert('請先在班級列表選擇班級'); return; }
-      const newName = (await safePromptText({
-        title: '重新命名班級',
-        label: `請輸入「${oldName}」的新班級名稱：`,
-        defaultValue: oldName,
-        placeholder: '班級名稱',
-        okText: '儲存'
-      }) || '').trim();
+      const newName = await promptRenameClass(oldName);
       renameClassState(oldName, newName);
     });
 
@@ -14494,7 +14521,7 @@ function openAddProgressClass(){
   const listHtml = options.map((c,i)=>`
     <label style="display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);">
       <input type="checkbox" class="progclass-addchk" value="${escapeHTML(c)}">
-      <span>${escapeHTML(c)}</span>
+      <span>${renderClassLabel(c)}</span>
     </label>
   `).join('');
 
@@ -14553,7 +14580,7 @@ function openDelProgressClass(){
   const listHtml = cur.map(c=>`
     <label style="display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);">
       <input type="checkbox" class="progclass-chk" value="${escapeHTML(c)}">
-      <span>${escapeHTML(c)}</span>
+      <span>${renderClassLabel(c)}</span>
     </label>
   `).join('');
 
@@ -14647,7 +14674,7 @@ function openDelProgressClass(){
       const classListHtml = allClasses.map(c=>`
         <label style="display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line); cursor:pointer;">
           <input type="checkbox" class="progpage-cls-cb" value="${escapeHTML(c)}" checked>
-          <span>${escapeHTML(c)}</span>
+          <span>${renderClassLabel(c)}</span>
         </label>
       `).join('');
 
@@ -14904,7 +14931,7 @@ function bindProgressPageUI(){
             cb.checked = activeSet.has(cls);
             const txt = document.createElement('span');
             txt.className = 'prog-cls-name';
-            txt.textContent = cls;
+            txt.innerHTML = renderClassLabel(cls);
             // 顯示班級人數
             const cnt = document.createElement('span');
             cnt.className = 'prog-cls-count';
@@ -15800,6 +15827,8 @@ elProgAdd?.addEventListener('click', ()=>{
         const name = card.querySelector('.name');
         if(name) fitName(name);
         const nameHeight = name?.getBoundingClientRect().height || 0;
+        const chip = card.querySelector('.score-chip');
+        if(name && chip) card.style.setProperty('--score-chip-top', (name.offsetTop + (name.offsetHeight - chip.offsetHeight) / 2)+'px');
         const buttonHeight = Math.max(1, Math.min(card.clientHeight * .4, card.clientHeight - 20 * scale - nameHeight - 2));
         card.style.setProperty('--score-button-height', buttonHeight+'px');
       };
@@ -15861,7 +15890,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
       const list = getSortedList(cls);
       const q = '';
-      if(elViolClassPill) elViolClassPill.textContent = cls;
+      if(elViolClassPill) elViolClassPill.innerHTML = renderClassLabel(cls);
       syncViolClassSelect(cls);
 
       const th = `
@@ -16227,7 +16256,7 @@ elProgAdd?.addEventListener('click', ()=>{
         fragments.push(`
           <div class="warning-class-group">
             <div class="warning-class-title">
-              <span>${escapeHTML(cls)}</span>
+              <span>${renderClassLabel(cls)}</span>
               <span class="warning-count-badge">${failing.length} 人</span>
             </div>
             <table class="warning-table">
@@ -16267,7 +16296,7 @@ elProgAdd?.addEventListener('click', ()=>{
     function renderHW(cls){
       if(_cleanupHWPointerDrag){_cleanupHWPointerDrag();_cleanupHWPointerDrag=null;}_dismissHWColBar();closeHWColumnMenu();
       if(!cls){elHWTable.innerHTML='';elHWClassPill.textContent='未選擇';syncHWClassSelect(cls);return;}
-      const hw=ensureHWState(cls),list=getSortedList(cls);prepareHWEntryView(cls,hw);elHWClassPill.textContent=cls;syncHWClassSelect(cls);
+      const hw=ensureHWState(cls),list=getSortedList(cls);prepareHWEntryView(cls,hw);elHWClassPill.innerHTML=renderClassLabel(cls);syncHWClassSelect(cls);
       list.forEach(s=>{const row=hw.data[s.id]||(hw.data[s.id]=[]);while(row.length<hw.cols.length)row.push('');});
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
       elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄">整批登錄</button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
@@ -16854,7 +16883,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const colName=hw.cols[colIndex] || `作業${colIndex+1}`;
       bulkColName.textContent = colName;
       bulkColName2.textContent = colName;
-      bulkClass.textContent = cls;
+      bulkClass.innerHTML = renderClassLabel(cls);
       document.getElementById('bulk-scope').textContent=`套用範圍：${cls}，目前顯示 ${hwGrid.bulkContext.rows.length} 位學生。不修改篩選隱藏的學生。`;
       bulkSameVal.value = '';
       bulkSameVal.disabled = false;
@@ -16918,7 +16947,7 @@ elProgAdd?.addEventListener('click', ()=>{
       }
       hwColDelMask.dataset.cls = cls;
       hwColDelMask.dataset.col = String(colIndex);
-      hwColDelClass.textContent = cls;
+      hwColDelClass.innerHTML = renderClassLabel(cls);
       hwColDelName.textContent = hw.cols[colIndex] || `作業${colIndex+1}`;
       hwColDelMask.classList.add('show');
       hwColDelCancel?.focus();
@@ -16970,7 +16999,7 @@ function openNoteModal(cls, id, label){
       if(!noteMask) return;
       _noteCtx = { cls: cls||'', id: id||'', label: label||'' };
 
-      noteClass.textContent = _noteCtx.cls || '';
+      noteClass.innerHTML = renderClassLabel(_noteCtx.cls || '');
       const stu = (state.classMap[cls] || []).find(s=>s.id === id);
       noteStudent.innerHTML = stu ? `${escapeHTML(String(stu.seat || ''))} ${renderStudentName(stu, cls)}` : escapeHTML(_noteCtx.label || _noteCtx.id || '');
       noteText.value = getNote(_noteCtx.cls, _noteCtx.id);
@@ -17100,7 +17129,7 @@ noteSave?.addEventListener('click', ()=>{
         function openViolationNoteModal(cls, id, label){
           if(!violNoteMask) return;
           _violNoteCtx = { cls: cls || '', id: id || '', label: label || '', tab:'entries' };
-          if(violNoteClass) violNoteClass.textContent = _violNoteCtx.cls;
+          if(violNoteClass) violNoteClass.innerHTML = renderClassLabel(_violNoteCtx.cls);
           const stu = (state.classMap[cls] || []).find(s=>s.id === id);
           if(violNoteStudent) violNoteStudent.innerHTML = stu ? `${escapeHTML(String(stu.seat || ''))} ${renderStudentName(stu, cls)}` : escapeHTML(_violNoteCtx.label || _violNoteCtx.id);
           if(violNoteDate) violNoteDate.value = getTodayInputDateValue();
@@ -17194,7 +17223,7 @@ noteSave?.addEventListener('click', ()=>{
       if(!addStuMask){ appAlert('介面尚未準備完成'); return; }
       if(!cls){ appAlert('請先選擇班級'); return; }
       _addStuSource = source || 'list';
-      addStuClass.textContent = cls;
+      addStuClass.innerHTML = renderClassLabel(cls);
       addStuSid.value = '';
       addStuName.value = '';
       addStuSeat.value = '';
@@ -17262,7 +17291,7 @@ noteSave?.addEventListener('click', ()=>{
         return;
       }
 
-      delClass.textContent = cls;
+      delClass.innerHTML = renderClassLabel(cls);
       delSelect.innerHTML = '';
 
       // ★ 對齊：座號用 0 補齊位數，搭配等寬字/表格數字
@@ -17611,6 +17640,58 @@ noteSave?.addEventListener('click', ()=>{
     })();
     // END SVG ICONS
 
+</script>
+
+<style>
+select.class-color-select{color:transparent!important;text-shadow:none!important;appearance:none!important;-webkit-appearance:none!important;background-image:none!important;background-color:var(--card)!important;border:1px solid var(--line)!important;border-radius:10px!important;padding:10px 14px!important;font-size:14px!important;font-weight:600!important;transition:border-color .15s,box-shadow .15s!important;}
+select.class-color-select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+select.class-color-select option{color:var(--fg);background:var(--card);}
+.class-select-display{position:absolute;display:flex;align-items:center;gap:4px;pointer-events:none;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:var(--fg);}
+.class-select-display .class-label{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.4;}
+select.class-color-select{flex-shrink:0;box-sizing:border-box;}
+.class-select-display::after{content:'';width:7px;height:7px;border-right:1.8px solid var(--muted);border-bottom:1.8px solid var(--muted);transform:rotate(45deg);margin:0 2px 0 auto;align-self:center;flex-shrink:0;}
+.class-select-display{gap:14px;}
+.class-select-display .class-subject{margin-left:8px;font-weight:500;}
+.class-select-display.is-disabled{opacity:.55;}
+@media(max-width:600px){
+ #group-pane .grp-toolbar,#group-pane .grp-toolbar-left{flex-wrap:wrap;min-width:0;max-width:100%;}
+ #group-pane .grp-toolbar-left{flex-shrink:1;}
+ .hw-bar{flex-wrap:wrap;}
+}
+</style>
+<script>
+// 原生選單負責互動與可及性，覆蓋文字僅呈現收合欄位的班名／科目色彩。
+(()=>{
+  const ids=['class-select','hw-class-select','group-class-pill','viol-class-select','warning-class-select','draw-class-select'];
+  const updates=[];
+  const measure=document.createElement('canvas').getContext('2d');
+  for(const id of ids){
+    const select=document.getElementById(id);if(!select)continue;
+    const parent=select.parentElement;if(getComputedStyle(parent).position==='static')parent.style.position='relative';
+    const display=document.createElement('span');display.className='class-select-display';display.setAttribute('aria-hidden','true');parent.append(display);select.classList.add('class-color-select');
+    let previous='';
+    const update=()=>{
+      const visible=select.getClientRects().length>0;display.style.display=visible?'flex':'none';if(!visible)return;
+      const style=getComputedStyle(select),text=select.selectedOptions[0]?.textContent||'';
+      measure.font=style.font;
+      const padding=(parseFloat(style.paddingLeft)||12)+(parseFloat(style.paddingRight)||12);
+      const textWidth=measure.measureText(text).width+10;
+      const width=Math.min(Math.max(160,Math.ceil(textWidth+padding+30)),Math.max(160,innerWidth-96));
+      select.style.setProperty('width',width+'px','important');select.style.setProperty('min-width','0','important');select.style.setProperty('max-width','none','important');
+      const lines=Math.max(1,Math.ceil(textWidth/Math.max(1,width-padding-24)));
+      select.style.setProperty('height',Math.max(44,lines*(parseFloat(style.fontSize)||15)*1.4+20)+'px','important');
+      const r=select.getBoundingClientRect(),pr=parent.getBoundingClientRect();
+      display.style.left=(r.left-pr.left-parent.clientLeft+parent.scrollLeft)+'px';display.style.top=(r.top-pr.top-parent.clientTop+parent.scrollTop)+'px';display.style.width=r.width+'px';display.style.height=r.height+'px';
+      display.style.paddingLeft=style.paddingLeft;display.style.paddingRight=style.paddingRight;display.style.font=style.font;
+      display.classList.toggle('is-disabled',select.disabled);
+      if(text!==previous){display.innerHTML=renderClassLabel(text);previous=text;}
+    };
+    select.addEventListener('change',update);new MutationObserver(update).observe(select,{childList:true,subtree:true,attributes:true,characterData:true});updates.push(update);update();
+  }
+  const refresh=()=>updates.forEach(update=>update());
+  window.addEventListener('resize',refresh);document.addEventListener('scroll',refresh,true);document.addEventListener('click',()=>requestAnimationFrame(refresh));
+  setInterval(refresh,250);
+})();
 </script>
 
 <dialog id="webapp-guide" aria-labelledby="webapp-guide-title" aria-describedby="webapp-guide-description">
