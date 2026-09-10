@@ -5731,7 +5731,6 @@
       .prog-context > .spacer { display:none; }
       .prog-filters { padding:8px; gap:6px; }
       .prog-search { flex-basis:100%; }
-      .prog-footer span:last-child { display:none; }
       #progress-pane .prog-title { font-size:13px; }
       #progress-pane.prog-editing { --prog-first-col:260px; }
       #progress-pane .prog-page-menuwrap .menu { right:auto; left:0; }
@@ -5976,14 +5975,16 @@
     #group-pane .grp-icon{ display:none; }
     #group-pane .grp-name-wrap{ min-width:0; flex:1; }
     #group-pane .grp-name{ font-size:18px; min-height:36px; min-width:0; text-align:left; overflow-wrap:anywhere; white-space:normal; }
-    .grp-rename-mark{ margin-left:8px; font-size:13px; color:var(--muted); }
+    .grp-rename-mark{ display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; margin-left:10px; vertical-align:middle; border:1px solid var(--accent); border-radius:8px; color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,var(--card)); }
+    .grp-rename-mark svg{ width:21px; height:21px; }
+    #group-pane .grp-name:hover .grp-rename-mark{ background:color-mix(in srgb,var(--accent) 22%,var(--card)); }
     #group-pane .grp-count{ font-size:13px; background:transparent; color:var(--muted); padding:0 0 0 10px; }
     #group-pane .grp-card-body{ display:flex; flex-direction:column; flex:1; min-width:0; min-height:76px; padding:10px; gap:6px; }
     #group-pane .grp-card-body:empty::after{ content:'尚無學生'; min-height:52px; font-size:14px; opacity:1; }
     #group-pane .grp-member{ flex-shrink:0; min-width:0; min-height:52px; padding:0; border:1px solid transparent; border-radius:9px; background:var(--bg); animation:none; }
     #group-pane .grp-member-select{ display:flex; align-items:center; gap:12px; min-width:0; width:100%; min-height:52px; padding:8px 12px; border:0; border-radius:8px; color:inherit; background:none; text-align:left; font:inherit; cursor:pointer; }
     #group-pane .grp-member-name{ font-size:18px; min-width:0; white-space:normal; overflow-wrap:anywhere; line-height:1.5; }
-    #group-pane .grp-avatar{ width:30px; height:30px; font-size:14px; border-radius:8px; color:var(--muted); background:var(--card); font-variant-numeric:tabular-nums; }
+    #group-pane .grp-avatar{ width:30px; height:30px; font-size:14px; border-radius:8px; color:var(--fg); background:var(--card); font-variant-numeric:tabular-nums; }
     #group-pane .grp-member-select::after{ content:''; width:16px; margin-left:auto; color:var(--accent); }
     #group-pane .grp-member.is-selected{ border-color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,var(--card)); }
     #group-pane .grp-member.is-selected .grp-member-select::after{ content:'✓'; }
@@ -6627,7 +6628,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div class="progtbl-wrap">
             <table class="progtbl" id="prog-table" aria-label="各班教學進度"></table>
           </div>
-          <div class="prog-footer"><span id="prog-stats" class="prog-stats" aria-label="整個分頁完成統計"></span><span id="prog-filter-status" role="status"></span><span>勾選即儲存 · 點主題箭頭可收合 · 表格可左右捲動</span></div>
+          <div class="prog-footer"><span id="prog-stats" class="prog-stats" aria-label="整個分頁完成統計"></span></div>
         </section>
 
         <!-- ⏳ 倒數計時 -->
@@ -6742,10 +6743,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <button id="btn-grp-random" class="btn grp-primary">隨機分組</button>
             <div class="grp-head-actions"><button id="btn-grp-undo" class="btn" disabled>復原上一步</button><button id="btn-grp-clear" class="btn grp-clear" disabled>清空分組</button></div>
           </div>
-          <div class="grp-selection-bar"><span id="grp-selection-hint"></span><div id="grp-move-controls" hidden><select id="grp-destination" class="input" aria-label="將選取學生移到組別"><option value="">移動到…</option></select><button id="grp-cancel-selection" class="btn">取消選取</button></div></div>
           <p id="grp-message" class="grp-message" tabindex="-1" role="status" aria-live="polite"></p>
           <div class="grp-workspace">
             <div class="grp-groups-section"><div class="grp-section-head"><h3>分組結果</h3></div><div id="grp-board" class="grp-board"></div></div>
+            <div class="grp-selection-bar"><span id="grp-selection-hint"></span><div id="grp-move-controls" hidden><select id="grp-destination" class="input" aria-label="將選取學生移到組別"><option value="">移動到…</option></select><button id="grp-cancel-selection" class="btn">取消選取</button></div></div>
             <aside id="grp-unassigned-wrap" class="grp-unassigned-wrap" aria-label="待分組學生">
               <div class="grp-section-head"><h3>待分組 <span id="grp-unassigned-count"></span></h3></div>
               <label class="grp-search-label" for="grp-search">搜尋待分組學生</label><input id="grp-search" type="search" class="input" placeholder="搜尋姓名或座號" aria-label="搜尋待分組學生">
@@ -12485,8 +12486,7 @@ function jsonOut(obj) {
     function applyProgressFilters(){
       progView.className = '';
       const pg = state.progress?.pages?.[state.progress.active];
-      const status = document.getElementById('prog-filter-status');
-      if(!pg){ status.textContent = ''; return; }
+      if(!pg) return;
       const classes = pg.classes || [];
       const searching = !!progView.query.trim() || progView.pending;
       let visible = 0;
@@ -12522,8 +12522,6 @@ function jsonOut(obj) {
         empty.firstElementChild.colSpan = 1 + (progView.className ? 1 : classes.length);
         empty.firstElementChild.textContent = progView.pending && !progView.query.trim() ? '這個範圍的進度已全部完成。' : '沒有符合的進度。請調整搜尋文字或「只看未完成」條件。';
       }
-      const total = pg.items.filter(it=>it.type !== 'topic').length;
-      status.textContent = `${progView.className || '全部班級'} · 顯示 ${visible} / ${total} 項進度`;
       document.getElementById('btn-prog-collapse').disabled = searching || !pg.items.some(it=>it.type==='topic');
     }
 
@@ -13479,7 +13477,7 @@ function onTimerDone(){
       groupMessage(message);
     }
     function moveGroupSelection(cls, ids, target){
-      commitGroupChange(cls,g=>moveGroupMembers(g,ids,target,state.classMap[cls]||[]),target < 0 ? '已移回待分組，可按「復原上一步」還原。' : '已移入組別，可繼續選取學生。');
+      commitGroupChange(cls,g=>moveGroupMembers(g,ids,target,state.classMap[cls]||[]),target < 0 ? '已移回待分組，可按「復原上一步」還原。' : '');
     }
     function paintGroupSelection(cls){
       const selected=groupSelection(cls);
@@ -13567,7 +13565,7 @@ function onTimerDone(){
         header.innerHTML = `
           <div class="grp-name-wrap">
             <span class="grp-icon">${gi+1}</span>
-            <button type="button" class="grp-name" title="重新命名組別">${escapeHTML(groupName)}<span class="grp-rename-mark" aria-hidden="true">✎</span></button>
+            <button type="button" class="grp-name" title="重新命名組別">${escapeHTML(groupName)}<span class="grp-rename-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m16 3 5 5M4 20l5-1L21 7a2.1 2.1 0 0 0-5-5L4 14zM4 20h16"/></svg></span></button>
           </div>
           <span class="grp-count">${members.length} 人</span>`;
         header.querySelector('.grp-name').addEventListener('click', async ()=>{
@@ -13664,13 +13662,9 @@ function onTimerDone(){
       // 交錯動畫延遲
       if(typeof animIdx === 'number') mem.style.animationDelay = `${animIdx * 30}ms`;
 
-      // 頭像：取名字最後一字
-      const initial = s.name ? s.name.slice(-1) : '?';
-      const avatarStyle = colorIdx >= 0 ? '' : `style="background:linear-gradient(135deg,var(--muted),#666)"`;
-
       const seatLabel = s.seat ? String(s.seat) : '?';
 
-      mem.innerHTML = `<button type="button" class="grp-member-select" aria-label="${escapeHTML(seatLabel+' '+(s.name || ''))}" aria-pressed="false"><span class="grp-avatar" ${avatarStyle}>${escapeHTML(seatLabel)}</span>${renderStudentName(s, cls, 'grp-member-name')}</button>`;
+      mem.innerHTML = `<button type="button" class="grp-member-select" aria-label="${escapeHTML(seatLabel+' '+(s.name || ''))}" aria-pressed="false"><span class="grp-avatar">${escapeHTML(seatLabel)}</span>${renderStudentName(s, cls, 'grp-member-name')}</button>`;
       mem.querySelector('.grp-member-select').addEventListener('click',()=>{
         const selected=groupSelection(cls);
         if(selected.has(s.id)) selected.delete(s.id); else selected.add(s.id);
@@ -13856,7 +13850,8 @@ function onTimerDone(){
       const cls=elSelect.value, ids=[...groupSelection(cls)], target=Number(e.target.value);
       if(!ids.length || (target !== -1 && (!Number.isInteger(target) || !ensureGroupState(cls).groups[target]))) return;
       moveGroupSelection(cls,ids,target);
-      document.getElementById('grp-message').focus({preventScroll:true});
+      const moved=[...document.querySelectorAll('#group-pane .grp-member')].find(el=>el.dataset.id===ids[0]);
+      moved?.querySelector('.grp-member-select')?.focus({preventScroll:true});
     });
     document.getElementById('group-pane')?.addEventListener('keydown',e=>{
       if(e.key !== 'Escape' || !groupSelection(elSelect.value).size) return;
@@ -16268,7 +16263,7 @@ elProgAdd?.addEventListener('click', ()=>{
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
       elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄">整批登錄</button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
         const summary=calcHWSummary(hw.data[s.id],hw.cols.length),note=getNote(cls,s.id);
-        return `<tr data-id="${escapeHTML(s.id)}"><td><div class="hw-seatcell"><button class="note-btn" data-note-id="${escapeHTML(s.id)}" title="備註">${note?'🗒️':'📝'}</button><span class="hw-seattext">${escapeHTML(String(s.seat||''))}</span></div></td><td><span class="hw-student-label">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(note)}" aria-label="已備註">📝</span>`:''}</span></td>${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
+        return `<tr data-id="${escapeHTML(s.id)}"><td><div class="hw-seatcell"><button class="note-btn" data-note-id="${escapeHTML(s.id)}" title="備註">${note?'🗒️':'📝'}</button><span class="hw-seattext">${escapeHTML(s.seat ? String(s.seat).padStart(2,'0') : '')}</span></div></td><td><span class="hw-student-label">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(note)}" aria-label="已備註">📝</span>`:''}</span></td>${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
       }).join('')}<tr id="hw-empty-row"><td colspan="${hw.cols.length+5}" class="hw-empty-message">沒有符合的學生。可清除篩選，或至學生管理新增學生。</td></tr></tbody>`;
       for(const tr of elHWTable.querySelectorAll('tr[data-id]')){
         const id=tr.dataset.id;
