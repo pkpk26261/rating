@@ -6658,7 +6658,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <input id="rows-input" type="number" class="input" min="1" max="9" value="6" aria-label="列數">
           <span>×</span>
           <input id="cols-input" type="number" class="input" min="1" max="9" value="6" aria-label="欄數">
-          <button id="btn-auto" class="btn">自動排位 ⮕⬆</button>
+          <button id="btn-auto" class="btn">自動排位 ↖</button>
           <button id="btn-random-fill" class="btn">隨機入座</button>
           <button id="btn-clear" class="btn">清空</button>
           <span id="seat-hint" class="hint"></span>
@@ -12319,10 +12319,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       _clearSeatDragHL();
       const d = window._seatDrag;
       if (!d || !d.ghost) return;
-      // 暫時隱藏幽靈以取得下方元素
-      d.ghost.style.display = 'none';
+      // 預覽已有 pointer-events:none，可直接取得下方座位。
+      // 切換 display 會讓入手動畫在每次移動時重播，造成預覽偏離手指。
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      d.ghost.style.display = '';
       if (!el){cancelSeatPanelTimer();return;}
       hoverSeatPanel(el.closest('#seat-unassigned-tab'));
       const cell = el.closest('.seat-cell');
@@ -12346,22 +12345,22 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     /* ★ 自動排位方向循環：共 4 種模式 */
     const AUTO_ARRANGE_MODES = [
-      { key:'rl-up', label:'自動排位 ⮕⬆', next:'lr-up',
+      { key:'rl-up', label:'自動排位 ↖', next:'lr-up',
         sort:(a,b,rows,cols)=>{
           // 右→左，下→上（預設）：先按欄倒序，同欄按列倒序
           if(a.c !== b.c) return b.c - a.c; return b.r - a.r; } },
-      { key:'lr-up', label:'自動排位 ⬅⬆', next:'rl-down',
+      { key:'lr-up', label:'自動排位 ↗', next:'lr-down',
         sort:(a,b,rows,cols)=>{
           // 左→右，下→上：先按欄正序，同欄按列倒序
           if(a.c !== b.c) return a.c - b.c; return b.r - a.r; } },
-      { key:'rl-down', label:'自動排位 ⮕⬇', next:'lr-down',
-        sort:(a,b,rows,cols)=>{
-          // 右→左，上→下：先按欄倒序，同欄按列正序
-          if(a.c !== b.c) return b.c - a.c; return a.r - b.r; } },
-      { key:'lr-down', label:'自動排位 ⬅⬇', next:'rl-up',
+      { key:'lr-down', label:'自動排位 ↘', next:'rl-down',
         sort:(a,b,rows,cols)=>{
           // 左→右，上→下：先按欄正序，同欄按列正序
           if(a.c !== b.c) return a.c - b.c; return a.r - b.r; } },
+      { key:'rl-down', label:'自動排位 ↙', next:'rl-up',
+        sort:(a,b,rows,cols)=>{
+          // 右→左，上→下：先按欄倒序，同欄按列正序
+          if(a.c !== b.c) return b.c - a.c; return a.r - b.r; } },
     ];
     let _autoArrangeIdx = 0;
 
