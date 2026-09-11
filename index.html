@@ -6158,7 +6158,10 @@
     #hw-table .hw-cell-editor:hover{border-color:transparent;}
     #hw-table .hw-cell-editor:focus-within{outline:none;}
     #hw-table td[data-grade-col]:focus-within{outline:2px solid var(--accent);outline-offset:-2px;}
-    #hw-table .hw-cell-editor input[type="number"]{width:99px;min-height:44px;font-size:17px;padding:8px;}
+    #hw-table .hw-cell-editor input[type="number"]{width:99px;min-height:44px;font-size:17px;padding:8px;border-radius:0!important;}
+    /* 焦點由整格呈現，避免全域 :focus-visible 在輸入框內重畫被裁切的圓角。 */
+    #hw-table .hw-cell-editor :is(input,select):focus{outline:none!important;box-shadow:none;}
+    #hw-table .hw-state-select:focus-visible{background-color:color-mix(in srgb,var(--accent) 14%,var(--card));}
     #hw-table .hw-cell-editor input::placeholder{font-size:14px;font-weight:500;color:var(--muted);opacity:1;}
     #hw-table .hw-cell-editor input:not([readonly]):not(:disabled):focus::placeholder{opacity:0;}
     #hw-table .hw-state-select{width:44px;min-width:44px;min-height:44px;padding:0;color:transparent;font-size:12px;border-left:0;background-position:center;}
