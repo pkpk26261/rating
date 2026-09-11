@@ -6507,7 +6507,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body.no-data .modebar{display:flex !important;}
     body.no-data .modebar [data-mode]:not([data-mode="taskboard"]):not([data-mode="timer"]):not([data-mode="manage"]){display:none;}
     body.no-data[data-mode="taskboard"] #btn-reset{display:inline-flex !important;}
-    #taskboard-pane{width:100%;min-width:0;}
+    #taskboard-pane{display:flex;flex-direction:column;width:100%;min-width:0;min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;scroll-padding-bottom:90px;}
+    #taskboard-pane.hidden{display:none;}
+    #tb-stage:not(.tb-projecting){flex:1 0 auto;box-sizing:border-box;}
+    #tb-stage:not(.tb-projecting) .tb-actions{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:12px 0 max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line);}
     #taskboard-pane [hidden],.tb-dialog [hidden]{display:none !important;}
     #taskboard-pane .btn,.tb-dialog .btn,.tb-dialog .input,#tb-library{min-height:44px;}
     .tb-toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-bottom:16px;}
@@ -6564,7 +6567,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     }
     @media(prefers-reduced-motion:reduce){#taskboard-pane *, .tb-dialog *{animation:none !important;transition:none !important;}}
     /* 任務與即時倒數集中在同一個視覺焦點。 */
-    .tb-stage{gap:16px;min-height:600px;background:var(--bg);}
+    .tb-stage{--tb-stage-gap:16px;gap:var(--tb-stage-gap);min-height:600px;background:var(--bg);}
     .tb-heading{padding-bottom:12px;gap:8px 16px;}
     .tb-heading h2{font-size:clamp(18px,1.7vw,26px);}
     .tb-focus{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px;padding:24px 0;}
@@ -6574,7 +6577,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-clock{border:0;padding:0;width:100%;}
     #tb-time{font-size:clamp(88px,12vw,184px);line-height:1;font-weight:800;color:var(--accent);letter-spacing:-.035em;}
     #tb-status{margin-top:10px;font-size:clamp(16px,1.5vw,22px);}
-    .tb-stage[data-status="active"] #tb-status::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:9px;}
+    .tb-stage[data-status="active"] #tb-clock:has(#tb-time:not([hidden])) #tb-status{display:flex;align-items:center;justify-content:center;gap:.4em;}
+    .tb-stage[data-status="active"] #tb-clock:has(#tb-time:not([hidden])) #tb-status::before{content:'';display:block;flex:0 0 1em;width:1em;height:1em;border-radius:50%;background:#f87171;animation:tb-running-dot 1.6s ease-in-out infinite;}
+    @keyframes tb-running-dot{0%,100%{opacity:1;}50%{opacity:.2;}}
+    @media(prefers-reduced-motion:reduce){#tb-status::before{animation:none !important;}}
     .tb-next{padding:10px 16px;border:0;border-top:1px solid var(--line);border-radius:0;text-align:center;font-size:clamp(16px,1.5vw,23px);color:var(--muted);}
     .tb-steps{justify-content:center;gap:6px;}
     .tb-steps li{padding:5px 10px;font-size:13px;border:0;background:transparent;}
@@ -6582,13 +6588,15 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-actions .btn{transition:none !important;touch-action:manipulation;}
     .tb-stage[data-status="paused"] #tb-start{background:#ffe4ae;color:#644000;border-color:#ca922f;}
     .tb-stage.tb-projecting{padding:clamp(20px,2.5vw,40px);min-height:0;}
+    .tb-stage.tb-projecting .tb-heading{padding-right:140px;min-height:44px;}
+    .tb-stage.tb-projecting #tb-exit{position:fixed;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));z-index:50001;min-width:120px;min-height:44px;}
     @media(max-width:700px){
-      .tb-stage{min-height:0;gap:12px;}.tb-focus{gap:20px;padding:20px 0;}.tb-copy h3{font-size:clamp(42px,10vw,68px);}.tb-clock{border:0;padding:0;}#tb-time{font-size:clamp(88px,21vw,128px);}
+      .tb-stage{--tb-stage-gap:12px;min-height:0;gap:var(--tb-stage-gap);}.tb-focus{gap:20px;padding:20px 0;}.tb-copy h3{font-size:clamp(42px,10vw,68px);}.tb-clock{border:0;padding:0;}#tb-time{font-size:clamp(88px,21vw,128px);}
       .tb-heading{padding-bottom:10px;}.tb-heading .tb-eyebrow{width:auto;}.tb-heading h2{flex-basis:70%;}.tb-heading #tb-position{margin-left:auto;}
       .tb-next{padding:10px 0;}.tb-steps li{padding:4px 6px;font-size:12px;}.tb-actions{gap:8px;}.tb-actions .btn{font-size:15px;min-width:120px;}
     }
     @media(max-height:700px) and (min-width:701px){
-      .tb-stage.tb-projecting{gap:10px;padding:20px 28px;}.tb-stage.tb-projecting .tb-focus{gap:10px;padding:8px 0;}.tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,7vw,94px);margin-bottom:8px;}.tb-stage.tb-projecting #tb-time{font-size:clamp(80px,11vw,136px);}.tb-stage.tb-projecting #tb-description{font-size:22px;}
+      .tb-stage.tb-projecting{--tb-stage-gap:10px;gap:var(--tb-stage-gap);padding:20px 28px;}.tb-stage.tb-projecting .tb-focus{gap:10px;padding:8px 0;}.tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,7vw,94px);margin-bottom:8px;}.tb-stage.tb-projecting #tb-time{font-size:clamp(80px,11vw,136px);}.tb-stage.tb-projecting #tb-description{font-size:22px;}
     }
     /* 投影文字隨螢幕寬高成長，避免大型螢幕仍停在桌面字級上限。 */
     .tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,min(12vw,20dvh),480px);}
@@ -6597,6 +6605,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-stage.tb-projecting .tb-focus{gap:clamp(12px,2dvh,36px);padding:clamp(8px,1.5dvh,24px) 0;}
     .tb-stage.tb-projecting .tb-heading h2{font-size:clamp(18px,min(2vw,2.8dvh),48px);}
     .tb-stage.tb-projecting #tb-status,.tb-stage.tb-projecting .tb-next{font-size:clamp(16px,min(1.8vw,2.5dvh),36px);}
+    #tb-next{margin-bottom:calc(-1 * var(--tb-stage-gap,16px));align-self:stretch;box-sizing:border-box;max-width:100%;padding:18px 24px;border:0;border-top:1px solid var(--line);border-radius:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 6%,transparent),transparent);color:var(--text);font-weight:500;letter-spacing:.025em;line-height:1.6;text-align:center;}
+    .tb-stage.tb-projecting #tb-next{margin-bottom:0;}
+    .tb-stage.tb-projecting .tb-actions{padding-top:8px;}
     #tb-title{width:100%;white-space:nowrap;overflow:hidden;text-wrap:nowrap;}
     #tb-title-text{display:inline-block;white-space:nowrap;max-width:none;vertical-align:top;}
     #tb-title[data-overflow="true"]{text-align:left;}
@@ -6826,7 +6837,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           </div>
 
           <div id="tb-preparation" class="tb-toolbar tb-preparation" hidden>
-            <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span class="tb-state-badge tb-state-open"><span aria-hidden="true">✓</span> 已開啟</span><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
+            <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
             <button class="btn" id="tb-edit">編輯任務</button><span id="tb-lock-status" class="tb-state-badge tb-state-locked" role="status" hidden></span><button class="btn primary" id="tb-project">開始並投影</button>
           </div>
 
@@ -6947,7 +6958,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <p class="tb-welcome-intro">把課堂安排成幾個步驟，學生就能看見目前任務與剩餘時間。</p>
             <ol class="tb-setup-path" aria-label="準備步驟"><li><span>1</span>選擇流程</li><li><span>2</span>調整任務</li><li><span>3</span>開始投影</li></ol>
             <div class="tb-welcome-options">
-              <div class="tb-welcome-option"><span class="tb-welcome-tag">第一次使用，從這裡開始</span><h3>閱讀 → 討論 → 發表</h3><p>閱讀 3 分鐘、討論 5 分鐘、發表 3 分鐘。<br>套用後可以自由調整，倒數不會自動開始。</p><button class="btn primary" id="tb-welcome-example">套用範例流程</button></div>
+              <div class="tb-welcome-option"><span class="tb-welcome-tag">第一次使用，從這裡開始</span><h3>範例流程</h3><p>閱讀 3 分鐘、討論 5 分鐘、發表 3 分鐘。<br>套用後可以自由調整，倒數不會自動開始。</p><button class="btn primary" id="tb-welcome-example">套用範例流程</button></div>
               <div class="tb-welcome-option"><span class="tb-welcome-tag">依照你的教學安排</span><h3>建立自己的流程</h3><p>填入任務和時間，排出今天的課堂步驟。<br>儲存後，下次上課也能再次使用。</p><button class="btn" id="tb-welcome-new">建立新流程</button></div>
             </div>
             <div id="tb-welcome-saved" class="tb-welcome-saved" hidden><p>已經準備好流程了？從流程庫接著開始。</p><button class="btn" id="tb-welcome-library">選擇已儲存的流程</button></div>
@@ -6955,11 +6966,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div id="tb-stage" class="tb-stage" hidden>
             <header class="tb-heading"><span class="tb-eyebrow">今天要做什麼</span><h2 id="tb-name">準備今天的課堂</h2><span id="tb-position"></span></header>
             <div class="tb-focus">
-              <div class="tb-copy"><div class="tb-eyebrow" id="tb-current-label">目前任務</div><h3 id="tb-title"><span id="tb-title-text">閱讀 → 討論 → 發表</span></h3><p id="tb-description">從上方選擇流程，或建立自己的課堂任務。</p></div>
+              <div class="tb-copy"><div class="tb-eyebrow" id="tb-current-label">目前任務</div><h3 id="tb-title"><span id="tb-title-text">範例流程</span></h3><p id="tb-description">從上方選擇流程，或建立自己的課堂任務。</p></div>
               <div class="tb-clock" id="tb-clock"><div id="tb-time" role="timer" aria-label="剩餘時間">03:00</div><div id="tb-status" role="status" aria-live="polite">準備開始</div></div>
             </div>
             <div id="tb-next" class="tb-next"></div>
-            <ol id="tb-steps" class="tb-steps" aria-label="課堂步驟"></ol>
+            <ol id="tb-steps" class="tb-steps" aria-label="課堂步驟" hidden></ol>
             <div class="tb-actions">
               <button class="btn primary" id="tb-start">開始</button><button class="btn" id="tb-restart" hidden>重新開始</button><button class="btn" id="tb-add-minute">加 1 分鐘</button><button class="btn primary" id="tb-next-button">下一步</button><button class="btn" id="tb-exit" hidden>退出投影</button>
             </div>
@@ -6974,10 +6985,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         <dialog id="tb-editor" class="tb-dialog" aria-labelledby="tb-editor-title">
           <form id="tb-editor-form" novalidate>
             <div class="tb-editor-head"><div><h2 id="tb-editor-title">編輯共用流程</h2><p id="tb-editor-hint" class="hint">依序填入任務與時間，完成後就能投影。</p></div><button class="btn" id="tb-editor-close" type="button">取消</button></div>
-            <label class="tb-field">流程名稱<input id="tb-edit-name" class="input" placeholder="例如：閱讀・討論・發表" required maxlength="100"></label>
+            <label class="tb-field">流程名稱<input id="tb-edit-name" class="input" placeholder="例如：小組閱讀活動" required maxlength="100"></label>
             <div class="tb-editor-overview"><strong>課堂步驟</strong><span id="tb-editor-total"></span></div>
             <div id="tb-edit-steps"></div>
             <button class="btn" id="tb-add-step" type="button">新增一個步驟</button>
+            <details class="tb-ending-settings" style="margin-top:18px"><summary style="min-height:44px;cursor:pointer;font-weight:700">課堂結語</summary><p class="hint">完成所有步驟後顯示，可依活動調整。</p><label class="tb-field">結語標題<input id="tb-edit-ending-title" class="input" maxlength="160" placeholder="今天的任務完成了！"></label><label class="tb-field">補充文字<textarea id="tb-edit-ending-description" class="input" rows="2" maxlength="2000" placeholder="例如：分享今天的一個收穫。"></textarea></label></details>
             <div class="tb-save-settings"><label id="tb-save-mode-wrap" class="tb-field">儲存方式<select id="tb-save-mode" class="input"><option value="update">更新共用流程</option><option value="new">另存新流程</option></select></label><p id="tb-save-hint" class="hint">儲存至共用流程，各班皆可套用。</p></div>
             <p id="tb-editor-error" role="alert"></p>
             <div class="tb-editor-footer tb-editor-submit"><button class="btn primary" id="tb-editor-done" type="submit">儲存流程</button></div>
@@ -8078,6 +8090,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     function validateTaskFlow(flow){
       const validText=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
       if(!flow||!validText(flow.id,200)||!validText(flow.name,100)||!Array.isArray(flow.steps)||!flow.steps.length)throw new Error('流程需要名稱與至少一個步驟。');
+      for(const [key,max] of [['completionTitle',160],['completionDescription',2000]]){if(flow[key]!==undefined&&(typeof flow[key]!=='string'||flow[key].length>max))throw new Error('課堂結語格式或長度無效。');}
       const ids=new Set();
       for(const step of flow.steps){
         if(!step||!validText(step.id,200)||ids.has(step.id)||!validText(step.title,160)||typeof step.description!=='string'||step.description.length>2000)throw new Error('任務標題必填，步驟識別不能重複。');
@@ -13714,8 +13727,32 @@ classes.forEach((cls, idx)=>{
     // BEGIN TASK BOARD MODEL
     function tbClone(value){ return JSON.parse(JSON.stringify(value)); }
     function tbId(){ return 'tb-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2); }
-    function ensureTaskBoard(){ return state.taskBoard ||= {library:[],current:null}; }
-    function tbExample(){return {id:tbId(),name:'閱讀・討論・發表',steps:[{id:tbId(),title:'閱讀課文',description:'安靜閱讀，圈出關鍵詞。',durationSec:180},{id:tbId(),title:'小組討論',description:'分享你的發現，一起整理重點。',durationSec:300},{id:tbId(),title:'發表分享',description:'用自己的話說出小組的想法。',durationSec:180}]};}
+    function ensureTaskBoard(){
+      const board=state.taskBoard ||= {library:[],current:null};
+      // 舊版已套用或保存的範例也沿用新的名稱，保留步驟與計時狀態。
+      for(const flow of [...board.library,board.current]){
+        if(flow&&flow.id!=='tb-builtin-example'&&flow.sourceId!=='tb-builtin-example'&&['閱讀・討論・發表','閱讀 → 討論 → 發表'].includes(flow.name))flow.name='範例流程';
+      }
+      return board;
+    }
+    function tbExample(){return {id:tbId(),name:'範例流程',steps:[{id:tbId(),title:'閱讀課文',description:'安靜閱讀，圈出關鍵詞。',durationSec:180},{id:tbId(),title:'小組討論',description:'分享你的發現，一起整理重點。',durationSec:300},{id:tbId(),title:'發表分享',description:'用自己的話說出小組的想法。',durationSec:180}]};}
+    function tbLinkLegacyExample(){
+      const board=ensureTaskBoard(),c=board.current;
+      if(c?.name!=='範例流程'||board.library.some(f=>f.id===c.sourceId))return;
+      if(!board.library.some(f=>f.id==='tb-builtin-example'))board.library.unshift({id:'tb-builtin-example',name:c.name,steps:tbClone(c.steps),completionTitle:c.completionTitle,completionDescription:c.completionDescription});
+      c.sourceId='tb-builtin-example';
+    }
+    function tbSavedExample(){
+      const board=ensureTaskBoard();let flow=board.library.find(f=>f.id==='tb-builtin-example');
+      if(!flow){flow={...tbExample(),id:'tb-builtin-example'};board.library.unshift(flow);}
+      return flow;
+    }
+    function tbRestoreExample(){
+      const board=ensureTaskBoard(),fresh={...tbExample(),id:'tb-builtin-example'};
+      const index=board.library.findIndex(f=>f.id===fresh.id);
+      if(index<0)board.library.unshift(fresh);else board.library[index]=fresh;
+      if(board.current?.sourceId===fresh.id)tbUseFlow(fresh);else tbCommit();
+    }
     function tbCurrent(){return ensureTaskBoard().current;}
     function tbStep(){const c=tbCurrent();return c?.steps[c.index] || null;}
     function tbOwnsTimer(){const c=state.taskBoard?.current,o=state.timer?.taskOwner;return !!(c && c.status==='active' && o?.activityId===c.id && o.stepId===c.steps[c.index]?.id);}
@@ -13748,12 +13785,11 @@ classes.forEach((cls, idx)=>{
       if(!tbCanControlTimer())return;
       const c=tbCurrent();if(!c||c.status==='completed')return;
       if(c.status==='ready'){
-        if(!tbCanWrite())return;
         const t=state.timer;
         if(t.running && !tbOwnsTimer()){
           const endAt=t.endAt;
           if(!await appConfirm('目前有獨立倒數正在進行。要停止它並開始課堂任務嗎？'))return;
-          if(!tbCanWrite()||tbCurrent()!==c||endAt!==state.timer.endAt)return;
+          if(!tbCanControlTimer()||tbCurrent()!==c||endAt!==state.timer.endAt)return;
         }
         tbBeginStep();return;
       }
@@ -13778,9 +13814,10 @@ classes.forEach((cls, idx)=>{
       const c=tbCurrent();if(!c)return;
       if(c.status==='active'){
         if(!tbOwnsTimer()||state.timer.running||tbStep().durationSec===null)return;
-        tbBeginStep();return;
+        stopAlarmSound();hideTimerDoneModal();
+        state.timer.setSec=tbStep().durationSec;resetTimer();return;
       }
-      if(c.status!=='completed'||!tbCanWrite())return;
+      if(c.status!=='completed')return;
       tbReleaseTimer();c.index=0;c.status='ready';tbCommit();
     }
     function tbSaveDraft(draft,kind){
@@ -13792,20 +13829,20 @@ classes.forEach((cls, idx)=>{
         for(let i=0;i<=c.index;i++)if(JSON.stringify(c.steps[i])!==JSON.stringify(draft.steps[i]))throw new Error('已開始的步驟不能變更，請調整後續步驟。');
       }
       if(kind==='update'&&!b.library.some(f=>f.id===c.sourceId))throw new Error('原流程已刪除，請另存新流程。');
-      c.name=draft.name.trim();c.steps=tbClone(draft.steps);
+      c.name=draft.name.trim();c.steps=tbClone(draft.steps);c.completionTitle=draft.completionTitle;c.completionDescription=draft.completionDescription;
       if(kind==='update'){
         const flow=b.library.find(f=>f.id===c.sourceId);if(!flow)throw new Error('原流程已刪除，請另存新流程。');
-        flow.name=c.name;flow.steps=tbClone(c.steps);
+        flow.name=c.name;flow.steps=tbClone(c.steps);flow.completionTitle=c.completionTitle;flow.completionDescription=c.completionDescription;
       }
       if(kind==='new'){
-        const flow={id:tbId(),name:c.name,steps:tbClone(c.steps)};b.library.push(flow);c.sourceId=flow.id;
+        const flow={id:tbId(),name:c.name,steps:tbClone(c.steps),completionTitle:c.completionTitle,completionDescription:c.completionDescription};b.library.push(flow);c.sourceId=flow.id;
       }
       if(c.status==='completed'){c.index=0;c.status='ready';}
       tbCommit();
     }
     function tbCreateFlow(draft){
       validateTaskFlow(draft);
-      const flow={id:tbId(),name:draft.name.trim(),steps:tbClone(draft.steps)};
+      const flow={id:tbId(),name:draft.name.trim(),steps:tbClone(draft.steps),completionTitle:draft.completionTitle,completionDescription:draft.completionDescription};
       ensureTaskBoard().library.push(flow);tbUseFlow(flow);
     }
     function tbSharedSaveKind(sourceId,saveAsNew=false){return !saveAsNew&&ensureTaskBoard().library.some(f=>f.id===sourceId)?'update':'new';}
@@ -13837,16 +13874,15 @@ classes.forEach((cls, idx)=>{
       const b=ensureTaskBoard(),c=b.current,s=tbStep(),active=c?.status==='active',completed=c?.status==='completed';
       tbEl('tb-welcome').hidden=!!c;tbEl('tb-preparation').hidden=!c;tbEl('tb-stage').hidden=!c;
       tbEl('tb-welcome-saved').hidden=b.library.length===0;
-      tbText('tb-prep-name',c?.name||'先選一套流程，開始準備');
-      tbEl('tb-library-open').setAttribute('aria-label',c?`已開啟流程：${c.name}，點選更換流程`:'選擇流程');
+      tbText('tb-prep-name',c?.name||'選擇流程');
       if(tbEl('tb-library-dialog').open)tbRenderLibraryCards();
       tbEl('tb-edit').disabled=!c;tbText('tb-edit',completed?'重新編輯':'編輯任務');tbEl('tb-project').disabled=!c;
       tbEl('tb-lock-status').hidden=!active;
       tbText('tb-lock-status',active?`已開始 ${c.index+1} 步 · 已鎖定`:'');
-      tbText('tb-project',completed?'查看投影':active&&state.timer.running?'放大投影':active?'繼續並投影':'開始並投影');
+      tbText('tb-project',completed?'查看投影':active&&(s?.durationSec===null||state.timer.running)?'放大投影':active?'繼續並投影':'開始並投影');
       tbText('tb-name',c?.name||'準備今天的課堂');tbText('tb-position',c?`${completed?'已完成':'步驟'} ${completed?c.steps.length:c.index+1} / ${c.steps.length}`:'');
-      tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title-text',completed?'今天的任務完成了！':s?.title||'閱讀 → 討論 → 發表');
-      tbText('tb-description',completed?'回想一下，今天你學到了什麼？':s?.description||(!c?'選擇共用流程，或新增自己的課堂任務。':''));
+      tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title-text',completed?(c.completionTitle?.trim()||'今天的任務完成了！'):s?.title||'範例流程');
+      tbText('tb-description',completed?(c.completionDescription??'回想一下，今天你學到了什麼？'):s?.description||(!c?'選擇共用流程，或新增自己的課堂任務。':''));
       const timed=s?.durationSec!=null&&!completed;
       tbEl('tb-clock').hidden=!c||completed;tbEl('tb-time').hidden=!timed;
       tbText('tb-time',fmtTime(active&&tbOwnsTimer()?state.timer.remainingSec:s?.durationSec||0));
@@ -13869,7 +13905,7 @@ classes.forEach((cls, idx)=>{
       tbEl('tb-add-minute').hidden=!active||!timed;tbEl('tb-next-button').hidden=!active;
       tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');
       tbEl('tb-restart').hidden=!(completed||active&&timed&&tbOwnsTimer()&&!state.timer.running);
-      tbEl('tb-restart').title=completed?'回到第一步，準備重新開始':'目前步驟恢復原訂時間，並立即重新倒數';
+      tbEl('tb-restart').title=completed?'回到第一步，準備重新開始':'目前步驟恢復原訂時間，按開始後倒數';
       const owner=tbOwnsTimer();tbEl('timer-task-owner').hidden=!owner;
       tbText('timer-task-label',owner?`課堂任務：${c.name} · ${s.title}`:'');
       document.querySelectorAll('#timer-pane .timer-presets button,#timer-pane .timer-set input,#timer-pane .timer-set button').forEach(el=>el.disabled=owner);
@@ -13889,6 +13925,7 @@ classes.forEach((cls, idx)=>{
     async function tbExitProjection(){if(document.fullscreenElement===tbEl('tb-stage')){try{await document.exitFullscreen();}catch(_){}}tbEndProjection();}
     function tbCollectDraft(){
       tbDraft.name=tbEl('tb-edit-name').value.trim();
+      tbDraft.completionTitle=tbEl('tb-edit-ending-title').value.trim();tbDraft.completionDescription=tbEl('tb-edit-ending-description').value;
       tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step').forEach((row,i)=>{
         if(row.dataset.locked==='true')return;
         const step=tbDraft.steps[i];step.title=row.querySelector('[data-field="title"]').value.trim();step.description=row.querySelector('[data-field="description"]').value;
@@ -13897,19 +13934,20 @@ classes.forEach((cls, idx)=>{
         step.durationSec=row.querySelector('[data-field="timed"]').checked?(valid?mins*60+secs:NaN):null;
       });
     }
+    function tbOpenLibrary(){tbRenderLibraryCards();tbEl('tb-library-dialog').showModal();tbEl('tb-library-cards').querySelector('button')?.focus();}
     function tbRenderLibraryCards(){
       const library=ensureTaskBoard().library,list=tbEl('tb-library-cards'),signature=JSON.stringify(library);
       if(list.dataset.flows===signature)return;list.dataset.flows=signature;
-      list.replaceChildren(...[{...tbExample(),id:'example',name:'閱讀 → 討論 → 發表'},...library].map(flow=>{
+      list.replaceChildren(...[{...(library.find(f=>f.id==='tb-builtin-example')||tbExample()),id:'example'},...library.filter(f=>f.id!=='tb-builtin-example')].map(flow=>{
         const row=document.createElement('div');row.className='tb-flow-card';
         const use=document.createElement('button');use.type='button';use.className='tb-flow-use';use.dataset.flow=flow.id;
         const name=document.createElement('strong'),steps=document.createElement('span'),time=document.createElement('small');
         name.textContent=flow.name;steps.textContent=flow.steps.map(s=>s.title).join(' → ');time.textContent=(flow.id==='example'?'範例 · ':'')+tbPlanSummary(flow.steps);
         use.append(name,steps,time);use.addEventListener('click',()=>tbApplyFlow(flow.id));row.append(use);
-        if(flow.id!=='example'){
+        {
           const menu=document.createElement('details'),summary=document.createElement('summary');menu.className='tb-flow-menu';summary.textContent='⋯';summary.setAttribute('aria-label',`管理「${flow.name}」`);menu.append(summary);
           const actions=document.createElement('div');
-          for(const [label,action] of [['重新命名',()=>tbRenameFlow(flow.id)],['刪除',()=>tbDeleteFlow(flow.id)]]){const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.addEventListener('click',action);actions.append(button);}
+          for(const [label,action] of (flow.id==='example'?[['編輯內容',async()=>{await tbApplyFlow('example');if(!tbEl('tb-library-dialog').open)tbShowEditor(false);}],['恢復範例',tbConfirmRestoreExample]]:[['重新命名',()=>tbRenameFlow(flow.id)],['刪除',()=>tbDeleteFlow(flow.id)]])){const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.addEventListener('click',action);actions.append(button);}
           menu.append(actions);row.append(menu);
         }return row;
       }));
@@ -13965,11 +14003,13 @@ classes.forEach((cls, idx)=>{
       if(!creating&&!tbCurrent())return;
       if(tbEl('tb-editor').open){tbEl('tb-edit-name').focus();return;}
       if(tbOwnsTimer()&&state.timer.running)pauseTimer();
+      if(!creating)tbLinkLegacyExample();
       tbReturnFocus=creating?(tbCurrent()?tbEl('tb-library-open'):tbEl('tb-welcome-new')):tbEl('tb-edit');tbCreating=creating;
       tbDraft=creating?{id:tbId(),name:'',steps:[{id:tbId(),title:'',description:'',durationSec:180}]}:tbClone(tbCurrent());
       tbDraftActivity=tbCurrent()?.id||null;tbDraftRevision=saveHealth.revision;
       tbExpandedId=tbDraft.steps[!creating&&tbCurrent().status==='active'?Math.min(tbCurrent().index+1,tbDraft.steps.length-1):0].id;
       tbText('tb-editor-title',creating?'建立共用流程':'編輯共用流程');tbText('tb-editor-done',creating?'建立並使用':'儲存流程');
+      tbEl('tb-edit-ending-title').value=tbDraft.completionTitle??'今天的任務完成了！';tbEl('tb-edit-ending-description').value=tbDraft.completionDescription??'回想一下，今天你學到了什麼？';
       tbEl('tb-edit-name').value=tbDraft.name;tbEl('tb-editor-error').textContent='';
       tbEl('tb-save-mode').value=tbSharedSaveKind(tbDraft.sourceId);tbEl('tb-save-mode-wrap').hidden=creating||tbEl('tb-save-mode').value==='new';tbSetSaveHint();
       tbText('tb-editor-hint',creating?'填好任務與時間，再建立流程；取消不會留下空白流程。':tbCurrent().status==='completed'?'全部步驟皆可修改。儲存後回到第一步，倒數不會自動開始。':tbCurrent().status==='ready'?'點開步驟即可調整，完成後就能投影。':'已暫停倒數。已開始的步驟保持原設定，仍可編輯後續任務。');
@@ -13993,27 +14033,39 @@ classes.forEach((cls, idx)=>{
       }catch(e){tbText('tb-editor-error',e.message);}
     }
     function tbAskName(title,value,action){tbNameAction=action;tbReturnFocus=document.activeElement;tbText('tb-name-title',title);tbEl('tb-name-input').value=value;tbEl('tb-name-dialog').showModal();tbEl('tb-name-input').focus();}
-    tbEl('tb-library-open').addEventListener('click',()=>{tbRenderLibraryCards();tbEl('tb-library-dialog').showModal();tbEl('tb-library-cards').querySelector('button')?.focus();});
-    tbEl('tb-welcome-library').addEventListener('click',()=>tbEl('tb-library-open').click());
+    tbEl('tb-library-open').addEventListener('click',tbOpenLibrary);
+    tbEl('tb-welcome-library').addEventListener('click',tbOpenLibrary);
     tbEl('tb-welcome-new').addEventListener('click',()=>tbShowEditor(true));
-    tbEl('tb-welcome-example').addEventListener('click',()=>{if(!tbCanWrite()||tbCurrent())return;tbUseFlow(tbExample());tbEl('tb-edit').focus();});
+    tbEl('tb-welcome-example').addEventListener('click',()=>{if(!tbCanWrite()||tbCurrent())return;tbUseFlow(tbSavedExample());tbEl('tb-edit').focus();});
     tbEl('tb-library-close').addEventListener('click',tbCloseLibrary);
     tbEl('tb-library-dialog').addEventListener('cancel',e=>{e.preventDefault();tbCloseLibrary();});
-    async function tbApplyFlow(selected){
-      if(!tbCanWrite())return;const flow=selected==='example'?tbExample():ensureTaskBoard().library.find(f=>f.id===selected);if(!flow)return;
-      const original=tbCurrent();if(original&&!await appConfirm('套用流程會取代本次課堂，正在進行的任務也會停止。要套用嗎？'))return;
-      if(!tbCanWrite()||tbCurrent()!==original)return;tbUseFlow(flow);tbCloseLibrary();tbEl('tb-edit').focus();
+    async function tbConfirmRestoreExample(){
+      const blocked=tbEditBlockReason();if(blocked){await appAlert(blocked);return;}
+      const before=JSON.stringify(ensureTaskBoard());
+      if(!await appConfirm('恢復原本範例會清除範例的修改；若正在使用範例，也會回到第一步並停止倒數。要恢復嗎？'))return;
+      const changed=tbEditBlockReason();if(changed){await appAlert(changed);return;}
+      if(JSON.stringify(ensureTaskBoard())!==before){await appAlert('流程已更新，請重新確認恢復範例。');return;}
+      tbRestoreExample();tbRenderLibraryCards();
     }
-    tbEl('tb-new').addEventListener('click',()=>{if(!tbCanWrite())return;tbCloseLibrary();tbShowEditor(true);});
+    async function tbApplyFlow(selected){
+      const blocked=tbEditBlockReason();if(blocked){await appAlert(blocked);return;}
+      const flow=selected==='example'?(ensureTaskBoard().library.find(f=>f.id==='tb-builtin-example')||{...tbExample(),id:'tb-builtin-example'}):ensureTaskBoard().library.find(f=>f.id===selected);if(!flow){await appAlert('這個流程已不存在，請重新選擇。');tbRenderLibraryCards();return;}
+      const original=tbCurrent();if(original?.status==='active'&&!await appConfirm('套用流程會取代本次課堂，正在進行的任務也會停止。要套用嗎？'))return;
+      const changed=tbEditBlockReason();if(changed){await appAlert(changed);return;}
+      if(tbCurrent()!==original){await appAlert('目前課堂已變更，請重新選擇流程。');return;}
+      if(selected!=='example'&&!ensureTaskBoard().library.includes(flow)){await appAlert('這個流程已變更，請重新選擇。');tbRenderLibraryCards();return;}
+      const fromLibrary=tbEl('tb-library-dialog').open;if(selected==='example'&&!ensureTaskBoard().library.some(f=>f.id===flow.id))ensureTaskBoard().library.unshift(flow);tbUseFlow(flow);if(fromLibrary){tbCloseLibrary();tbEl('tb-edit').focus();}else tbEl('tb-library-open').focus();
+    }
+    tbEl('tb-new').addEventListener('click',()=>{const blocked=tbEditBlockReason();if(blocked){appAlert(blocked);return;}tbCloseLibrary();tbShowEditor(true);});
     function tbRenameFlow(id){
-      if(!tbCanWrite())return;const f=ensureTaskBoard().library.find(f=>f.id===id);if(!f)return;
-      tbAskName('重新命名流程',f.name,name=>{if(ensureTaskBoard().library.includes(f)){f.name=name;tbCommit();}});
+      const blocked=tbEditBlockReason();if(blocked){appAlert(blocked);return;}const f=ensureTaskBoard().library.find(f=>f.id===id);if(!f)return;
+      tbAskName('重新命名流程',f.name,name=>{if(ensureTaskBoard().library.includes(f)){const c=tbCurrent(),oldName=f.name;f.name=name;if(c?.sourceId===id&&c.name===oldName)c.name=name;tbCommit();}});
     }
     async function tbDeleteFlow(id){
-      if(!tbCanWrite())return;const b=ensureTaskBoard(),f=b.library.find(f=>f.id===id);if(!f)return;
-      if(await appConfirm(`刪除流程「${f.name}」？本次課堂仍會保留。`)&&tbCanWrite()&&ensureTaskBoard()===b){b.library=b.library.filter(x=>x.id!==f.id);if(b.current?.sourceId===f.id)b.current.sourceId=null;tbCommit();}
+      const blocked=tbEditBlockReason();if(blocked){appAlert(blocked);return;}const b=ensureTaskBoard(),f=b.library.find(f=>f.id===id);if(!f)return;
+      if(await appConfirm(`刪除流程「${f.name}」？本次課堂仍會保留。`)&&!tbEditBlockReason()&&ensureTaskBoard()===b){b.library=b.library.filter(x=>x.id!==f.id);if(b.current?.sourceId===f.id)b.current.sourceId=null;tbCommit();}
     }
-    tbEl('tb-name-form').addEventListener('submit',e=>{e.preventDefault();const name=tbEl('tb-name-input').value.trim();if(!name||!tbCanWrite())return;tbNameAction?.(name);tbEl('tb-name-dialog').close();if(tbReturnFocus?.isConnected)tbReturnFocus.focus();else tbEl('tb-library-cards').querySelector('button')?.focus();});
+    tbEl('tb-name-form').addEventListener('submit',e=>{e.preventDefault();const name=tbEl('tb-name-input').value.trim();if(!name)return;const blocked=tbEditBlockReason();if(blocked){appAlert(blocked);return;}tbNameAction?.(name);tbEl('tb-name-dialog').close();if(tbReturnFocus?.isConnected)tbReturnFocus.focus();else tbEl('tb-library-cards').querySelector('button')?.focus();});
     tbEl('tb-name-cancel').addEventListener('click',()=>{tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
     tbEl('tb-edit').addEventListener('click',tbOpenEditor);tbEl('tb-editor-close').addEventListener('click',tbCloseEditor);
     tbEl('tb-editor').addEventListener('cancel',e=>{e.preventDefault();tbCloseEditor();});
