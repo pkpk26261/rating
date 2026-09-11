@@ -6704,9 +6704,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-board-field{display:flex;align-items:center;gap:10px;margin-right:auto;font-weight:700;min-width:0;}
     #att-board-select{width:auto;min-width:160px;max-width:100%;}
     .att-help{margin:0;font-size:13px;color:var(--muted);}
-    .att-class-picker{position:relative;display:inline-flex;min-width:0;max-width:100%;}
-    .att-class-picker .class-select-display{inset:0;width:100%;height:100%;padding:0 14px;font-size:15px;font-weight:650;}
-    #att-board-select{height:48px;border-radius:12px;background-color:var(--card);border-color:var(--line);}
+    .att-class-picker{position:relative;display:inline-flex;min-width:0;max-width:100%;visibility:hidden;}
+    .att-class-picker.is-ready{visibility:visible;}
+    .att-class-picker .class-select-display{inset:0!important;width:100%!important;height:100%!important;padding:0 14px;font-size:14px;font-weight:600;}
+    #att-board-select{height:44px;border-radius:10px;background-color:var(--card);border-color:var(--line);}
     .att-summary{display:flex;align-items:center;flex-wrap:wrap;gap:14px;width:fit-content;max-width:100%;font-size:12px;}
     .att-stat{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
     .att-stat-icon{width:14px;flex-shrink:0;text-align:center;font-size:14px;color:var(--muted);}
@@ -6718,6 +6719,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-table{table-layout:fixed;border-collapse:separate;border-spacing:0;}
     .att-roster-only thead tr{height:61px;}
     .att-roster-only tbody tr{height:49px;}
+    .att-scroll-empty{display:grid;grid-template-columns:180px minmax(0,1fr);align-items:start;}
+    .att-first-hint{position:sticky;top:85px;margin:85px 0 0;padding:0 24px 24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.8;}
     .att-table,.att-table *,.att-menu,.att-menu *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     .att-table th,.att-table td{box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 4px;text-align:center;background:var(--card);}
     .att-table thead th{position:sticky;top:0;z-index:2;vertical-align:top;}
@@ -15904,6 +15907,7 @@ function onTimerDone(){
       const add=attendanceButton('＋ 新增點名',()=>attendanceEdit(board.id),'btn att-primary');add.id='att-add-column';add.disabled=!board;bar.append(add);
       const edit=attendanceButton('編輯點名',()=>{const current=attCurrent();if(current)attendanceEdit(current.id,attView.selected.get(current.id));});edit.id='att-edit-column';edit.disabled=!board?.columns.length;bar.append(edit);
       pane.append(bar);
+      document.dispatchEvent(new Event('class-selects-rendered'));
       if(!board){const empty=attNode('div','att-empty');empty.append(attNode('h2','','尚無班級'),attNode('p','','請先在學生管理新增或匯入班級名單，每個班級都會自動有一張點名表。'));pane.append(empty);return;}
       // Keep shared roster-dependent actions consistent while this page uses its own board selector.
       elSelect.value=board.rosterKey;
@@ -15925,7 +15929,9 @@ function onTimerDone(){
       const body=table.createTBody();for(const student of students){const row=body.insertRow();row.insertCell().textContent=student.seat??'';const name=attNode('th','',student.name);name.scope='row';row.append(name);
         for(const column of board.columns){const cell=row.insertCell(),button=attendanceButton('',null,'att-mark');button.dataset.board=board.id;button.dataset.lesson=column.id;button.dataset.student=student.id;button.setAttribute('aria-haspopup','menu');attUpdateMark(button,board,column,student);cell.append(button);}
       }
-      scroller.append(table);pane.append(scroller);attBindGrid(pane,scroller);attSelectColumn(board,attView.selected.get(board.id));const pos=attView.scroll.get(board.id)||[0,0];scroller.scrollLeft=reveal?scroller.scrollWidth:pos[0];scroller.scrollTop=pos[1];
+      scroller.append(table);
+      if(!board.columns.length){scroller.classList.add('att-scroll-empty');scroller.append(attNode('p','att-first-hint','尚未新增點名欄位，請點右上方「＋ 新增點名」開始第一次點名。'));}
+      pane.append(scroller);attBindGrid(pane,scroller);attSelectColumn(board,attView.selected.get(board.id));const pos=attView.scroll.get(board.id)||[0,0];scroller.scrollLeft=reveal?scroller.scrollWidth:pos[0];scroller.scrollTop=pos[1];
     }
     // END ATTENDANCE UI
 
@@ -19377,6 +19383,7 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
       const padding=(parseFloat(style.paddingLeft)||12)+(parseFloat(style.paddingRight)||12);
       const textWidth=measure.measureText(text).width+10;
       const width=Math.min(Math.max(160,Math.ceil(textWidth+padding+30)),Math.max(160,innerWidth-96));
+      if(select.id==='att-board-select')parent.style.width=width+'px';
       select.style.setProperty('width',width+'px','important');select.style.setProperty('min-width','0','important');select.style.setProperty('max-width','none','important');
       const lines=Math.max(1,Math.ceil(textWidth/Math.max(1,width-padding-24)));
       select.style.setProperty('height',Math.max(44,lines*(parseFloat(style.fontSize)||15)*1.4+20)+'px','important');
@@ -19385,6 +19392,7 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
       display.style.paddingLeft=style.paddingLeft;display.style.paddingRight=style.paddingRight;display.style.font=style.font;
       display.classList.toggle('is-disabled',select.disabled);
       if(text!==previous){display.innerHTML=renderClassLabel(text);previous=text;}
+      if(select.id==='att-board-select')parent.classList.add('is-ready');
     };
     const observer=new MutationObserver(update);select.addEventListener('change',update);observer.observe(select,{childList:true,subtree:true,attributes:true,characterData:true});updates.set(select,{update,observer});update();
   };
@@ -19394,6 +19402,7 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
     updates.forEach(({update})=>update());
   };
   refresh();
+  document.addEventListener('class-selects-rendered',refresh);
   window.addEventListener('resize',refresh);document.addEventListener('scroll',refresh,true);document.addEventListener('click',()=>requestAnimationFrame(refresh));
   setInterval(refresh,250);
 })();
