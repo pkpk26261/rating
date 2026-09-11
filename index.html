@@ -43,6 +43,35 @@
       white-space: pre;
     }
 
+    /* 清除資料：一致的選項列與固定操作區 */
+    #clear-mask .clear-dialog{width:min(640px,calc(100vw - 32px))!important;max-height:calc(100dvh - 32px)!important;display:flex;flex-direction:column;overflow:hidden;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:18px;}
+    #clear-mask header{position:static;flex-shrink:0;padding:20px 24px;gap:16px;}
+    #clear-mask h3{font-size:20px;}
+    #clear-description{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.5;}
+    #clear-mask .close{width:44px;height:44px;flex-shrink:0;color:var(--fg);}
+    #clear-mask .content{padding:16px 24px 24px;min-height:0;overflow:auto;overscroll-behavior:contain;}
+    #clear-gs-note{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,var(--card));color:var(--muted);font-size:12px;line-height:1.6;}
+    .clear-selection-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0;}
+    #clear-count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+    .clear-selection-tools>div,.clear-footer>div{display:flex;gap:8px;}
+    #clear-mask .btn{min-height:44px;color:var(--fg);background:var(--card);border-color:var(--line);}
+    #clear-mask .clear-selection-tools .btn{padding:8px 10px;border-color:transparent;background:transparent;font-size:13px;box-shadow:none;}
+    .clear-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+    #clear-mask .clear-opt{display:flex;align-items:center;gap:10px;min-height:72px;margin:0;padding:12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+    #clear-mask .clear-opt:hover{border-color:var(--muted);}
+    #clear-mask .clear-opt:has(:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card));}
+    #clear-mask .clear-opt:focus-within{outline:2px solid var(--accent);outline-offset:2px;}
+    #clear-mask .clear-cb{margin:0;width:18px;height:18px;flex:0 0 18px;accent-color:var(--accent);}
+    .clear-option-icon{display:flex;align-items:center;justify-content:center;width:20px;flex:0 0 20px;color:var(--muted);}
+    .clear-option-copy{display:flex;flex-direction:column;gap:4px;min-width:0;}
+    .clear-option-copy strong{font-size:14px;font-weight:600;line-height:1.4;color:var(--fg);}
+    .clear-option-copy small{font-size:12px;color:var(--muted);line-height:1.4;}
+    #clear-mask .clear-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;border-top:1px solid var(--line);flex-shrink:0;background:var(--card);}
+    .clear-footer>span{font-size:12px;color:var(--muted);}
+    #clear-go:not(:disabled){color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line));background:color-mix(in srgb,var(--bad) 8%,var(--card));}
+    #clear-mask #clear-go:disabled{opacity:.45;cursor:default;}
+    @media(max-width:560px){#clear-mask header{padding:16px;}#clear-mask .content{padding:12px 16px 16px;}.clear-options{grid-template-columns:1fr;}#clear-mask .clear-opt{min-height:64px;}#clear-mask .clear-footer{padding:12px 16px;flex-wrap:wrap;}.clear-footer>div{margin-left:auto;}}
+
     /* ★ 淺色主題覆寫：當 <html data-theme="light"> 時套用 */
     :root[data-theme="light"]{
       --bg:#f4f5f9;                  /* 頁面背景基底 */
@@ -7513,61 +7542,26 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
   </div>
 
   <!-- ★ 清除設定彈窗 -->
-  <div id="clear-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="clear-title">
-    <div class="modal" role="document" style="width:min(480px, 92vw);">
-      <header>
-        <h3 id="clear-title">🧹 清除資料</h3>
-        <button id="clear-close" class="close" aria-label="關閉">✕</button>
-      </header>
+  <div id="clear-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="clear-title" aria-describedby="clear-description">
+    <div class="modal clear-dialog" role="document">
+      <header><div><h3 id="clear-title">清除資料</h3><p id="clear-description">選擇要清除的本機資料類別。</p></div><button id="clear-close" class="close" aria-label="關閉">✕</button></header>
       <div class="content">
-        <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">請勾選要清除的資料類別：</div>
-        <div id="clear-gs-note" style="display:none; font-size:12px; line-height:1.5; color:var(--fg); background:rgba(255,196,0,.12); border:1px solid rgba(229,160,0,.4); border-radius:10px; padding:8px 10px; margin-bottom:10px;">
-          ☁️ <b>此清除只影響本機資料</b>，不會刪除 Google 試算表的內容。
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="classMap"> 📋 學生名單（班級、座號、姓名）
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="scores"> ⭐ 平時分數（含扣分統計）
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="violations"> 🚨 違規紀錄簿
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="hw"> 📝 作業成績
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="seating"> 🪑 座位表（格數與配位）
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="notes"> 📌 學生備註
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="progress"> 📖 教學進度
-          </label>
-          <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
-            <input type="checkbox" class="clear-cb" value="attendance"> 點名紀錄
-          </label><label>
-            <input type="checkbox" class="clear-cb" value="taskBoard"> 📋 課堂任務板（流程庫與本次課堂）
-          </label>
-          <label class="clear-opt" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;">
-            <input type="checkbox" class="clear-cb" value="group"> 👥 分組名單
-          </label>
-
-        </div>
-        <div style="height:1px; background:var(--line); margin:12px 0;"></div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; gap:8px;">
-            <button id="clear-sel-all" class="btn" style="font-size:12px; padding:3px 10px;">全選</button>
-            <button id="clear-sel-none" class="btn" style="font-size:12px; padding:3px 10px;">全不選</button>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button id="clear-cancel" class="btn">取消</button>
-            <button id="clear-go" class="btn sub">清除選取項目</button>
-          </div>
+        <div id="clear-gs-note"><span aria-hidden="true">☁️</span><span>只清除本機資料，Google 試算表內容會保留。</span></div>
+        <div class="clear-selection-tools"><span id="clear-count" role="status" aria-live="polite">已選 0 項</span><div><button id="clear-sel-all" class="btn">全選</button><button id="clear-sel-none" class="btn">全不選</button></div></div>
+        <div class="clear-options" role="group" aria-label="要清除的資料類別">
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="classMap"><span class="clear-option-icon" aria-hidden="true">📋</span><span class="clear-option-copy"><strong>學生名單</strong><small>班級、座號與姓名</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="scores"><span class="clear-option-icon" aria-hidden="true">⭐</span><span class="clear-option-copy"><strong>平時分數</strong><small>分數與扣分統計</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="violations"><span class="clear-option-icon" aria-hidden="true">🚨</span><span class="clear-option-copy"><strong>違規紀錄簿</strong><small>學生違規紀錄</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="hw"><span class="clear-option-icon" aria-hidden="true">📝</span><span class="clear-option-copy"><strong>作業成績</strong><small>作業項目與成績</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="seating"><span class="clear-option-icon" aria-hidden="true">🪑</span><span class="clear-option-copy"><strong>座位表</strong><small>座位格數與配位</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="notes"><span class="clear-option-icon" aria-hidden="true">📌</span><span class="clear-option-copy"><strong>學生備註</strong><small>各學生的備註內容</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="progress"><span class="clear-option-icon" aria-hidden="true">📖</span><span class="clear-option-copy"><strong>教學進度</strong><small>各班教學進度紀錄</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="attendance"><span class="clear-option-icon" aria-hidden="true">📋</span><span class="clear-option-copy"><strong>點名紀錄</strong><small>點名欄位與出席狀態</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="taskBoard"><span class="clear-option-icon" aria-hidden="true">📋</span><span class="clear-option-copy"><strong>課堂任務板</strong><small>流程庫與本次課堂</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="group"><span class="clear-option-icon" aria-hidden="true">👥</span><span class="clear-option-copy"><strong>分組名單</strong><small>學生分組安排</small></span></label>
         </div>
       </div>
+      <footer class="clear-footer"><span>清除前會再次確認所選項目</span><div><button id="clear-cancel" class="btn">取消</button><button id="clear-go" class="btn sub" disabled>清除選取項目</button></div></footer>
     </div>
   </div>
 
@@ -10998,12 +10992,29 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     const clearSelAll  = document.getElementById('clear-sel-all');
     const clearSelNone = document.getElementById('clear-sel-none');
 
+    let clearReturnFocus=null;
+    function updateClearSelection(){
+      const count=clearMask.querySelectorAll('.clear-cb:checked').length;
+      document.getElementById('clear-count').textContent=`已選 ${count} 項`;
+      clearGo.disabled=count===0;
+    }
+    clearMask.addEventListener('change',updateClearSelection);
+    clearMask.addEventListener('keydown',e=>{
+      if(e.key!=='Tab')return;
+      const controls=[...clearMask.querySelectorAll('button:not(:disabled),input:not(:disabled)')].filter(el=>el.getClientRects().length);
+      const first=controls[0],last=controls[controls.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    });
     function openClearModal(){
+      clearReturnFocus=document.activeElement;
       const note = document.getElementById('clear-gs-note');
       if(note) note.style.display = (typeof gsReady === 'function' && gsReady()) ? '' : 'none';
       clearMask.classList.add('show');
+      updateClearSelection();
+      clearClose.focus({preventScroll:true});
     }
-    function closeClearModal(){ clearMask.classList.remove('show'); }
+    function closeClearModal(){ clearMask.classList.remove('show');if(clearReturnFocus?.isConnected)clearReturnFocus.focus({preventScroll:true}); }
 
     clearClose.addEventListener('click', closeClearModal);
     clearCancel.addEventListener('click', closeClearModal);
@@ -11012,9 +11023,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     clearSelAll.addEventListener('click', ()=>{
       clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=true);
+      updateClearSelection();
     });
     clearSelNone.addEventListener('click', ()=>{
       clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=false);
+      updateClearSelection();
     });
 
     elReset?.addEventListener('click', openClearModal);
