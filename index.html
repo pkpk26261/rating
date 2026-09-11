@@ -5989,11 +5989,6 @@
     #group-pane .grp-input{ height:40px; width:40px; font-size:20px; font-weight:700; padding:0; text-align:center; border:0; border-radius:6px; background:transparent; color:var(--fg); box-shadow:none; font-variant-numeric:tabular-nums; }
     .grp-plan{ color:var(--muted); margin:0; line-height:44px; font-size:14px; }
     #group-pane .grp-primary{ min-height:44px; padding-inline:18px; flex-shrink:0; font-size:15px; background:var(--accent); color:var(--bg); box-shadow:none; }
-    .grp-selection-bar{ display:flex; justify-content:flex-end; gap:12px; align-items:center; flex-wrap:wrap; flex-shrink:0; }
-    .grp-selection-bar:not(.has-selection){ display:none; }
-    #grp-move-controls{ display:flex; align-items:center; gap:10px; }
-    #grp-move-controls[hidden]{ display:none; }
-    #grp-destination{ min-height:44px; width:210px; font-size:15px; }
     .grp-message{ margin:0; font-size:14px; color:var(--muted); flex-shrink:0; }
     .grp-message:empty{ display:none; }
     .grp-workspace{ display:flex; flex-direction:column; gap:20px; flex:none; min-width:0; }
@@ -6053,8 +6048,6 @@
       #group-pane .grp-toolbar-left{ gap:12px; }
       #group-pane .grp-class-select{ min-width:140px; }
       #group-pane .grp-board{ grid-template-columns:minmax(0,1fr); }
-      #grp-move-controls{ flex-wrap:wrap; width:100%; }
-      #grp-destination{ flex:1; min-width:0; }
       #group-pane .grp-unassigned-wrap{ grid-template-columns:minmax(0,1fr); }
     }
     @media(min-width:700px) and (max-width:1000px){
@@ -6838,7 +6831,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <p id="grp-message" class="grp-message" tabindex="-1" role="status" aria-live="polite"></p>
           <div class="grp-workspace">
             <div class="grp-groups-section"><div class="grp-section-head"><h3>分組結果</h3></div><div id="grp-board" class="grp-board"></div></div>
-            <div class="grp-selection-bar"><div id="grp-move-controls" hidden><select id="grp-destination" class="input" aria-label="將選取學生移到組別"><option value="">移動到…</option></select><button id="grp-cancel-selection" class="btn">取消選取</button></div></div>
             <button id="grp-unassigned-tab" type="button" aria-label="展開待分組，0 人" aria-controls="grp-unassigned-wrap" aria-expanded="false" hidden><span class="grp-tab-label" aria-hidden="true">待分組 · 0 人</span></button>
             <aside id="grp-unassigned-wrap" class="grp-unassigned-wrap" aria-label="待分組學生">
               <div class="grp-section-head"><h3>待分組 <span id="grp-unassigned-count"></span></h3><button id="grp-panel-collapse" class="btn" type="button" aria-label="收納待分組視窗">收納 ›</button></div>
@@ -13789,9 +13781,6 @@ function onTimerDone(){
         el.classList.toggle('is-selected',active);
         el.querySelector('.grp-member-select')?.setAttribute('aria-pressed',String(active));
       });
-      document.getElementById('grp-move-controls').hidden=!selected.size;
-      document.querySelector('.grp-selection-bar').classList.toggle('has-selection',!!selected.size);
-      document.getElementById('grp-destination').value='';
     }
 
     // BEGIN GROUP PANEL MODEL
@@ -14054,10 +14043,6 @@ function onTimerDone(){
         const mem = _buildGroupMember(cls, s, -1, g, -1, mi);
         newUn.appendChild(mem);
       });
-      const destination=document.getElementById('grp-destination');
-      destination.replaceChildren(new Option('移動到…',''));
-      g.groups.forEach((members,gi)=>destination.add(new Option(`${g.groupNames[gi] || `第 ${gi+1} 組`}（${members.length} 人）`,String(gi))));
-      destination.add(new Option('待分組','-1'));
       document.getElementById('btn-grp-random').textContent=assignedIds.size ? '重新隨機分組' : '隨機分組';
       paintGroupSelection(cls);
       fitGroupBoard();
@@ -14370,15 +14355,6 @@ function onTimerDone(){
       commitGroupChange(elSelect.value,g=>resizeGroupState(g,document.getElementById('grp-count').value),'已調整組數；移除組別的成員會回到待分組。');
     });
     document.getElementById('grp-search')?.addEventListener('input',()=>renderGroup(elSelect.value));
-    document.getElementById('grp-cancel-selection')?.addEventListener('click',()=>{groupSelection(elSelect.value).clear();paintGroupSelection(elSelect.value);});
-    document.getElementById('grp-destination')?.addEventListener('change',e=>{
-      if(e.target.value === '') return;
-      const cls=elSelect.value, ids=[...groupSelection(cls)], target=Number(e.target.value);
-      if(!ids.length || (target !== -1 && (!Number.isInteger(target) || !ensureGroupState(cls).groups[target]))) return;
-      moveGroupSelection(cls,ids,target);
-      const moved=[...document.querySelectorAll('#group-pane .grp-member')].find(el=>el.dataset.id===ids[0]);
-      moved?.querySelector('.grp-member-select')?.focus({preventScroll:true});
-    });
     document.getElementById('group-pane')?.addEventListener('keydown',e=>{
       if(e.key !== 'Escape' || !groupSelection(elSelect.value).size) return;
       const first=document.querySelector('#group-pane .is-selected .grp-member-select');
