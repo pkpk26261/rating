@@ -4504,7 +4504,9 @@
     /* 座號排列固定列高，不因學生人數或搜尋結果較少而拉伸。 */
     body[data-mode="list"] #students.grid.is-order{
       align-content: start;
-      grid-auto-rows: minmax(0, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+      grid-auto-rows: 120px;
+      overflow-y: auto;
     }
     body[data-mode="list"] #students.grid .card{
       box-shadow: none !important;
@@ -6151,16 +6153,19 @@
     #hw-table .hw-col-name .hw-title-text{color:var(--fg);overflow-wrap:anywhere;}
     .hw-col-actions{display:flex;align-items:center;gap:8px;margin:6px 0 2px;}
     #hw-table .hw-batch-entry{border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--accent);padding:6px 9px;font:inherit;font-size:12px;cursor:pointer;min-height:32px;}
-    #hw-table .hw-cell-editor{width:156px;min-width:156px;max-width:156px;border:1px solid var(--line);background:var(--bg);border-radius:9px;}
-    #hw-table .hw-cell-editor:hover{border-color:var(--accent);}
+    /* 成績直接融入表格，編輯焦點以整格標示。 */
+    #hw-table .hw-cell-editor{width:156px;min-width:156px;max-width:156px;border:0;background:transparent;border-radius:0;}
+    #hw-table .hw-cell-editor:hover{border-color:transparent;}
+    #hw-table .hw-cell-editor:focus-within{outline:none;}
+    #hw-table td[data-grade-col]:focus-within{outline:2px solid var(--accent);outline-offset:-2px;}
     #hw-table .hw-cell-editor input[type="number"]{width:99px;min-height:44px;font-size:17px;padding:8px;}
     #hw-table .hw-cell-editor input::placeholder{font-size:14px;font-weight:500;color:var(--muted);opacity:1;}
     #hw-table .hw-cell-editor input:not([readonly]):not(:disabled):focus::placeholder{opacity:0;}
-    #hw-table .hw-state-select{width:44px;min-width:44px;min-height:44px;padding:0;color:transparent;font-size:12px;border-left:1px solid var(--line);background-position:center;}
-    #hw-table .hw-cell-editor[data-status="missing"]{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--bg));}
+    #hw-table .hw-state-select{width:44px;min-width:44px;min-height:44px;padding:0;color:transparent;font-size:12px;border-left:0;background-position:center;}
+    #hw-table .hw-cell-editor[data-status="missing"]{border:0;background:transparent;}
     #hw-table .hw-cell-editor[data-status="missing"] input:disabled::placeholder{color:var(--bad);font-weight:700;opacity:1;}
     .manage-tbl td.col-hw[data-status="missing"]{color:var(--bad);font-weight:700;}
-    #hw-table .hw-cell-editor[data-status="exempt"]{border-style:dashed;}
+    #hw-table .hw-cell-editor[data-status="exempt"]{border:0;}
     #hw-table .hw-cell-editor[data-status="scored"] input{color:var(--fg);}
     #hw-table .hw-count{font-size:11px;white-space:nowrap;}
     #hw-pane button:focus-visible,#hw-pane select:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
@@ -6493,6 +6498,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                   <button type="button" class="data-item" id="btn-import-roster">📂 匯入名單</button>
                   <button type="button" class="data-item" id="btn-manual-sync" title="匯出目前所有班級的成績">💾 匯出成績報表</button>
                   <button type="button" class="data-item" id="btn-backup-export">💾 下載完整備份</button>
+                  <button type="button" class="data-item" id="btn-backup-before-cloud" hidden>💾 下載雲端載入前的本機備份</button>
                   <button type="button" class="data-item" id="btn-backup-restore">📥 還原完整備份</button>
                 </div>
                 <div class="data-section">
@@ -7634,7 +7640,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     // BEGIN SAVE STATUS MODEL
     const saveHealth = {
       initialized: false, pendingLocal: false, localAt: 0, failures: new Map(),
-      revision: '', cloud: 'idle', operation: 'upload', cloudError: '', busy: false
+      revision: '', cloud: 'idle', operation: 'upload', cloudError: '', busy: false, autoDownloadBlocked: false
     };
     function renderSaveHealth(){
       const local = document.getElementById('save-local-status');
@@ -7649,15 +7655,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         : saveHealth.pendingLocal ? '正在儲存…' : saveHealth.localAt ? '已存本機' : '尚無資料';
       local.dataset.kind = failed ? 'error' : saveHealth.pendingLocal ? 'pending' : saveHealth.localAt ? 'saved' : '';
       local.title = saveHealth.localAt ? `最後存檔：${new Date(saveHealth.localAt).toLocaleString('zh-TW')}` : '';
-      const pending = !!(state.classOrder?.length && (!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision));
+      const hasData = !!(state.classOrder?.length || state.progress?.order?.length);
+      const pending = hasData && (!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision);
       cloud.textContent = !ready ? '未設定同步' : saveHealth.busy ? (saveHealth.operation === 'download' ? '雲端載入中…' : '同步中…')
-        : saveHealth.cloud === 'error' ? '同步失敗' : !state.classOrder?.length ? '尚無資料可同步' : saveHealth.cloud === 'downloaded' ? '已載入雲端' : pending ? '待同步'
+        : saveHealth.cloud === 'error' ? '同步失敗' : !hasData ? '尚無資料可同步' : saveHealth.cloud === 'downloaded' ? '已載入雲端' : pending ? '待同步'
         : saveHealth.cloud === 'synced' || gsConfig.lastUploadedRevision ? '已同步' : '尚未同步';
       cloud.dataset.kind = !ready ? '' : saveHealth.busy ? 'busy' : saveHealth.cloud === 'error' ? 'error' : pending ? 'pending' : saveHealth.cloud === 'synced' || gsConfig.lastUploadedRevision ? 'saved' : '';
       cloud.title = ready && gsConfig.lastSync ? `最後同步：${new Date(gsConfig.lastSync).toLocaleString('zh-TW')}` : '';
       const messages = [];
       if(failed) messages.push('本機尚有資料未存妥，請重試；若仍失敗，請先匯出備份。');
       if(ready && saveHealth.cloud === 'error') messages.push(saveHealth.cloudError);
+      if(saveHealth.autoDownloadBlocked) messages.push('本機有尚未確認同步的資料，已暫停自動下載。請先下載完整備份，再選擇上傳或下載。');
       if(state.backupSyncPaused) messages.push('已還原備份，自動上傳與開啟時雲端載入已暫停。確認資料後可手動同步恢復。');
       detail.textContent = messages.join(' ');
       detail.hidden = messages.length === 0;
@@ -7905,9 +7913,12 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(typeof cloudImportStaging!=='undefined' && cloudImportStaging) return;
       if(!TabLock.isActive() || !saveHealth.initialized) return;
       saveHealth.pendingLocal = true;
+      const viewOnly = ['class change','mode change','toggle stage in list','toggle stage (checkbox)','list view: seat','list view: order','progress switch page','progress toggle collapse','progress collapse all','progress toggle subject'].includes(reason);
+      if(!viewOnly){
       if(saveHealth.cloud === 'downloaded') saveHealth.cloud = 'idle';
       saveHealth.revision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       gsScheduleAutoUpload();
+      }
       renderSaveHealth();
       if(_saveTimer) return;
       _saveTimer = setTimeout(()=>{
@@ -7933,6 +7944,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           if(key.startsWith(prefix) && !Object.hasOwn(values || {}, key.slice(prefix.length))) removeLocalKey(key);
         }
       }
+      if(saveHealth.failures.has('pscore_before_cloud_download_v1')) writeLocalJSON('pscore_before_cloud_download_v1', buildSession());
       if(saveHealth.failures.has(GS_CFG_KEY)) writeLocalJSON(GS_CFG_KEY, gsConfig);
       writeLocalJSON(SESSION_KEY, buildSession());
       return saveHealth.failures.size === 0;
@@ -8434,15 +8446,16 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       try{
         const preparedFiles=await prepareRosterFiles(files,isManualImport);
         if(!preparedFiles){setStatus('已取消匯入，原有資料未變更。');return false;}
+        if(isSyncImport && opts.canApply && !opts.canApply()) throw new Error('準備下載資料期間本機狀態已變更，已取消套用。');
         const existingMap = (state.classMap && typeof state.classMap === 'object') ? state.classMap : {};
         const existingOrder = Array.isArray(state.classOrder) ? state.classOrder.slice() : [];
         const hadExistingClasses = existingOrder.length > 0;
         const prevSelectedClass = elSelect?.value || '';
         if(isSyncImport){
-          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores'];
+          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores','timer','warningThreshold'];
           originalCloudState=Object.fromEntries(keys.map(key=>[key,state[key]]));
           cloudImportStaging=true;
-          for(const key of keys) state[key]={};
+          for(const key of keys) if(!['timer','warningThreshold'].includes(key)) state[key]={};
           state.classOrder=[];
           state.progress={pages:{},order:[],active:''};
           state.cadreOptions=JSON.parse(JSON.stringify(opts.syncCadreOptions||{}));
@@ -8626,7 +8639,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
               const name=String(row[nameIdx]??'').trim(); if(!name) continue;
               const seat=seatIdx>=0?String(row[seatIdx]??'').trim():'';
               const sid=(idIdx>=0?String(row[idIdx]??'').trim():'');
-              const id = sid ? `SID__${sid}` : makeFallbackId(targetClassName, seat, name);
+              const originalStudent = opts.syncSupplement?.backup.data.classMap[targetClassName]?.find(s=>sid ? String(s.sid||'')===sid : String(s.seat??'')===seat && s.name===name);
+              const id = originalStudent?.id || (sid ? `SID__${sid}` : makeFallbackId(targetClassName, seat, name));
+              if(classData.list.some(s=>s.id===id)) throw new Error(targetClassName+' 有重複學生識別碼，未匯入。');
               const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
               const nameColor = nameColorIdx >= 0 ? normalizeNameColor(row[nameColorIdx]) : '';
               classData.list.push({id,sid,name, seat, titles, nameColor, row:r+1, sheet:targetClassName});
@@ -8639,15 +8654,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
               if(seatRIdx>=0 && seatCIdx>=0){
                 const rr=Number(row[seatRIdx]); const cc=Number(row[seatCIdx]);
-                if(Number.isFinite(rr)&&Number.isFinite(cc)&&rr>=1&&rr<=9&&cc>=1&&cc<=9){
+                if(Number.isInteger(rr)&&Number.isInteger(cc)&&rr>=1&&rr<=9&&cc>=1&&cc<=9){
+                  if(classData.pendingCoords.some(p=>p.rr===rr && p.cc===cc)) throw new Error(targetClassName+' 的座位重複，未匯入。');
                   classData.pendingCoords.push({rr,cc,id});
                   classData.maxR=Math.max(classData.maxR,rr);
                   classData.maxC=Math.max(classData.maxC,cc);
-                }
+                }else if(String(row[seatRIdx]??'').trim() || String(row[seatCIdx]??'').trim()){ throw new Error(targetClassName+' 的座位座標無效，未匯入。'); }
               }
 
               if (scoreIdx >= 0){
                 const sc = Number(row[scoreIdx]);
+                if(!Number.isFinite(sc)) throw new Error(targetClassName+' 的加扣分不是有效數字，未匯入。');
                 if (Number.isFinite(sc)){
                   setScore(targetClassName, id, sc);
                 }else if (!hasScore(targetClassName, id)){
@@ -8678,6 +8695,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
               if(violLateIdx >= 0 || violMissingIdx >= 0 || violClassroomIdx >= 0 || violOtherIdx >= 0 || violEntriesIdx >= 0 || violSpecialEntriesIdx >= 0 || violPendingIdx >= 0){
                 const rec = createEmptyViolationRecord();
+                for(const idx of [violLateIdx,violMissingIdx,violClassroomIdx,violOtherIdx]){
+                  if(idx>=0 && (!Number.isInteger(Number(row[idx] || 0)) || Number(row[idx] || 0)<0)) throw new Error(targetClassName+' 的違規次數無效，未匯入。');
+                }
                 rec.late = violLateIdx >= 0 ? Math.max(0, Number(row[violLateIdx]) || 0) : 0;
                 rec.missing = violMissingIdx >= 0 ? Math.max(0, Number(row[violMissingIdx]) || 0) : 0;
                 rec.classroom = violClassroomIdx >= 0 ? Math.max(0, Number(row[violClassroomIdx]) || 0) : 0;
@@ -8693,10 +8713,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                     const text = String(entriesRaw).trim();
                     try{
                       const parsed = JSON.parse(text);
+                      if(!Array.isArray(parsed) || parsed.some(e=>!e || typeof e.item!=='string' || !e.item.trim() || typeof e.date!=='string')) throw new Error();
                       rec.entries = normalizeViolationEntries(parsed);
-                    }catch(_){
-                      rec.entries = [];
-                    }
+                    }catch(_){ throw new Error(targetClassName+' 的違規記事格式錯誤，未匯入。'); }
                   }
                 }
 
@@ -8706,10 +8725,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                     const text = String(specialEntriesRaw).trim();
                     try{
                       const parsed = JSON.parse(text);
+                      if(!Array.isArray(parsed) || parsed.some(e=>!e || typeof e.item!=='string' || !e.item.trim() || typeof e.date!=='string')) throw new Error();
                       rec.specialEntries = normalizeViolationEntries(parsed);
-                    }catch(_){
-                      rec.specialEntries = [];
-                    }
+                    }catch(_){ throw new Error(targetClassName+' 的特殊記事格式錯誤，未匯入。'); }
                   }
                 }
 
@@ -8720,12 +8738,16 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             for(const [targetClassName, classData] of importClassData){
               if(!hwCols.length && !isSyncImport){ loadHWFromLS(targetClassName); }
 
-              const rowsCnt=clampSize(classData.maxR||6); const colsCnt=clampSize(classData.maxC||6);
+              const savedSeat = opts.syncSupplement?.backup.data.seating[targetClassName];
+              const rowsCnt=clampSize(savedSeat?.rows || Math.max(6,classData.maxR)); const colsCnt=clampSize(savedSeat?.cols || Math.max(6,classData.maxC));
+              if(classData.maxR>rowsCnt || classData.maxC>colsCnt) throw new Error(targetClassName+' 的座位座標超出保存格數，未匯入。');
               const seatMapForSheet={};
               for(const {rr,cc,id} of classData.pendingCoords){
-                const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1; seatMapForSheet[rTop+'-'+cLeft]=id;
+                const rTop=rowsCnt-rr+1; const cLeft=colsCnt-cc+1;
+                if(savedSeat?.disabled?.includes(rTop+'-'+cLeft)) throw new Error(targetClassName+' 的已停用座位包含學生，請先確認座位設定。');
+                seatMapForSheet[rTop+'-'+cLeft]=id;
               }
-              if(Object.keys(seatMapForSheet).length){ state.seating[targetClassName]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet}; }
+              state.seating[targetClassName]={rows:rowsCnt, cols:colsCnt, map:seatMapForSheet, disabled:savedSeat?.disabled?.slice() || []};
 
               if(classData.list.length || isSyncImport){ map[targetClassName]=classData.list; order.push(targetClassName); }
 
@@ -8761,6 +8783,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         if(!hasClassData && !importedProgress){
           throw new Error('沒有偵測到任何班級或教學進度資料');
         }
+        if(isSyncImport && opts.syncSupplement) applySyncSupplement(map, opts.syncSupplement, opts.syncSheets);
         // 至此整份資料解析成功，才允許存檔與更新畫面。
         cloudImportStaging=false;
         originalCloudState=null;
@@ -9498,6 +9521,116 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     }
 
     /* ★ 上傳：將本機所有班級資料寫入 Google 試算表（每班一分頁） */
+    // BEGIN SYNC COMPLETENESS MODEL
+    function gsHasPendingChanges(){
+      return !!((state.classOrder?.length || state.progress?.order?.length) &&
+        (saveHealth.pendingLocal || saveHealth.failures.size || !saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision));
+    }
+    function syncComparableRows(rows){
+      const result = rows.map(row=>{
+        if(!Array.isArray(row)) throw new Error('雲端資料列格式錯誤。');
+        const r = row.map(v=>v == null ? '' : v);
+        while(r.length && r[r.length-1] === '') r.pop();
+        return r;
+      });
+      while(result.length && !result[result.length-1].length) result.pop();
+      return JSON.stringify(result);
+    }
+    function appendSyncSupplement(sheets, progressNames={}){
+      // 試算表仍保留可編輯的資料表；補充快照保留表格無法表達的完整狀態。
+      const projections = Object.fromEntries(Object.entries(sheets).filter(([name])=>name!=='__CLASS_META__'));
+      const backup=createFullBackup();
+      const stamp=Number(saveHealth.revision.split('-')[0]) || saveHealth.localAt || Date.now();
+      backup.createdAt=new Date(stamp).toISOString();backup.data.ts=stamp;
+      const bundle = {version:1, backup, projections, progressNames};
+      const raw = JSON.stringify(bundle);
+      const chunks = [];
+      // 每格使用 JSON 字串包裝，避免 Sheets 把數字或公式型態的分段重新解讀。
+      for(let i=0;i<raw.length;i+=12000) chunks.push(JSON.stringify(raw.slice(i,i+12000)));
+      sheets.__CLASS_META__[0].push('grade-sync-full-v1', ...chunks);
+    }
+    function readSyncSupplement(sheets){
+      const header = sheets.__CLASS_META__?.[0];
+      if(!header || header.length < 3 || header[2] === '') return null; // 舊格式
+      if(header[2] !== 'grade-sync-full-v1') throw new Error('不支援的同步完整資料版本，未覆蓋本機。');
+      let bundle;
+      try{
+        const raw = header.slice(3).map(chunk=>{
+          const part=JSON.parse(chunk); if(typeof part!=='string') throw new Error(); return part;
+        }).join('');
+        bundle=JSON.parse(raw);
+        if(bundle.version!==1 || !bundle.projections || typeof bundle.projections!=='object' || !bundle.progressNames) throw new Error();
+        bundle.backup=validateFullBackup(bundle.backup);
+        Object.values(bundle.projections).forEach(syncComparableRows);
+      }catch(error){ throw new Error('雲端完整資料毀損或缺少分段，已取消下載套用。'); }
+      return bundle;
+    }
+    function applySyncSupplement(map, bundle, sheets){
+      const original = bundle.backup.data;
+      const clone = value=>JSON.parse(JSON.stringify(value));
+      const same = name=>Array.isArray(sheets[name]) && Array.isArray(bundle.projections[name]) &&
+        syncComparableRows(sheets[name]) === syncComparableRows(bundle.projections[name]);
+      for(const cls of Object.keys(map)){
+        if(!original.classMap[cls]) continue;
+        const name=safeSheetName(cls), unchanged=same(name);
+        if(unchanged){
+          map[cls]=clone(original.classMap[cls]);
+          for(const key of ['hw','seating','group','notes','draw']){
+            if(Object.hasOwn(original[key],cls)) state[key][cls]=clone(original[key][cls]);
+          }
+          for(const student of map[cls]){
+            const key=scoreKey(cls,student.id);
+            for(const field of ['scores','deductions','violations']){
+              if(Object.hasOwn(original[field],key)) state[field][key]=clone(original[field][key]);
+            }
+            if(original.sidMap[student.id]) state.sidMap[student.id]=clone(original.sidMap[student.id]);
+          }
+        }else{
+          // 人工修改的班級分頁為準；保留其未表示的扣分累計、抽號及空組。
+          const ids=new Set(map[cls].map(s=>s.id));
+          for(const id of ids){
+            const key=scoreKey(cls,id);
+            if(Object.hasOwn(original.deductions,key)) state.deductions[key]=original.deductions[key];
+          }
+          if(original.draw[cls]){
+            const draw=clone(original.draw[cls]);
+            draw.drawn=draw.drawn.filter(id=>ids.has(id));
+            draw.history=draw.history.map(h=>({...h,ids:h.ids.filter(id=>ids.has(id))})).filter(h=>h.ids.length);
+            state.draw[cls]=draw;
+          }
+          const old=original.group[cls];
+          if(old){
+            const next={groups:old.groups.map(()=>[]),groupNames:old.groups.map((_,i)=>old.groupNames?.[i] || '')};
+            const current=state.group[cls];
+            current.groups.forEach((members,i)=>{
+              const label=current.groupNames[i];
+              members.forEach(id=>{
+                let target=old.groups.findIndex((members,j)=>members.includes(id) && (old.groupNames?.[j] || `第 ${j+1} 組`)===label);
+                if(target<0) target=next.groupNames.findIndex((n,j)=>(n || `第 ${j+1} 組`)===label);
+                if(target<0){target=next.groups.length;next.groups.push([]);next.groupNames.push(label);}
+                next.groups[target].push(id);
+              });
+            });
+            state.group[cls]=next;
+          }
+        }
+      }
+      for(const [pageName,sheetName] of Object.entries(bundle.progressNames)){
+        if(!same(sheetName) || !original.progress.pages[pageName]) continue;
+        // 匯出時名稱消毒／避重命名，下載還原課程原名與完整主題結構。
+        const at=state.progress.order.indexOf(sheetName);
+        if(at<0) continue;
+        delete state.progress.pages[sheetName];
+        state.progress.pages[pageName]=clone(original.progress.pages[pageName]);
+        state.progress.order[at]=pageName;
+        if(state.progress.active===sheetName) state.progress.active=pageName;
+      }
+      state.timer=clone(original.timer);
+      state.timer.running=false;state.timer.endAt=0;
+      state.warningThreshold=original.warningThreshold ?? 60;
+    }
+    // END SYNC COMPLETENESS MODEL
+
     async function gsUpload(opts={}){
       if(!TabLock.isActive() || saveHealth.busy) return false;
       if(!gsReady()){
@@ -9505,7 +9638,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         return false;
       }
       const classes = state.classOrder || [];
-      if(classes.length === 0){
+      if(classes.length === 0 && !state.progress?.order?.length){
         markCloudFailure('upload', new Error('目前沒有任何班級可上傳。'));
         return false;
       }
@@ -9528,6 +9661,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       },20000);
       try{
         const sheets = {};
+        const progressNames = {};
         // ★ 幹部選項集中寫入獨立的 __CLASS_META__ 分頁，班級分頁本身不含 metadata 列
         const classMeta = [['班級', '幹部選項']];
         for(const cls of classes){
@@ -9535,7 +9669,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           let aoa = buildClassAoA(cls);
           // 剝除班級 AoA 最前面的 metadata 列，讓班級分頁維持純資料
           if(aoa.length > 0 && String(aoa[0][0] || '').trim() === CLASS_META_MARKER) aoa = aoa.slice(1);
-          sheets[safeSheetName(cls)] = aoa;
+          const sheetName = safeSheetName(cls);
+          if(sheetName === '__CLASS_META__' || Object.hasOwn(sheets, sheetName) || Object.keys(sheets).some(n=>n.toLowerCase()===sheetName.toLowerCase())) throw new Error('班級分頁名稱重複或使用保留名稱，請先重新命名：'+cls);
+          sheets[sheetName] = aoa;
           classMeta.push([cls, JSON.stringify(ensureCadreOptions(cls))]);
         }
         sheets['__CLASS_META__'] = classMeta;
@@ -9543,16 +9679,12 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         {
           const prog = ensureProgressState();
           for(const pageName of (prog.order || [])){
-            let name = safeSheetName(pageName || '教學進度') || '教學進度';
-            // 避免與班級分頁或其他進度分頁名稱衝突
-            if(sheets[name] !== undefined){
-              let i = 2;
-              while(sheets[`${name}_${i}`] !== undefined) i++;
-              name = `${name}_${i}`;
-            }
+            const name = uniqueSheetName({SheetNames:Object.keys(sheets)}, pageName || '教學進度');
             sheets[name] = buildProgressAOA(pageName);
+            progressNames[pageName] = name;
           }
         }
+        appendSyncSupplement(sheets, progressNames);
         const payload = { token: gsConfig.token, action: 'upload', sheets, replaceManagedSheets: true };
         gsSetSyncStatus('正在上傳，等待 Google 完成備份與寫入…', '');
         const data = await gsRequest(uploadedUrl, {
@@ -9571,6 +9703,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         gsConfig.lastSync = Date.now();
         gsConfig.lastUploadedRevision = uploadedRevision;
         saveHealth.cloud = 'synced';
+        saveHealth.autoDownloadBlocked=false;
         if(state.backupSyncPaused){ state.backupSyncPaused = false; saveSessionNow(); }
         gsSaveConfig();
         gsUpdateLastSyncLabel();
@@ -9592,7 +9725,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     }
 
     /* ★ 下載：從 Google 試算表讀回資料，組成 workbook 後沿用既有匯入流程 */
-    async function gsDownload(){
+    async function gsDownload(opts={}){
       if(saveHealth.busy) return false;
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()){
         gsSetSyncStatus('此視窗為唯讀狀態（已在另一個視窗開啟），無法下載。', 'error');
@@ -9602,6 +9735,20 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         markCloudFailure('download', new Error('請先填寫正確的網頁應用程式網址與密碼。'));
         return false;
       }
+      if(opts.automatic && gsHasPendingChanges()){
+        saveHealth.autoDownloadBlocked=true;renderSaveHealth();
+        gsSetSyncStatus('本機有尚未確認同步的資料，已保留本機內容並暫停自動下載。請先備份，再選擇上傳或下載。', 'error');
+        setStatus('已保留本機尚未同步的資料，自動下載已暫停。');
+        return false;
+      }
+      if((state.classOrder.length || state.progress?.order?.length) &&
+        !writeLocalJSON('pscore_before_cloud_download_v1', buildSession())){
+        markCloudFailure('download', new Error('無法保存下載前的本機復原點，已取消下載。請先下載完整備份。'));
+        return false;
+      }
+      saveHealth.autoDownloadBlocked=false;
+      const downloadRevision = saveHealth.revision;
+      const downloadUrl = gsConfig.url, downloadToken = gsConfig.token;
       gsCancelAutoUpload();
       const wasSuppressed = _gsSuppressAutoUpload;
       _gsSuppressAutoUpload = true;
@@ -9623,14 +9770,20 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         gsSetSyncStatus('仍在等待雲端回應，尚未覆寫本機資料。','');
       },20000);
       try{
-        const url = gsConfig.url + (gsConfig.url.includes('?') ? '&' : '?')
-                  + 'action=download&token=' + encodeURIComponent(gsConfig.token);
+        const url = downloadUrl + (downloadUrl.includes('?') ? '&' : '?')
+                  + 'action=download&token=' + encodeURIComponent(downloadToken);
         const data = await gsRequest(url, { method:'GET', redirect:'follow' },90000);
         clearTimeout(slowDownloadTimer);slowDownloadTimer=null;
         gsSetLoadingMask(true,{title:'正在整理下載的班級資料…',desc:'已收到雲端回應，正在整理名單與成績，請稍候。'});
         if(!data.ok) throw new Error(data.error || '下載失敗');
         gsSetSyncStatus('已收到雲端資料，正在整理名單與成績…', '');
-        const sheetsObj = data.sheets || {};
+        if(downloadRevision !== saveHealth.revision || downloadUrl !== gsConfig.url || downloadToken !== gsConfig.token || !TabLock.isActive())
+          throw new Error('下載期間資料、連線或作用視窗已變更，已取消套用雲端資料。');
+        const sheetsObj = data.sheets;
+        if(!sheetsObj || typeof sheetsObj !== 'object' || Array.isArray(sheetsObj) || Object.values(sheetsObj).some(rows=>!Array.isArray(rows)))
+          throw new Error('雲端資料結構不完整，未覆蓋本機資料。');
+        const syncSupplement = readSyncSupplement(sheetsObj);
+
         const hadLocalClassesBeforeDownload = !!(state.classOrder && state.classOrder.length);
         // ★ 先從 __CLASS_META__ 分頁還原幹部選項
         const metaRows = sheetsObj['__CLASS_META__'];
@@ -9647,7 +9800,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             try{
               const opts = JSON.parse(raw);
               if(Array.isArray(opts)) syncCadreOptions[cls] = uniqCadreTitles(opts);
-            }catch(e){}
+            }catch(e){ throw new Error('班級幹部選項格式錯誤，未覆蓋本機。'); }
           });
         }
         (state.classOrder || []).forEach(cls=>{
@@ -9669,7 +9822,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const buf = XLSX.write(wb, { type:'array', bookType:'xlsx' });
         const file = new File([buf], 'GoogleSheets.xlsx',
           { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const imported = await handleFiles([file], { source: 'sync', syncNameMap, syncCadreOptions });
+        const imported = await handleFiles([file], { source: 'sync', syncNameMap, syncCadreOptions, syncSupplement, syncSheets: sheetsObj,
+          canApply:()=>downloadRevision===saveHealth.revision && downloadUrl===gsConfig.url && downloadToken===gsConfig.token && TabLock.isActive() });
         if(!imported){
           throw new Error('下載未完成，請檢查試算表格式及既有班級名稱。');
         }
@@ -9677,6 +9831,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         state.backupSyncPaused = false;
         const localSaved = saveSessionNow();
         saveHealth.cloud = 'downloaded';
+        gsConfig.lastUploadedRevision = saveHealth.revision;
         gsConfig.lastSync = Date.now();
         gsSaveConfig();
         gsUpdateLastSyncLabel();
@@ -9696,6 +9851,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         saveHealth.busy = false;
         renderSaveHealth();
         gsSetLoadingMask(false);
+        refreshBeforeCloudBackup();
         if(state.mode==='hw') renderHW(elSelect.value);
       }
     }
@@ -9727,7 +9883,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(state.backupSyncPaused) return;
       if(_gsSuppressAutoUpload) return;  // ★ 清除動作不自動上傳，避免誤刪雲端資料
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不自動上傳
-      if(!gsConfig.autoSync || !gsReady() || saveHealth.busy || !state.classOrder.length) return;
+      if(!gsConfig.autoSync || !gsReady() || saveHealth.busy || (!state.classOrder.length && !state.progress?.order?.length)) return;
       if(_gsAutoTimer) clearTimeout(_gsAutoTimer);
       _gsAutoTimer = setTimeout(async ()=>{
         _gsAutoTimer = null;
@@ -9861,10 +10017,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       openExportModal();
     });
 
-    function downloadFullBackup(){
+    function downloadFullBackup(snapshot=null){
       try{
         if(_drawAnimating) throw new Error('請等候抽號完成後再下載備份。');
-        const backup = createFullBackup();
+        const backup = snapshot?.format ? validateFullBackup(snapshot) : createFullBackup();
         const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
         if(blob.size > BACKUP_MAX_BYTES) throw new Error('備份超過 50 MB，請先減少資料量。');
         const url = URL.createObjectURL(blob);
@@ -9890,6 +10046,19 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       backupReadVersion++; resetBackupPreview(); backupMask.classList.remove('show');
       document.getElementById('btn-data').focus();
     }
+    const beforeCloudButton=document.getElementById('btn-backup-before-cloud');
+    function refreshBeforeCloudBackup(){
+      try{beforeCloudButton.hidden=!localStorage.getItem('pscore_before_cloud_download_v1');}catch{beforeCloudButton.hidden=true;}
+    }
+    refreshBeforeCloudBackup();
+    beforeCloudButton.addEventListener('click',()=>{
+      try{
+        const data=JSON.parse(localStorage.getItem('pscore_before_cloud_download_v1') || 'null');
+        if(!data) throw new Error('目前沒有下載前備份。');
+        for(const d of Object.values(data.draw || {})){d.history ||= [];d.drawn ||= [];}
+        downloadFullBackup({format:BACKUP_FORMAT,version:BACKUP_VERSION,createdAt:new Date(data.ts).toISOString(),data});
+      }catch(error){appAlert('備份未完成：'+error.message);}
+    });
     document.getElementById('btn-backup-export').addEventListener('click',downloadFullBackup);
     document.getElementById('backup-before-export').addEventListener('click',downloadFullBackup);
     document.getElementById('btn-backup-restore').addEventListener('click',()=>{
@@ -11101,7 +11270,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             const sb = parseInt(b.seat, 10) || 9999;
             return sa - sb;
           });
-        elStudents.style.gridTemplateRows = `repeat(${Math.max(1, Math.ceil(sorted.length / cols))}, minmax(0, 1fr))`;
+        elStudents.style.gridTemplateRows = 'none';
         for(const stu of sorted){
           frag2.appendChild(buildStudentCard(cls, stu, q && matchFilter(stu, q) ? q : ''));
         }
@@ -12125,7 +12294,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           continue;
         }
 
-        const tail = row.slice(1).map(v=>String(v||'').trim());
+        const tail = row.slice(1).map(v=>String(v??'').trim());
         const hasAny = title || tail.some(v=>v);
         if(!hasAny) continue;
 
@@ -15376,8 +15545,8 @@ elProgAdd?.addEventListener('click', ()=>{
         if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // 唯讀分頁不載入
         try{
           setStatus('正在從 Google 試算表載入最新資料…');
-          const ok = await gsDownload();
-          if(!ok) setStatus('已沿用本機暫存資料（雲端載入未完成）。');
+          const ok = await gsDownload({automatic:true});
+          if(!ok && !saveHealth.autoDownloadBlocked) setStatus('已沿用本機暫存資料（雲端載入未完成）。');
         }catch(e){
           console.warn('開啟時自動載入失敗，沿用本機資料', e);
           setStatus('已沿用本機暫存資料（雲端載入失敗）。');
