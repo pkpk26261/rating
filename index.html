@@ -4501,11 +4501,12 @@
       box-shadow: none !important;
       background: transparent !important;
     }
-    /* 座號排列固定列高，不因學生人數或搜尋結果較少而拉伸。 */
+    /* 座號排列依可用寬高容納全班；少量搜尋結果不過度拉高。 */
     body[data-mode="list"] #students.grid.is-order{
       align-content: start;
-      grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-      grid-auto-rows: 120px;
+      flex:1 1 0;
+      grid-template-columns: repeat(var(--order-cols, 1), minmax(0, 1fr));
+      grid-auto-rows: var(--order-height, 120px);
       overflow-y: auto;
     }
     body[data-mode="list"] #students.grid .card{
@@ -6407,6 +6408,14 @@ body[data-mode="list"] #students.grid .stage{height:auto;min-height:0;box-sizing
 /* 頂部功能導覽：縮短按鈕間距與左右留白。 */
 body .app .topbar.topbar--compact .modebar > .seg{gap:2px;}
 body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;padding-right:8px !important;gap:4px;}
+/* 窄螢幕座號全覽：排行榜不占用學生區高度。 */
+@media(max-width:880px){
+  body[data-mode="list"]:has(#students.is-order) .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;}
+  body[data-mode="list"]:has(#students.is-order) .layout > .sidebar{display:none;}
+  body[data-mode="list"]:has(#students.is-order) .layout > .main-col{min-height:0;}
+  body[data-mode="list"]:has(#students.is-order) .modebar > .seg{gap:2px;}
+  body[data-mode="list"]:has(#students.is-order) .modebar .seg-btn{min-height:30px;padding-top:4px!important;padding-bottom:4px!important;}
+}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -11215,7 +11224,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     function findSeatPos(cls, id){ const st=state.seating[cls]; if(!st||!st.map) return null; for(const key in st.map){ if(st.map[key]===id){ const [r,c]=key.split('-').map(Number); return {r,c}; } } return null; }
 
     /* ====== 列表渲染：鏡像座位表（座位模式） ====== */
+    let orderGridResizeObserver=null;
     function renderStudents(cls){
+      orderGridResizeObserver?.disconnect();
       const elStudents = document.getElementById('students');
       elStudents.classList.toggle('is-order', state.listViewMode === 'order');
       const _oldNotice = document.getElementById('seat-notice');
@@ -11280,7 +11291,18 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         elStudents.innerHTML = '';
         elStudents.appendChild(frag2);
         elStudents.querySelectorAll('.card').forEach(c=> io.observe(c));
-        requestAnimationFrame(()=> setupAutoFitForNames(elStudents));
+        requestAnimationFrame(()=>{
+          if(state.listViewMode !== 'order') return;
+          const fitOrderGrid=()=>{
+            const layout=getOrderGridLayout(sorted.length,elStudents.clientWidth,elStudents.clientHeight);
+            elStudents.style.setProperty('--order-cols',layout.cols);
+            elStudents.style.setProperty('--order-height',layout.height+'px');
+          };
+          fitOrderGrid();
+          orderGridResizeObserver=new ResizeObserver(fitOrderGrid);
+          orderGridResizeObserver.observe(elStudents);
+          setupAutoFitForNames(elStudents);
+        });
         if(q){
           const first = elStudents.querySelector('.card.match');
           if(first){ first.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' }); }
@@ -15964,6 +15986,18 @@ elProgAdd?.addEventListener('click', ()=>{
     }
 
     /* ===== 加扣分卡片內容與姓名自動縮放 ===== */
+    function getOrderGridLayout(count,width,height){
+      const total=Math.max(1,count),gap=6;
+      let best={cols:1,height:Math.min(120,Math.max(1,height)),scale:-1};
+      for(let cols=1;cols<=total;cols++){
+        const rows=Math.ceil(total/cols);
+        const cardWidth=(width-gap*(cols-1))/cols;
+        const cardHeight=Math.min(120,(height-gap*(rows-1))/rows);
+        const scale=Math.min(cardWidth/160,cardHeight/80);
+        if(scale>best.scale) best={cols,height:Math.max(1,cardHeight),scale};
+      }
+      return best;
+    }
     function getScoreCardScale(width, height){
       // 160 × 80 為基準；短邊不足時允許縮小，避免內容溢出。
       return Math.max(.05, Math.min(1.75, width / 160, height / 80));
