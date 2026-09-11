@@ -478,6 +478,12 @@
       border-color: color-mix(in oklab, var(--accent) 55%, white);
       box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
     }
+    #note-mask [hidden]{display:none!important;}
+    #note-mask .note-privacy-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;}
+    #note-mask .note-privacy-setting{display:flex;align-items:center;gap:8px;font-size:14px;min-height:44px;cursor:pointer;}
+    #note-mask .note-privacy-toolbar .btn,#note-private .btn{min-height:44px;}
+    #note-mask .note-privacy-setting input{width:18px;height:18px;accent-color:var(--accent);}
+    #note-mask .note-private{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--muted);}
     #note-mask .note-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
     @media (max-width: 520px){
       #note-text{ min-height: 220px; height: 260px; }
@@ -616,6 +622,11 @@
     /* ===== 排行榜 ===== */
     .board{ border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow: var(--shadow); flex:1 1 auto; min-height:0; overflow:hidden; }
     .board h3{ margin:0; font-size:16px; display:flex; align-items:center; gap:8px; }
+    :is(#board-score,#board-deduct,#board-violations) h3{container-type:inline-size;flex-direction:row;flex-wrap:nowrap;align-items:stretch;justify-content:space-between;gap:6px;min-width:0;}
+    :is(#board-score,#board-deduct,#board-violations) .board-title{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;font-size:clamp(14px,8cqi,18px);}
+    :is(#board-score,#board-deduct,#board-violations) h3 > .badge{display:flex;align-items:center;box-sizing:border-box;min-width:0;max-width:100%;padding:2px 4px;border-radius:10px;line-height:1.25;font-size:clamp(10px,5.5cqi,14px)!important;}
+    :is(#board-score,#board-deduct,#board-violations) .class-label{display:flex;flex-direction:column;align-items:flex-start;gap:0;white-space:nowrap;overflow-wrap:normal;}
+    :is(#board-score,#board-deduct,#board-violations) .class-subject{min-width:0;max-width:100%;margin-left:0;white-space:normal;overflow-wrap:anywhere;}
     .badge{ display:inline-block; padding:2px 6px; border-radius:999px; border:1px solid var(--line); font-size:12px; color:var(--muted); }
     .leaderboard-list{ flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 4px; -webkit-overflow-scrolling: touch; contain: layout style; }
     .board .row{ display:grid; grid-template-columns: 38px 1fr 64px; gap:8px; padding:8px 8px; border-radius:10px; align-items:center; transition: background .15s ease; contain: layout style; }
@@ -623,25 +634,12 @@
     .board .rank{ display:flex; align-items:center; justify-content:center; }
     .board .who{ min-width:0; display:flex; align-items:center; gap:8px; }
     .board .who-text{ min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .board .who-new-badge{
-      flex:0 0 auto;
-      display:inline-flex;
-      align-items:center;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid color-mix(in oklab, var(--accent) 34%, var(--line));
-      background:color-mix(in oklab, var(--card) 76%, var(--accent) 24%);
-      color:color-mix(in oklab, var(--accent) 78%, white);
-      font-size:11px;
-      font-weight:900;
-      line-height:1.2;
-      letter-spacing:.02em;
-      white-space:nowrap;
-    }
-    :root[data-theme="light"] .board .who-new-badge{
-      background:color-mix(in oklab, white 72%, var(--accent) 28%);
-      color:color-mix(in oklab, var(--accent) 82%, #0f172a);
-    }
+    #board-violations .row{grid-template-columns:max-content minmax(0,1fr) max-content;align-items:center;column-gap:6px;padding:7px 6px;}
+    #board-violations .who{display:contents;}
+    #board-violations .who-text{grid-column:2;line-height:24px;}
+    #board-violations .score{grid-column:3;line-height:24px;}
+    #board-violations .medal{box-sizing:border-box;min-width:22px;height:22px;padding:0 4px;font-size:12px;}
+    #board-violations .who-new-badge{grid-column:3;color:var(--accent);font-size:11px;font-weight:600;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums;}
     .board .score{ text-align:right; font-variant-numeric: tabular-nums; font-weight:800; }
     .board-deduct .score{ color:#fca5a5; }
     :root[data-theme="light"] .board-deduct .score{ color:#b91c1c; }
@@ -6548,17 +6546,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       <aside id="sidebar" class="sidebar">
         <section id="board-score" class="board">
-          <h3>🏆 加分排行榜 <span id="board-class" class="badge">尚未載入</span></h3>
+          <h3><span class="board-title">🏆 加分排行榜</span><span id="board-class" class="badge">尚未載入</span></h3>
           <div id="leaderboard" class="leaderboard-list"></div>
         </section>
 
         <section id="board-deduct" class="board board-deduct">
-          <h3>📉 扣分排行榜 <span id="board-class-deduct" class="badge">尚未載入</span></h3>
+          <h3><span class="board-title">📉 扣分排行榜</span><span id="board-class-deduct" class="badge">尚未載入</span></h3>
           <div id="leaderboard-deduct" class="leaderboard-list"></div>
         </section>
 
         <section id="board-violations" class="board hidden">
-          <h3>🚨 違規排行榜 <span id="board-class-violations" class="badge">尚未載入</span></h3>
+          <h3><span class="board-title">🚨 違規排行榜</span><span id="board-class-violations" class="badge">尚未載入</span></h3>
           <div id="leaderboard-violations" class="leaderboard-list"></div>
         </section>
       </aside>
@@ -7315,6 +7313,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div class="note-count">字數：<span id="note-count">0</span></div>
         </div>
 
+        <div class="note-privacy-toolbar">
+          <label class="note-privacy-setting"><input id="note-hidden-setting" type="checkbox">下次開啟時隱藏內容</label>
+          <button id="note-conceal" class="btn" type="button">隱藏內容</button>
+        </div>
+        <div id="note-private" class="note-private" hidden><span>備註內容已隱藏</span><button id="note-reveal" class="btn" type="button">顯示內容</button></div>
         <textarea id="note-text" rows="12" placeholder="輸入備註（例如：補交、需要關懷、家長聯絡紀錄…）"></textarea>
 
         <div class="note-actions">
@@ -7800,6 +7803,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           ids.add(s.id);
           if(s.seat != null && !['string','number'].includes(typeof s.seat)) fail('座號');
           if(s.titles != null) strings(s.titles,'幹部');
+          if(Object.hasOwn(s,'noteHidden') && typeof s.noteHidden !== 'boolean') fail('備註預設隱藏');
         });
       });
       for(const key of ['scores','deductions']) Object.values(d[key]).forEach(v=>num(v,key));
@@ -8580,6 +8584,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             const nameIdx=findNameColumnIndex(header);
             const scoreIdx=findScoreColumnIndex(header);
             const noteIdx=findNoteColumnIndex(header);
+            const noteHiddenIdx=header.findIndex(h=>String(h||'').trim()==='備註預設隱藏');
 
             const seatRIdx = header.findIndex(h => h === COL.R);
             const seatCIdx = header.findIndex(h => h === COL.C);
@@ -8601,7 +8606,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             const hwCols=[];
             if(scoreIdx >= 0){
               const reserved = new Set([
-                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, titleIdx, nameColorIdx, seatRIdx, seatCIdx, groupIdx,
+                idIdx, seatIdx, nameIdx, scoreIdx, noteIdx, noteHiddenIdx, titleIdx, nameColorIdx, seatRIdx, seatCIdx, groupIdx,
                 violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx, violPendingIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
@@ -8671,7 +8676,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
               if(classData.list.some(s=>s.id===id)) throw new Error(targetClassName+' 有重複學生識別碼，未匯入。');
               const titles = titleIdx >= 0 ? splitCadreTitles(row[titleIdx] ?? '') : [];
               const nameColor = nameColorIdx >= 0 ? normalizeNameColor(row[nameColorIdx]) : '';
-              classData.list.push({id,sid,name, seat, titles, nameColor, row:r+1, sheet:targetClassName});
+              const noteHidden=parseNoteHiddenValue(noteHiddenIdx>=0 ? row[noteHiddenIdx] : undefined);
+              classData.list.push({id,sid,name, seat, titles, nameColor, noteHidden, row:r+1, sheet:targetClassName});
 
               // 備註（可選）：不論是否為空都更新，確保在試算表刪除備註後能同步清除
               if(noteIdx>=0){
@@ -9385,7 +9391,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         });
       }
 
-      const header = ['學號','座號','姓名','幹部職稱','姓名顏色','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '吵鬧', '其他', '違規記事', '特殊記事', '待處理'];
+      const header = ['學號','座號','姓名','幹部職稱','姓名顏色','備註','加扣分', ...hwSt.cols, '小計', '平均', '分組', COL.R, COL.C, '遲到', '缺交', '吵鬧', '其他', '違規記事', '特殊記事', '待處理', '備註預設隱藏'];
       const aoa = [buildClassMetaRow(cls), header];
 
       for (const s of list){
@@ -9429,7 +9435,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           viol.other || 0,
           violEntriesJson,
           violSpecialEntriesJson,
-          viol.pending ? 1 : 0
+          viol.pending ? 1 : 0,
+          s.noteHidden === true ? 1 : 0
         ]);
       }
 
@@ -11095,6 +11102,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       return -1;
     }
 
+    function parseNoteHiddenValue(value){
+      if(value == null || value === '') return false;
+      if(value === true || value === 1) return true;
+      if(value === false || value === 0) return false;
+      if(typeof value === 'string'){
+        const text=value.trim().toLowerCase();
+        if(['','0','false'].includes(text)) return false;
+        if(['1','true'].includes(text)) return true;
+      }
+      throw new Error('備註預設隱藏必須為 0、1、true 或 false，未匯入。');
+    }
     function findNoteColumnIndex(header){
       // 嚴格匹配（最穩）
       for(let i=0;i<header.length;i++){
@@ -11104,7 +11122,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       // 放寬匹配（允許「學生備註」「備註(可選)」）
       for(let i=0;i<header.length;i++){
         const h=String(header[i]||'').trim();
-        if(/備註|註記|note|remark|comment/i.test(h)) return i;
+        if(h !== '備註預設隱藏' && /備註|註記|note|remark|comment/i.test(h)) return i;
       }
       return -1;
     }
@@ -11390,7 +11408,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       const score = getScore(cls, s.id);   // ★
       const note = getNote(cls, s.id);
-      const noteAttr = note ? ` data-note="${escapeHTML(note)}"` : '';
+      const noteAttr = note ? ` data-note="${escapeHTML(s.noteHidden === true ? '有備註' : note)}"` : '';
       const noteDot = note ? '<span class="note-dot" title="有備註"></span>' : '';
 
       card.innerHTML=`
@@ -11491,14 +11509,18 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     function getBoardWhoText(entry){
       const seatDisp = padSeat(entry.seat);
-      return `${entry.seat ? `#${seatDisp}` : ''}${entry.name || ''}`;
+      return `${entry.seat ? `#${seatDisp} ` : ''}${entry.name || ''}`;
     }
 
+    function getTodayViolationLabel(count){
+      const value=Math.max(0,Math.round(Number(count)||0));
+      return value>0 ? `+${value}` : '';
+    }
     function buildBoardWhoHTML(entry, showTodayViolationBadge){
-      const whoHTML = `${entry.seat ? `#${escapeHTML(padSeat(entry.seat))}` : ''}${renderStudentName(entry, entry.cls, 'board-student-name')}`;
+      const whoHTML = `${entry.seat ? `#${escapeHTML(padSeat(entry.seat))} ` : ''}${renderStudentName(entry, entry.cls, 'board-student-name')}`;
       if(!showTodayViolationBadge) return `<div class="who"><span class="who-text">${whoHTML}</span></div>`;
-      const todayCount = Math.max(0, Math.round(Number(entry.todayViolationCount) || 0));
-      const badgeHTML = todayCount > 0 ? `<span class="who-new-badge">${escapeHTML(`今日新增 ${todayCount}次`)}</span>` : '';
+      const todayLabel = getTodayViolationLabel(entry.todayViolationCount);
+      const badgeHTML = todayLabel ? `<span class="who-new-badge" title="今日新增 ${escapeHTML(todayLabel.slice(1))} 次" aria-label="今日新增 ${escapeHTML(todayLabel.slice(1))} 次">${escapeHTML(todayLabel)}</span>` : '';
       return `<div class="who"><span class="who-text">${whoHTML}</span>${badgeHTML}</div>`;
     }
 
@@ -11531,7 +11553,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           const expectedWho = getBoardWhoText(s);
           const currentWho = (whoTextEl ? whoTextEl.textContent : whoEl?.textContent || '').trim();
           const badgeEl = whoEl?.querySelector('.who-new-badge');
-          const expectedBadgeText = showTodayViolationBadge && Number(s.todayViolationCount) > 0 ? `今日新增 ${s.todayViolationCount}次` : '';
+          const expectedBadgeText = showTodayViolationBadge ? getTodayViolationLabel(s.todayViolationCount) : '';
           const currentBadgeText = badgeEl?.textContent?.trim() || '';
           if(!whoEl || whoEl.querySelector('[data-name-color]')?.dataset.nameColor !== getStudentNameColor(s) || currentWho !== expectedWho.trim() || currentBadgeText !== expectedBadgeText){
             canPatch = false;
@@ -11596,7 +11618,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         valueKey: 'violationTotal',
         emptyText: '尚無違規紀錄',
         filter: s => s.violationTotal > 0 || s.todayViolationCount > 0,
-        showTodayViolationBadge: true
+        showTodayViolationBadge: false
       });
     }
 
@@ -16502,7 +16524,7 @@ elProgAdd?.addEventListener('click', ()=>{
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
       elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄">整批登錄</button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
         const summary=calcHWSummary(hw.data[s.id],hw.cols.length),note=getNote(cls,s.id);
-        return `<tr data-id="${escapeHTML(s.id)}"><td><div class="hw-seatcell"><button class="note-btn" data-note-id="${escapeHTML(s.id)}" title="備註">${note?'🗒️':'📝'}</button><span class="hw-seattext">${escapeHTML(s.seat ? String(s.seat).padStart(2,'0') : '')}</span></div></td><td><span class="hw-student-label">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(note)}" aria-label="已備註">📝</span>`:''}</span></td>${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
+        return `<tr data-id="${escapeHTML(s.id)}"><td><div class="hw-seatcell"><button class="note-btn" data-note-id="${escapeHTML(s.id)}" title="備註">${note?'🗒️':'📝'}</button><span class="hw-seattext">${escapeHTML(s.seat ? String(s.seat).padStart(2,'0') : '')}</span></div></td><td><span class="hw-student-label">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(s.noteHidden === true ? '有備註' : note)}" aria-label="已備註">📝</span>`:''}</span></td>${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
       }).join('')}<tr id="hw-empty-row"><td colspan="${hw.cols.length+5}" class="hw-empty-message">沒有符合的學生。可清除篩選，或至學生管理新增學生。</td></tr></tbody>`;
       for(const tr of elHWTable.querySelectorAll('tr[data-id]')){
         const id=tr.dataset.id;
@@ -17196,58 +17218,84 @@ elProgAdd?.addEventListener('click', ()=>{
       const cap = Math.max(220, Math.floor(window.innerHeight * 0.55));
       noteText.style.height = Math.min(noteText.scrollHeight + 2, cap) + 'px';
     }
-function openNoteModal(cls, id, label){
+    // BEGIN NOTE PRIVACY UI
+    const noteHiddenSetting=document.getElementById('note-hidden-setting');
+    const notePrivate=document.getElementById('note-private');
+    const noteReveal=document.getElementById('note-reveal');
+    const noteConceal=document.getElementById('note-conceal');
+    let _noteKeyHandler=null;
+    function setNoteContentVisible(visible){
+      if(_noteCtx.revealed) _noteCtx.draft=noteText.value;
+      _noteCtx.revealed=visible;
+      noteText.value=visible ? _noteCtx.draft : '';
+      noteText.hidden=!visible;
+      noteText.disabled=!visible;
+      notePrivate.hidden=visible;
+      noteConceal.hidden=!visible;
+      noteCount.parentElement.hidden=!visible;
+      noteCount.textContent='';
+      noteDel.disabled=!visible;
+      if(visible){ _updateNoteCount(); _autoSizeNote(); }
+    }
+    function openNoteModal(cls, id, label){
       if(!noteMask) return;
-      _noteCtx = { cls: cls||'', id: id||'', label: label||'' };
-
-      noteClass.innerHTML = renderClassLabel(_noteCtx.cls || '');
-      const stu = (state.classMap[cls] || []).find(s=>s.id === id);
-      noteStudent.innerHTML = stu ? `${escapeHTML(String(stu.seat || ''))} ${renderStudentName(stu, cls)}` : escapeHTML(_noteCtx.label || _noteCtx.id || '');
-      noteText.value = getNote(_noteCtx.cls, _noteCtx.id);
-      _updateNoteCount();
-      // 開啟時先把高度拉到舒服的大小
-      _autoSizeNote();
-
+      closeNoteModal();
+      const stu=(state.classMap[cls]||[]).find(s=>s.id===id);
+      _noteCtx={cls:cls||'',id:id||'',label:label||'',draft:getNote(cls,id),revealed:false};
+      noteClass.innerHTML=renderClassLabel(cls||'');
+      noteStudent.innerHTML=stu ? `${escapeHTML(String(stu.seat||''))} ${renderStudentName(stu,cls)}` : escapeHTML(label||id||'');
+      noteHiddenSetting.checked=stu?.noteHidden === true;
+      setNoteContentVisible(!noteHiddenSetting.checked);
       noteMask.classList.add('show');
-      noteText.focus();
-
-      // Ctrl/⌘ + Enter 快速儲存
-      noteText.onkeydown = (e)=>{
-        if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
-          e.preventDefault();
-          noteSave?.click();
-        }
+      (_noteCtx.revealed ? noteText : noteReveal).focus();
+      _noteKeyHandler=e=>{
+        if(e.key==='Escape'){ e.preventDefault(); closeNoteModal(); }
+        else if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); noteSave.click(); }
       };
-
-      const onKey=(e)=>{ if(e.key==='Escape'){ closeNoteModal(); } };
-      window.addEventListener('keydown', onKey, { once:true });
-      noteMask.addEventListener('click', (e)=>{ if(e.target===noteMask){ closeNoteModal(); } }, { once:true });
+      window.addEventListener('keydown',_noteKeyHandler);
     }
     function closeNoteModal(){
-      if(noteMask) noteMask.classList.remove('show');
+      noteMask?.classList.remove('show');
+      if(_noteKeyHandler) window.removeEventListener('keydown',_noteKeyHandler);
+      _noteKeyHandler=null;
+      noteText.value='';
+      noteText.hidden=true;
+      noteText.disabled=true;
+      noteCount.textContent='';
+      _noteCtx={cls:'',id:'',label:'',draft:'',revealed:false};
     }
-    noteClose?.addEventListener('click', closeNoteModal);
-
-    
-
-    noteCancel?.addEventListener('click', closeNoteModal);
-    noteText?.addEventListener('input', ()=>{ _updateNoteCount(); _autoSizeNote(); });
-noteSave?.addEventListener('click', ()=>{
-      if(!_noteCtx.cls || !_noteCtx.id) return;
-      setNote(_noteCtx.cls, _noteCtx.id, noteText.value);
-      // 立即刷新作業表：更新圖示狀態
-      if(state.mode==='hw') renderHW(_noteCtx.cls);
+    function refreshNoteViews(cls){
+      if(state.mode==='hw') renderHW(cls);
+      else if(state.mode==='list') renderStudents(cls);
+    }
+    noteReveal.addEventListener('click',()=>{setNoteContentVisible(true);noteText.focus();});
+    noteConceal.addEventListener('click',()=>{setNoteContentVisible(false);noteReveal.focus();});
+    noteClose?.addEventListener('click',closeNoteModal);
+    noteCancel?.addEventListener('click',closeNoteModal);
+    noteMask?.addEventListener('click',e=>{if(e.target===noteMask) closeNoteModal();});
+    noteText?.addEventListener('input',()=>{_updateNoteCount();_autoSizeNote();});
+    noteSave?.addEventListener('click',()=>{
+      const {cls,id}=_noteCtx;
+      const stu=(state.classMap[cls]||[]).find(s=>s.id===id);
+      if(!stu) return;
+      stu.noteHidden=noteHiddenSetting.checked;
+      setNote(cls,id,_noteCtx.revealed ? noteText.value : _noteCtx.draft);
+      refreshNoteViews(cls);
       saveSession('note save');
       closeNoteModal();
     });
-    noteDel?.addEventListener('click', ()=>{
-      if(!_noteCtx.cls || !_noteCtx.id) return;
-      noteText.value = '';
-      setNote(_noteCtx.cls, _noteCtx.id, '');
-      if(state.mode==='hw') renderHW(_noteCtx.cls);
+    noteDel?.addEventListener('click',()=>{
+      const {cls,id}=_noteCtx;
+      if(!_noteCtx.revealed || !cls || !id) return;
+      const stu=(state.classMap[cls]||[]).find(s=>s.id===id);
+      if(!stu) return;
+      stu.noteHidden=noteHiddenSetting.checked;
+      setNote(cls,id,'');
+      refreshNoteViews(cls);
       saveSession('note clear');
       closeNoteModal();
     });
+    // END NOTE PRIVACY UI
 
         // 違規記事彈窗
         let _violNoteCtx = { cls:'', id:'', label:'', tab:'entries' };
