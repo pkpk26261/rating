@@ -6405,6 +6405,7 @@ body[data-mode="list"] #students.grid .card .actions .btn{height:var(--score-but
 body[data-mode="list"] #students.grid .card .empty-text{font-size:calc(14px * var(--score-scale)) !important;}
 body[data-mode="list"] #students.grid .card .note-dot{width:calc(6px * var(--score-scale));height:calc(6px * var(--score-scale));flex-shrink:0;}
 body[data-mode="list"] #students.grid .stage{height:auto;min-height:0;box-sizing:border-box;position:static;padding:0;display:flex;align-items:center;justify-content:center;}
+body[data-mode="list"] #students.grid.is-order .card{animation:none;}
 /* 頂部功能導覽：縮短按鈕間距與左右留白。 */
 body .app .topbar.topbar--compact .modebar > .seg{gap:2px;}
 body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;padding-right:8px !important;gap:4px;}
@@ -6415,6 +6416,20 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
   body[data-mode="list"]:has(#students.is-order) .layout > .main-col{min-height:0;}
   body[data-mode="list"]:has(#students.is-order) .modebar > .seg{gap:2px;}
   body[data-mode="list"]:has(#students.is-order) .modebar .seg-btn{min-height:30px;padding-top:4px!important;padding-bottom:4px!important;}
+}
+@media(max-width:600px){
+  body[data-mode="list"]:has(#students.is-order) .app .topbar{gap:4px;padding-top:4px!important;padding-bottom:4px!important;}
+  body[data-mode="list"]:has(#students.is-order) .app .modebar > .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;}
+  body[data-mode="list"]:has(#students.is-order) .app .modebar .seg-btn{font-size:12px;padding-left:3px!important;padding-right:3px!important;}
+}
+@media(max-height:500px) and (min-width:480px){
+  body[data-mode="list"]:has(#students.is-order) .app .topbar{gap:2px;padding:4px 10px!important;}
+  body[data-mode="list"]:has(#students.is-order) .app .modebar > .seg{display:flex;flex-wrap:nowrap;gap:0;}
+  body[data-mode="list"]:has(#students.is-order) .app .modebar .seg-btn{font-size:11px;min-height:28px;padding:4px!important;}
+  body[data-mode="list"]:has(#students.is-order) .app .controls-row{flex-wrap:nowrap;gap:6px;margin-bottom:6px;}
+  body[data-mode="list"]:has(#students.is-order) .app #class-select{width:110px;min-width:0!important;padding:6px;}
+  body[data-mode="list"]:has(#students.is-order) .app #search-input{width:0;min-width:0!important;flex:1 1 0;padding:6px;}
+  body[data-mode="list"]:has(#students.is-order) #list-view-seg{flex-shrink:0;}
 }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -11293,6 +11308,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         elStudents.querySelectorAll('.card').forEach(c=> io.observe(c));
         requestAnimationFrame(()=>{
           if(state.listViewMode !== 'order') return;
+          orderGridResizeObserver?.disconnect();
           const fitOrderGrid=()=>{
             const layout=getOrderGridLayout(sorted.length,elStudents.clientWidth,elStudents.clientHeight);
             elStudents.style.setProperty('--order-cols',layout.cols);
