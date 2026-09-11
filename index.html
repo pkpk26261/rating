@@ -13823,10 +13823,49 @@ function onTimerDone(){
       return document.elementFromPoint(x,y)?.closest('.grp-card,#grp-unassigned-wrap,#grp-unassigned-tab') || null;
     }
     function resetGroupPanel(){
+      cancelGroupEdgeSwipe();
       groupPointerCancel?.({});cancelGroupPanelTimer();clearGroupDrag();
       groupPanelClass=undefined;setGroupPanelCollapsed(true);
     }
     // END GROUP PANEL MODEL
+    // BEGIN GROUP EDGE SWIPE
+    var groupEdgeGesture=null;
+    function cancelGroupEdgeSwipe(){groupEdgeGesture=null;}
+    document.addEventListener('touchstart',e=>{
+      cancelGroupEdgeSwipe();
+      const pane=document.getElementById('group-pane');
+      if(e.touches.length!==1 || pane.classList.contains('hidden') || !groupPanelCollapsed || _groupDrag) return;
+      const t=e.touches[0];
+      // An invisible edge gesture, without covering group cards or enlarging the handle.
+      if(t.clientX<window.innerWidth-28 || t.clientX>window.innerWidth) return;
+      groupEdgeGesture={id:t.identifier,x:t.clientX,y:t.clientY,cls:groupPanelClass};
+      e.stopPropagation();
+    },{capture:true,passive:true});
+    document.addEventListener('touchmove',e=>{
+      const gesture=groupEdgeGesture;
+      if(!gesture) return;
+      if(e.touches.length!==1 || !groupPanelCollapsed || _groupDrag || gesture.cls!==groupPanelClass || document.getElementById('group-pane').classList.contains('hidden')){cancelGroupEdgeSwipe();return;}
+      const t=Array.from(e.touches).find(t=>t.identifier===gesture.id);
+      if(!t){cancelGroupEdgeSwipe();return;}
+      const dx=gesture.x-t.clientX,dy=Math.abs(t.clientY-gesture.y);
+      if(!gesture.horizontal){
+        if(Math.hypot(dx,dy)<=8) return;
+        if(dx<=dy){cancelGroupEdgeSwipe();return;}
+        gesture.horizontal=true;
+      }
+      if(e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      if(dx>=24){
+        cancelGroupEdgeSwipe();cancelGroupPanelTimer();
+        setGroupPanelCollapsed(false);
+        // Do not focus search: swiping should reveal the list without opening a keyboard.
+      }
+    },{capture:true,passive:false});
+    document.addEventListener('touchend',cancelGroupEdgeSwipe,true);
+    document.addEventListener('touchcancel',cancelGroupEdgeSwipe,true);
+    window.addEventListener('blur',cancelGroupEdgeSwipe);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden) cancelGroupEdgeSwipe();});
+    // END GROUP EDGE SWIPE
     document.getElementById('grp-unassigned-tab').addEventListener('click',()=>{setGroupPanelCollapsed(false);document.getElementById('grp-search').focus();});
     document.getElementById('grp-panel-collapse').addEventListener('click',e=>{setGroupPanelCollapsed(true);if(e.detail===0) document.getElementById('grp-unassigned-tab').focus();});
     function fitGroupBoard(){
@@ -14055,9 +14094,6 @@ function onTimerDone(){
         if(e.button!==0) return;
         const touchMode=e.pointerType==='touch';
         let touchReady=!touchMode,ended=false;
-        const sourcePanel=touchMode ? mem.closest('#grp-unassigned-wrap') : null;
-        const sourceLeft=sourcePanel?.getBoundingClientRect().left;
-        let sourceRetracted=!sourcePanel;
         const startX=e.clientX,startY=e.clientY,pointerId=e.pointerId;
         let dragging=false,over=null,preview=null;
         const ids=groupDragIds(cls,s.id);
@@ -14125,12 +14161,8 @@ function onTimerDone(){
             preview.style.left=`${ev.clientX-4}px`;
             preview.style.top=`${ev.clientY-8}px`;
             document.body.appendChild(preview);
-            if(!sourcePanel) setGroupPanelCollapsed(true);
-            document.querySelectorAll('#group-pane .grp-member').forEach(el=>el.classList.toggle('grp-drag-source',ids.includes(el.dataset.id)));
-          }
-          if(sourcePanel && !sourceRetracted && ev.clientX<sourceLeft){
-            sourceRetracted=true;
             setGroupPanelCollapsed(true);
+            document.querySelectorAll('#group-pane .grp-member').forEach(el=>el.classList.toggle('grp-drag-source',ids.includes(el.dataset.id)));
           }
           preview.style.left=`${ev.clientX-4}px`;
           preview.style.top=`${ev.clientY-8}px`;
