@@ -4993,13 +4993,13 @@
       border: 1px solid rgba(0,0,0,.06) !important;
       background: rgba(255,255,255,.5) !important;
     }
-    .hwtbl th{
+    .hwtbl th,.att-table thead th{
       background: rgb(10,14,26) !important;
       border-bottom: 2px solid rgba(129,140,248,.18) !important;
       font-weight: 800;
       letter-spacing: .02em;
     }
-    :root[data-theme="light"] .hwtbl th{
+    :root[data-theme="light"] .hwtbl th,:root[data-theme="light"] .att-table thead th{
       background: rgb(255,255,255) !important;
       border-bottom: 2px solid rgba(99,102,241,.12) !important;
     }
@@ -5620,6 +5620,8 @@
     }
     .hwtbl th,
     .hwtbl td,
+    .att-table th,
+    .att-table td,
     .hwtbl input[type="number"],
     .warning-table th,
     .warning-table td,
@@ -6002,8 +6004,8 @@
     .grp-member .grp-member-remove{ min-width:32px; min-height:32px; }
     .hw-student-label{ display:flex; align-items:center; justify-content:flex-start; gap:8px; min-width:0; font-size:16px; text-align:left; }
     .hw-student-label .student-name{ min-width:0; }
-    #hw-table .hw-student-label .note-indicator,.att-student-label .note-indicator{ display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; flex:0 0 1em; font-size:inherit !important; line-height:1; padding:0; margin:0; border:0; border-radius:0; background:none; overflow:visible; }
-    #hw-table .hw-student-label .note-indicator .ui-icon,.att-student-label .note-indicator .ui-icon{ width:1em; height:1em; vertical-align:0; }
+    :is(#hw-table,.att-table) .hw-student-label .note-indicator{ display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; flex:0 0 1em; font-size:inherit !important; line-height:1; padding:0; margin:0; border:0; border-radius:0; background:none; overflow:visible; }
+    :is(#hw-table,.att-table) .hw-student-label .note-indicator .ui-icon{ width:1em; height:1em; vertical-align:0; }
 
     /* 分組：自然高度的名單卡片，選取後才顯示集中移動操作。 */
     #group-pane{ width:100%; max-width:1800px; margin-inline:auto; gap:20px; overflow:auto; padding:8px 8px 28px; }
@@ -6217,6 +6219,7 @@
     #hw-table .hw-cell-editor[data-status="missing"] input:disabled::placeholder{color:var(--bad);font-weight:700;opacity:1;}
     .manage-tbl td.col-hw[data-status="missing"]{color:var(--bad);font-weight:700;}
     #hw-table .hw-cell-editor[data-status="exempt"]{border:0;}
+    #hw-table .hw-cell-editor[data-status="exempt"] input:disabled::placeholder{color:var(--ok);opacity:1;}
     #hw-table .hw-cell-editor[data-status="scored"] input{color:var(--fg);}
     #hw-table .hw-count{font-size:11px;white-space:nowrap;}
     #hw-pane button:focus-visible,#hw-pane select:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
@@ -6761,13 +6764,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-table tr>:nth-child(2){position:sticky;z-index:3;vertical-align:middle;}
     .att-table thead th:nth-child(-n+2){z-index:4;}
     .att-table thead .att-selected{box-shadow:inset 0 3px var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
-    .att-column-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;height:51px;min-width:0;padding:5px 0;font:inherit;line-height:1.35;white-space:nowrap;overflow:hidden;background:transparent;color:var(--fg);border:0;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
+    .att-column-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;height:50px;min-width:0;padding:5px 0;font:inherit;line-height:1.35;white-space:nowrap;overflow:hidden;background:transparent;color:var(--fg);border:0;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
     .att-head-date{display:flex;align-items:baseline;justify-content:center;gap:3px;white-space:nowrap;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
     .att-head-weekday{font-size:10px;font-weight:400;color:var(--muted);}
     .att-head-subject{font-size:11px;font-weight:500;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .att-head-period{max-width:100%;box-sizing:border-box;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--accent) 8%,var(--card));color:var(--accent);font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .att-head-fallback{font-size:12px;font-weight:650;}
-    .att-mark{width:100%;min-width:44px;height:44px;padding:0;border:0;border-radius:5px;background:transparent;color:inherit;font-size:26px;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
+    .att-mark{display:block;width:100%;min-width:44px;height:44px;padding:0;border:0;border-radius:5px;background:transparent;color:inherit;font-size:26px;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
     .att-mark:hover{background:transparent;}
     .att-mark[data-status="present"]{color:var(--accent);background:transparent;}
     .att-mark[data-status="absent"]{color:var(--bad,#e57585);background:transparent;}
