@@ -6503,7 +6503,69 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body[data-mode="seat"] #seat-controls{flex:0 0 auto;flex-wrap:nowrap;gap:10px;margin:0;padding-left:16px;margin-left:4px;border-left:1px solid var(--line);}
     body[data-mode="seat"] #seat-controls>.input{flex:0 0 64px;width:64px;min-width:64px;height:44px;box-sizing:border-box;}
     body[data-mode="seat"] #seat-controls>.btn{flex-shrink:0;min-height:44px;}
-</style>
+    /* BEGIN TASK BOARD STYLE */
+    body.no-data .modebar{display:flex !important;}
+    body.no-data .modebar [data-mode]:not([data-mode="taskboard"]):not([data-mode="timer"]):not([data-mode="manage"]){display:none;}
+    body.no-data[data-mode="taskboard"] #btn-reset{display:inline-flex !important;}
+    #taskboard-pane{width:100%;min-width:0;}
+    #taskboard-pane [hidden],.tb-dialog [hidden]{display:none !important;}
+    #taskboard-pane .btn,.tb-dialog .btn,.tb-dialog .input,#tb-library{min-height:44px;}
+    .tb-toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-bottom:16px;}
+    .tb-library-label{display:grid;gap:5px;color:var(--muted);font-size:12px;min-width:180px;max-width:100%;}
+    #tb-library{max-width:280px;}
+    .tb-toolbar-spacer{flex:1;}
+    .tb-stage{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(20px,3vw,48px);display:flex;flex-direction:column;gap:24px;min-height:540px;overflow-wrap:anywhere;}
+    .tb-heading{display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--line);padding-bottom:20px;}
+    .tb-eyebrow{color:var(--muted);font-size:14px;letter-spacing:.08em;}
+    .tb-heading h2{font-size:clamp(20px,2vw,30px);margin:0;flex:1;min-width:0;}
+    #tb-position{color:var(--muted);font-variant-numeric:tabular-nums;}
+    .tb-focus{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.65fr);align-items:center;gap:32px;flex:1;padding:20px 0;}
+    .tb-copy h3{font-size:clamp(36px,4.5vw,80px);line-height:1.2;margin:14px 0 18px;}
+    #tb-description{font-size:clamp(19px,2vw,30px);line-height:1.65;white-space:pre-wrap;margin:0;}
+    .tb-clock{text-align:center;border-left:1px solid var(--line);padding:24px 0 24px 24px;}
+    #tb-time{font-size:clamp(52px,6.8vw,120px);line-height:1.2;font-weight:750;letter-spacing:-.045em;font-variant-numeric:tabular-nums;}
+    #tb-status{color:var(--muted);font-size:clamp(15px,1.5vw,22px);margin-top:14px;}
+    .tb-stage[data-status="expired"] #tb-status{color:var(--accent);font-weight:700;}
+    .tb-next{font-size:clamp(18px,1.8vw,26px);padding:16px 20px;border:1px solid var(--line);border-radius:14px;white-space:pre-wrap;}
+    .tb-steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;}
+    .tb-steps li{padding:9px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;color:var(--muted);}
+    .tb-steps li[aria-current="step"]{background:var(--accent);color:var(--accent-contrast,#07121d);border-color:transparent;font-weight:700;}
+    :root[data-theme="light"] .tb-steps li[aria-current="step"]{color:#fff;}
+    .tb-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;}
+    .tb-actions .btn{min-width:112px;font-size:16px;padding:10px 20px;}
+    .tb-message{margin:0;text-align:center;color:var(--muted);font-size:13px;}
+    .tb-message:empty{display:none;}
+    body.tb-projecting{overflow:hidden;}
+    body.tb-projecting .topbar,body.tb-projecting .controls-row,body.tb-projecting .sidebar{visibility:hidden;}
+    .tb-stage.tb-projecting{position:fixed;inset:0;z-index:50000;width:100%;height:100dvh;min-height:0;border:0;border-radius:0;overflow:auto;background:var(--bg);box-sizing:border-box;}
+    .tb-stage:fullscreen{overflow:auto;background:var(--bg);}
+    .tb-dialog{color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:18px;width:min(850px,calc(100vw - 32px));max-height:90dvh;padding:24px;box-sizing:border-box;}
+    .tb-dialog::backdrop{background:rgba(0,0,0,.65);}
+    .tb-editor-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .tb-editor-head h2{margin:0 0 12px;}
+    .tb-field{display:grid;gap:6px;margin:10px 0;min-width:0;}
+    .tb-field .input{width:100%;box-sizing:border-box;}
+    .tb-edit-step{margin:12px 0;padding:16px;border:1px solid var(--line);border-radius:12px;min-width:0;}
+    .tb-step-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+    .tb-step-controls strong{flex:1;}
+    .tb-time-fields{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .tb-time-fields input[type="number"]{width:90px;}
+    .tb-time-fields label{display:flex;gap:5px;align-items:center;min-height:44px;}
+    .tb-time-fields input[type="checkbox"]{width:22px;height:22px;}
+    .tb-editor-footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px;}
+    #tb-editor-error{color:#e56e64;}
+    .tb-name-dialog{max-width:440px;}
+    #timer-task-owner{padding:10px 16px;border:1px solid var(--line);border-radius:12px;}
+    @media(max-width:700px){
+      .tb-toolbar-spacer{display:none;}.tb-toolbar{gap:8px;}.tb-library-label{flex:1;min-width:100%;}#tb-library{max-width:none;width:100%;}
+      .tb-stage{gap:18px;padding:20px;min-height:0;}.tb-heading{gap:8px;padding-bottom:14px;}.tb-heading .tb-eyebrow{width:100%;}
+      .tb-focus{grid-template-columns:1fr;gap:20px;padding:4px 0;}.tb-copy h3{font-size:36px;}.tb-clock{border-left:0;border-top:1px solid var(--line);padding:18px 0 0;}#tb-time{font-size:68px;}
+      .tb-actions .btn{flex:1;min-width:120px;}.tb-dialog{padding:16px;}.tb-steps li{font-size:14px;}
+    }
+    @media(prefers-reduced-motion:reduce){#taskboard-pane *, .tb-dialog *{animation:none !important;transition:none !important;}}
+    /* END TASK BOARD STYLE */
+
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="no-data">
@@ -6563,6 +6625,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
                 <button id="mode-group" class="more-item" data-mode="group" data-icon="👥">分組</button>
                 <button id="mode-draw" class="more-item" data-mode="draw" data-icon="🎲">抽號</button>
+                <button id="mode-taskboard" class="more-item" data-mode="taskboard" data-icon="📋">課堂任務板</button>
                 <button id="mode-timer" class="more-item" data-mode="timer" data-icon="⏳">倒數計時</button>
               </div>
             </div>
@@ -6761,9 +6824,50 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div class="prog-footer"><span id="prog-stats" class="prog-stats" aria-label="整個分頁完成統計"></span></div>
         </section>
 
+        <!-- BEGIN TASK BOARD UI -->
+        <section id="taskboard-pane" class="hidden" aria-label="課堂任務板">
+          <div class="tb-toolbar">
+            <label class="tb-library-label">共用流程庫<select id="tb-library" class="input" aria-label="共用流程庫"></select></label>
+            <button class="btn" id="tb-apply">套用流程</button>
+            <button class="btn" id="tb-new">新增流程</button>
+            <button class="btn" id="tb-rename">重新命名</button>
+            <button class="btn" id="tb-delete">刪除流程</button>
+            <span class="tb-toolbar-spacer"></span>
+            <button class="btn" id="tb-edit">編輯任務</button>
+            <button class="btn primary" id="tb-project">開始投影</button>
+          </div>
+          <div id="tb-stage" class="tb-stage">
+            <header class="tb-heading"><span class="tb-eyebrow">今天要做什麼</span><h2 id="tb-name">準備今天的課堂</h2><span id="tb-position"></span></header>
+            <div class="tb-focus">
+              <div class="tb-copy"><div class="tb-eyebrow" id="tb-current-label">目前任務</div><h3 id="tb-title">閱讀 → 討論 → 發表</h3><p id="tb-description">從上方選擇流程，或建立自己的課堂任務。</p></div>
+              <div class="tb-clock" id="tb-clock"><div id="tb-time" role="timer" aria-label="剩餘時間">03:00</div><div id="tb-status" role="status" aria-live="polite">準備開始</div></div>
+            </div>
+            <div id="tb-next" class="tb-next"></div>
+            <ol id="tb-steps" class="tb-steps" aria-label="課堂步驟"></ol>
+            <div class="tb-actions">
+              <button class="btn primary" id="tb-start">開始</button><button class="btn" id="tb-add-minute">加 1 分鐘</button><button class="btn primary" id="tb-next-button">下一步</button><button class="btn" id="tb-restart" hidden>重新開始</button><button class="btn" id="tb-exit" hidden>退出投影</button>
+            </div>
+            <p id="tb-message" class="tb-message" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+        <dialog id="tb-editor" class="tb-dialog" aria-labelledby="tb-editor-title">
+          <form id="tb-editor-form">
+            <div class="tb-editor-head"><h2 id="tb-editor-title">編輯本次課堂</h2><button class="btn" id="tb-editor-close" type="button">取消</button></div>
+            <label class="tb-field">活動名稱<input id="tb-edit-name" class="input" required maxlength="100"></label>
+            <p id="tb-editor-hint" class="hint">本次修改不會自動覆寫共用流程。</p>
+            <div id="tb-edit-steps"></div>
+            <button class="btn" id="tb-add-step" type="button">新增步驟</button>
+            <p id="tb-editor-error" role="alert"></p>
+            <div class="tb-editor-footer"><button class="btn" id="tb-save-library" type="button">另存新流程</button><button class="btn" id="tb-update-library" type="button">更新原流程</button><button class="btn primary" type="submit">套用本次課堂</button></div>
+          </form>
+        </dialog>
+        <dialog id="tb-name-dialog" class="tb-dialog tb-name-dialog" aria-labelledby="tb-name-title"><form id="tb-name-form"><h2 id="tb-name-title">流程名稱</h2><label class="tb-field">名稱<input id="tb-name-input" class="input" required maxlength="100"></label><div class="tb-editor-footer"><button class="btn" type="button" id="tb-name-cancel">取消</button><button class="btn primary" type="submit">儲存</button></div></form></dialog>
+        <!-- END TASK BOARD UI -->
+
         <!-- ⏳ 倒數計時 -->
         <section id="timer-pane" class="hidden" aria-label="倒數計時">
           <div class="timer-wrap">
+            <div id="timer-task-owner" hidden><span id="timer-task-label"></span> <button type="button" class="btn" onclick="setMode('taskboard')">前往任務板</button></div>
             <!-- 圓形進度環 -->
             <div class="timer-ring-box" id="timer-ring-box">
               <svg class="timer-ring-svg" viewBox="0 0 200 200">
@@ -7234,6 +7338,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <input type="checkbox" class="clear-cb" value="progress"> 📖 教學進度
           </label>
           <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="taskBoard"> 📋 課堂任務板（流程庫與本次課堂）
+          </label>
+          <label class="clear-opt" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;">
             <input type="checkbox" class="clear-cb" value="group"> 👥 分組名單
           </label>
 
@@ -7519,6 +7626,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       warningThreshold: 60,
       // ★ 新增：教學進度（跨班勾選）與倒數計時
       progress:{ pages:{}, order:[], active:'' },
+      taskBoard:{library:[],current:null},
       timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
     };
 
@@ -7763,7 +7871,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         : saveHealth.pendingLocal ? '正在儲存…' : saveHealth.localAt ? '已存本機' : '尚無資料';
       local.dataset.kind = failed ? 'error' : saveHealth.pendingLocal ? 'pending' : saveHealth.localAt ? 'saved' : '';
       local.title = saveHealth.localAt ? `最後存檔：${new Date(saveHealth.localAt).toLocaleString('zh-TW')}` : '';
-      const hasData = !!(state.classOrder?.length || state.progress?.order?.length);
+      const hasData = !!(state.classOrder?.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length);
       const pending = hasData && (!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision);
       cloud.textContent = !ready ? '未設定同步' : saveHealth.busy ? (saveHealth.operation === 'download' ? '雲端載入中…' : '同步中…')
         : saveHealth.cloud === 'error' ? '同步失敗' : !hasData ? '尚無資料可同步' : saveHealth.cloud === 'downloaded' ? '已載入雲端' : pending ? '待同步'
@@ -7845,6 +7953,31 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     const BACKUP_FORMAT = 'pscore-full-backup';
     const BACKUP_VERSION = 1;
     const BACKUP_MAX_BYTES = 50 * 1024 * 1024;
+    function validateTaskFlow(flow){
+      const validText=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
+      if(!flow||!validText(flow.id,200)||!validText(flow.name,100)||!Array.isArray(flow.steps)||!flow.steps.length)throw new Error('流程需要名稱與至少一個步驟。');
+      const ids=new Set();
+      for(const step of flow.steps){
+        if(!step||!validText(step.id,200)||ids.has(step.id)||!validText(step.title,160)||typeof step.description!=='string'||step.description.length>2000)throw new Error('任務標題必填，步驟識別不能重複。');
+        if(step.durationSec!==null&&(!Number.isInteger(step.durationSec)||step.durationSec<1||step.durationSec>86400))throw new Error('倒數時間請填入 1 秒至 24 小時的整數秒數。');
+        ids.add(step.id);
+      }
+    }
+    function validateTaskBoard(board,timer){
+      if(!board||!Array.isArray(board.library))throw new Error('課堂任務板格式無效。');
+      const ids=new Set();for(const flow of board.library){validateTaskFlow(flow);if(ids.has(flow.id))throw new Error('共用流程識別重複。');ids.add(flow.id);}
+      const c=board.current;
+      if(c!==null){
+        validateTaskFlow(c);
+        if(!Number.isInteger(c.index)||c.index<0||c.index>=c.steps.length||!['ready','active','completed'].includes(c.status)||(c.sourceId!==null&&typeof c.sourceId!=='string'))throw new Error('目前任務狀態無效。');
+        if(c.status==='ready'&&c.index!==0 || c.status==='completed'&&c.index!==c.steps.length-1)throw new Error('課堂步驟狀態不一致。');
+      }
+      const o=timer?.taskOwner;
+      if(o!=null || c?.status==='active'){
+        if(!o||!c||c.status!=='active'||o.activityId!==c.id||o.stepId!==c.steps[c.index].id)throw new Error('課堂任務與計時器不一致。');
+        if(c.steps[c.index].durationSec===null&&(timer.running||timer.remainingSec!==0||timer.setSec!==0))throw new Error('不計時任務不能啟動倒數。');
+      }
+    }
     function validateFullBackup(input){
       const fail = path=>{ throw new Error(`備份格式不完整或資料無效：${path}。未變更目前資料。`); };
       const record = (v,p)=>{ if(!v || typeof v !== 'object' || Array.isArray(v)) fail(p); };
@@ -7933,6 +8066,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       record(d.timer,'倒數計時');
       for(const key of ['setSec','remainingSec','endAt']){ num(d.timer[key],'倒數計時'); if(d.timer[key]<0) fail('倒數計時'); }
       if(typeof d.timer.running !== 'boolean') fail('倒數計時');
+      if(d.taskBoard !== undefined) validateTaskBoard(d.taskBoard,d.timer);
+      else if(d.timer.taskOwner != null) fail('缺少計時器所屬任務');
       if(d.warningThreshold != null) num(d.warningThreshold,'預警門檻');
       // 回傳獨立副本，驗證與預覽都不修改使用中的資料。
       const result = JSON.parse(JSON.stringify(input));
@@ -7958,6 +8093,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       d.syncRevision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       d.backupSyncPaused = true;
       d.timer.running = false; d.timer.endAt = 0; d.timer.doneNotified = false;
+      d.taskBoard ||= {library:[],current:null};
       d.ts = Date.now();
       return d;
     }
@@ -7973,7 +8109,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       for(const timer of [_saveTimer, _scoreTimer, _deductionTimer]) if(timer) clearTimeout(timer);
       _saveTimer = _scoreTimer = _deductionTimer = null;
       stopTimerInterval();
-      for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer']) state[key] = d[key];
+      for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard']) state[key] = d[key];
+      if(typeof stopAlarmSound==='function'){stopAlarmSound();hideTimerDoneModal();}
+      if(typeof tbExitProjection==='function')tbExitProjection();
       state.backupSyncPaused = true;
       state.warningThreshold = d.warningThreshold ?? 60;
       state.showStageInList = d.showStageInList !== false;
@@ -8008,6 +8146,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         // ★ 教學進度 & 倒數計時
         progress: state.progress,
         timer: state.timer,
+        taskBoard: state.taskBoard || {library:[],current:null},
         selectedClass: elSelect?.value || '',
         mode: state.mode,
         showStageInList: state.showStageInList,
@@ -8083,6 +8222,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         state.backupSyncPaused = !!s.backupSyncPaused;
         state.cadreOptions = s.cadreOptions || {};
         // ★ 教學進度/倒數計時
+        state.taskBoard = s.taskBoard || {library:[],current:null};
         state.progress   = s.progress   || { items: [] };
         state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
 
@@ -8121,7 +8261,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           document.body.classList.remove('no-data');
 
           // 回到老師上次使用的功能，避免重新登錄時還要再找入口。
-          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer'];
+          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer','taskboard'];
           setMode(modes.includes(state.mode) ? state.mode : 'hw');
 
 
@@ -8132,6 +8272,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           setStatus('已從本機暫存還原。');
           return true;
         }
+        if(state.mode==='taskboard'||state.taskBoard?.current||state.taskBoard?.library?.length){setMode('taskboard');return true;}
       }catch(e){
         console.warn('還原暫存失敗', e);
       }
@@ -8561,10 +8702,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const hadExistingClasses = existingOrder.length > 0;
         const prevSelectedClass = elSelect?.value || '';
         if(isSyncImport){
-          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores','timer','warningThreshold'];
+          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores','timer','warningThreshold','taskBoard'];
           originalCloudState=Object.fromEntries(keys.map(key=>[key,state[key]]));
           cloudImportStaging=true;
-          for(const key of keys) if(!['timer','warningThreshold'].includes(key)) state[key]={};
+          for(const key of keys) if(!['timer','warningThreshold','taskBoard'].includes(key)) state[key]={};
           state.classOrder=[];
           state.progress={pages:{},order:[],active:''};
           state.cadreOptions=JSON.parse(JSON.stringify(opts.syncCadreOptions||{}));
@@ -9635,7 +9776,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     /* ★ 上傳：將本機所有班級資料寫入 Google 試算表（每班一分頁） */
     // BEGIN SYNC COMPLETENESS MODEL
     function gsHasPendingChanges(){
-      return !!((state.classOrder?.length || state.progress?.order?.length) &&
+      return !!((state.classOrder?.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length) &&
         (saveHealth.pendingLocal || saveHealth.failures.size || !saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision));
     }
     function syncComparableRows(rows){
@@ -9737,8 +9878,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         state.progress.order[at]=pageName;
         if(state.progress.active===sheetName) state.progress.active=pageName;
       }
-      state.timer=clone(original.timer);
-      state.timer.running=false;state.timer.endAt=0;
+      // 舊雲端未表示任務板時保留本機活動與其計時器。
+      if(original.taskBoard !== undefined){state.taskBoard=clone(original.taskBoard);state.timer=clone(original.timer);}
+      else if(!state.taskBoard?.current || state.taskBoard.current.status!=='active')state.timer=clone(original.timer);
+      state.timer.running=false;state.timer.endAt=0;state.timer.doneNotified=false;
       state.warningThreshold=original.warningThreshold ?? 60;
     }
     // END SYNC COMPLETENESS MODEL
@@ -9750,7 +9893,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         return false;
       }
       const classes = state.classOrder || [];
-      if(classes.length === 0 && !state.progress?.order?.length){
+      if(classes.length === 0 && !state.progress?.order?.length && !state.taskBoard?.current && !state.taskBoard?.library?.length){
         markCloudFailure('upload', new Error('目前沒有任何班級可上傳。'));
         return false;
       }
@@ -9853,7 +9996,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         setStatus('已保留本機尚未同步的資料，自動下載已暫停。');
         return false;
       }
-      if((state.classOrder.length || state.progress?.order?.length) &&
+      if((state.classOrder.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length) &&
         !writeLocalJSON('pscore_before_cloud_download_v1', buildSession())){
         markCloudFailure('download', new Error('無法保存下載前的本機復原點，已取消下載。請先下載完整備份。'));
         return false;
@@ -9922,9 +10065,16 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           if(!syncNameMap[name]) syncNameMap[name] = name;
         });
         const names = Object.keys(sheetsObj).filter(n => n !== '__CLASS_META__' && Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
+        let imported=false;
         if(names.length === 0){
-          throw new Error('試算表沒有可匯入的班級資料。');
-        }
+          if(!syncSupplement || syncSupplement.backup.data.classOrder.length || syncSupplement.backup.data.progress.order.length || !syncSupplement.backup.data.taskBoard)throw new Error('試算表沒有可匯入的完整資料。');
+          if(downloadRevision!==saveHealth.revision || downloadUrl!==gsConfig.url || downloadToken!==gsConfig.token || !TabLock.isActive())throw new Error('下載期間本機資料已變更，已取消套用。');
+          const d=prepareBackupSession(syncSupplement.backup);
+          stopTimerInterval();stopAlarmSound();hideTimerDoneModal();
+          for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard'])state[key]=d[key];
+          state.savedScores={};state.savedHW={};state.legacyScores={};state.warningThreshold=d.warningThreshold??60;
+          resetHWGridHistory();renderClassOptions([]);elSelect.value='';setMode('taskboard');saveSession('after import taskboard');imported=true;
+        }else{ 
         // 將下載資料組成單一 workbook（每分頁=一個班級），再餵給既有 handleFiles 解析
         const wb = XLSX.utils.book_new();
         for(const name of names){
@@ -9934,11 +10084,18 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const buf = XLSX.write(wb, { type:'array', bookType:'xlsx' });
         const file = new File([buf], 'GoogleSheets.xlsx',
           { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const imported = await handleFiles([file], { source: 'sync', syncNameMap, syncCadreOptions, syncSupplement, syncSheets: sheetsObj,
+        imported = await handleFiles([file], { source: 'sync', syncNameMap, syncCadreOptions, syncSupplement, syncSheets: sheetsObj,
           canApply:()=>downloadRevision===saveHealth.revision && downloadUrl===gsConfig.url && downloadToken===gsConfig.token && TabLock.isActive() });
+        }
         if(!imported){
           throw new Error('下載未完成，請檢查試算表格式及既有班級名稱。');
         }
+        stopTimerInterval();stopAlarmSound();hideTimerDoneModal();
+        if(!syncSupplement?.backup.data.taskBoard){
+          state.timer.running=false;state.timer.endAt=0;state.timer.doneNotified=false;
+          setStatus('舊雲端未包含課堂任務板，已保留本機任務板並暫停計時。');
+        }
+        renderTaskBoard();
         // 匯入後立刻持久化，避免重新整理時還原到舊的作業欄名。
         state.backupSyncPaused = false;
         const localSaved = saveSessionNow();
@@ -9948,7 +10105,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         gsSaveConfig();
         gsUpdateLastSyncLabel();
         gsSetSyncStatus(
-          !localSaved ? '雲端資料已載入，但本機儲存失敗，請重試儲存。' : hadLocalClassesBeforeDownload
+          !localSaved ? '雲端資料已載入，但本機儲存失敗，請重試儲存。' : !syncSupplement?.backup.data.taskBoard ? '已下載；舊雲端未包含任務板，已保留本機任務板並暫停計時。' : names.length===0 ? '已下載課堂任務板，計時已暫停。' : hadLocalClassesBeforeDownload
             ? '已以雲端資料覆蓋本機班級、名單與紀錄。'
             : '已從試算表下載並載入班級資料。',
           localSaved ? 'ok' : 'error'
@@ -9995,7 +10152,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(state.backupSyncPaused) return;
       if(_gsSuppressAutoUpload) return;  // ★ 清除動作不自動上傳，避免誤刪雲端資料
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不自動上傳
-      if(!gsConfig.autoSync || !gsReady() || saveHealth.busy || (!state.classOrder.length && !state.progress?.order?.length)) return;
+      if(!gsConfig.autoSync || !gsReady() || saveHealth.busy || (!state.classOrder.length && !state.progress?.order?.length && !state.taskBoard?.current && !state.taskBoard?.library?.length)) return;
       if(_gsAutoTimer) clearTimeout(_gsAutoTimer);
       _gsAutoTimer = setTimeout(async ()=>{
         _gsAutoTimer = null;
@@ -10405,6 +10562,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       state.group      = {};
       state.filter     = '';
       state.mode       = 'list';
+      state.taskBoard = {library:[],current:null};
+      tbExitProjection();stopAlarmSound();hideTimerDoneModal();
       state.progress   = { pages:{}, order:[], active:'' };
       state.timer = { setSec: 300, remainingSec: 300, running:false, endAt: 0, doneNotified:false };
       stopTimerInterval();
@@ -10500,7 +10659,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       const labels = {
         classMap: '學生名單', scores: '平時分數（含扣分統計）', hw: '作業成績',
         seating: '座位表', notes: '學生備註', progress: '教學進度', timer: '倒數計時',
-        group: '分組名單', violations: '違規紀錄'
+        group: '分組名單', violations: '違規紀錄', taskBoard: '課堂任務板'
       };
       const desc = picked.map(k=>labels[k]||k).join('、');
       let confirmMsg = `確定要清除以下資料嗎？\n→ ${desc}`;
@@ -10551,12 +10710,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }
       if(picked.includes('progress')){ state.progress = { pages:{}, order:[], active:'' }; }
 
+      if(picked.includes('taskBoard')){tbReleaseTimer();state.taskBoard={library:[],current:null};tbExitProjection();renderTaskBoard();}
+
       // 清除 localStorage
       clearAllAppStorage();
 
       // 如果名單被清→完整重置 UI
       if(picked.includes('classMap')){
+        const keepTaskBoard=!picked.includes('taskBoard')?state.taskBoard:null;
+        const keepTimer=state.timer?.taskOwner&&keepTaskBoard?{...state.timer}:null;
         hardResetApp();
+        if(keepTaskBoard){state.taskBoard=keepTaskBoard;if(keepTimer){state.timer=keepTimer;if(keepTimer.running)startTimerInterval();}saveSession('preserve taskboard after roster clear');}
       }else{
         // 部分清除：全面刷新所有相關 UI
         const cls = elSelect.value;
@@ -10640,7 +10804,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }catch(_){}
 
       // ★ 教學進度/抽號/管理模式不顯示工具列
-      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw');
+      document.querySelector('.controls-row')?.classList.toggle('hidden', m==='taskboard' || m==='progress' || m==='draw' || m==='manage' || m==='hw');
 
       if(state.mode === 'list') renderStudents(elSelect.value); // 只影響「座位」模式
       saveSession('toggle stage in list');
@@ -12235,9 +12399,12 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         ghost.className = 'seat-drag-ghost';
         ghost.innerHTML = d.tile.innerHTML;
         const origin=d.tile.getBoundingClientRect();
-        ghost.style.setProperty('--pickup-x',(origin.left-e.clientX-4)+'px');
-        ghost.style.setProperty('--pickup-y',(origin.top-e.clientY-4)+'px');
         document.body.appendChild(ghost);
+        // 以卡片右下角對齊鼠標／觸控點，尺寸只在拿起時計算。
+        d.anchorX = ghost.offsetWidth;
+        d.anchorY = ghost.offsetHeight;
+        ghost.style.setProperty('--pickup-x',(origin.left-e.clientX+d.anchorX)+'px');
+        ghost.style.setProperty('--pickup-y',(origin.top-e.clientY+d.anchorY)+'px');
         d.ghost = ghost;
         requestAnimationFrame(() => ghost.classList.add('visible'));
         d.tile.classList.add('dragging-src');
@@ -12247,8 +12414,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(e.cancelable)e.preventDefault();
       // 定位幽靈
       if (d.ghost) {
-        d.ghost.style.left = (e.clientX + 4) + 'px';
-        d.ghost.style.top  = (e.clientY + 4) + 'px';
+        d.ghost.style.left = (e.clientX - d.anchorX) + 'px';
+        d.ghost.style.top  = (e.clientY - d.anchorY) + 'px';
       }
 
       // 高亮 drop 目標
@@ -13429,6 +13596,225 @@ classes.forEach((cls, idx)=>{
       });
     }
 
+    // BEGIN TASK BOARD MODEL
+    function tbClone(value){ return JSON.parse(JSON.stringify(value)); }
+    function tbId(){ return 'tb-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2); }
+    function ensureTaskBoard(){ return state.taskBoard ||= {library:[],current:null}; }
+    function tbExample(){return {id:tbId(),name:'閱讀・討論・發表',steps:[{id:tbId(),title:'閱讀課文',description:'安靜閱讀，圈出關鍵詞。',durationSec:180},{id:tbId(),title:'小組討論',description:'分享你的發現，一起整理重點。',durationSec:300},{id:tbId(),title:'發表分享',description:'用自己的話說出小組的想法。',durationSec:180}]};}
+    function tbCurrent(){return ensureTaskBoard().current;}
+    function tbStep(){const c=tbCurrent();return c?.steps[c.index] || null;}
+    function tbOwnsTimer(){const c=state.taskBoard?.current,o=state.timer?.taskOwner;return !!(c && c.status==='active' && o?.activityId===c.id && o.stepId===c.steps[c.index]?.id);}
+    function tbCanWrite(){return TabLock.isActive() && !saveHealth.busy;}
+    function tbCommit(){saveSession('taskboard change');renderTaskBoard();}
+    function tbReleaseTimer(){
+      if(state.timer?.taskOwner){stopTimerInterval();state.timer={setSec:300,remainingSec:300,running:false,endAt:0,doneNotified:false};}
+      stopAlarmSound();hideTimerDoneModal();
+    }
+    function tbUseFlow(flow){
+      tbReleaseTimer();
+      ensureTaskBoard().current={...tbClone(flow),id:tbId(),sourceId:flow.id,index:0,status:'ready'};
+      tbCommit();
+    }
+    function tbBeginStep(){
+      const c=tbCurrent(),s=tbStep();if(!c||!s)return;
+      stopTimerInterval();stopAlarmSound();hideTimerDoneModal();
+      c.status='active';
+      state.timer={setSec:s.durationSec||0,remainingSec:s.durationSec||0,running:false,endAt:0,doneNotified:false,taskOwner:{activityId:c.id,stepId:s.id}};
+      if(s.durationSec!==null) startTimer();
+      tbCommit();
+    }
+    async function tbStart(){
+      if(!tbCanWrite())return;
+      const c=tbCurrent();if(!c||c.status==='completed')return;
+      if(c.status==='ready'){
+        const t=state.timer;
+        if(t.running && !tbOwnsTimer()){
+          const endAt=t.endAt;
+          if(!await appConfirm('目前有獨立倒數正在進行。要停止它並開始課堂任務嗎？'))return;
+          if(!tbCanWrite()||tbCurrent()!==c||endAt!==state.timer.endAt)return;
+        }
+        tbBeginStep();return;
+      }
+      if(!tbOwnsTimer()||tbStep().durationSec===null)return;
+      if(state.timer.running)pauseTimer();else startTimer();
+      renderTaskBoard();
+    }
+    function tbNext(){
+      if(!tbCanWrite())return;
+      const c=tbCurrent();if(!c||c.status!=='active')return;
+      if(c.index===c.steps.length-1){tbReleaseTimer();c.status='completed';tbCommit();return;}
+      c.index++;tbBeginStep();
+    }
+    function tbAddMinute(){
+      if(!tbCanWrite()||!tbOwnsTimer()||tbStep().durationSec===null)return;
+      syncTimerFromEndAt();const t=state.timer;
+      t.remainingSec+=60;t.setSec+=60;t.doneNotified=false;
+      if(t.running)t.endAt+=60000;
+      updateTimerDisplay();saveSession('taskboard add time');
+    }
+    function tbRestart(){if(!tbCanWrite()||tbCurrent()?.status!=='completed')return;tbReleaseTimer();tbCurrent().index=0;tbCurrent().status='ready';tbCommit();}
+    function tbSaveDraft(draft,kind){
+      const b=ensureTaskBoard(),c=b.current;
+      if(!c)throw new Error('請先套用流程。');
+      if(state.timer.running&&tbOwnsTimer())throw new Error('請先暫停再編輯。');
+      validateTaskFlow(draft);
+      if(c.status!=='ready'){
+        for(let i=0;i<=c.index;i++)if(JSON.stringify(c.steps[i])!==JSON.stringify(draft.steps[i]))throw new Error('已開始的步驟不能變更，請調整後續步驟。');
+      }
+      if(kind==='update'&&!b.library.some(f=>f.id===c.sourceId))throw new Error('原流程已刪除，請另存新流程。');
+      c.name=draft.name.trim();c.steps=tbClone(draft.steps);
+      if(kind==='update'){
+        const flow=b.library.find(f=>f.id===c.sourceId);if(!flow)throw new Error('原流程已刪除，請另存新流程。');
+        flow.name=c.name;flow.steps=tbClone(c.steps);
+      }
+      if(kind==='new'){
+        const flow={id:tbId(),name:c.name,steps:tbClone(c.steps)};b.library.push(flow);c.sourceId=flow.id;
+      }
+      tbCommit();
+    }
+    // END TASK BOARD MODEL
+
+    // BEGIN TASK BOARD VIEW
+    const tbEl=id=>document.getElementById(id);
+    let tbDraft=null,tbDraftActivity=null,tbDraftRevision=null,tbReturnFocus=null,tbNameAction=null,tbProjectFocus=null;
+    function tbText(id,text){const el=tbEl(id);if(el&&el.textContent!==text)el.textContent=text;}
+    function renderTaskBoard(){
+      const pane=tbEl('taskboard-pane');if(!pane)return;
+      const b=ensureTaskBoard(),c=b.current,s=tbStep(),active=c?.status==='active',completed=c?.status==='completed';
+      const select=tbEl('tb-library'),chosen=select.value;
+      const options=b.library.map(f=>[f.id,f.name]);options.unshift(['example','範例：閱讀 → 討論 → 發表']);
+      const signature=JSON.stringify(options);
+      if(select.dataset.options!==signature){
+        select.replaceChildren(...options.map(([id,name])=>{const o=document.createElement('option');o.value=id;o.textContent=name;return o;}));
+        select.value=options.some(([id])=>id===chosen)?chosen:(c?.sourceId && b.library.some(f=>f.id===c.sourceId)?c.sourceId:'example');select.dataset.options=signature;
+      }
+      tbEl('tb-rename').disabled=select.value==='example';tbEl('tb-delete').disabled=select.value==='example';
+      tbEl('tb-edit').disabled=!c||completed;tbEl('tb-project').disabled=!c;
+      tbText('tb-name',c?.name||'準備今天的課堂');tbText('tb-position',c?`${completed?'已完成':'步驟'} ${completed?c.steps.length:c.index+1} / ${c.steps.length}`:'');
+      tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title',completed?'今天的任務完成了！':s?.title||'閱讀 → 討論 → 發表');
+      tbText('tb-description',completed?'回想一下，今天你學到了什麼？':s?.description||(!c?'選擇共用流程，或新增自己的課堂任務。':''));
+      const timed=s?.durationSec!=null&&!completed;
+      tbEl('tb-clock').hidden=!c||completed;tbEl('tb-time').hidden=!timed;
+      tbText('tb-time',fmtTime(active&&tbOwnsTimer()?state.timer.remainingSec:s?.durationSec||0));
+      const expired=active&&timed&&tbOwnsTimer()&&state.timer.remainingSec===0;
+      tbText('tb-status',!timed?'依老師指示進行':!active?'準備開始':expired?'時間到，等待老師切換':state.timer.running?'倒數中':'已暫停');
+      tbEl('tb-stage').dataset.status=expired?'expired':c?.status||'empty';
+      tbEl('tb-next').hidden=!c||completed;
+      tbText('tb-next',c?(c.steps[c.index+1]?`接下來：${c.steps[c.index+1].title}`:'這是最後一步，完成後一起回顧。'):'');
+      const stepSignature=JSON.stringify([c?.steps,c?.index,c?.status]);
+      if(tbEl('tb-steps').dataset.steps!==stepSignature){
+        tbEl('tb-steps').replaceChildren(...(c?.steps||[]).map((step,i)=>{
+          const li=document.createElement('li'),done=completed||i<c.index,current=!completed&&i===c.index;
+          li.textContent=`${done?'✓ 完成':current?'● 目前':'○ 待進行'} · ${step.title}`;
+          if(current)li.setAttribute('aria-current','step');return li;
+        }));tbEl('tb-steps').dataset.steps=stepSignature;
+      }
+      tbEl('tb-start').hidden=!c||completed||(active&&!timed);
+      tbText('tb-start',active&&state.timer.running?'暫停':active?'繼續':'開始');
+      tbEl('tb-add-minute').hidden=!active||!timed;tbEl('tb-next-button').hidden=!active;
+      tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');tbEl('tb-restart').hidden=!completed;
+      const owner=tbOwnsTimer();tbEl('timer-task-owner').hidden=!owner;
+      tbText('timer-task-label',owner?`課堂任務：${c.name} · ${s.title}`:'');
+      document.querySelectorAll('#timer-pane .timer-presets button,#timer-pane .timer-set input,#timer-pane .timer-set button').forEach(el=>el.disabled=owner);
+      [elTimerStart,elTimerPause,elTimerReset].forEach(el=>{if(el)el.disabled=owner&&s.durationSec===null;});
+    }
+    async function tbProject(){
+      if(!tbCurrent())return;tbProjectFocus=document.activeElement;
+      document.body.classList.add('tb-projecting');tbEl('tb-stage').classList.add('tb-projecting');tbEl('tb-exit').hidden=false;
+      try{await tbEl('tb-stage').requestFullscreen?.();}catch(_){}
+      tbEl('tb-exit').focus();
+    }
+    function tbEndProjection(){
+      document.body.classList.remove('tb-projecting');tbEl('tb-stage').classList.remove('tb-projecting');tbEl('tb-exit').hidden=true;
+      tbProjectFocus?.focus();tbProjectFocus=null;
+    }
+    async function tbExitProjection(){if(document.fullscreenElement===tbEl('tb-stage')){try{await document.exitFullscreen();}catch(_){}}tbEndProjection();}
+    function tbCollectDraft(){
+      tbDraft.name=tbEl('tb-edit-name').value.trim();
+      tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step').forEach((row,i)=>{
+        if(row.dataset.locked==='true')return;
+        const step=tbDraft.steps[i];step.title=row.querySelector('[data-field="title"]').value.trim();step.description=row.querySelector('[data-field="description"]').value;
+        const mins=Number(row.querySelector('[data-field="minutes"]').value),secs=Number(row.querySelector('[data-field="seconds"]').value);
+        const valid=Number.isInteger(mins)&&mins>=0&&Number.isInteger(secs)&&secs>=0&&secs<=59;
+        step.durationSec=row.querySelector('[data-field="timed"]').checked?(valid?mins*60+secs:NaN):null;
+      });
+    }
+    function tbRenderEditor(){
+      const c=tbCurrent();tbEl('tb-edit-steps').replaceChildren(...tbDraft.steps.map((step,i)=>{
+        const locked=c.status!=='ready'&&i<=c.index,row=document.createElement('div');row.className='tb-edit-step';row.dataset.locked=String(locked);
+        row.innerHTML='<div class="tb-step-controls"><strong></strong><button type="button" class="btn" data-action="up">上移</button><button type="button" class="btn" data-action="down">下移</button><button type="button" class="btn" data-action="delete">刪除</button></div><label class="tb-field">任務標題<input class="input" data-field="title" maxlength="160" required></label><label class="tb-field">補充說明<textarea class="input" data-field="description" rows="2" maxlength="2000"></textarea></label><div class="tb-time-fields"><label><input type="checkbox" data-field="timed">倒數計時</label><label><input class="input" type="number" min="0" max="1440" step="1" data-field="minutes">分</label><label><input class="input" type="number" min="0" max="59" step="1" data-field="seconds">秒</label></div>';
+        row.querySelector('strong').textContent=`步驟 ${i+1}${locked?' · 已開始，設定鎖定':''}`;
+        row.querySelector('[data-field="title"]').value=step.title;row.querySelector('[data-field="description"]').value=step.description;
+        row.querySelector('[data-field="timed"]').checked=step.durationSec!==null;
+        row.querySelector('[data-field="minutes"]').value=Math.floor((step.durationSec||0)/60);row.querySelector('[data-field="seconds"]').value=(step.durationSec||0)%60;
+        row.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=locked);
+        row.querySelector('[data-action="up"]').disabled=locked||i===0||(c.status!=='ready'&&i===c.index+1);
+        row.querySelector('[data-action="down"]').disabled=locked||i===tbDraft.steps.length-1;
+        row.querySelector('[data-action="delete"]').disabled=locked||tbDraft.steps.length===1;
+        const timed=row.querySelector('[data-field="timed"]');const update=()=>row.querySelectorAll('input[type="number"]').forEach(el=>el.disabled=locked||!timed.checked);timed.addEventListener('change',update);update();
+        row.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
+          tbCollectDraft();const action=button.dataset.action;
+          if(action==='delete')tbDraft.steps.splice(i,1);else{const j=i+(action==='up'?-1:1);[tbDraft.steps[i],tbDraft.steps[j]]=[tbDraft.steps[j],tbDraft.steps[i]];}
+          tbRenderEditor();tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step')[Math.min(i,tbDraft.steps.length-1)]?.querySelector('button:not(:disabled)')?.focus();
+        }));return row;
+      }));
+    }
+    function tbCloseEditor(){tbEl('tb-editor').close();tbDraft=null;tbReturnFocus?.focus();}
+    async function tbOpenEditor(){
+      if(!tbCanWrite()||!tbCurrent()||tbCurrent().status==='completed')return;
+      if(tbOwnsTimer()&&state.timer.running)pauseTimer();
+      tbReturnFocus=document.activeElement;tbDraft=tbClone(tbCurrent());tbDraftActivity=tbCurrent().id;tbDraftRevision=saveHealth.revision;
+      tbEl('tb-edit-name').value=tbDraft.name;tbEl('tb-editor-error').textContent='';
+      tbEl('tb-update-library').disabled=!ensureTaskBoard().library.some(f=>f.id===tbDraft.sourceId);
+      tbText('tb-editor-hint',tbCurrent().status==='ready'?'修改套用到本次課堂；儲存流程時也會套用本次內容。':'已暫停。已開始的步驟保持原設定，仍可編輯後續任務。');
+      tbRenderEditor();tbEl('tb-editor').showModal();tbEl('tb-edit-name').focus();
+    }
+    function tbSubmitEditor(kind){
+      if(!tbCanWrite())return;
+      try{
+        if(tbCurrent()?.id!==tbDraftActivity||saveHealth.revision!==tbDraftRevision)throw new Error('資料已更新，請取消後重新開啟編輯。');
+        tbCollectDraft();tbSaveDraft(tbDraft,kind);tbCloseEditor();
+      }catch(e){tbText('tb-editor-error',e.message);}
+    }
+    function tbAskName(title,value,action){tbNameAction=action;tbReturnFocus=document.activeElement;tbText('tb-name-title',title);tbEl('tb-name-input').value=value;tbEl('tb-name-dialog').showModal();tbEl('tb-name-input').focus();}
+    tbEl('tb-library').addEventListener('change',renderTaskBoard);
+    tbEl('tb-apply').addEventListener('click',async()=>{
+      if(!tbCanWrite())return;const selected=tbEl('tb-library').value,flow=selected==='example'?tbExample():ensureTaskBoard().library.find(f=>f.id===selected);if(!flow)return;
+      const original=tbCurrent();if(original&&!await appConfirm('套用流程會取代本次課堂，正在進行的任務也會停止。要套用嗎？'))return;
+      if(!tbCanWrite()||tbCurrent()!==original)return;tbUseFlow(flow);
+    });
+    tbEl('tb-new').addEventListener('click',()=>{
+      if(!tbCanWrite())return;
+      tbAskName('新增共用流程','',name=>{const flow={id:tbId(),name,steps:[{id:tbId(),title:'新任務',description:'',durationSec:180}]};ensureTaskBoard().library.push(flow);tbCommit();tbEl('tb-library').value=flow.id;renderTaskBoard();tbText('tb-message','已新增流程，按「套用流程」後可編輯任務。');});
+    });
+    tbEl('tb-rename').addEventListener('click',()=>{
+      if(!tbCanWrite())return;const f=ensureTaskBoard().library.find(f=>f.id===tbEl('tb-library').value);if(!f)return;
+      tbAskName('重新命名流程',f.name,name=>{if(ensureTaskBoard().library.includes(f)){f.name=name;tbCommit();}});
+    });
+    tbEl('tb-delete').addEventListener('click',async()=>{
+      if(!tbCanWrite())return;const b=ensureTaskBoard(),f=b.library.find(f=>f.id===tbEl('tb-library').value);if(!f)return;
+      if(await appConfirm(`刪除流程「${f.name}」？本次課堂仍會保留。`)&&tbCanWrite()&&ensureTaskBoard()===b){b.library=b.library.filter(x=>x.id!==f.id);if(b.current?.sourceId===f.id)b.current.sourceId=null;tbCommit();}
+    });
+    tbEl('tb-name-form').addEventListener('submit',e=>{e.preventDefault();const name=tbEl('tb-name-input').value.trim();if(!name||!tbCanWrite())return;tbNameAction?.(name);tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
+    tbEl('tb-name-cancel').addEventListener('click',()=>{tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
+    tbEl('tb-edit').addEventListener('click',tbOpenEditor);tbEl('tb-editor-close').addEventListener('click',tbCloseEditor);
+    tbEl('tb-editor').addEventListener('cancel',e=>{e.preventDefault();tbCloseEditor();});
+    tbEl('tb-editor-form').addEventListener('submit',e=>{e.preventDefault();tbSubmitEditor('current');});
+    tbEl('tb-save-library').addEventListener('click',()=>tbSubmitEditor('new'));tbEl('tb-update-library').addEventListener('click',()=>tbSubmitEditor('update'));
+    tbEl('tb-add-step').addEventListener('click',()=>{tbCollectDraft();tbDraft.steps.push({id:tbId(),title:'',description:'',durationSec:180});tbRenderEditor();tbEl('tb-edit-steps').lastElementChild.querySelector('[data-field="title"]').focus();});
+    tbEl('tb-project').addEventListener('click',tbProject);tbEl('tb-exit').addEventListener('click',tbExitProjection);
+    tbEl('tb-start').addEventListener('click',tbStart);tbEl('tb-next-button').addEventListener('click',tbNext);tbEl('tb-add-minute').addEventListener('click',tbAddMinute);tbEl('tb-restart').addEventListener('click',tbRestart);
+    document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('tb-projecting'))tbEndProjection();});
+    document.addEventListener('keydown',e=>{
+      if(!document.body.classList.contains('tb-projecting'))return;
+      if(e.key==='Escape'){e.preventDefault();tbExitProjection();}
+      if(e.key==='Tab'){
+        const buttons=[...tbEl('tb-stage').querySelectorAll('button')].filter(b=>!b.hidden&&!b.disabled),first=buttons[0],last=buttons.at(-1);
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+      }
+    });
+    // END TASK BOARD VIEW
+
     /* ====== ⏳ 倒數計時 ====== */
     let timerInterval = null;
 
@@ -13474,6 +13860,8 @@ classes.forEach((cls, idx)=>{
       const t = ensureTimerState();
       syncTimerFromEndAt();
       if(elTimerDisplay) elTimerDisplay.textContent = fmtTime(t.remainingSec);
+
+      renderTaskBoard();
 
       // 更新圓形進度環
       if(elTimerRingFg){
@@ -13527,6 +13915,7 @@ classes.forEach((cls, idx)=>{
     }
 
     function setTimerSeconds(sec){
+      if(tbOwnsTimer())return;
       const t = ensureTimerState();
       sec = Math.max(0, Math.floor(Number(sec) || 0));
       t.setSec = sec;
@@ -13548,6 +13937,7 @@ classes.forEach((cls, idx)=>{
     }
 
     function startTimer(){
+      if(tbOwnsTimer()&&tbStep().durationSec===null)return;
       const t = ensureTimerState();
       if(t.running) return;
       if(t.remainingSec<=0) t.remainingSec = t.setSec || 0;
@@ -13764,6 +14154,11 @@ function onTimerDone(){
       stopTimerInterval();
       updateTimerDisplay();
 
+      if(tbOwnsTimer()){
+        // 短提示音；任務板內顯示時間到，不開遮擋內容的彈窗。
+        try{playAlarmSound();setTimeout(stopAlarmSound,950);}catch(_){}
+        saveSession('timer done');return;
+      }
       // 顯示設定時長資訊
       const totalSet = t.setSec || 0;
       if(elTimerDoneSub){
@@ -14213,7 +14608,7 @@ function onTimerDone(){
         const touchMode=e.pointerType==='touch';
         let touchReady=!touchMode,ended=false;
         const startX=e.clientX,startY=e.clientY,pointerId=e.pointerId;
-        let dragging=false,over=null,preview=null;
+        let dragging=false,over=null,preview=null,anchorX=0,anchorY=0;
         const ids=groupDragIds(cls,s.id);
         const finish=(event,cancelled=false)=>{
           if(ended || (event.pointerId!=null && event.pointerId!==pointerId)) return;
@@ -14273,17 +14668,18 @@ function onTimerDone(){
 
             preview=dragPreview;
             const origin=mem.getBoundingClientRect();
-            // 預覽內卡片的 padding 為 (8,12)，游標終點留 4px 間距。
-            preview.style.setProperty('--pickup-x',`${origin.left-ev.clientX-4}px`);
-            preview.style.setProperty('--pickup-y',`${origin.top-ev.clientY-4}px`);
-            preview.style.left=`${ev.clientX-4}px`;
-            preview.style.top=`${ev.clientY-8}px`;
             document.body.appendChild(preview);
+            // 對齊最上層姓名卡右下角，不把背卡及陰影留白算入。
+            const frontCard=preview.querySelector('.grp-drag-stack__card');
+            anchorX=frontCard.offsetLeft+frontCard.offsetWidth;
+            anchorY=frontCard.offsetTop+frontCard.offsetHeight;
+            preview.style.setProperty('--pickup-x',`${origin.left-ev.clientX+anchorX-frontCard.offsetLeft}px`);
+            preview.style.setProperty('--pickup-y',`${origin.top-ev.clientY+anchorY-frontCard.offsetTop}px`);
             setGroupPanelCollapsed(true);
             document.querySelectorAll('#group-pane .grp-member').forEach(el=>el.classList.toggle('grp-drag-source',ids.includes(el.dataset.id)));
           }
-          preview.style.left=`${ev.clientX-4}px`;
-          preview.style.top=`${ev.clientY-8}px`;
+          preview.style.left=`${ev.clientX-anchorX}px`;
+          preview.style.top=`${ev.clientY-anchorY}px`;
           const target=groupDropTarget(ev.clientX,ev.clientY);
           hoverGroupPanel(target);
           if(target!==over){over?.classList.remove('dragover');over=target;over?.classList.add('dragover');}
@@ -14895,13 +15291,14 @@ function onTimerDone(){
 
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
+      if(m!=='taskboard'&&document.body.classList.contains('tb-projecting'))tbExitProjection();
       if(state.mode==='seat' || m==='seat')resetSeatPanel();
       if(state.mode==='group' || m==='group') resetGroupPanel();
       if(m!=='hw')setHWGrading(false);
       if(state.mode === 'manage' && m !== 'manage' && manageEditMode) applyManageEdits();
       // ★ 無資料時，只允許切到 list、timer 和 manage
       const hasData = state.classOrder && state.classOrder.length > 0;
-      if(!hasData && m!=='list' && m!=='timer' && m!=='manage'){
+      if(!hasData && m!=='list' && m!=='timer' && m!=='manage' && m!=='taskboard'){
         m = 'list'; // 強制回到列表(歡迎引導)
       }
       // ★ 同步 body.no-data 狀態
@@ -14918,6 +15315,7 @@ function onTimerDone(){
       document.querySelector('.layout')?.classList.toggle('sidebar-off', m!=='list' && m!=='violations');
       document.querySelector('.controls-row')?.classList.toggle('hidden', m==='progress' || m==='draw' || m==='manage' || m==='hw' || m==='violations' || m==='warning');
 
+      document.getElementById('mode-taskboard')?.classList.toggle('active',m==='taskboard');
       // 模式按鈕狀態
       elModeManage?.classList.toggle('active', m==='manage');
       elModeProgress?.classList.toggle('active', m==='progress');
@@ -14931,7 +15329,7 @@ function onTimerDone(){
       elModeGroup?.classList.toggle('active', m==='group');
       // ★ 更多選單按鈕同步
       const _moreBtn = document.getElementById('mode-more');
-      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時'};
+      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 課堂任務板'};
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
@@ -14968,6 +15366,7 @@ function onTimerDone(){
       elWarningPane?.classList.toggle('hidden', m!=='warning');
       elDrawPane.classList.toggle('hidden', m!=='draw');
       elTimerPane?.classList.toggle('hidden', m!=='timer');
+      document.getElementById('taskboard-pane')?.classList.toggle('hidden',m!=='taskboard');
       elGroupPane?.classList.toggle('hidden', m!=='group');
       elManagePane?.classList.toggle('hidden', m!=='manage');
 
@@ -14980,6 +15379,7 @@ function onTimerDone(){
       else if(m==='warning'){ renderWarning(); }
       else if(m==='draw'){ renderDraw(cls); }
       else if(m==='timer'){ renderTimerUI(); }
+      else if(m==='taskboard'){renderTimerUI();renderTaskBoard();}
       else if(m==='group'){ renderGroup(cls); }
       else if(m==='manage'){ renderManage(); }
 
@@ -14992,6 +15392,7 @@ function onTimerDone(){
     document.getElementById('mode-seat-more')?.addEventListener('click', ()=> setMode('seat'));
     document.getElementById('mode-hw').addEventListener('click', ()=> setMode('hw'));
     document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
+    document.getElementById('mode-taskboard')?.addEventListener('click',()=>setMode('taskboard'));
     document.getElementById('mode-timer')?.addEventListener('click', ()=> setMode('timer'));
     document.getElementById('mode-group')?.addEventListener('click', ()=> setMode('group'));
     document.getElementById('mode-manage')?.addEventListener('click', ()=> setMode('manage'));
@@ -18163,6 +18564,7 @@ elProgAdd?.addEventListener('click', ()=>{
     /* ===== ★ 離開前自動暫存狀態 ===== */
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') saveSessionNow();
+      else if(state.timer?.running)updateTimerDisplay();
     });
     window.addEventListener('pagehide', () => saveSessionNow());
     window.addEventListener('beforeunload', ()=> saveSessionNow());
