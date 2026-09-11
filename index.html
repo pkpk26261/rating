@@ -9089,6 +9089,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             // ★ 智慧標頭偵測（自動跳過標題列）
             const headerRowIdx = detectHeaderRow(rows);
             const header=rows[headerRowIdx].map(v=>String(v||'').replace(/^\uFEFF/, '').trim());
+            const systemHeader=classSystemHeader(header);
             if(isSyncImport && (!header.some(h=>/^(姓名|學生姓名|name|student)$/i.test(h)) ||
               (findSeatColumnIndex(header)<0 && findIdColumnIndex(header)<0))){
               throw new Error(`${sheetName} 缺少學生姓名、座號或學號欄位，尚未覆蓋本機資料。`);
@@ -9120,7 +9121,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
               className = syncNameMap[className];
             }
 
-            const classIdx = findClassColumnIndex(header);
+            const classIdx = findClassColumnIndex(systemHeader);
             const classNameByRaw = new Map();
             const resolveClassName = (rawName)=>{
               const requested = String(rawName || className || '').trim();
@@ -9152,25 +9153,25 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             const classMeta = parseClassMetaRows(rows, headerRowIdx);
             if(typeof classMeta.className === 'string' && classMeta.className.trim()) className = classMeta.className.trim();
 
-            const idIdx=findIdColumnIndex(header);
-            const seatIdx=findSeatColumnIndex(header);
-            const nameIdx=findNameColumnIndex(header);
-            const scoreIdx=findScoreColumnIndex(header);
-            const noteIdx=findNoteColumnIndex(header);
-            const noteHiddenIdx=header.findIndex(h=>String(h||'').trim()==='備註預設隱藏');
+            const idIdx=findIdColumnIndex(systemHeader);
+            const seatIdx=findSeatColumnIndex(systemHeader);
+            const nameIdx=findNameColumnIndex(systemHeader);
+            const scoreIdx=findScoreColumnIndex(systemHeader);
+            const noteIdx=findNoteColumnIndex(systemHeader);
+            const noteHiddenIdx=systemHeader.findIndex(h=>String(h||'').trim()==='備註預設隱藏');
 
-            const seatRIdx = header.findIndex(h => h === COL.R);
-            const seatCIdx = header.findIndex(h => h === COL.C);
-            const groupIdx = header.findIndex(h => /^分組$/i.test(String(h||"").trim()));
-            const violLateIdx = header.findIndex(h => /^遲到$/i.test(String(h||"").trim()));
-            const violMissingIdx = header.findIndex(h => /^缺交$/i.test(String(h||"").trim()));
-            const violClassroomIdx = header.findIndex(h => /^吵鬧$/i.test(String(h||"").trim()));
-            const violOtherIdx = header.findIndex(h => /^其他$/i.test(String(h||"").trim()));
-            const violEntriesIdx = header.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
-            const violSpecialEntriesIdx = header.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
-            const violPendingIdx = header.findIndex(h => /^待處理$/i.test(String(h||"").trim()));
-            const titleIdx = header.findIndex(h => /^幹部職稱$|^幹部$|^職稱$|^cadres?$|^titles?$/i.test(String(h||"").trim()));
-            const nameColorIdx = header.findIndex(h => /^姓名顏色$|^名字顏色$|^name\s*colou?r$/i.test(String(h||"").trim()));
+            const seatRIdx = systemHeader.findIndex(h => h === COL.R);
+            const seatCIdx = systemHeader.findIndex(h => h === COL.C);
+            const groupIdx = systemHeader.findIndex(h => /^分組$/i.test(String(h||"").trim()));
+            const violLateIdx = systemHeader.findIndex(h => /^遲到$/i.test(String(h||"").trim()));
+            const violMissingIdx = systemHeader.findIndex(h => /^缺交$/i.test(String(h||"").trim()));
+            const violClassroomIdx = systemHeader.findIndex(h => /^吵鬧$/i.test(String(h||"").trim()));
+            const violOtherIdx = systemHeader.findIndex(h => /^其他$/i.test(String(h||"").trim()));
+            const violEntriesIdx = systemHeader.findIndex(h => /^違規記事$/i.test(String(h||"").trim()));
+            const violSpecialEntriesIdx = systemHeader.findIndex(h => /^特殊記事$/i.test(String(h||"").trim()));
+            const violPendingIdx = systemHeader.findIndex(h => /^待處理$/i.test(String(h||"").trim()));
+            const titleIdx = systemHeader.findIndex(h => /^幹部職稱$|^幹部$|^職稱$|^cadres?$|^titles?$/i.test(String(h||"").trim()));
+            const nameColorIdx = systemHeader.findIndex(h => /^姓名顏色$|^名字顏色$|^name\s*colou?r$/i.test(String(h||"").trim()));
 
             /* ★ 作業欄偵測：
                找「分數」與「小計」之間所有非系統保留欄位，全部當作作業欄
@@ -9183,7 +9184,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 violLateIdx, violMissingIdx, violClassroomIdx, violOtherIdx, violEntriesIdx, violSpecialEntriesIdx, violPendingIdx
               ].filter(x=>x>=0));
               const endCols = new Set();
-              header.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
+              systemHeader.forEach((h,i)=>{ if(/^(小計|平均|sum|avg|average|total)$/i.test(String(h).trim())) endCols.add(i); });
               const firstEnd = endCols.size ? Math.min(...endCols) : header.length;
               for(let i = scoreIdx + 1; i < firstEnd; i++){
                 if(reserved.has(i)) continue;
@@ -10148,6 +10149,33 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       while(result.length && !result[result.length-1].length) result.pop();
       return JSON.stringify(result);
     }
+    function gsDownloadSheetNames(sheets, knownNames={}, requiredNames={}){
+      for(const name of Object.keys(requiredNames)){
+        if(!Object.hasOwn(sheets,name) || !Array.isArray(sheets[name]) || !sheets[name].length)
+          throw new Error(name+' 的同步分頁遺失、為空或損壞，未覆蓋本機資料。');
+      }
+      return Object.keys(sheets).filter(name=>{
+        const rows=sheets[name];
+        if(name==='__CLASS_META__') return false;
+        if(Object.hasOwn(knownNames,name) && (!Array.isArray(rows) || !rows.length))
+          throw new Error(name+' 的同步分頁內容為空或損壞，未覆蓋本機資料。');
+        if(!Array.isArray(rows) || !rows.length) return false;
+        // Apps Script 也會讀回試算表中的私人分頁；只匯入系統資料。
+        // 已登錄的同步分頁仍交給完整解析驗證，不能把損壞資料靜默略過。
+        if(Object.hasOwn(knownNames,name)) return true;
+        const header=(rows[0] || []).map(v=>String(v??'').trim());
+        return (header[0] || '').replace(/\s+/g,'')==='教學進度' ||
+          (header.includes('姓名') && header.includes('座號'));
+      });
+    }
+    function classSystemHeader(header){
+      const prefix=['學號','座號','姓名','幹部職稱','姓名顏色','備註','加扣分'];
+      const tail=['小計','平均','分組','座位列','座位欄','遲到','缺交','吵鬧','其他','違規記事','特殊記事','待處理'];
+      const end=header.lastIndexOf('小計');
+      if(!prefix.every((h,i)=>header[i]===h) || !tail.every((h,i)=>header[end+i]===h)) return header;
+      // 自訂作業可以叫「缺交」「小計」「班級」；以報表結構區分同名欄。
+      return header.map((h,i)=>i>=prefix.length && i<end ? '' : h);
+    }
     function appendSyncSupplement(sheets, progressNames={}){
       // 試算表仍保留可編輯的資料表；補充快照保留表格無法表達的完整狀態。
       const projections = Object.fromEntries(Object.entries(sheets).filter(([name])=>name!=='__CLASS_META__'));
@@ -10403,12 +10431,14 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         // ★ 先從 __CLASS_META__ 分頁還原幹部選項
         const metaRows = sheetsObj['__CLASS_META__'];
         const syncNameMap = {};
+        const registeredSheetNames = {};
         const syncCadreOptions = {};
         if(Array.isArray(metaRows)){
           metaRows.slice(1).forEach(row=>{
             const cls = String(row[0] || '').trim();
             const raw = String(row[1] || '').trim();
             if(!cls) return;
+            registeredSheetNames[safeSheetName(cls)] = true;
             syncNameMap[safeSheetName(cls)] = cls;
             syncNameMap[cls] = cls;
             if(!raw) return;
@@ -10424,7 +10454,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           if(!syncNameMap[safeSheetName(name)]) syncNameMap[safeSheetName(name)] = name;
           if(!syncNameMap[name]) syncNameMap[name] = name;
         });
-        const names = Object.keys(sheetsObj).filter(n => n !== '__CLASS_META__' && Array.isArray(sheetsObj[n]) && sheetsObj[n].length);
+        const names = gsDownloadSheetNames(sheetsObj, {...syncNameMap,...syncSupplement?.projections}, {...registeredSheetNames,...syncSupplement?.projections});
         let imported=false;
         if(names.length === 0){
           if(!syncSupplement || syncSupplement.backup.data.classOrder.length || syncSupplement.backup.data.progress.order.length || !syncSupplement.backup.data.taskBoard)throw new Error('試算表沒有可匯入的完整資料。');
