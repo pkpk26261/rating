@@ -6563,6 +6563,71 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       .tb-actions .btn{flex:1;min-width:120px;}.tb-dialog{padding:16px;}.tb-steps li{font-size:14px;}
     }
     @media(prefers-reduced-motion:reduce){#taskboard-pane *, .tb-dialog *{animation:none !important;transition:none !important;}}
+    /* 任務與即時倒數集中在同一個視覺焦點。 */
+    .tb-stage{gap:16px;min-height:600px;background:var(--bg);}
+    .tb-heading{padding-bottom:12px;gap:8px 16px;}
+    .tb-heading h2{font-size:clamp(18px,1.7vw,26px);}
+    .tb-focus{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px;padding:24px 0;}
+    .tb-copy{width:100%;min-width:0;}
+    .tb-copy h3{font-size:clamp(48px,7.2vw,132px);font-weight:850;letter-spacing:-.025em;margin:8px 0 14px;line-height:1.12;text-wrap:balance;}
+    #tb-description{max-width:60ch;margin:0 auto;font-size:clamp(20px,2vw,32px);line-height:1.45;}
+    .tb-clock{border:0;padding:0;width:100%;}
+    #tb-time{font-size:clamp(88px,12vw,184px);line-height:1;font-weight:800;color:var(--accent);letter-spacing:-.035em;}
+    #tb-status{margin-top:10px;font-size:clamp(16px,1.5vw,22px);}
+    .tb-stage[data-status="active"] #tb-status::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:9px;}
+    .tb-next{padding:10px 16px;border:0;border-top:1px solid var(--line);border-radius:0;text-align:center;font-size:clamp(16px,1.5vw,23px);color:var(--muted);}
+    .tb-steps{justify-content:center;gap:6px;}
+    .tb-steps li{padding:5px 10px;font-size:13px;border:0;background:transparent;}
+    .tb-actions .btn{min-height:48px;min-width:120px;}
+    .tb-stage.tb-projecting{padding:clamp(20px,2.5vw,40px);min-height:0;}
+    @media(max-width:700px){
+      .tb-stage{min-height:0;gap:12px;}.tb-focus{gap:20px;padding:20px 0;}.tb-copy h3{font-size:clamp(42px,10vw,68px);}.tb-clock{border:0;padding:0;}#tb-time{font-size:clamp(88px,21vw,128px);}
+      .tb-heading{padding-bottom:10px;}.tb-heading .tb-eyebrow{width:auto;}.tb-heading h2{flex-basis:70%;}.tb-heading #tb-position{margin-left:auto;}
+      .tb-next{padding:10px 0;}.tb-steps li{padding:4px 6px;font-size:12px;}.tb-actions{gap:8px;}.tb-actions .btn{font-size:15px;min-width:120px;}
+    }
+    @media(max-height:700px) and (min-width:701px){
+      .tb-stage.tb-projecting{gap:10px;padding:20px 28px;}.tb-stage.tb-projecting .tb-focus{gap:10px;padding:8px 0;}.tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,7vw,94px);margin-bottom:8px;}.tb-stage.tb-projecting #tb-time{font-size:clamp(80px,11vw,136px);}.tb-stage.tb-projecting #tb-description{font-size:22px;}
+    }
+    #tb-title{width:100%;white-space:nowrap;overflow:hidden;text-wrap:nowrap;}
+    #tb-title-text{display:inline-block;white-space:nowrap;max-width:none;vertical-align:top;}
+    #tb-title[data-overflow="true"]{text-align:left;}
+    #tb-title[data-overflow="true"] #tb-title-text{animation:tb-title-pan var(--tb-title-duration,12s) linear infinite alternate;}
+    @keyframes tb-title-pan{0%,12%{transform:translateX(0);}88%,100%{transform:translateX(var(--tb-title-travel));}}
+    @media(prefers-reduced-motion:reduce){#tb-title[data-overflow="true"]{overflow-x:auto;}#tb-title-text{animation:none !important;}}
+    /* 任務板設定：流程選用、逐步編輯與單一完成入口。 */
+    .tb-preparation{align-items:center;justify-content:space-between;padding:20px 24px;border:1px solid var(--line);border-radius:18px;background:var(--card);gap:16px;}
+    .tb-preparation-title{min-width:0;flex:1;}.tb-preparation h2{font-size:22px;margin:6px 0;overflow-wrap:anywhere;}.tb-preparation p{margin:0;font-size:13px;color:var(--muted);}
+    .tb-prep-actions{display:flex;gap:8px;flex-wrap:wrap;}.tb-prep-actions .btn{min-height:44px;}
+    #tb-library-dialog{max-width:640px;}#tb-library-dialog #tb-library{max-width:none;width:100%;}
+    .tb-library-cards{display:grid;gap:12px;margin:20px 0;}.tb-flow-card{display:flex;align-items:flex-start;border:1px solid var(--line);border-radius:14px;background:var(--bg);position:relative;}.tb-flow-card:focus-within{border-color:var(--accent);}.tb-flow-use{min-width:0;flex:1;border:0;background:none;color:var(--text);text-align:left;padding:20px;display:grid;gap:8px;cursor:pointer;font:inherit;border-radius:14px;}.tb-flow-use:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);}.tb-flow-use strong{font-size:18px;overflow-wrap:anywhere;}.tb-flow-use>span{font-size:14px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}.tb-flow-use small{font-size:12px;color:var(--muted);}.tb-flow-menu{flex:none;position:relative;margin:8px;}.tb-flow-menu>summary{display:grid;place-items:center;list-style:none;cursor:pointer;width:44px;height:44px;font-size:22px;border-radius:8px;}.tb-flow-menu>summary::-webkit-details-marker{display:none;}.tb-flow-menu>div{position:absolute;right:0;top:44px;z-index:2;background:var(--card);border:1px solid var(--line);padding:6px;border-radius:10px;box-shadow:0 8px 24px #0003;display:grid;min-width:120px;gap:4px;}.tb-flow-menu .btn{min-height:44px;}
+    .tb-flow-preview{list-style:none;padding:0;display:grid;gap:8px;margin:20px 0;}.tb-flow-preview li{display:flex;justify-content:space-between;gap:20px;padding:14px;border-radius:10px;background:var(--bg);}.tb-flow-preview li span:first-child{min-width:0;overflow-wrap:anywhere;}.tb-flow-preview li span:last-child{color:var(--muted);white-space:nowrap;}
+    .tb-library-tools summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--muted);}.tb-library-tools summary::before{content:'⋯';margin-right:8px;}
+    #tb-editor{padding:0;max-width:760px;}#tb-editor-form{padding:24px;}#tb-editor .tb-editor-head{align-items:start;}#tb-editor .tb-editor-head h2{margin:0 0 6px;}#tb-editor .tb-editor-head p{margin:0;}
+    .tb-editor-overview{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 12px;flex-wrap:wrap;}#tb-editor-total{font-size:13px;color:var(--muted);}
+    #tb-editor .tb-edit-step{padding:0;overflow:hidden;background:var(--bg);margin:10px 0;}
+    .tb-edit-step>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:52px;cursor:pointer;box-sizing:border-box;}.tb-edit-step>summary::-webkit-details-marker{display:none;}
+    .tb-step-number{display:grid;place-items:center;width:28px;height:28px;flex:none;border:1px solid var(--line);border-radius:50%;font-variant-numeric:tabular-nums;}.tb-step-name{font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.tb-step-duration{color:var(--muted);font-size:13px;white-space:nowrap;}.tb-step-expand{color:var(--muted);}.tb-edit-step[open] .tb-step-expand{transform:rotate(180deg);}
+    .tb-edit-step[open]{border-color:var(--accent);}.tb-step-body{padding:0 18px 18px;border-top:1px solid var(--line);}.tb-step-body .tb-field{font-size:14px;margin-top:16px;}.tb-optional{display:contents;color:var(--muted);font-size:12px;}
+    #tb-editor .tb-time-fields{display:block;margin-top:18px;}#tb-editor .tb-time-presets{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px;}#tb-editor .tb-time-presets .btn{min-width:64px;}#tb-editor .tb-time-presets [aria-pressed="true"]{outline:2px solid var(--accent);}
+    .tb-custom-time{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.tb-custom-time>span{font-size:13px;color:var(--muted);margin-right:4px;}#tb-editor .tb-custom-time input{width:80px !important;min-width:0 !important;flex:none;}
+    .tb-step-controls{border-top:1px solid var(--line);padding-top:12px;margin-top:16px;}.tb-step-controls>span{font-size:12px;color:var(--muted);margin-right:auto;}.tb-step-controls .btn{font-size:13px;}.tb-step-delete{margin-left:auto;}
+    .tb-step-locked{font-size:13px;color:var(--muted);line-height:1.6;}.tb-step-error{color:var(--bad);font-size:13px;}.tb-step-error:empty{display:none;}
+    #tb-add-step{width:100%;border-style:dashed;margin:4px 0 12px;}
+    .tb-save-settings{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}.tb-save-settings .hint{margin:0;}
+    .tb-editor-submit{position:sticky;bottom:-24px;margin:16px -24px -24px;padding:16px 24px;background:var(--card);border-top:1px solid var(--line);}.tb-editor-submit .btn{min-width:150px;}
+    @media(max-width:700px){.tb-preparation{padding:16px;}.tb-preparation-title{flex-basis:100%;}.tb-prep-actions{width:100%;}.tb-prep-actions .btn{flex:1;padding:8px 10px;}#tb-editor-form{padding:18px;}.tb-editor-submit{bottom:-18px;margin:16px -18px -18px;padding:12px 18px;}.tb-editor-submit .btn{width:100%;}.tb-step-body{padding:0 12px 12px;}.tb-edit-step>summary{padding:12px;gap:8px;}.tb-step-controls{gap:6px;}.tb-step-controls>span{width:100%;}.tb-step-controls .btn{flex:1;}.tb-step-delete{margin-left:0;}}
+    .tb-dialog .hint{display:block !important;line-height:1.5;}
+    .tb-dialog .hint[hidden]{display:none !important;}
+    #taskboard-pane [hidden]{display:none !important;}
+    .tb-welcome{max-width:960px;margin:32px auto;padding:clamp(20px,4vw,48px);border:1px solid var(--line);border-radius:24px;background:var(--card);}
+    .tb-welcome h2{font-size:clamp(26px,3vw,36px);margin:10px 0 14px;line-height:1.35;}.tb-welcome-intro{color:var(--muted);line-height:1.7;margin:0;}
+    .tb-setup-path{display:flex;gap:20px;list-style:none;padding:0;margin:28px 0;flex-wrap:wrap;color:var(--muted);font-size:14px;}.tb-setup-path li{display:flex;align-items:center;gap:8px;}.tb-setup-path span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);}.tb-setup-path li:first-child{color:var(--accent);font-weight:700;}
+    .tb-welcome-options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}.tb-welcome-option{min-width:0;border:1px solid var(--line);border-radius:16px;padding:24px;background:var(--bg);display:flex;flex-direction:column;align-items:flex-start;gap:12px;}.tb-welcome-option h3{font-size:19px;margin:0;}.tb-welcome-option p{font-size:14px;color:var(--muted);line-height:1.7;margin:0 0 8px;}.tb-welcome-option .btn{margin-top:auto;min-height:44px;}.tb-welcome-tag{font-size:12px;color:var(--accent);letter-spacing:.04em;}.tb-welcome-saved{border-top:1px solid var(--line);margin-top:24px;padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}.tb-welcome-saved p{margin:0;color:var(--muted);font-size:14px;}
+    @media(max-width:700px){.tb-welcome{margin:16px 0;}.tb-welcome-options{grid-template-columns:1fr;}.tb-welcome-option{padding:20px;}.tb-welcome-option .btn{width:100%;}.tb-setup-path{gap:12px;font-size:12px;}}
+    #tb-preparation{display:flex;justify-content:center;align-items:center;gap:8px;padding:0;margin:0 0 16px;background:none;border:0;border-radius:0;flex-wrap:wrap;}
+    #tb-preparation>.btn{min-height:44px;flex:none;}#tb-preparation .tb-current-flow{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:min(420px,100%);min-width:180px;}
+    #tb-prep-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+    @media(max-width:500px){#tb-preparation .tb-current-flow{flex-basis:100%;max-width:100%;}#tb-preparation>#tb-edit,#tb-preparation>#tb-project{flex:1;}}
     /* END TASK BOARD STYLE */
 
   </style>
@@ -6721,7 +6786,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <input id="rows-input" type="number" class="input" min="1" max="9" value="6" aria-label="列數">
           <span>×</span>
           <input id="cols-input" type="number" class="input" min="1" max="9" value="6" aria-label="欄數">
-          <button id="btn-auto" class="btn">自動排位 ↖</button>
+          <button id="btn-auto" class="btn" data-preserve-symbols>自動排位 ↖</button>
           <button id="btn-random-fill" class="btn">隨機入座</button>
           <button id="btn-clear" class="btn">清空</button>
           <span id="seat-hint" class="hint"></span>
@@ -6826,20 +6891,25 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
         <!-- BEGIN TASK BOARD UI -->
         <section id="taskboard-pane" class="hidden" aria-label="課堂任務板">
-          <div class="tb-toolbar">
-            <label class="tb-library-label">共用流程庫<select id="tb-library" class="input" aria-label="共用流程庫"></select></label>
-            <button class="btn" id="tb-apply">套用流程</button>
-            <button class="btn" id="tb-new">新增流程</button>
-            <button class="btn" id="tb-rename">重新命名</button>
-            <button class="btn" id="tb-delete">刪除流程</button>
-            <span class="tb-toolbar-spacer"></span>
-            <button class="btn" id="tb-edit">編輯任務</button>
-            <button class="btn primary" id="tb-project">開始投影</button>
+          <div id="tb-welcome" class="tb-welcome" aria-labelledby="tb-welcome-title">
+            <span class="tb-eyebrow">課堂任務板</span>
+            <h2 id="tb-welcome-title">先選擇今天的流程</h2>
+            <p class="tb-welcome-intro">把課堂安排成幾個步驟，學生就能看見目前任務與剩餘時間。</p>
+            <ol class="tb-setup-path" aria-label="準備步驟"><li><span>1</span>選擇流程</li><li><span>2</span>調整任務</li><li><span>3</span>開始投影</li></ol>
+            <div class="tb-welcome-options">
+              <div class="tb-welcome-option"><span class="tb-welcome-tag">第一次使用，從這裡開始</span><h3>閱讀 → 討論 → 發表</h3><p>閱讀 3 分鐘、討論 5 分鐘、發表 3 分鐘。<br>套用後可以自由調整，倒數不會自動開始。</p><button class="btn primary" id="tb-welcome-example">套用範例流程</button></div>
+              <div class="tb-welcome-option"><span class="tb-welcome-tag">依照你的教學安排</span><h3>建立自己的流程</h3><p>填入任務和時間，排出今天的課堂步驟。<br>儲存後，下次上課也能再次使用。</p><button class="btn" id="tb-welcome-new">建立新流程</button></div>
+            </div>
+            <div id="tb-welcome-saved" class="tb-welcome-saved" hidden><p>已經準備好流程了？從流程庫接著開始。</p><button class="btn" id="tb-welcome-library">選擇已儲存的流程</button></div>
           </div>
-          <div id="tb-stage" class="tb-stage">
+          <div id="tb-preparation" class="tb-toolbar tb-preparation" hidden>
+            <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
+            <button class="btn" id="tb-edit">編輯任務</button><button class="btn primary" id="tb-project">開始並投影</button>
+          </div>
+          <div id="tb-stage" class="tb-stage" hidden>
             <header class="tb-heading"><span class="tb-eyebrow">今天要做什麼</span><h2 id="tb-name">準備今天的課堂</h2><span id="tb-position"></span></header>
             <div class="tb-focus">
-              <div class="tb-copy"><div class="tb-eyebrow" id="tb-current-label">目前任務</div><h3 id="tb-title">閱讀 → 討論 → 發表</h3><p id="tb-description">從上方選擇流程，或建立自己的課堂任務。</p></div>
+              <div class="tb-copy"><div class="tb-eyebrow" id="tb-current-label">目前任務</div><h3 id="tb-title"><span id="tb-title-text">閱讀 → 討論 → 發表</span></h3><p id="tb-description">從上方選擇流程，或建立自己的課堂任務。</p></div>
               <div class="tb-clock" id="tb-clock"><div id="tb-time" role="timer" aria-label="剩餘時間">03:00</div><div id="tb-status" role="status" aria-live="polite">準備開始</div></div>
             </div>
             <div id="tb-next" class="tb-next"></div>
@@ -6850,15 +6920,21 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <p id="tb-message" class="tb-message" role="status" aria-live="polite"></p>
           </div>
         </section>
+        <dialog id="tb-library-dialog" class="tb-dialog" aria-labelledby="tb-library-title">
+          <div class="tb-editor-head"><div><h2 id="tb-library-title">今天用哪個流程？</h2><p class="hint">點一下即可套用，之後還能調整。</p></div><button class="btn" id="tb-library-close">關閉</button></div>
+          <div id="tb-library-cards" class="tb-library-cards"></div>
+          <div class="tb-editor-footer"><button class="btn" id="tb-new">＋ 建立新流程</button></div>
+        </dialog>
         <dialog id="tb-editor" class="tb-dialog" aria-labelledby="tb-editor-title">
-          <form id="tb-editor-form">
-            <div class="tb-editor-head"><h2 id="tb-editor-title">編輯本次課堂</h2><button class="btn" id="tb-editor-close" type="button">取消</button></div>
-            <label class="tb-field">活動名稱<input id="tb-edit-name" class="input" required maxlength="100"></label>
-            <p id="tb-editor-hint" class="hint">本次修改不會自動覆寫共用流程。</p>
+          <form id="tb-editor-form" novalidate>
+            <div class="tb-editor-head"><div><h2 id="tb-editor-title">設定今天的任務</h2><p id="tb-editor-hint" class="hint">依序填入任務與時間，完成後就能投影。</p></div><button class="btn" id="tb-editor-close" type="button">取消</button></div>
+            <label class="tb-field">這堂課的名稱<input id="tb-edit-name" class="input" placeholder="例如：國語第三課・閱讀與討論" required maxlength="100"></label>
+            <div class="tb-editor-overview"><strong>課堂步驟</strong><span id="tb-editor-total"></span></div>
             <div id="tb-edit-steps"></div>
-            <button class="btn" id="tb-add-step" type="button">新增步驟</button>
+            <button class="btn" id="tb-add-step" type="button">新增一個步驟</button>
+            <div class="tb-save-settings"><label class="tb-field">這次設定要存在哪裡？<select id="tb-save-mode" class="input"><option value="current">只調整今天這堂課</option><option value="update">同步更新原本的共用流程</option><option value="new">另存一套共用流程，下次再用</option></select></label><p id="tb-save-hint" class="hint">共用流程保持原樣。</p></div>
             <p id="tb-editor-error" role="alert"></p>
-            <div class="tb-editor-footer"><button class="btn" id="tb-save-library" type="button">另存新流程</button><button class="btn" id="tb-update-library" type="button">更新原流程</button><button class="btn primary" type="submit">套用本次課堂</button></div>
+            <div class="tb-editor-footer tb-editor-submit"><button class="btn primary" id="tb-editor-done" type="submit">完成設定</button></div>
           </form>
         </dialog>
         <dialog id="tb-name-dialog" class="tb-dialog tb-name-dialog" aria-labelledby="tb-name-title"><form id="tb-name-form"><h2 id="tb-name-title">流程名稱</h2><label class="tb-field">名稱<input id="tb-name-input" class="input" required maxlength="100"></label><div class="tb-editor-footer"><button class="btn" type="button" id="tb-name-cancel">取消</button><button class="btn primary" type="submit">儲存</button></div></form></dialog>
@@ -7606,7 +7682,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         <p id="backup-message" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7"></p>
         <div id="backup-preview" hidden>
           <p id="backup-summary" style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7"></p>
-          <p>確認後會取代目前全部班級、成績、座位、記事、分組、抽號紀錄與教學進度。倒數計時會以備份剩餘時間暫停。</p>
+          <p>確認後會取代目前全部班級、成績、座位、記事、分組、抽號紀錄、教學進度與課堂任務板。倒數計時會以備份剩餘時間暫停。</p>
           <p>還原後暫停自動上傳與開啟時雲端載入；確認資料後，可手動同步恢復。Google 連線設定與密碼不包含在備份內。</p>
           <button id="backup-before-export" type="button" class="btn">先下載目前資料的完整備份</button>
           <label style="display:flex;gap:8px;align-items:flex-start;margin:16px 0"><input id="backup-ack" type="checkbox">我了解還原會取代目前全部資料</label>
@@ -10074,7 +10150,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard'])state[key]=d[key];
           state.savedScores={};state.savedHW={};state.legacyScores={};state.warningThreshold=d.warningThreshold??60;
           resetHWGridHistory();renderClassOptions([]);elSelect.value='';setMode('taskboard');saveSession('after import taskboard');imported=true;
-        }else{ 
+        }else{
         // 將下載資料組成單一 workbook（每分頁=一個班級），再餵給既有 handleFiles 解析
         const wb = XLSX.utils.book_new();
         for(const name of names){
@@ -10356,7 +10432,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const students = d.classOrder.reduce((n,c)=>n+d.classMap[c].length,0);
         const pages = d.progress.order.length;
         const items = d.progress.order.reduce((n,p)=>n+d.progress.pages[p].items.filter(i=>i.type!=='topic').length,0);
-        document.getElementById('backup-summary').textContent = `檔案：${file.name}\n備份時間：${new Date(pendingFullBackup.createdAt).toLocaleString('zh-TW')}\n備份內容：${d.classOrder.length} 個班級、${students} 位學生、${pages} 個課程、${items} 項進度\n班級：${d.classOrder.join('、') || '無'}\n目前資料：${state.classOrder.length} 個班級、${state.classOrder.reduce((n,c)=>n+(state.classMap[c]?.length||0),0)} 位學生（將被取代）`;
+        document.getElementById('backup-summary').textContent = `檔案：${file.name}\n備份時間：${new Date(pendingFullBackup.createdAt).toLocaleString('zh-TW')}\n備份內容：${d.classOrder.length} 個班級、${students} 位學生、${pages} 個課程、${items} 項進度、${d.taskBoard?.library?.length||0} 套共用流程${d.taskBoard?.current?'、含本次課堂':''}\n班級：${d.classOrder.join('、') || '無'}\n目前資料：${state.classOrder.length} 個班級、${state.classOrder.reduce((n,c)=>n+(state.classMap[c]?.length||0),0)} 位學生（將被取代）`;
         backupMessage.textContent = '格式檢查通過，尚未還原。'; backupPreview.hidden = false;
       }catch(error){
         if(version !== backupReadVersion) return;
@@ -12511,29 +12587,22 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     /* ===== 全域自訂 Pointer 拖曳系統 結束 ===== */
 
     /* ★ 自動排位方向循環：共 4 種模式 */
+    // 箭頭表示 1 號學生的起始角落；同欄排完再移到下一欄。
     const AUTO_ARRANGE_MODES = [
-      { key:'rl-up', label:'自動排位 ↖', next:'lr-up',
-        sort:(a,b,rows,cols)=>{
-          // 右→左，下→上（預設）：先按欄倒序，同欄按列倒序
-          if(a.c !== b.c) return b.c - a.c; return b.r - a.r; } },
-      { key:'lr-up', label:'自動排位 ↗', next:'lr-down',
-        sort:(a,b,rows,cols)=>{
-          // 左→右，下→上：先按欄正序，同欄按列倒序
-          if(a.c !== b.c) return a.c - b.c; return b.r - a.r; } },
-      { key:'lr-down', label:'自動排位 ↘', next:'rl-down',
-        sort:(a,b,rows,cols)=>{
-          // 左→右，上→下：先按欄正序，同欄按列正序
-          if(a.c !== b.c) return a.c - b.c; return a.r - b.r; } },
-      { key:'rl-down', label:'自動排位 ↙', next:'rl-up',
-        sort:(a,b,rows,cols)=>{
-          // 右→左，上→下：先按欄倒序，同欄按列正序
-          if(a.c !== b.c) return b.c - a.c; return a.r - b.r; } },
+      { key:'lr-down', label:'自動排位 ↖', next:'rl-down',
+        sort:(a,b)=> a.c !== b.c ? a.c - b.c : a.r - b.r },
+      { key:'rl-down', label:'自動排位 ↗', next:'rl-up',
+        sort:(a,b)=> a.c !== b.c ? b.c - a.c : a.r - b.r },
+      { key:'rl-up', label:'自動排位 ↘', next:'lr-up',
+        sort:(a,b)=> a.c !== b.c ? b.c - a.c : b.r - a.r },
+      { key:'lr-up', label:'自動排位 ↙', next:'lr-down',
+        sort:(a,b)=> a.c !== b.c ? a.c - b.c : b.r - a.r },
     ];
     let _autoArrangeIdx = 0;
 
     function autoArrange(cls){
       const mode = AUTO_ARRANGE_MODES[_autoArrangeIdx];
-      const st=ensureSeatState(cls); const list=(state.classMap[cls]||[]).slice();
+      const st=ensureSeatState(cls); const list=(state.classMap[cls]||[]).slice().sort((a,b)=>Number(a.seat)-Number(b.seat));
       const {rows, cols} = getCurrentRowsCols(cls); const coords=[];
       const disabledSet = new Set(st.disabled||[]);
       for(let r=1;r<=rows;r++){ for(let c=1;c<=cols;c++){ if(!disabledSet.has(r+'-'+c)) coords.push({r,c}); } }
@@ -13672,33 +13741,53 @@ classes.forEach((cls, idx)=>{
       }
       tbCommit();
     }
+    function tbCreateFlow(draft){
+      validateTaskFlow(draft);
+      const flow={id:tbId(),name:draft.name.trim(),steps:tbClone(draft.steps)};
+      ensureTaskBoard().library.push(flow);tbUseFlow(flow);
+    }
+    function tbPlanSummary(steps){
+      const seconds=steps.reduce((n,s)=>n+(Number.isFinite(s.durationSec)?s.durationSec:0),0);
+      const untimed=steps.filter(s=>s.durationSec===null).length;
+      const time=seconds?`${Math.floor(seconds/60)?Math.floor(seconds/60)+' 分':''}${seconds%60?seconds%60+' 秒':''}`:'0 分';
+      return `${steps.length} 個步驟 · 計時共 ${time}${untimed?` · ${untimed} 步不計時`:''}`;
+    }
     // END TASK BOARD MODEL
 
     // BEGIN TASK BOARD VIEW
     const tbEl=id=>document.getElementById(id);
-    let tbDraft=null,tbDraftActivity=null,tbDraftRevision=null,tbReturnFocus=null,tbNameAction=null,tbProjectFocus=null;
-    function tbText(id,text){const el=tbEl(id);if(el&&el.textContent!==text)el.textContent=text;}
+    let tbDraft=null,tbDraftActivity=null,tbDraftRevision=null,tbReturnFocus=null,tbNameAction=null,tbProjectFocus=null,tbCreating=false,tbExpandedId=null;
+    function tbText(id,text){const el=tbEl(id);if(el&&el.textContent!==text){el.textContent=text;if(id==='tb-title-text')requestAnimationFrame(tbFitTitle);}}
+    function tbFitTitle(){
+      const heading=tbEl('tb-title'),text=tbEl('tb-title-text');
+      if(!heading||!text||!heading.clientWidth)return;
+      const travel=Math.max(0,text.scrollWidth-heading.clientWidth);
+      const signature=`${heading.clientWidth}:${text.scrollWidth}:${text.textContent}`;
+      if(heading.dataset.fit===signature)return;
+      heading.dataset.fit=signature;heading.dataset.overflow=String(travel>1);
+      heading.style.setProperty('--tb-title-travel',`${-travel}px`);
+      const speed=Math.max(40,parseFloat(getComputedStyle(text).fontSize)*.9);
+      heading.style.setProperty('--tb-title-duration',`${Math.max(8,travel/speed+4)}s`);
+    }
     function renderTaskBoard(){
       const pane=tbEl('taskboard-pane');if(!pane)return;
       const b=ensureTaskBoard(),c=b.current,s=tbStep(),active=c?.status==='active',completed=c?.status==='completed';
-      const select=tbEl('tb-library'),chosen=select.value;
-      const options=b.library.map(f=>[f.id,f.name]);options.unshift(['example','範例：閱讀 → 討論 → 發表']);
-      const signature=JSON.stringify(options);
-      if(select.dataset.options!==signature){
-        select.replaceChildren(...options.map(([id,name])=>{const o=document.createElement('option');o.value=id;o.textContent=name;return o;}));
-        select.value=options.some(([id])=>id===chosen)?chosen:(c?.sourceId && b.library.some(f=>f.id===c.sourceId)?c.sourceId:'example');select.dataset.options=signature;
-      }
-      tbEl('tb-rename').disabled=select.value==='example';tbEl('tb-delete').disabled=select.value==='example';
+      tbEl('tb-welcome').hidden=!!c;tbEl('tb-preparation').hidden=!c;tbEl('tb-stage').hidden=!c;
+      tbEl('tb-welcome-saved').hidden=b.library.length===0;
+      tbText('tb-prep-name',c?.name||'先選一套流程，開始準備');
+      tbEl('tb-library-open').setAttribute('aria-label',c?`選擇流程：${c.name}`:'選擇流程');
+      if(tbEl('tb-library-dialog').open)tbRenderLibraryCards();
       tbEl('tb-edit').disabled=!c||completed;tbEl('tb-project').disabled=!c;
+      tbText('tb-project',completed?'查看投影':active&&state.timer.running?'放大投影':active?'繼續並投影':'開始並投影');
       tbText('tb-name',c?.name||'準備今天的課堂');tbText('tb-position',c?`${completed?'已完成':'步驟'} ${completed?c.steps.length:c.index+1} / ${c.steps.length}`:'');
-      tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title',completed?'今天的任務完成了！':s?.title||'閱讀 → 討論 → 發表');
+      tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title-text',completed?'今天的任務完成了！':s?.title||'閱讀 → 討論 → 發表');
       tbText('tb-description',completed?'回想一下，今天你學到了什麼？':s?.description||(!c?'選擇共用流程，或新增自己的課堂任務。':''));
       const timed=s?.durationSec!=null&&!completed;
       tbEl('tb-clock').hidden=!c||completed;tbEl('tb-time').hidden=!timed;
       tbText('tb-time',fmtTime(active&&tbOwnsTimer()?state.timer.remainingSec:s?.durationSec||0));
       const expired=active&&timed&&tbOwnsTimer()&&state.timer.remainingSec===0;
       tbText('tb-status',!timed?'依老師指示進行':!active?'準備開始':expired?'時間到，等待老師切換':state.timer.running?'倒數中':'已暫停');
-      tbEl('tb-stage').dataset.status=expired?'expired':c?.status||'empty';
+      tbEl('tb-stage').dataset.status=expired?'expired':active&&timed&&!state.timer.running?'paused':c?.status||'empty';
       tbEl('tb-next').hidden=!c||completed;
       tbText('tb-next',c?(c.steps[c.index+1]?`接下來：${c.steps[c.index+1].title}`:'這是最後一步，完成後一起回顧。'):'');
       const stepSignature=JSON.stringify([c?.steps,c?.index,c?.status]);
@@ -13710,7 +13799,7 @@ classes.forEach((cls, idx)=>{
         }));tbEl('tb-steps').dataset.steps=stepSignature;
       }
       tbEl('tb-start').hidden=!c||completed||(active&&!timed);
-      tbText('tb-start',active&&state.timer.running?'暫停':active?'繼續':'開始');
+      tbText('tb-start',active&&state.timer.running?'暫停':active?'繼續倒數':'開始任務');
       tbEl('tb-add-minute').hidden=!active||!timed;tbEl('tb-next-button').hidden=!active;
       tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');tbEl('tb-restart').hidden=!completed;
       const owner=tbOwnsTimer();tbEl('timer-task-owner').hidden=!owner;
@@ -13722,6 +13811,7 @@ classes.forEach((cls, idx)=>{
       if(!tbCurrent())return;tbProjectFocus=document.activeElement;
       document.body.classList.add('tb-projecting');tbEl('tb-stage').classList.add('tb-projecting');tbEl('tb-exit').hidden=false;
       try{await tbEl('tb-stage').requestFullscreen?.();}catch(_){}
+      if(tbCanWrite()&&tbCurrent()?.status!=='completed' && (tbCurrent()?.status==='ready'||tbOwnsTimer()&&!state.timer.running&&tbStep()?.durationSec!==null))await tbStart();
       tbEl('tb-exit').focus();
     }
     function tbEndProjection(){
@@ -13739,69 +13829,125 @@ classes.forEach((cls, idx)=>{
         step.durationSec=row.querySelector('[data-field="timed"]').checked?(valid?mins*60+secs:NaN):null;
       });
     }
+    function tbRenderLibraryCards(){
+      const library=ensureTaskBoard().library,list=tbEl('tb-library-cards'),signature=JSON.stringify(library);
+      if(list.dataset.flows===signature)return;list.dataset.flows=signature;
+      list.replaceChildren(...[{...tbExample(),id:'example',name:'閱讀 → 討論 → 發表'},...library].map(flow=>{
+        const row=document.createElement('div');row.className='tb-flow-card';
+        const use=document.createElement('button');use.type='button';use.className='tb-flow-use';use.dataset.flow=flow.id;
+        const name=document.createElement('strong'),steps=document.createElement('span'),time=document.createElement('small');
+        name.textContent=flow.name;steps.textContent=flow.steps.map(s=>s.title).join(' → ');time.textContent=(flow.id==='example'?'範例 · ':'')+tbPlanSummary(flow.steps);
+        use.append(name,steps,time);use.addEventListener('click',()=>tbApplyFlow(flow.id));row.append(use);
+        if(flow.id!=='example'){
+          const menu=document.createElement('details'),summary=document.createElement('summary');menu.className='tb-flow-menu';summary.textContent='⋯';summary.setAttribute('aria-label',`管理「${flow.name}」`);menu.append(summary);
+          const actions=document.createElement('div');
+          for(const [label,action] of [['重新命名',()=>tbRenameFlow(flow.id)],['刪除',()=>tbDeleteFlow(flow.id)]]){const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.addEventListener('click',action);actions.append(button);}
+          menu.append(actions);row.append(menu);
+        }return row;
+      }));
+    }
+    function tbLibraryTrigger(){return tbCurrent()?tbEl('tb-library-open'):tbEl('tb-welcome-library');}
+    function tbCloseLibrary(){tbEl('tb-library-dialog').close();tbLibraryTrigger().focus();}
+    function tbRefreshEditorSummary(){
+      tbText('tb-editor-total',tbPlanSummary(tbDraft.steps));
+      tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step').forEach((row,i)=>{
+        const step=tbDraft.steps[i];row.querySelector('.tb-step-name').textContent=step.title||'尚未填寫任務';
+        row.querySelector('.tb-step-duration').textContent=step.durationSec===null?'不計時':Number.isFinite(step.durationSec)?fmtTime(step.durationSec):'請設定時間';
+        row.querySelectorAll('[data-minutes]').forEach(b=>b.setAttribute('aria-pressed',String(step.durationSec===Number(b.dataset.minutes)*60)));
+      });
+    }
     function tbRenderEditor(){
-      const c=tbCurrent();tbEl('tb-edit-steps').replaceChildren(...tbDraft.steps.map((step,i)=>{
-        const locked=c.status!=='ready'&&i<=c.index,row=document.createElement('div');row.className='tb-edit-step';row.dataset.locked=String(locked);
-        row.innerHTML='<div class="tb-step-controls"><strong></strong><button type="button" class="btn" data-action="up">上移</button><button type="button" class="btn" data-action="down">下移</button><button type="button" class="btn" data-action="delete">刪除</button></div><label class="tb-field">任務標題<input class="input" data-field="title" maxlength="160" required></label><label class="tb-field">補充說明<textarea class="input" data-field="description" rows="2" maxlength="2000"></textarea></label><div class="tb-time-fields"><label><input type="checkbox" data-field="timed">倒數計時</label><label><input class="input" type="number" min="0" max="1440" step="1" data-field="minutes">分</label><label><input class="input" type="number" min="0" max="59" step="1" data-field="seconds">秒</label></div>';
-        row.querySelector('strong').textContent=`步驟 ${i+1}${locked?' · 已開始，設定鎖定':''}`;
+      const c=tbCreating?null:tbCurrent();tbEl('tb-edit-steps').replaceChildren(...tbDraft.steps.map((step,i)=>{
+        const locked=!!(c&&c.status!=='ready'&&i<=c.index),row=document.createElement('details');row.className='tb-edit-step';row.dataset.locked=String(locked);row.open=step.id===tbExpandedId;
+        row.innerHTML='<summary><span class="tb-step-number"></span><span class="tb-step-name"></span><span class="tb-step-duration"></span><span class="tb-step-expand" aria-hidden="true">⌄</span></summary><div class="tb-step-body"><p class="tb-step-locked" hidden>這一步已開始，內容與時間已鎖定；需要延長請回到任務板加時。</p><label class="tb-field">學生要做什麼？<input class="input" data-field="title" placeholder="例如：閱讀課文、兩人討論、分享答案" maxlength="160" required></label><label class="tb-field">補充說明 <span class="tb-optional">選填</span><textarea class="input" data-field="description" rows="2" placeholder="例如：第 12–14 頁，圈出關鍵詞" maxlength="2000"></textarea></label><div class="tb-time-fields"><label class="tb-timed-toggle"><input type="checkbox" data-field="timed">這一步需要倒數計時</label><div class="tb-time-settings"><div class="tb-time-presets" aria-label="常用時間"><button type="button" class="btn" data-minutes="1">1 分</button><button type="button" class="btn" data-minutes="3">3 分</button><button type="button" class="btn" data-minutes="5">5 分</button><button type="button" class="btn" data-minutes="10">10 分</button></div><div class="tb-custom-time"><span>自訂時間</span><label><input class="input" type="number" min="0" max="1440" step="1" inputmode="numeric" data-field="minutes">分</label><label><input class="input" type="number" min="0" max="59" step="1" inputmode="numeric" data-field="seconds">秒</label></div></div><p class="hint tb-untimed-hint" hidden>這一步由老師按「下一步」結束，不顯示倒數。</p></div><p class="tb-step-error" role="alert"></p><div class="tb-step-controls"><span>調整順序</span><button type="button" class="btn" data-action="up">上移</button><button type="button" class="btn" data-action="down">下移</button><button type="button" class="btn tb-step-delete" data-action="delete">刪除步驟</button></div></div>';
+        row.querySelector('.tb-step-number').textContent=String(i+1);
+        row.querySelector('.tb-step-locked').hidden=!locked;
         row.querySelector('[data-field="title"]').value=step.title;row.querySelector('[data-field="description"]').value=step.description;
         row.querySelector('[data-field="timed"]').checked=step.durationSec!==null;
         row.querySelector('[data-field="minutes"]').value=Math.floor((step.durationSec||0)/60);row.querySelector('[data-field="seconds"]').value=(step.durationSec||0)%60;
         row.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=locked);
-        row.querySelector('[data-action="up"]').disabled=locked||i===0||(c.status!=='ready'&&i===c.index+1);
+        row.querySelector('[data-action="up"]').disabled=locked||i===0||(c&&c.status!=='ready'&&i===c.index+1);
         row.querySelector('[data-action="down"]').disabled=locked||i===tbDraft.steps.length-1;
         row.querySelector('[data-action="delete"]').disabled=locked||tbDraft.steps.length===1;
-        const timed=row.querySelector('[data-field="timed"]');const update=()=>row.querySelectorAll('input[type="number"]').forEach(el=>el.disabled=locked||!timed.checked);timed.addEventListener('change',update);update();
+        const timed=row.querySelector('[data-field="timed"]');const update=()=>{
+          row.querySelector('.tb-time-settings').hidden=!timed.checked;row.querySelector('.tb-untimed-hint').hidden=timed.checked;
+          row.querySelectorAll('input[type="number"], [data-minutes]').forEach(el=>el.disabled=locked||!timed.checked);
+        };timed.addEventListener('change',()=>{update();tbCollectDraft();tbRefreshEditorSummary();});update();
+        row.addEventListener('input',()=>{tbCollectDraft();tbRefreshEditorSummary();row.querySelector('.tb-step-error').textContent='';});
+        row.addEventListener('toggle',()=>{if(row.isConnected&&row.open){tbExpandedId=step.id;tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step').forEach(other=>{if(other!==row)other.open=false;});}});
+        row.querySelectorAll('[data-minutes]').forEach(button=>button.addEventListener('click',()=>{
+          row.querySelector('[data-field="minutes"]').value=button.dataset.minutes;row.querySelector('[data-field="seconds"]').value=0;tbCollectDraft();tbRefreshEditorSummary();
+          row.querySelectorAll('[data-minutes]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+        }));
         row.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
           tbCollectDraft();const action=button.dataset.action;
-          if(action==='delete')tbDraft.steps.splice(i,1);else{const j=i+(action==='up'?-1:1);[tbDraft.steps[i],tbDraft.steps[j]]=[tbDraft.steps[j],tbDraft.steps[i]];}
-          tbRenderEditor();tbEl('tb-edit-steps').querySelectorAll('.tb-edit-step')[Math.min(i,tbDraft.steps.length-1)]?.querySelector('button:not(:disabled)')?.focus();
+          if(action==='delete'){tbDraft.steps.splice(i,1);tbExpandedId=tbDraft.steps[Math.min(i,tbDraft.steps.length-1)].id;}else{const j=i+(action==='up'?-1:1);[tbDraft.steps[i],tbDraft.steps[j]]=[tbDraft.steps[j],tbDraft.steps[i]];}
+          tbRenderEditor();tbEl('tb-edit-steps').querySelector('details[open] summary')?.focus();
         }));return row;
-      }));
+      }));tbRefreshEditorSummary();
     }
-    function tbCloseEditor(){tbEl('tb-editor').close();tbDraft=null;tbReturnFocus?.focus();}
-    async function tbOpenEditor(){
-      if(!tbCanWrite()||!tbCurrent()||tbCurrent().status==='completed')return;
+    function tbCloseEditor(){tbEl('tb-editor').close();tbDraft=null;tbCreating=false;tbReturnFocus?.focus();}
+    function tbSetSaveHint(){
+      tbText('tb-save-hint',tbCreating?'建立後會切換到新流程，並保存在流程庫供下次使用。':tbEl('tb-save-mode').value==='current'?'只更改今天這堂課，共用流程保持原樣。':tbEl('tb-save-mode').value==='update'?'今天的調整也會存回原本的共用流程，下次套用就會使用新版。':'今天的調整會另存為一套流程，原本的流程保持原樣。');
+    }
+    function tbShowEditor(creating){
+      if(!tbCanWrite()||!creating&&(!tbCurrent()||tbCurrent().status==='completed'))return;
       if(tbOwnsTimer()&&state.timer.running)pauseTimer();
-      tbReturnFocus=document.activeElement;tbDraft=tbClone(tbCurrent());tbDraftActivity=tbCurrent().id;tbDraftRevision=saveHealth.revision;
+      tbReturnFocus=creating?(tbCurrent()?tbEl('tb-library-open'):tbEl('tb-welcome-new')):tbEl('tb-edit');tbCreating=creating;
+      tbDraft=creating?{id:tbId(),name:'',steps:[{id:tbId(),title:'',description:'',durationSec:180}]}:tbClone(tbCurrent());
+      tbDraftActivity=tbCurrent()?.id||null;tbDraftRevision=saveHealth.revision;
+      tbExpandedId=tbDraft.steps[!creating&&tbCurrent().status==='active'?Math.min(tbCurrent().index+1,tbDraft.steps.length-1):0].id;
+      tbText('tb-editor-title',creating?'建立課堂流程':'設定今天的任務');tbText('tb-editor-done',creating?'建立並使用':'完成設定');
       tbEl('tb-edit-name').value=tbDraft.name;tbEl('tb-editor-error').textContent='';
-      tbEl('tb-update-library').disabled=!ensureTaskBoard().library.some(f=>f.id===tbDraft.sourceId);
-      tbText('tb-editor-hint',tbCurrent().status==='ready'?'修改套用到本次課堂；儲存流程時也會套用本次內容。':'已暫停。已開始的步驟保持原設定，仍可編輯後續任務。');
+      const mode=tbEl('tb-save-mode');mode.querySelector('[value="update"]').disabled=creating||!ensureTaskBoard().library.some(f=>f.id===tbDraft.sourceId);mode.value=creating?'new':'current';mode.disabled=creating;mode.closest('label').hidden=creating;tbSetSaveHint();
+      tbText('tb-editor-hint',creating?'填好任務與時間，再建立流程；取消不會留下空白流程。':tbCurrent().status==='ready'?'點開步驟即可調整，完成後就能投影。':'已暫停倒數。已開始的步驟保持原設定，仍可編輯後續任務。');
       tbRenderEditor();tbEl('tb-editor').showModal();tbEl('tb-edit-name').focus();
     }
+    async function tbOpenEditor(){tbShowEditor(false);}
     function tbSubmitEditor(kind){
       if(!tbCanWrite())return;
       try{
-        if(tbCurrent()?.id!==tbDraftActivity||saveHealth.revision!==tbDraftRevision)throw new Error('資料已更新，請取消後重新開啟編輯。');
-        tbCollectDraft();tbSaveDraft(tbDraft,kind);tbCloseEditor();
+        if((tbCurrent()?.id||null)!==tbDraftActivity||saveHealth.revision!==tbDraftRevision)throw new Error('資料已更新，請取消後重新開啟編輯。');
+        tbCollectDraft();
+        if(!tbDraft.name.trim()){tbEl('tb-edit-name').focus();throw new Error('請先填寫這堂課的名稱。');}
+        for(let i=0;i<tbDraft.steps.length;i++){
+          const step=tbDraft.steps[i],row=tbEl('tb-edit-steps').children[i];let error='';
+          if(!step.title.trim())error='請填寫學生要做的任務。';
+          else if(step.durationSec!==null&&(!Number.isInteger(step.durationSec)||step.durationSec<1||step.durationSec>86400))error='請設定 1 秒至 24 小時的時間，或取消倒數計時。';
+          if(error){row.open=true;row.querySelector('.tb-step-error').textContent=error;row.querySelector(step.title.trim()?'[data-field="minutes"]':'[data-field="title"]').focus();throw new Error(`步驟 ${i+1} 還有設定需要完成。`);}
+        }
+        if(tbCreating)tbCreateFlow(tbDraft);else tbSaveDraft(tbDraft,kind);
+        tbCloseEditor();tbEl('tb-edit').focus();tbText('tb-message','設定已完成，可以開始投影。');
       }catch(e){tbText('tb-editor-error',e.message);}
     }
     function tbAskName(title,value,action){tbNameAction=action;tbReturnFocus=document.activeElement;tbText('tb-name-title',title);tbEl('tb-name-input').value=value;tbEl('tb-name-dialog').showModal();tbEl('tb-name-input').focus();}
-    tbEl('tb-library').addEventListener('change',renderTaskBoard);
-    tbEl('tb-apply').addEventListener('click',async()=>{
-      if(!tbCanWrite())return;const selected=tbEl('tb-library').value,flow=selected==='example'?tbExample():ensureTaskBoard().library.find(f=>f.id===selected);if(!flow)return;
+    tbEl('tb-library-open').addEventListener('click',()=>{tbRenderLibraryCards();tbEl('tb-library-dialog').showModal();tbEl('tb-library-cards').querySelector('button')?.focus();});
+    tbEl('tb-welcome-library').addEventListener('click',()=>tbEl('tb-library-open').click());
+    tbEl('tb-welcome-new').addEventListener('click',()=>tbShowEditor(true));
+    tbEl('tb-welcome-example').addEventListener('click',()=>{if(!tbCanWrite()||tbCurrent())return;tbUseFlow(tbExample());tbEl('tb-edit').focus();});
+    tbEl('tb-library-close').addEventListener('click',tbCloseLibrary);
+    tbEl('tb-library-dialog').addEventListener('cancel',e=>{e.preventDefault();tbCloseLibrary();});
+    async function tbApplyFlow(selected){
+      if(!tbCanWrite())return;const flow=selected==='example'?tbExample():ensureTaskBoard().library.find(f=>f.id===selected);if(!flow)return;
       const original=tbCurrent();if(original&&!await appConfirm('套用流程會取代本次課堂，正在進行的任務也會停止。要套用嗎？'))return;
-      if(!tbCanWrite()||tbCurrent()!==original)return;tbUseFlow(flow);
-    });
-    tbEl('tb-new').addEventListener('click',()=>{
-      if(!tbCanWrite())return;
-      tbAskName('新增共用流程','',name=>{const flow={id:tbId(),name,steps:[{id:tbId(),title:'新任務',description:'',durationSec:180}]};ensureTaskBoard().library.push(flow);tbCommit();tbEl('tb-library').value=flow.id;renderTaskBoard();tbText('tb-message','已新增流程，按「套用流程」後可編輯任務。');});
-    });
-    tbEl('tb-rename').addEventListener('click',()=>{
-      if(!tbCanWrite())return;const f=ensureTaskBoard().library.find(f=>f.id===tbEl('tb-library').value);if(!f)return;
+      if(!tbCanWrite()||tbCurrent()!==original)return;tbUseFlow(flow);tbCloseLibrary();tbEl('tb-edit').focus();
+    }
+    tbEl('tb-new').addEventListener('click',()=>{if(!tbCanWrite())return;tbCloseLibrary();tbShowEditor(true);});
+    function tbRenameFlow(id){
+      if(!tbCanWrite())return;const f=ensureTaskBoard().library.find(f=>f.id===id);if(!f)return;
       tbAskName('重新命名流程',f.name,name=>{if(ensureTaskBoard().library.includes(f)){f.name=name;tbCommit();}});
-    });
-    tbEl('tb-delete').addEventListener('click',async()=>{
-      if(!tbCanWrite())return;const b=ensureTaskBoard(),f=b.library.find(f=>f.id===tbEl('tb-library').value);if(!f)return;
+    }
+    async function tbDeleteFlow(id){
+      if(!tbCanWrite())return;const b=ensureTaskBoard(),f=b.library.find(f=>f.id===id);if(!f)return;
       if(await appConfirm(`刪除流程「${f.name}」？本次課堂仍會保留。`)&&tbCanWrite()&&ensureTaskBoard()===b){b.library=b.library.filter(x=>x.id!==f.id);if(b.current?.sourceId===f.id)b.current.sourceId=null;tbCommit();}
-    });
-    tbEl('tb-name-form').addEventListener('submit',e=>{e.preventDefault();const name=tbEl('tb-name-input').value.trim();if(!name||!tbCanWrite())return;tbNameAction?.(name);tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
+    }
+    tbEl('tb-name-form').addEventListener('submit',e=>{e.preventDefault();const name=tbEl('tb-name-input').value.trim();if(!name||!tbCanWrite())return;tbNameAction?.(name);tbEl('tb-name-dialog').close();if(tbReturnFocus?.isConnected)tbReturnFocus.focus();else tbEl('tb-library-cards').querySelector('button')?.focus();});
     tbEl('tb-name-cancel').addEventListener('click',()=>{tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
     tbEl('tb-edit').addEventListener('click',tbOpenEditor);tbEl('tb-editor-close').addEventListener('click',tbCloseEditor);
     tbEl('tb-editor').addEventListener('cancel',e=>{e.preventDefault();tbCloseEditor();});
-    tbEl('tb-editor-form').addEventListener('submit',e=>{e.preventDefault();tbSubmitEditor('current');});
-    tbEl('tb-save-library').addEventListener('click',()=>tbSubmitEditor('new'));tbEl('tb-update-library').addEventListener('click',()=>tbSubmitEditor('update'));
-    tbEl('tb-add-step').addEventListener('click',()=>{tbCollectDraft();tbDraft.steps.push({id:tbId(),title:'',description:'',durationSec:180});tbRenderEditor();tbEl('tb-edit-steps').lastElementChild.querySelector('[data-field="title"]').focus();});
+    tbEl('tb-editor-form').addEventListener('submit',e=>{e.preventDefault();tbSubmitEditor(tbEl('tb-save-mode').value);});
+    tbEl('tb-save-mode').addEventListener('change',tbSetSaveHint);
+    tbEl('tb-add-step').addEventListener('click',()=>{tbCollectDraft();tbDraft.steps.push({id:tbId(),title:'',description:'',durationSec:180});tbExpandedId=tbDraft.steps.at(-1).id;tbRenderEditor();tbEl('tb-edit-steps').lastElementChild.querySelector('[data-field="title"]').focus();});
     tbEl('tb-project').addEventListener('click',tbProject);tbEl('tb-exit').addEventListener('click',tbExitProjection);
     tbEl('tb-start').addEventListener('click',tbStart);tbEl('tb-next-button').addEventListener('click',tbNext);tbEl('tb-add-minute').addEventListener('click',tbAddMinute);tbEl('tb-restart').addEventListener('click',tbRestart);
     document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('tb-projecting'))tbEndProjection();});
@@ -13813,6 +13959,8 @@ classes.forEach((cls, idx)=>{
         if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
       }
     });
+    if(typeof ResizeObserver!=='undefined'){const titleObserver=new ResizeObserver(tbFitTitle);titleObserver.observe(tbEl('tb-title'));titleObserver.observe(tbEl('tb-title-text'));}
+    window.addEventListener('resize',tbFitTitle);
     // END TASK BOARD VIEW
 
     /* ====== ⏳ 倒數計時 ====== */
@@ -18649,10 +18797,10 @@ elProgAdd?.addEventListener('click', ()=>{
       function convert(root){
         if(!root.isConnected) return;
         const element=root.nodeType===1?root:root.parentElement;
-        if(!element || element.closest('script,style,svg,textarea,input,[contenteditable="true"]')) return;
+        if(!element || element.closest('script,style,svg,textarea,input,[contenteditable="true"],[data-preserve-symbols]')) return;
         const elements=root.nodeType===1?[root,...root.querySelectorAll('[title],[aria-label],[placeholder],[data-icon]')]:[];
         for(const el of elements){
-          if(el.closest('svg,script,style')) continue;
+          if(el.closest('svg,script,style,[data-preserve-symbols]')) continue;
           for(const attr of ['title','aria-label','placeholder']){
             const value=el.getAttribute(attr);
             if(value) { const clean=value.replace(emoji,'').trim(); if(clean!==value) el.setAttribute(attr,clean||'操作'); }
@@ -18665,7 +18813,7 @@ elProgAdd?.addEventListener('click', ()=>{
         else { const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); while(walker.nextNode()) nodes.push(walker.currentNode); }
         for(const node of nodes){
           const parent=node.parentElement;
-          if(!parent || parent.closest('script,style,svg,textarea,input,[contenteditable="true"]')) continue;
+          if(!parent || parent.closest('script,style,svg,textarea,input,[contenteditable="true"],[data-preserve-symbols]')) continue;
           const matches=[...node.textContent.matchAll(emoji)];
           if(!matches.length) continue;
           if(parent.closest('option')){ node.textContent=node.textContent.replace(emoji,'').trim(); continue; }
