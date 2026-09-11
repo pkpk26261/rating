@@ -5868,7 +5868,9 @@
     #hw-pane:not(.hw-editing-columns) .hw-col-head{ cursor:default !important; }
     #hw-table .hw-col-head{ gap:8px; min-height:36px; }
     #hw-table .hw-col-name{ white-space:normal; max-width:230px; }
-    #hw-table .hw-seatcell{ gap:3px; }
+    #hw-table .hw-seatcell{ gap:3px; justify-content:center; }
+    #hw-table tr>:nth-child(-n+2){ text-align:center; }
+    #hw-table tr>:nth-child(2){ text-align:left; }
     #hw-table .note-btn{ font-size:12px; width:24px; min-width:24px; }
     #hw-table .hw-empty-message{ padding:40px 20px; text-align:center; color:var(--muted); }
     .welcome-shell{ max-width:880px; margin:20px auto; }
@@ -5998,9 +6000,10 @@
     .grp-card-header{ padding:10px 12px; }
     .grp-card:hover{ transform:none; }
     .grp-member .grp-member-remove{ min-width:32px; min-height:32px; }
-    .hw-student-label{ display:inline-flex; align-items:center; gap:8px; font-size:16px; vertical-align:middle; }
-    #hw-table .hw-student-label .note-indicator{ display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; flex:0 0 1em; font-size:inherit !important; line-height:1; padding:0; margin:0; border:0; border-radius:0; background:none; overflow:visible; }
-    #hw-table .hw-student-label .note-indicator .ui-icon{ width:1em; height:1em; vertical-align:0; }
+    .hw-student-label{ display:flex; align-items:center; justify-content:flex-start; gap:8px; min-width:0; font-size:16px; text-align:left; }
+    .hw-student-label .student-name{ min-width:0; }
+    #hw-table .hw-student-label .note-indicator,.att-student-label .note-indicator{ display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; flex:0 0 1em; font-size:inherit !important; line-height:1; padding:0; margin:0; border:0; border-radius:0; background:none; overflow:visible; }
+    #hw-table .hw-student-label .note-indicator .ui-icon,.att-student-label .note-indicator .ui-icon{ width:1em; height:1em; vertical-align:0; }
 
     /* 分組：自然高度的名單卡片，選取後才顯示集中移動操作。 */
     #group-pane{ width:100%; max-width:1800px; margin-inline:auto; gap:20px; overflow:auto; padding:8px 8px 28px; }
@@ -6726,10 +6729,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     /* END TASK BOARD STYLE */
 
 
-    #attendance-pane{display:flex;flex-direction:column;min-height:0;min-width:0;flex:1;gap:10px;}
+    #attendance-pane{display:flex;flex-direction:column;min-height:0;min-width:0;flex:1;gap:6px;--hw-seat-width:76px;--hw-name-width:132px;}
     #attendance-pane.hidden{display:none;}
     body[data-mode="attendance"] .main>.controls-row{display:none!important;}
-    .att-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;}
+    .att-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0;}
     .att-board-field{display:flex;align-items:center;gap:10px;margin-right:auto;font-weight:700;min-width:0;}
     #att-board-select{width:auto;min-width:160px;max-width:100%;}
     .att-help{margin:0;font-size:13px;color:var(--muted);}
@@ -6738,6 +6741,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-class-picker .class-select-display{inset:0!important;width:100%!important;height:100%!important;padding:0 14px;font-size:14px;font-weight:600;}
     #att-board-select{height:44px;border-radius:10px;background-color:var(--card);border-color:var(--line);}
     .att-summary{display:flex;align-items:center;flex-wrap:wrap;gap:14px;width:fit-content;max-width:100%;font-size:12px;}
+    .att-toolbar .att-summary{margin-right:auto;}
     .att-stat{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
     .att-stat-icon{width:14px;flex-shrink:0;text-align:center;font-size:14px;color:var(--muted);}
     .att-stat-label{color:var(--muted);white-space:nowrap;}
@@ -6746,18 +6750,18 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-stat[data-status="late"] .att-stat-icon{color:var(--warn,#d8a739);}
     .att-scroll{overflow:auto;min-height:0;max-width:100%;border:1px solid var(--line);border-radius:10px;overscroll-behavior:contain;scrollbar-gutter:stable;}
     .att-table{table-layout:fixed;border-collapse:separate;border-spacing:0;}
-    .att-roster-only thead tr{height:61px;}
-    .att-roster-only tbody tr{height:49px;}
-    .att-scroll-empty{display:grid;grid-template-columns:180px minmax(0,1fr);align-items:start;}
+    .att-table thead tr{height:52px;}
+    .att-table tbody tr{height:45px;}
+    .att-scroll-empty{display:grid;grid-template-columns:calc(var(--hw-seat-width) + var(--hw-name-width)) minmax(0,1fr);align-items:start;}
     .att-first-hint{position:sticky;top:85px;margin:85px 0 0;padding:0 24px 24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.8;}
     .att-table,.att-table *,.att-menu,.att-menu *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
-    .att-table th,.att-table td{box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 4px;text-align:center;background:var(--card);}
+    .att-table th,.att-table td{box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0 4px;text-align:center;background:var(--card);}
     .att-table thead th{position:sticky;top:0;z-index:2;vertical-align:top;}
-    .att-table tr>:first-child{position:sticky;left:0;width:60px;z-index:3;vertical-align:middle;}
-    .att-table tr>:nth-child(2){position:sticky;left:60px;width:120px;z-index:3;vertical-align:middle;overflow-wrap:anywhere;}
+    .att-table tr>:first-child{position:sticky;left:0;z-index:3;vertical-align:middle;}
+    .att-table tr>:nth-child(2){position:sticky;z-index:3;vertical-align:middle;}
     .att-table thead th:nth-child(-n+2){z-index:4;}
     .att-table thead .att-selected{box-shadow:inset 0 3px var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
-    .att-column-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;height:56px;min-width:0;padding:5px 0;font:inherit;line-height:1.35;white-space:nowrap;overflow:hidden;background:transparent;color:var(--fg);border:0;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
+    .att-column-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;height:51px;min-width:0;padding:5px 0;font:inherit;line-height:1.35;white-space:nowrap;overflow:hidden;background:transparent;color:var(--fg);border:0;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
     .att-head-date{display:flex;align-items:baseline;justify-content:center;gap:3px;white-space:nowrap;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
     .att-head-weekday{font-size:10px;font-weight:400;color:var(--muted);}
     .att-head-subject{font-size:11px;font-weight:500;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -6787,6 +6791,24 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-menu-item{display:block;width:100%;text-align:left;min-height:44px;padding:8px 12px;color:var(--fg);background:transparent;border:0;border-radius:6px;cursor:pointer;font:inherit;font-size:14px;}
     .att-menu-item:hover{background:color-mix(in srgb,var(--accent) 12%,var(--card));}.att-menu-item.att-danger{color:#c63948;}
     @media(max-width:600px){.att-board-field{flex-basis:100%;}#att-board-select{flex:1;width:auto;}.att-summary{gap:6px 10px;}}
+
+    /* 作業成績與點名板：共用座號、姓名欄位外觀。 */
+    :is(#hw-table,.att-table) tr>:nth-child(-n+2){box-sizing:border-box;padding:9px 12px;font-size:14px;font-weight:400;white-space:normal;overflow-wrap:anywhere;background:var(--card);}
+    :is(#hw-table,.att-table) tbody tr>:nth-child(-n+2){padding-top:0;padding-bottom:0;}
+    :is(#hw-table,.att-table) thead tr>:nth-child(-n+2){height:52px;background:var(--bg);font-weight:600;vertical-align:middle;}
+    :is(#hw-table,.att-table) tr>:first-child{width:var(--hw-seat-width);min-width:var(--hw-seat-width)!important;max-width:var(--hw-seat-width);text-align:center;}
+    :is(#hw-table,.att-table) tr>:nth-child(2){left:var(--hw-seat-width);width:var(--hw-name-width);min-width:var(--hw-name-width)!important;max-width:var(--hw-name-width);text-align:left;box-shadow:2px 0 0 var(--line);}
+    :is(#hw-table,.att-table) .hw-seatcell{gap:3px;justify-content:center;}
+    :is(#hw-table,.att-table) .note-btn{font-size:12px;width:24px;min-width:24px;color:var(--muted);}
+    .att-table tbody tr:last-child>:nth-child(-n+2){border-bottom:0;}
+    @media(max-width:1000px){
+      #attendance-pane{--hw-name-width:112px;}
+      :is(#hw-table,.att-table) .note-btn{min-height:40px;}
+    }
+    @media(max-width:600px){
+      #attendance-pane{--hw-seat-width:64px;--hw-name-width:90px;}
+      :is(#hw-table,.att-table) tr>:nth-child(-n+2){padding:8px;}
+    }
 
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -15947,21 +15969,21 @@ function onTimerDone(){
       if(!data.boards.length){const option=attNode('option','','尚無班級');option.value='';select.append(option);select.disabled=true;}
       for(const b of [...data.boards].sort((a,b)=>compareClassByGrade(a.rosterKey,b.rosterKey))){const option=attNode('option','',attBoardLabel(b));option.value=b.id;option.title=b.rosterKey;select.append(option);}if(board)select.value=board.id;
       select.onchange=()=>{attCleanup();attendanceData().activeBoardId=select.value;saveSession('attendance board select');renderAttendance();};const picker=attNode('span','att-class-picker'),display=attNode('span','class-select-display');select.classList.add('class-color-select');display.setAttribute('aria-hidden','true');display.innerHTML=board?renderClassLabel(board.rosterKey):'尚無班級';picker.append(select,display);label.append(picker);bar.append(label);
-      const add=attendanceButton('＋ 新增點名',()=>attendanceEdit(board.id),'btn att-primary');add.id='att-add-column';add.disabled=!board;bar.append(add);
+      const add=attendanceButton('＋新增',()=>attendanceEdit(board.id),'btn att-primary');add.id='att-add-column';add.disabled=!board;bar.append(add);
       const edit=attendanceButton('編輯點名',()=>{const current=attCurrent();if(current)attendanceEdit(current.id,attView.selected.get(current.id));});edit.id='att-edit-column';edit.disabled=!board?.columns.length;bar.append(edit);
       pane.append(bar);
       document.dispatchEvent(new Event('class-selects-rendered'));
       if(!board){const empty=attNode('div','att-empty');empty.append(attNode('h2','','尚無班級'),attNode('p','','請先在學生管理新增或匯入班級名單，每個班級都會自動有一張點名表。'));pane.append(empty);return;}
       // Keep shared roster-dependent actions consistent while this page uses its own board selector.
       elSelect.value=board.rosterKey;
-      const summary=attNode('div','att-summary');summary.id='att-summary';summary.setAttribute('role','group');summary.setAttribute('aria-label','點名狀態圖例');pane.append(summary);attSummary();
+      const summary=attNode('div','att-summary');summary.id='att-summary';summary.setAttribute('role','group');summary.setAttribute('aria-label','點名狀態圖例');bar.insertBefore(summary,add);attSummary();
       if(board.columns.length){
         if(!board.columns.some(l=>l.id===attView.selected.get(board.id)))attView.selected.set(board.id,board.columns[board.columns.length-1].id);
       }else attView.selected.delete(board.id);
       const students=[...(state.classMap[board.rosterKey]||[])].sort((a,b)=>String(a.seat??'').localeCompare(String(b.seat??''),'zh-Hant',{numeric:true}));
-      const scroller=attNode('div','att-scroll');scroller.dataset.board=board.id;const table=attNode('table','att-table');table.setAttribute('aria-label',attBoardLabel(board)+' 點名板');table.style.width=(180+80*board.columns.length)+'px';
+      const scroller=attNode('div','att-scroll');scroller.dataset.board=board.id;const table=attNode('table','att-table');table.setAttribute('aria-label',attBoardLabel(board)+' 點名板');table.style.width=`calc(var(--hw-seat-width) + var(--hw-name-width) + ${80*board.columns.length}px)`;
       table.classList.toggle('att-roster-only',!board.columns.length);
-      const cg=attNode('colgroup');for(const w of [60,120,...board.columns.map(()=>80)]){const col=attNode('col');col.style.width=w+'px';cg.append(col);}table.append(cg);
+      const cg=attNode('colgroup');for(const w of ['var(--hw-seat-width)','var(--hw-name-width)',...board.columns.map(()=>'80px')]){const col=attNode('col');col.style.width=w;cg.append(col);}table.append(cg);
       const head=table.createTHead().insertRow();for(const text of ['座號','姓名']){const th=attNode('th','',text);th.scope='col';head.append(th);}
       board.columns.forEach((l,index)=>{
         const th=attNode('th');th.scope='col';th.dataset.columnHead=l.id;
@@ -15969,11 +15991,12 @@ function onTimerDone(){
         title.dataset.board=board.id;title.dataset.lesson=l.id;title.setAttribute('aria-haspopup','dialog');attHeaderContent(title,l,index);title.title+='（右鍵或長按編輯）';th.append(title);
         head.append(th);
       });
-      const body=table.createTBody();for(const student of students){const row=body.insertRow();row.insertCell().textContent=student.seat??'';const name=attNode('th','',student.name);name.scope='row';row.append(name);
+      const body=table.createTBody();for(const student of students){const row=body.insertRow();row.innerHTML=renderStudentRosterCells(student,board.rosterKey,true);
+        row.querySelector('.note-btn').onclick=()=>openNoteModal(board.rosterKey,student.id,`${student.seat??''} ${student.name||''}`);
         for(const column of board.columns){const cell=row.insertCell(),button=attendanceButton('',null,'att-mark');button.dataset.board=board.id;button.dataset.lesson=column.id;button.dataset.student=student.id;button.setAttribute('aria-haspopup','menu');attUpdateMark(button,board,column,student);cell.append(button);}
       }
       scroller.append(table);
-      if(!board.columns.length){scroller.classList.add('att-scroll-empty');scroller.append(attNode('p','att-first-hint','尚未新增點名欄位，請點右上方「＋ 新增點名」開始第一次點名。'));}
+      if(!board.columns.length){scroller.classList.add('att-scroll-empty');scroller.append(attNode('p','att-first-hint','尚未新增點名欄位，請點右上方「＋ 新增」開始第一次點名。'));}
       pane.append(scroller);attBindGrid(pane,scroller);attSelectColumn(board,attView.selected.get(board.id));const pos=attView.scroll.get(board.id)||[0,0];scroller.scrollLeft=reveal?scroller.scrollWidth:pos[0];scroller.scrollTop=pos[1];
     }
     // END ATTENDANCE UI
@@ -18013,6 +18036,12 @@ elProgAdd?.addEventListener('click', ()=>{
       return `${formatHWAverage(summary)}<span class="hw-count">計入 ${summary.count}／${summary.total} 項</span>`;
     }
 
+    // 共用作業成績與點名板的座號、姓名、備註欄位。
+    function renderStudentRosterCells(s,cls,attendance=false){
+      const note=getNote(cls,s.id);
+      return `<td><div class="hw-seatcell${attendance?' att-seatcell':''}"><button class="note-btn${attendance?' att-note-btn':''}" data-note-id="${escapeHTML(s.id)}" title="${escapeHTML(note?(s.noteHidden===true?'有備註':note):'新增備註')}" aria-label="${escapeHTML(`${s.seat??''} ${s.name||''}，${note?'查看或編輯備註':'新增備註'}`)}" aria-haspopup="dialog">${note?'🗒️':'📝'}</button><span class="hw-seattext${attendance?' att-seattext':''}">${escapeHTML(s.seat ? String(s.seat).padStart(2,'0') : '')}</span></div></td><${attendance?'th scope="row"':'td'}><span class="hw-student-label${attendance?' att-student-label':''}">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(s.noteHidden === true ? '有備註' : note)}" aria-label="已備註">📝</span>`:''}</span>${attendance?'</th>':'</td>'}`;
+    }
+
     function renderHW(cls){
       if(_cleanupHWPointerDrag){_cleanupHWPointerDrag();_cleanupHWPointerDrag=null;}_dismissHWColBar();closeHWColumnMenu();
       if(!cls){elHWTable.innerHTML='';elHWClassPill.textContent='未選擇';syncHWClassSelect(cls);return;}
@@ -18020,8 +18049,8 @@ elProgAdd?.addEventListener('click', ()=>{
       list.forEach(s=>{const row=hw.data[s.id]||(hw.data[s.id]=[]);while(row.length<hw.cols.length)row.push('');});
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
       elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄">整批登錄</button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
-        const summary=calcHWSummary(hw.data[s.id],hw.cols.length),note=getNote(cls,s.id);
-        return `<tr data-id="${escapeHTML(s.id)}"><td><div class="hw-seatcell"><button class="note-btn" data-note-id="${escapeHTML(s.id)}" title="備註">${note?'🗒️':'📝'}</button><span class="hw-seattext">${escapeHTML(s.seat ? String(s.seat).padStart(2,'0') : '')}</span></div></td><td><span class="hw-student-label">${renderStudentName(s, cls)}${note?`<span class="note-indicator" title="${escapeHTML(s.noteHidden === true ? '有備註' : note)}" aria-label="已備註">📝</span>`:''}</span></td>${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
+        const summary=calcHWSummary(hw.data[s.id],hw.cols.length);
+        return `<tr data-id="${escapeHTML(s.id)}">${renderStudentRosterCells(s,cls)}${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
       }).join('')}<tr id="hw-empty-row"><td colspan="${hw.cols.length+5}" class="hw-empty-message">沒有符合的學生。可清除篩選，或至學生管理新增學生。</td></tr></tbody>`;
       for(const tr of elHWTable.querySelectorAll('tr[data-id]')){
         const id=tr.dataset.id;
@@ -18764,6 +18793,7 @@ elProgAdd?.addEventListener('click', ()=>{
     function refreshNoteViews(cls){
       if(state.mode==='hw') renderHW(cls);
       else if(state.mode==='list') renderStudents(cls);
+      else if(state.mode==='attendance') renderAttendance();
     }
     noteReveal.addEventListener('click',()=>{setNoteContentVisible(true);noteText.focus();});
     noteConceal.addEventListener('click',()=>{setNoteContentVisible(false);noteReveal.focus();});
