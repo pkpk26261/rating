@@ -6023,6 +6023,7 @@
     #group-pane :is(button,select,input):focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
     #group-pane .grp-unassigned-wrap{position:fixed;top:16px;right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - 32px);max-height:calc(100dvh - 32px);box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;}
     #group-pane .grp-unassigned-wrap.is-collapsed{transform:translateX(calc(100% + 24px));visibility:hidden;pointer-events:none;}
+    #group-pane .grp-unassigned-wrap.is-collapsed.is-touch-source{visibility:visible;opacity:0;pointer-events:none;}
     #group-pane .grp-unassigned-wrap .grp-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;}
     #grp-unassigned-count{margin-left:6px;color:var(--muted);font-size:14px;font-weight:400;}
     .grp-search-label{display:none;}
@@ -6452,6 +6453,21 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
   body[data-mode="list"]:has(#students.is-order) .app #search-input{width:0;min-width:0!important;flex:1 1 0;padding:6px;}
   body[data-mode="list"]:has(#students.is-order) #list-view-seg{flex-shrink:0;}
 }
+
+    /* Fit all groups in the available workspace; the pending drawer stays scrollable. */
+    #group-pane{overflow:hidden;gap:12px;padding-bottom:8px;}
+    #group-pane .grp-workspace{flex:1;min-height:0;gap:10px;}
+    #group-pane .grp-groups-section{flex:1;min-height:0;overflow:hidden;}
+    #group-pane .grp-groups-section>.grp-section-head{margin-bottom:8px;}
+    #group-pane #grp-board{gap:8px;}
+    #group-pane #grp-board .grp-card-header{padding:4px 10px;}
+    #group-pane #grp-board .grp-name{font-size:16px;min-height:36px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #group-pane #grp-board .grp-rename-mark{width:24px;height:24px;margin-left:6px;}
+    #group-pane #grp-board .grp-card-body{padding:6px;gap:4px;min-height:44px;}
+    #group-pane #grp-board .grp-member{min-height:0;}
+    #group-pane #grp-board .grp-member-select{min-height:44px;padding:4px 8px;gap:8px;}
+    #group-pane #grp-board .grp-member-name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #group-pane #grp-board .grp-avatar{width:26px;height:26px;font-size:13px;}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -6827,7 +6843,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <aside id="grp-unassigned-wrap" class="grp-unassigned-wrap" aria-label="待分組學生">
               <div class="grp-section-head"><h3>待分組 <span id="grp-unassigned-count"></span></h3><button id="grp-panel-collapse" class="btn" type="button" aria-label="收納待分組視窗">收納 ›</button></div>
               <label class="grp-search-label" for="grp-search">搜尋待分組學生</label><input id="grp-search" type="search" class="input" placeholder="搜尋姓名或座號" aria-label="搜尋待分組學生">
-              <p class="grp-touch-hint">點選可多選，長按學生即可拖移</p>
+              <p class="grp-touch-hint">橫拖學生可移動，上下滑動瀏覽名單</p>
               <div id="grp-unassigned" class="grp-unassigned"></div>
             </aside>
           </div>
@@ -13745,6 +13761,7 @@ function onTimerDone(){
       _groupDrag=null;
       _groupDragPreview?.remove();
       _groupDragPreview=null;
+      if(typeof groupPanelCollapsed==='boolean' && typeof setGroupPanelCollapsed==='function') setGroupPanelCollapsed(groupPanelCollapsed);
       document.querySelectorAll('#group-pane .grp-drag-source,#group-pane .dragover').forEach(el=>el.classList.remove('grp-drag-source','dragover'));
     }
     function groupDragIds(cls, id){
@@ -13783,7 +13800,10 @@ function onTimerDone(){
       groupPanelCollapsed=collapsed;
       const panel=document.getElementById('grp-unassigned-wrap'),tab=document.getElementById('grp-unassigned-tab');
       panel.classList.toggle('is-collapsed',collapsed);
-      panel.inert=collapsed;
+      // 觸控尚未放開時，來源不可變成 inert / visibility:hidden，避免瀏覽器取消手勢。
+      const preserveTouch=collapsed && _groupDrag?.touch===true;
+      panel.classList.toggle('is-touch-source',preserveTouch);
+      panel.inert=collapsed && !preserveTouch;
       panel.setAttribute('aria-hidden',String(collapsed));
       tab.hidden=!collapsed;
       tab.setAttribute('aria-expanded',String(!collapsed));
@@ -13809,6 +13829,34 @@ function onTimerDone(){
     // END GROUP PANEL MODEL
     document.getElementById('grp-unassigned-tab').addEventListener('click',()=>{setGroupPanelCollapsed(false);document.getElementById('grp-search').focus();});
     document.getElementById('grp-panel-collapse').addEventListener('click',e=>{setGroupPanelCollapsed(true);if(e.detail===0) document.getElementById('grp-unassigned-tab').focus();});
+    function fitGroupBoard(){
+      const board=document.getElementById('grp-board'),section=board?.parentElement;
+      if(!board || !section || !board.getClientRects().length || !board.children.length) return;
+      const width=section.clientWidth;
+      const height=section.clientHeight-section.querySelector('.grp-section-head').getBoundingClientRect().height-8;
+      if(width<=0 || height<=0) return;
+      let best={scale:0,columns:1,width,cost:Infinity,score:0};
+      const preferred=Math.max(1,Math.round(width/360));
+      board.style.zoom=1;
+      // Measure real content, including uneven group sizes and renamed headers.
+      for(let columns=1;columns<=board.children.length;columns++){
+        const naturalWidth=Math.max(width,columns*220+(columns-1)*8);
+        board.style.width=naturalWidth+'px';
+        board.style.gridTemplateColumns=`repeat(${columns},minmax(0,1fr))`;
+        const scale=Math.min(1,width/naturalWidth,height/board.getBoundingClientRect().height);
+        const cost=(Math.ceil(board.children.length/columns)*columns-board.children.length)*2+Math.abs(columns-preferred);
+        const empty=Math.ceil(board.children.length/columns)*columns-board.children.length;
+        const score=scale/(1+empty*0.035+Math.abs(columns-preferred)*0.03);
+        if(score>best.score+0.001 || (Math.abs(score-best.score)<=0.001 && cost<best.cost)) best={scale,columns,width:naturalWidth,cost,score};
+      }
+      board.style.gridTemplateColumns=`repeat(${best.columns},minmax(0,1fr))`;
+      board.style.width=(width/best.scale)+'px';
+      board.style.zoom=best.scale;
+    }
+    if(typeof ResizeObserver!=='undefined'){
+      new ResizeObserver(()=>fitGroupBoard()).observe(document.querySelector('.grp-groups-section'));
+    }
+
     function renderGroup(cls){
       if(groupPointerCancel) groupPointerCancel({});
       const elBoard = document.getElementById('grp-board');
@@ -13973,6 +14021,7 @@ function onTimerDone(){
       destination.add(new Option('待分組','-1'));
       document.getElementById('btn-grp-random').textContent=assignedIds.size ? '重新隨機分組' : '隨機分組';
       paintGroupSelection(cls);
+      fitGroupBoard();
     }
 
     function animateGroupDrop(ids){
@@ -14005,13 +14054,16 @@ function onTimerDone(){
       const beginDrag=e=>{
         if(e.button!==0) return;
         const touchMode=e.pointerType==='touch';
-        let holdTimer=null,touchReady=!touchMode,ended=false;
+        let touchReady=!touchMode,ended=false;
+        const sourcePanel=touchMode ? mem.closest('#grp-unassigned-wrap') : null;
+        const sourceLeft=sourcePanel?.getBoundingClientRect().left;
+        let sourceRetracted=!sourcePanel;
         const startX=e.clientX,startY=e.clientY,pointerId=e.pointerId;
         let dragging=false,over=null,preview=null;
         const ids=groupDragIds(cls,s.id);
         const finish=(event,cancelled=false)=>{
           if(ended || (event.pointerId!=null && event.pointerId!==pointerId)) return;
-          ended=true;clearTimeout(holdTimer);
+          ended=true;
           document.removeEventListener('touchmove',touchMove,true);
           document.removeEventListener('touchend',touchEnd,true);
           document.removeEventListener('touchcancel',touchCancel,true);
@@ -14044,14 +14096,19 @@ function onTimerDone(){
         const move=ev=>{
           if(ev.pointerId!==pointerId) return;
           if(ended) return;
-          if(touchMode && !touchReady){if(Math.hypot(ev.clientX-startX,ev.clientY-startY)>8) finish(ev,true);return;}
+          if(touchMode && !touchReady){
+            const dx=Math.abs(ev.clientX-startX),dy=Math.abs(ev.clientY-startY);
+            if(Math.hypot(dx,dy)<=8) return;
+            if(dx<=dy){finish(ev,true);return;}
+            touchReady=true;
+          }
           if(!(ev.buttons&1)){finish(ev,true);return;}
-          if(!dragging && !ev.force && Math.hypot(ev.clientX-startX,ev.clientY-startY)<6) return;
+          if(!dragging && !touchMode && Math.hypot(ev.clientX-startX,ev.clientY-startY)<6) return;
           ev.preventDefault();
           if(!dragging){
             dragging=true;
             clearGroupDrag();
-            _groupDrag={cls,anchor:s.id,ids};
+            _groupDrag={cls,anchor:s.id,ids,touch:touchMode};
         const dragPreview=document.createElement('div');
         _groupDragPreview=dragPreview;
         dragPreview.className='grp-drag-stack';
@@ -14068,8 +14125,12 @@ function onTimerDone(){
             preview.style.left=`${ev.clientX-4}px`;
             preview.style.top=`${ev.clientY-8}px`;
             document.body.appendChild(preview);
-            setGroupPanelCollapsed(true);
+            if(!sourcePanel) setGroupPanelCollapsed(true);
             document.querySelectorAll('#group-pane .grp-member').forEach(el=>el.classList.toggle('grp-drag-source',ids.includes(el.dataset.id)));
+          }
+          if(sourcePanel && !sourceRetracted && ev.clientX<sourceLeft){
+            sourceRetracted=true;
+            setGroupPanelCollapsed(true);
           }
           preview.style.left=`${ev.clientX-4}px`;
           preview.style.top=`${ev.clientY-8}px`;
@@ -14089,7 +14150,6 @@ function onTimerDone(){
           document.addEventListener('touchend',touchEnd,{capture:true,passive:false});
           document.addEventListener('touchcancel',touchCancel,true);
           document.addEventListener('touchstart',extraTouch,true);
-          holdTimer=setTimeout(()=>{touchReady=true;move({...e,force:true,buttons:1,preventDefault(){}});},320);
         }else{
           document.addEventListener('pointermove',move,{capture:true,passive:false});
           document.addEventListener('pointerup',up,true);
@@ -14107,7 +14167,7 @@ function onTimerDone(){
       mem.addEventListener('contextmenu',e=>e.preventDefault());
 
       // ★ 平板 Touch 拖曳支援
-      // 短按選取，長按 320ms 拿起；長按成立前滑動維持原生捲動。
+      // 短按選取，橫拖拿起；直滑維持原生捲動，手勢一旦判定就不切換。
 
       if(groupIdx >= 0){
         mem.querySelector('.grp-member-remove')?.addEventListener('click', ()=>{
