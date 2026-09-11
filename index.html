@@ -6702,7 +6702,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body[data-mode="attendance"] .main>.controls-row{display:none!important;}
     .att-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;}
     .att-board-field{display:flex;align-items:center;gap:10px;margin-right:auto;font-weight:700;min-width:0;}
-    #att-board-select{width:min(340px,45vw);min-width:160px;max-width:100%;}
+    #att-board-select{width:auto;min-width:160px;max-width:100%;}
     .att-help{margin:0;font-size:13px;color:var(--muted);}
     .att-class-picker{position:relative;display:inline-flex;min-width:0;max-width:100%;}
     .att-class-picker .class-select-display{inset:0;width:100%;height:100%;padding:0 14px;font-size:15px;font-weight:650;}
@@ -6716,6 +6716,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .att-stat[data-status="late"] .att-stat-icon{color:var(--warn,#d8a739);}
     .att-scroll{overflow:auto;min-height:0;max-width:100%;border:1px solid var(--line);border-radius:10px;overscroll-behavior:contain;scrollbar-gutter:stable;}
     .att-table{table-layout:fixed;border-collapse:separate;border-spacing:0;}
+    .att-roster-only thead tr{height:61px;}
+    .att-roster-only tbody tr{height:49px;}
+    .att-table,.att-table *,.att-menu,.att-menu *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     .att-table th,.att-table td{box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 4px;text-align:center;background:var(--card);}
     .att-table thead th{position:sticky;top:0;z-index:2;vertical-align:top;}
     .att-table tr>:first-child{position:sticky;left:0;width:60px;z-index:3;vertical-align:middle;}
@@ -15905,10 +15908,12 @@ function onTimerDone(){
       // Keep shared roster-dependent actions consistent while this page uses its own board selector.
       elSelect.value=board.rosterKey;
       const summary=attNode('div','att-summary');summary.id='att-summary';summary.setAttribute('role','group');summary.setAttribute('aria-label','點名狀態圖例');pane.append(summary);attSummary();
-      if(!board.columns.length){const empty=attNode('div','att-empty');empty.append(attNode('h2','','新增第一次點名'),attNode('p','','每欄都是獨立紀錄，同一天也可以新增多次。'),attendanceButton('新增點名',()=>attendanceEdit(board.id),'btn'));pane.append(empty);return;}
-      if(!board.columns.some(l=>l.id===attView.selected.get(board.id)))attView.selected.set(board.id,board.columns[board.columns.length-1].id);
+      if(board.columns.length){
+        if(!board.columns.some(l=>l.id===attView.selected.get(board.id)))attView.selected.set(board.id,board.columns[board.columns.length-1].id);
+      }else attView.selected.delete(board.id);
       const students=[...(state.classMap[board.rosterKey]||[])].sort((a,b)=>String(a.seat??'').localeCompare(String(b.seat??''),'zh-Hant',{numeric:true}));
       const scroller=attNode('div','att-scroll');scroller.dataset.board=board.id;const table=attNode('table','att-table');table.setAttribute('aria-label',attBoardLabel(board)+' 點名板');table.style.width=(180+80*board.columns.length)+'px';
+      table.classList.toggle('att-roster-only',!board.columns.length);
       const cg=attNode('colgroup');for(const w of [60,120,...board.columns.map(()=>80)]){const col=attNode('col');col.style.width=w+'px';cg.append(col);}table.append(cg);
       const head=table.createTHead().insertRow();for(const text of ['座號','姓名']){const th=attNode('th','',text);th.scope='col';head.append(th);}
       board.columns.forEach((l,index)=>{
@@ -19357,13 +19362,13 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
 <script>
 // 原生選單負責互動與可及性，覆蓋文字僅呈現收合欄位的班名／科目色彩。
 (()=>{
-  const ids=['class-select','hw-class-select','group-class-pill','viol-class-select','warning-class-select','draw-class-select'];
-  const updates=[];
+  const ids=['class-select','hw-class-select','group-class-pill','viol-class-select','warning-class-select','draw-class-select','att-board-select'];
+  const updates=new Map();
   const measure=document.createElement('canvas').getContext('2d');
-  for(const id of ids){
-    const select=document.getElementById(id);if(!select)continue;
+  const register=select=>{
+    if(!select||updates.has(select))return;
     const parent=select.parentElement;if(getComputedStyle(parent).position==='static')parent.style.position='relative';
-    const display=document.createElement('span');display.className='class-select-display';display.setAttribute('aria-hidden','true');parent.append(display);select.classList.add('class-color-select');
+    const display=(select.id==='att-board-select'?parent.querySelector('.class-select-display'):null)||document.createElement('span');display.className='class-select-display';display.setAttribute('aria-hidden','true');parent.append(display);select.classList.add('class-color-select');
     let previous='';
     const update=()=>{
       const visible=select.getClientRects().length>0;display.style.display=visible?'flex':'none';if(!visible)return;
@@ -19381,9 +19386,14 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
       display.classList.toggle('is-disabled',select.disabled);
       if(text!==previous){display.innerHTML=renderClassLabel(text);previous=text;}
     };
-    select.addEventListener('change',update);new MutationObserver(update).observe(select,{childList:true,subtree:true,attributes:true,characterData:true});updates.push(update);update();
-  }
-  const refresh=()=>updates.forEach(update=>update());
+    const observer=new MutationObserver(update);select.addEventListener('change',update);observer.observe(select,{childList:true,subtree:true,attributes:true,characterData:true});updates.set(select,{update,observer});update();
+  };
+  const refresh=()=>{
+    for(const [select,{observer}]of updates)if(!select.isConnected){observer.disconnect();updates.delete(select);}
+    ids.forEach(id=>register(document.getElementById(id)));
+    updates.forEach(({update})=>update());
+  };
+  refresh();
   window.addEventListener('resize',refresh);document.addEventListener('scroll',refresh,true);document.addEventListener('click',()=>requestAnimationFrame(refresh));
   setInterval(refresh,250);
 })();
