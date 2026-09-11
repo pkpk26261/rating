@@ -6579,6 +6579,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-steps{justify-content:center;gap:6px;}
     .tb-steps li{padding:5px 10px;font-size:13px;border:0;background:transparent;}
     .tb-actions .btn{min-height:48px;min-width:120px;}
+    .tb-actions .btn{transition:none !important;touch-action:manipulation;}
+    .tb-stage[data-status="paused"] #tb-start{background:#ffe4ae;color:#644000;border-color:#ca922f;}
     .tb-stage.tb-projecting{padding:clamp(20px,2.5vw,40px);min-height:0;}
     @media(max-width:700px){
       .tb-stage{min-height:0;gap:12px;}.tb-focus{gap:20px;padding:20px 0;}.tb-copy h3{font-size:clamp(42px,10vw,68px);}.tb-clock{border:0;padding:0;}#tb-time{font-size:clamp(88px,21vw,128px);}
@@ -6588,6 +6590,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     @media(max-height:700px) and (min-width:701px){
       .tb-stage.tb-projecting{gap:10px;padding:20px 28px;}.tb-stage.tb-projecting .tb-focus{gap:10px;padding:8px 0;}.tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,7vw,94px);margin-bottom:8px;}.tb-stage.tb-projecting #tb-time{font-size:clamp(80px,11vw,136px);}.tb-stage.tb-projecting #tb-description{font-size:22px;}
     }
+    /* 投影文字隨螢幕寬高成長，避免大型螢幕仍停在桌面字級上限。 */
+    .tb-stage.tb-projecting .tb-copy h3{font-size:clamp(48px,min(12vw,20dvh),480px);}
+    .tb-stage.tb-projecting #tb-time{font-size:clamp(64px,min(19vw,24dvh),600px);}
+    .tb-stage.tb-projecting #tb-description{font-size:clamp(20px,min(3vw,3.8dvh),80px);max-width:55ch;}
+    .tb-stage.tb-projecting .tb-focus{gap:clamp(12px,2dvh,36px);padding:clamp(8px,1.5dvh,24px) 0;}
+    .tb-stage.tb-projecting .tb-heading h2{font-size:clamp(18px,min(2vw,2.8dvh),48px);}
+    .tb-stage.tb-projecting #tb-status,.tb-stage.tb-projecting .tb-next{font-size:clamp(16px,min(1.8vw,2.5dvh),36px);}
     #tb-title{width:100%;white-space:nowrap;overflow:hidden;text-wrap:nowrap;}
     #tb-title-text{display:inline-block;white-space:nowrap;max-width:none;vertical-align:top;}
     #tb-title[data-overflow="true"]{text-align:left;}
@@ -6608,8 +6617,20 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-edit-step>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:52px;cursor:pointer;box-sizing:border-box;}.tb-edit-step>summary::-webkit-details-marker{display:none;}
     .tb-step-number{display:grid;place-items:center;width:28px;height:28px;flex:none;border:1px solid var(--line);border-radius:50%;font-variant-numeric:tabular-nums;}.tb-step-name{font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.tb-step-duration{color:var(--muted);font-size:13px;white-space:nowrap;}.tb-step-expand{color:var(--muted);}.tb-edit-step[open] .tb-step-expand{transform:rotate(180deg);}
     .tb-edit-step[open]{border-color:var(--accent);}.tb-step-body{padding:0 18px 18px;border-top:1px solid var(--line);}.tb-step-body .tb-field{font-size:14px;margin-top:16px;}.tb-optional{display:contents;color:var(--muted);font-size:12px;}
-    #tb-editor .tb-time-fields{display:block;margin-top:18px;}#tb-editor .tb-time-presets{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px;}#tb-editor .tb-time-presets .btn{min-width:64px;}#tb-editor .tb-time-presets [aria-pressed="true"]{outline:2px solid var(--accent);}
-    .tb-custom-time{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.tb-custom-time>span{font-size:13px;color:var(--muted);margin-right:4px;}#tb-editor .tb-custom-time input{width:80px !important;min-width:0 !important;flex:none;}
+    #tb-editor .tb-time-fields{display:block;box-sizing:border-box;width:100%;margin-top:18px;padding:14px 16px 16px;border:1px solid var(--line);border-radius:14px;background:var(--card);}
+    #tb-editor .tb-timed-toggle{gap:9px;font-weight:600;}#tb-editor .tb-timed-toggle input{accent-color:var(--accent);}
+    #tb-editor .tb-time-settings{min-width:0;}
+    #tb-editor .tb-time-presets{display:grid;grid-template-columns:repeat(6,minmax(60px,1fr));gap:6px;margin:8px 0 16px;overflow-x:auto;}
+    #tb-editor .tb-time-presets .btn{min-width:0;min-height:44px;padding:0 8px;border-radius:8px;}
+    #tb-editor .tb-time-presets [aria-pressed="true"]{outline:0;background:var(--accent);color:#102b28;border-color:var(--accent);font-weight:750;}
+    .tb-custom-time{display:grid;gap:8px;}.tb-custom-time>span{font-size:13px;color:var(--muted);}
+    .tb-duration-input{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:6px 10px 10px;}
+    .tb-duration-input:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent);}
+    #tb-editor .tb-duration-input label{display:flex;flex-direction:column;gap:0;min-width:0;}
+    #tb-editor .tb-duration-input input{width:100% !important;min-width:0 !important;max-width:none;box-sizing:border-box;height:48px;min-height:48px;padding:0 6px;border:0 !important;border-radius:6px;background:transparent;box-shadow:none !important;text-align:center;font-size:28px !important;font-weight:700;font-variant-numeric:tabular-nums;appearance:textfield;}
+    #tb-editor .tb-duration-input input::-webkit-inner-spin-button,#tb-editor .tb-duration-input input::-webkit-outer-spin-button{appearance:none;margin:0;}
+    #tb-editor .tb-duration-input input:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+    .tb-duration-input label>span{font-size:12px;color:var(--muted);}.tb-duration-separator{text-align:center;font-size:26px;color:var(--muted);padding-bottom:18px;}
     .tb-step-controls{border-top:1px solid var(--line);padding-top:12px;margin-top:16px;}.tb-step-controls>span{font-size:12px;color:var(--muted);margin-right:auto;}.tb-step-controls .btn{font-size:13px;}.tb-step-delete{margin-left:auto;}
     .tb-step-locked{font-size:13px;color:var(--muted);line-height:1.6;}.tb-step-error{color:var(--bad);font-size:13px;}.tb-step-error:empty{display:none;}
     #tb-add-step{width:100%;border-style:dashed;margin:4px 0 12px;}
@@ -6627,7 +6648,31 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #tb-preparation{display:flex;justify-content:center;align-items:center;gap:8px;padding:0;margin:0 0 16px;background:none;border:0;border-radius:0;flex-wrap:wrap;}
     #tb-preparation>.btn{min-height:44px;flex:none;}#tb-preparation .tb-current-flow{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:min(420px,100%);min-width:180px;}
     #tb-prep-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+    .tb-state-badge{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;white-space:nowrap;padding:5px 10px;border-radius:7px;font-size:13px;font-weight:750;line-height:1.4;}
+    .tb-state-open{background:#b9f1db;color:#124a36;border:1px solid #69b998;}
+    .tb-state-locked{background:#ffe4ae;color:#644000;border:1px solid #ca922f;}
+    .tb-state-locked::before{content:'';display:inline-block;width:16px;height:16px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h2v12H5V10zm2 0h6V7a3 3 0 0 0-6 0z'/%3E%3C/svg%3E") center/contain no-repeat;}
+    .tb-state-editable{color:var(--muted);border:1px solid var(--line);font-weight:500;}
+    .tb-editor-head>.btn{flex-shrink:0;white-space:nowrap;}
+    #tb-editor .tb-edit-step[data-locked="true"]{border-color:#ca922f;}
+    #tb-editor .tb-edit-step[data-locked="true"]>summary{background:color-mix(in srgb,#ca922f 12%,var(--bg));}
+    #tb-editor .tb-step-locked{background:#ffe4ae;color:#644000;border-left:4px solid #ca922f;border-radius:6px;padding:10px 12px;font-size:14px;font-weight:600;}
+    @media(max-width:500px){#tb-editor .tb-edit-step>summary{flex-wrap:wrap;}#tb-editor .tb-step-name{flex-basis:calc(100% - 48px);}#tb-editor .tb-step-duration{margin-left:36px;}.tb-edit-step .tb-state-badge{font-size:12px;}#tb-lock-status{order:3;}}
+    #tb-preparation .tb-current-flow{border-color:#69b998;gap:10px;max-width:min(520px,100%);}
     @media(max-width:500px){#tb-preparation .tb-current-flow{flex-basis:100%;max-width:100%;}#tb-preparation>#tb-edit,#tb-preparation>#tb-project{flex:1;}}
+    body:not([data-mode="taskboard"]) #tb-preparation,.controls-row #tb-preparation[hidden],#tb-preparation [hidden]{display:none !important;}
+    body[data-mode="taskboard"] .main>.controls-row{display:flex !important;align-items:center !important;flex-direction:row;flex-wrap:nowrap;flex-shrink:0;min-height:44px;gap:10px;margin-bottom:14px;overflow-x:auto;min-width:0;white-space:nowrap;}
+    body[data-mode="taskboard"] #search-input{display:none !important;}
+    body[data-mode="taskboard"] .controls-row>label,body[data-mode="taskboard"] #class-select{flex-shrink:0;}
+    body[data-mode="taskboard"] .controls-row #tb-preparation{margin:0;padding:0;flex:1 0 auto;flex-wrap:nowrap;justify-content:flex-start;}
+    body[data-mode="taskboard"] #tb-preparation>#tb-project{margin-left:auto;}
+    body[data-mode="taskboard"] #tb-preparation>.btn,
+    body[data-mode="taskboard"] #tb-preparation>#tb-lock-status{box-sizing:border-box;height:44px !important;min-height:44px !important;max-height:44px;padding:0 12px;align-items:center;line-height:1.4;}
+    body[data-mode="taskboard"] #tb-preparation>.btn{flex:0 0 auto;}
+    body[data-mode="taskboard"] #tb-preparation .tb-current-flow{flex:0 1 auto;min-width:180px;max-width:300px;}
+    body[data-mode="taskboard"] #tb-lock-status{order:0;}
+    body[data-mode="taskboard"] .controls-row>label[for="class-select"],body[data-mode="taskboard"] #class-select,body[data-mode="taskboard"] .controls-row>.class-select-display{display:none !important;}
+    body[data-mode="taskboard"] .controls-row:has(#tb-preparation[hidden]){display:none !important;}
     /* END TASK BOARD STYLE */
 
   </style>
@@ -6690,7 +6735,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
                 <button id="mode-group" class="more-item" data-mode="group" data-icon="👥">分組</button>
                 <button id="mode-draw" class="more-item" data-mode="draw" data-icon="🎲">抽號</button>
-                <button id="mode-taskboard" class="more-item" data-mode="taskboard" data-icon="📋">課堂任務板</button>
+                <button id="mode-taskboard" class="more-item" data-mode="taskboard" data-icon="📋">任務版</button>
                 <button id="mode-timer" class="more-item" data-mode="timer" data-icon="⏳">倒數計時</button>
               </div>
             </div>
@@ -6778,6 +6823,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <div id="list-view-seg" class="seg hidden" role="group" aria-label="排列方式" style="margin-left:auto;">
             <button id="btn-view-seat" class="seg-btn active" title="依座位圖排列">🗺️ 座位圖</button>
             <button id="btn-view-order" class="seg-btn" title="依座號排列">🔢 座號</button>
+          </div>
+
+          <div id="tb-preparation" class="tb-toolbar tb-preparation" hidden>
+            <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span class="tb-state-badge tb-state-open"><span aria-hidden="true">✓</span> 已開啟</span><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
+            <button class="btn" id="tb-edit">編輯任務</button><span id="tb-lock-status" class="tb-state-badge tb-state-locked" role="status" hidden></span><button class="btn primary" id="tb-project">開始並投影</button>
           </div>
 
         <!-- 安排座位 -->
@@ -6890,9 +6940,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         </section>
 
         <!-- BEGIN TASK BOARD UI -->
-        <section id="taskboard-pane" class="hidden" aria-label="課堂任務板">
+        <section id="taskboard-pane" class="hidden" aria-label="任務版">
           <div id="tb-welcome" class="tb-welcome" aria-labelledby="tb-welcome-title">
-            <span class="tb-eyebrow">課堂任務板</span>
+            <span class="tb-eyebrow">任務版</span>
             <h2 id="tb-welcome-title">先選擇今天的流程</h2>
             <p class="tb-welcome-intro">把課堂安排成幾個步驟，學生就能看見目前任務與剩餘時間。</p>
             <ol class="tb-setup-path" aria-label="準備步驟"><li><span>1</span>選擇流程</li><li><span>2</span>調整任務</li><li><span>3</span>開始投影</li></ol>
@@ -6901,10 +6951,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
               <div class="tb-welcome-option"><span class="tb-welcome-tag">依照你的教學安排</span><h3>建立自己的流程</h3><p>填入任務和時間，排出今天的課堂步驟。<br>儲存後，下次上課也能再次使用。</p><button class="btn" id="tb-welcome-new">建立新流程</button></div>
             </div>
             <div id="tb-welcome-saved" class="tb-welcome-saved" hidden><p>已經準備好流程了？從流程庫接著開始。</p><button class="btn" id="tb-welcome-library">選擇已儲存的流程</button></div>
-          </div>
-          <div id="tb-preparation" class="tb-toolbar tb-preparation" hidden>
-            <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
-            <button class="btn" id="tb-edit">編輯任務</button><button class="btn primary" id="tb-project">開始並投影</button>
           </div>
           <div id="tb-stage" class="tb-stage" hidden>
             <header class="tb-heading"><span class="tb-eyebrow">今天要做什麼</span><h2 id="tb-name">準備今天的課堂</h2><span id="tb-position"></span></header>
@@ -6915,7 +6961,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <div id="tb-next" class="tb-next"></div>
             <ol id="tb-steps" class="tb-steps" aria-label="課堂步驟"></ol>
             <div class="tb-actions">
-              <button class="btn primary" id="tb-start">開始</button><button class="btn" id="tb-add-minute">加 1 分鐘</button><button class="btn primary" id="tb-next-button">下一步</button><button class="btn" id="tb-restart" hidden>重新開始</button><button class="btn" id="tb-exit" hidden>退出投影</button>
+              <button class="btn primary" id="tb-start">開始</button><button class="btn" id="tb-restart" hidden>重新開始</button><button class="btn" id="tb-add-minute">加 1 分鐘</button><button class="btn primary" id="tb-next-button">下一步</button><button class="btn" id="tb-exit" hidden>退出投影</button>
             </div>
             <p id="tb-message" class="tb-message" role="status" aria-live="polite"></p>
           </div>
@@ -6927,14 +6973,14 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         </dialog>
         <dialog id="tb-editor" class="tb-dialog" aria-labelledby="tb-editor-title">
           <form id="tb-editor-form" novalidate>
-            <div class="tb-editor-head"><div><h2 id="tb-editor-title">設定今天的任務</h2><p id="tb-editor-hint" class="hint">依序填入任務與時間，完成後就能投影。</p></div><button class="btn" id="tb-editor-close" type="button">取消</button></div>
-            <label class="tb-field">這堂課的名稱<input id="tb-edit-name" class="input" placeholder="例如：國語第三課・閱讀與討論" required maxlength="100"></label>
+            <div class="tb-editor-head"><div><h2 id="tb-editor-title">編輯共用流程</h2><p id="tb-editor-hint" class="hint">依序填入任務與時間，完成後就能投影。</p></div><button class="btn" id="tb-editor-close" type="button">取消</button></div>
+            <label class="tb-field">流程名稱<input id="tb-edit-name" class="input" placeholder="例如：閱讀・討論・發表" required maxlength="100"></label>
             <div class="tb-editor-overview"><strong>課堂步驟</strong><span id="tb-editor-total"></span></div>
             <div id="tb-edit-steps"></div>
             <button class="btn" id="tb-add-step" type="button">新增一個步驟</button>
-            <div class="tb-save-settings"><label class="tb-field">這次設定要存在哪裡？<select id="tb-save-mode" class="input"><option value="current">只調整今天這堂課</option><option value="update">同步更新原本的共用流程</option><option value="new">另存一套共用流程，下次再用</option></select></label><p id="tb-save-hint" class="hint">共用流程保持原樣。</p></div>
+            <div class="tb-save-settings"><label id="tb-save-mode-wrap" class="tb-field">儲存方式<select id="tb-save-mode" class="input"><option value="update">更新共用流程</option><option value="new">另存新流程</option></select></label><p id="tb-save-hint" class="hint">儲存至共用流程，各班皆可套用。</p></div>
             <p id="tb-editor-error" role="alert"></p>
-            <div class="tb-editor-footer tb-editor-submit"><button class="btn primary" id="tb-editor-done" type="submit">完成設定</button></div>
+            <div class="tb-editor-footer tb-editor-submit"><button class="btn primary" id="tb-editor-done" type="submit">儲存流程</button></div>
           </form>
         </dialog>
         <dialog id="tb-name-dialog" class="tb-dialog tb-name-dialog" aria-labelledby="tb-name-title"><form id="tb-name-form"><h2 id="tb-name-title">流程名稱</h2><label class="tb-field">名稱<input id="tb-name-input" class="input" required maxlength="100"></label><div class="tb-editor-footer"><button class="btn" type="button" id="tb-name-cancel">取消</button><button class="btn primary" type="submit">儲存</button></div></form></dialog>
@@ -13674,6 +13720,12 @@ classes.forEach((cls, idx)=>{
     function tbStep(){const c=tbCurrent();return c?.steps[c.index] || null;}
     function tbOwnsTimer(){const c=state.taskBoard?.current,o=state.timer?.taskOwner;return !!(c && c.status==='active' && o?.activityId===c.id && o.stepId===c.steps[c.index]?.id);}
     function tbCanWrite(){return TabLock.isActive() && !saveHealth.busy;}
+    function tbCanControlTimer(){return TabLock.isActive() && (!saveHealth.busy || saveHealth.operation==='upload');}
+    function tbEditBlockReason(){
+      if(!TabLock.isActive())return '這是唯讀視窗，請切換到目前可操作的視窗編輯任務。';
+      if(saveHealth.busy && saveHealth.operation!=='upload')return '正在載入雲端資料，請等候完成後再編輯；未儲存的內容會保留在此視窗。';
+      return '';
+    }
     function tbCommit(){saveSession('taskboard change');renderTaskBoard();}
     function tbReleaseTimer(){
       if(state.timer?.taskOwner){stopTimerInterval();state.timer={setSec:300,remainingSec:300,running:false,endAt:0,doneNotified:false};}
@@ -13693,9 +13745,10 @@ classes.forEach((cls, idx)=>{
       tbCommit();
     }
     async function tbStart(){
-      if(!tbCanWrite())return;
+      if(!tbCanControlTimer())return;
       const c=tbCurrent();if(!c||c.status==='completed')return;
       if(c.status==='ready'){
+        if(!tbCanWrite())return;
         const t=state.timer;
         if(t.running && !tbOwnsTimer()){
           const endAt=t.endAt;
@@ -13706,28 +13759,36 @@ classes.forEach((cls, idx)=>{
       }
       if(!tbOwnsTimer()||tbStep().durationSec===null)return;
       if(state.timer.running)pauseTimer();else startTimer();
-      renderTaskBoard();
     }
     function tbNext(){
-      if(!tbCanWrite())return;
+      if(!tbCanControlTimer())return;
       const c=tbCurrent();if(!c||c.status!=='active')return;
       if(c.index===c.steps.length-1){tbReleaseTimer();c.status='completed';tbCommit();return;}
       c.index++;tbBeginStep();
     }
     function tbAddMinute(){
-      if(!tbCanWrite()||!tbOwnsTimer()||tbStep().durationSec===null)return;
+      if(!tbCanControlTimer()||!tbOwnsTimer()||tbStep().durationSec===null)return;
       syncTimerFromEndAt();const t=state.timer;
       t.remainingSec+=60;t.setSec+=60;t.doneNotified=false;
       if(t.running)t.endAt+=60000;
       updateTimerDisplay();saveSession('taskboard add time');
     }
-    function tbRestart(){if(!tbCanWrite()||tbCurrent()?.status!=='completed')return;tbReleaseTimer();tbCurrent().index=0;tbCurrent().status='ready';tbCommit();}
+    function tbRestart(){
+      if(!tbCanControlTimer())return;
+      const c=tbCurrent();if(!c)return;
+      if(c.status==='active'){
+        if(!tbOwnsTimer()||state.timer.running||tbStep().durationSec===null)return;
+        tbBeginStep();return;
+      }
+      if(c.status!=='completed'||!tbCanWrite())return;
+      tbReleaseTimer();c.index=0;c.status='ready';tbCommit();
+    }
     function tbSaveDraft(draft,kind){
       const b=ensureTaskBoard(),c=b.current;
       if(!c)throw new Error('請先套用流程。');
       if(state.timer.running&&tbOwnsTimer())throw new Error('請先暫停再編輯。');
       validateTaskFlow(draft);
-      if(c.status!=='ready'){
+      if(c.status==='active'){
         for(let i=0;i<=c.index;i++)if(JSON.stringify(c.steps[i])!==JSON.stringify(draft.steps[i]))throw new Error('已開始的步驟不能變更，請調整後續步驟。');
       }
       if(kind==='update'&&!b.library.some(f=>f.id===c.sourceId))throw new Error('原流程已刪除，請另存新流程。');
@@ -13739,6 +13800,7 @@ classes.forEach((cls, idx)=>{
       if(kind==='new'){
         const flow={id:tbId(),name:c.name,steps:tbClone(c.steps)};b.library.push(flow);c.sourceId=flow.id;
       }
+      if(c.status==='completed'){c.index=0;c.status='ready';}
       tbCommit();
     }
     function tbCreateFlow(draft){
@@ -13746,6 +13808,7 @@ classes.forEach((cls, idx)=>{
       const flow={id:tbId(),name:draft.name.trim(),steps:tbClone(draft.steps)};
       ensureTaskBoard().library.push(flow);tbUseFlow(flow);
     }
+    function tbSharedSaveKind(sourceId,saveAsNew=false){return !saveAsNew&&ensureTaskBoard().library.some(f=>f.id===sourceId)?'update':'new';}
     function tbPlanSummary(steps){
       const seconds=steps.reduce((n,s)=>n+(Number.isFinite(s.durationSec)?s.durationSec:0),0);
       const untimed=steps.filter(s=>s.durationSec===null).length;
@@ -13775,9 +13838,11 @@ classes.forEach((cls, idx)=>{
       tbEl('tb-welcome').hidden=!!c;tbEl('tb-preparation').hidden=!c;tbEl('tb-stage').hidden=!c;
       tbEl('tb-welcome-saved').hidden=b.library.length===0;
       tbText('tb-prep-name',c?.name||'先選一套流程，開始準備');
-      tbEl('tb-library-open').setAttribute('aria-label',c?`選擇流程：${c.name}`:'選擇流程');
+      tbEl('tb-library-open').setAttribute('aria-label',c?`已開啟流程：${c.name}，點選更換流程`:'選擇流程');
       if(tbEl('tb-library-dialog').open)tbRenderLibraryCards();
-      tbEl('tb-edit').disabled=!c||completed;tbEl('tb-project').disabled=!c;
+      tbEl('tb-edit').disabled=!c;tbText('tb-edit',completed?'重新編輯':'編輯任務');tbEl('tb-project').disabled=!c;
+      tbEl('tb-lock-status').hidden=!active;
+      tbText('tb-lock-status',active?`已開始 ${c.index+1} 步 · 已鎖定`:'');
       tbText('tb-project',completed?'查看投影':active&&state.timer.running?'放大投影':active?'繼續並投影':'開始並投影');
       tbText('tb-name',c?.name||'準備今天的課堂');tbText('tb-position',c?`${completed?'已完成':'步驟'} ${completed?c.steps.length:c.index+1} / ${c.steps.length}`:'');
       tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title-text',completed?'今天的任務完成了！':s?.title||'閱讀 → 討論 → 發表');
@@ -13800,8 +13865,11 @@ classes.forEach((cls, idx)=>{
       }
       tbEl('tb-start').hidden=!c||completed||(active&&!timed);
       tbText('tb-start',active&&state.timer.running?'暫停':active?'繼續倒數':'開始任務');
+      tbEl('tb-start').setAttribute('aria-pressed',String(!!(active&&state.timer.running)));
       tbEl('tb-add-minute').hidden=!active||!timed;tbEl('tb-next-button').hidden=!active;
-      tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');tbEl('tb-restart').hidden=!completed;
+      tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');
+      tbEl('tb-restart').hidden=!(completed||active&&timed&&tbOwnsTimer()&&!state.timer.running);
+      tbEl('tb-restart').title=completed?'回到第一步，準備重新開始':'目前步驟恢復原訂時間，並立即重新倒數';
       const owner=tbOwnsTimer();tbEl('timer-task-owner').hidden=!owner;
       tbText('timer-task-label',owner?`課堂任務：${c.name} · ${s.title}`:'');
       document.querySelectorAll('#timer-pane .timer-presets button,#timer-pane .timer-set input,#timer-pane .timer-set button').forEach(el=>el.disabled=owner);
@@ -13811,7 +13879,7 @@ classes.forEach((cls, idx)=>{
       if(!tbCurrent())return;tbProjectFocus=document.activeElement;
       document.body.classList.add('tb-projecting');tbEl('tb-stage').classList.add('tb-projecting');tbEl('tb-exit').hidden=false;
       try{await tbEl('tb-stage').requestFullscreen?.();}catch(_){}
-      if(tbCanWrite()&&tbCurrent()?.status!=='completed' && (tbCurrent()?.status==='ready'||tbOwnsTimer()&&!state.timer.running&&tbStep()?.durationSec!==null))await tbStart();
+      if(tbCurrent()?.status!=='completed' && (tbCurrent()?.status==='ready'||tbOwnsTimer()&&!state.timer.running&&tbStep()?.durationSec!==null))await tbStart();
       tbEl('tb-exit').focus();
     }
     function tbEndProjection(){
@@ -13858,15 +13926,17 @@ classes.forEach((cls, idx)=>{
     }
     function tbRenderEditor(){
       const c=tbCreating?null:tbCurrent();tbEl('tb-edit-steps').replaceChildren(...tbDraft.steps.map((step,i)=>{
-        const locked=!!(c&&c.status!=='ready'&&i<=c.index),row=document.createElement('details');row.className='tb-edit-step';row.dataset.locked=String(locked);row.open=step.id===tbExpandedId;
-        row.innerHTML='<summary><span class="tb-step-number"></span><span class="tb-step-name"></span><span class="tb-step-duration"></span><span class="tb-step-expand" aria-hidden="true">⌄</span></summary><div class="tb-step-body"><p class="tb-step-locked" hidden>這一步已開始，內容與時間已鎖定；需要延長請回到任務板加時。</p><label class="tb-field">學生要做什麼？<input class="input" data-field="title" placeholder="例如：閱讀課文、兩人討論、分享答案" maxlength="160" required></label><label class="tb-field">補充說明 <span class="tb-optional">選填</span><textarea class="input" data-field="description" rows="2" placeholder="例如：第 12–14 頁，圈出關鍵詞" maxlength="2000"></textarea></label><div class="tb-time-fields"><label class="tb-timed-toggle"><input type="checkbox" data-field="timed">這一步需要倒數計時</label><div class="tb-time-settings"><div class="tb-time-presets" aria-label="常用時間"><button type="button" class="btn" data-minutes="1">1 分</button><button type="button" class="btn" data-minutes="3">3 分</button><button type="button" class="btn" data-minutes="5">5 分</button><button type="button" class="btn" data-minutes="10">10 分</button></div><div class="tb-custom-time"><span>自訂時間</span><label><input class="input" type="number" min="0" max="1440" step="1" inputmode="numeric" data-field="minutes">分</label><label><input class="input" type="number" min="0" max="59" step="1" inputmode="numeric" data-field="seconds">秒</label></div></div><p class="hint tb-untimed-hint" hidden>這一步由老師按「下一步」結束，不顯示倒數。</p></div><p class="tb-step-error" role="alert"></p><div class="tb-step-controls"><span>調整順序</span><button type="button" class="btn" data-action="up">上移</button><button type="button" class="btn" data-action="down">下移</button><button type="button" class="btn tb-step-delete" data-action="delete">刪除步驟</button></div></div>';
+        const locked=!!(c&&c.status==='active'&&i<=c.index),row=document.createElement('details');row.className='tb-edit-step';row.dataset.locked=String(locked);row.open=step.id===tbExpandedId;
+        row.innerHTML='<summary><span class="tb-step-number"></span><span class="tb-step-name"></span><span class="tb-step-duration"></span><span class="tb-step-expand" aria-hidden="true">⌄</span></summary><div class="tb-step-body"><p class="tb-step-locked" hidden>這一步已開始，內容與時間已鎖定；需要延長請回到任務板加時。</p><label class="tb-field">學生要做什麼？<input class="input" data-field="title" placeholder="例如：閱讀課文、兩人討論、分享答案" maxlength="160" required></label><label class="tb-field">補充說明 <span class="tb-optional">選填</span><textarea class="input" data-field="description" rows="2" placeholder="例如：第 12–14 頁，圈出關鍵詞" maxlength="2000"></textarea></label><div class="tb-time-fields"><label class="tb-timed-toggle"><input type="checkbox" data-field="timed">這一步需要倒數計時</label><div class="tb-time-settings"><div class="tb-time-presets" aria-label="常用時間"><button type="button" class="btn" data-minutes="1">1 分</button><button type="button" class="btn" data-minutes="3">3 分</button><button type="button" class="btn" data-minutes="5">5 分</button><button type="button" class="btn" data-minutes="10">10 分</button><button type="button" class="btn" data-minutes="15">15 分</button><button type="button" class="btn" data-minutes="20">20 分</button></div><div class="tb-custom-time"><span>自訂時間</span><div class="tb-duration-input" role="group" aria-label="自訂倒數時間"><label><input class="input" type="number" min="0" max="1440" step="1" inputmode="numeric" data-field="minutes" aria-label="分鐘"><span>分鐘</span></label><span class="tb-duration-separator" aria-hidden="true">:</span><label><input class="input" type="number" min="0" max="59" step="1" inputmode="numeric" data-field="seconds" aria-label="秒"><span>秒</span></label></div></div></div><p class="hint tb-untimed-hint" hidden>這一步由老師按「下一步」結束，不顯示倒數。</p></div><p class="tb-step-error" role="alert"></p><div class="tb-step-controls"><span>調整順序</span><button type="button" class="btn" data-action="up">上移</button><button type="button" class="btn" data-action="down">下移</button><button type="button" class="btn tb-step-delete" data-action="delete">刪除步驟</button></div></div>';
         row.querySelector('.tb-step-number').textContent=String(i+1);
+        const lockBadge=document.createElement('span');lockBadge.className='tb-state-badge '+(locked?'tb-state-locked':'tb-state-editable');lockBadge.textContent=locked?'已鎖定':'可編輯';
+        row.querySelector('summary').insertBefore(lockBadge,row.querySelector('.tb-step-expand'));
         row.querySelector('.tb-step-locked').hidden=!locked;
         row.querySelector('[data-field="title"]').value=step.title;row.querySelector('[data-field="description"]').value=step.description;
         row.querySelector('[data-field="timed"]').checked=step.durationSec!==null;
         row.querySelector('[data-field="minutes"]').value=Math.floor((step.durationSec||0)/60);row.querySelector('[data-field="seconds"]').value=(step.durationSec||0)%60;
         row.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=locked);
-        row.querySelector('[data-action="up"]').disabled=locked||i===0||(c&&c.status!=='ready'&&i===c.index+1);
+        row.querySelector('[data-action="up"]').disabled=locked||i===0||(c&&c.status==='active'&&i===c.index+1);
         row.querySelector('[data-action="down"]').disabled=locked||i===tbDraft.steps.length-1;
         row.querySelector('[data-action="delete"]').disabled=locked||tbDraft.steps.length===1;
         const timed=row.querySelector('[data-field="timed"]');const update=()=>{
@@ -13888,28 +13958,30 @@ classes.forEach((cls, idx)=>{
     }
     function tbCloseEditor(){tbEl('tb-editor').close();tbDraft=null;tbCreating=false;tbReturnFocus?.focus();}
     function tbSetSaveHint(){
-      tbText('tb-save-hint',tbCreating?'建立後會切換到新流程，並保存在流程庫供下次使用。':tbEl('tb-save-mode').value==='current'?'只更改今天這堂課，共用流程保持原樣。':tbEl('tb-save-mode').value==='update'?'今天的調整也會存回原本的共用流程，下次套用就會使用新版。':'今天的調整會另存為一套流程，原本的流程保持原樣。');
+      tbText('tb-save-hint',tbEl('tb-save-mode-wrap').hidden?'建立共用流程，各班皆可套用。':tbEl('tb-save-mode').value==='new'?'保留原流程，另存一套供各班套用。':'儲存修改，各班下次套用時會使用更新後的流程。');
     }
     function tbShowEditor(creating){
-      if(!tbCanWrite()||!creating&&(!tbCurrent()||tbCurrent().status==='completed'))return;
+      const blocked=tbEditBlockReason();if(blocked){appAlert(blocked);return;}
+      if(!creating&&!tbCurrent())return;
+      if(tbEl('tb-editor').open){tbEl('tb-edit-name').focus();return;}
       if(tbOwnsTimer()&&state.timer.running)pauseTimer();
       tbReturnFocus=creating?(tbCurrent()?tbEl('tb-library-open'):tbEl('tb-welcome-new')):tbEl('tb-edit');tbCreating=creating;
       tbDraft=creating?{id:tbId(),name:'',steps:[{id:tbId(),title:'',description:'',durationSec:180}]}:tbClone(tbCurrent());
       tbDraftActivity=tbCurrent()?.id||null;tbDraftRevision=saveHealth.revision;
       tbExpandedId=tbDraft.steps[!creating&&tbCurrent().status==='active'?Math.min(tbCurrent().index+1,tbDraft.steps.length-1):0].id;
-      tbText('tb-editor-title',creating?'建立課堂流程':'設定今天的任務');tbText('tb-editor-done',creating?'建立並使用':'完成設定');
+      tbText('tb-editor-title',creating?'建立共用流程':'編輯共用流程');tbText('tb-editor-done',creating?'建立並使用':'儲存流程');
       tbEl('tb-edit-name').value=tbDraft.name;tbEl('tb-editor-error').textContent='';
-      const mode=tbEl('tb-save-mode');mode.querySelector('[value="update"]').disabled=creating||!ensureTaskBoard().library.some(f=>f.id===tbDraft.sourceId);mode.value=creating?'new':'current';mode.disabled=creating;mode.closest('label').hidden=creating;tbSetSaveHint();
-      tbText('tb-editor-hint',creating?'填好任務與時間，再建立流程；取消不會留下空白流程。':tbCurrent().status==='ready'?'點開步驟即可調整，完成後就能投影。':'已暫停倒數。已開始的步驟保持原設定，仍可編輯後續任務。');
+      tbEl('tb-save-mode').value=tbSharedSaveKind(tbDraft.sourceId);tbEl('tb-save-mode-wrap').hidden=creating||tbEl('tb-save-mode').value==='new';tbSetSaveHint();
+      tbText('tb-editor-hint',creating?'填好任務與時間，再建立流程；取消不會留下空白流程。':tbCurrent().status==='completed'?'全部步驟皆可修改。儲存後回到第一步，倒數不會自動開始。':tbCurrent().status==='ready'?'點開步驟即可調整，完成後就能投影。':'已暫停倒數。已開始的步驟保持原設定，仍可編輯後續任務。');
       tbRenderEditor();tbEl('tb-editor').showModal();tbEl('tb-edit-name').focus();
     }
     async function tbOpenEditor(){tbShowEditor(false);}
     function tbSubmitEditor(kind){
-      if(!tbCanWrite())return;
+      const blocked=tbEditBlockReason();if(blocked){tbText('tb-editor-error',blocked);return;}
       try{
         if((tbCurrent()?.id||null)!==tbDraftActivity||saveHealth.revision!==tbDraftRevision)throw new Error('資料已更新，請取消後重新開啟編輯。');
         tbCollectDraft();
-        if(!tbDraft.name.trim()){tbEl('tb-edit-name').focus();throw new Error('請先填寫這堂課的名稱。');}
+        if(!tbDraft.name.trim()){tbEl('tb-edit-name').focus();throw new Error('請先填寫流程名稱。');}
         for(let i=0;i<tbDraft.steps.length;i++){
           const step=tbDraft.steps[i],row=tbEl('tb-edit-steps').children[i];let error='';
           if(!step.title.trim())error='請填寫學生要做的任務。';
@@ -13917,7 +13989,7 @@ classes.forEach((cls, idx)=>{
           if(error){row.open=true;row.querySelector('.tb-step-error').textContent=error;row.querySelector(step.title.trim()?'[data-field="minutes"]':'[data-field="title"]').focus();throw new Error(`步驟 ${i+1} 還有設定需要完成。`);}
         }
         if(tbCreating)tbCreateFlow(tbDraft);else tbSaveDraft(tbDraft,kind);
-        tbCloseEditor();tbEl('tb-edit').focus();tbText('tb-message','設定已完成，可以開始投影。');
+        tbCloseEditor();tbEl('tb-edit').focus();tbText('tb-message','共用流程已儲存，各班皆可套用。');
       }catch(e){tbText('tb-editor-error',e.message);}
     }
     function tbAskName(title,value,action){tbNameAction=action;tbReturnFocus=document.activeElement;tbText('tb-name-title',title);tbEl('tb-name-input').value=value;tbEl('tb-name-dialog').showModal();tbEl('tb-name-input').focus();}
@@ -13945,11 +14017,11 @@ classes.forEach((cls, idx)=>{
     tbEl('tb-name-cancel').addEventListener('click',()=>{tbEl('tb-name-dialog').close();tbReturnFocus?.focus();});
     tbEl('tb-edit').addEventListener('click',tbOpenEditor);tbEl('tb-editor-close').addEventListener('click',tbCloseEditor);
     tbEl('tb-editor').addEventListener('cancel',e=>{e.preventDefault();tbCloseEditor();});
-    tbEl('tb-editor-form').addEventListener('submit',e=>{e.preventDefault();tbSubmitEditor(tbEl('tb-save-mode').value);});
+    tbEl('tb-editor-form').addEventListener('submit',e=>{e.preventDefault();if(tbDraft)tbSubmitEditor(tbSharedSaveKind(tbDraft.sourceId,tbEl('tb-save-mode').value==='new'));});
     tbEl('tb-save-mode').addEventListener('change',tbSetSaveHint);
     tbEl('tb-add-step').addEventListener('click',()=>{tbCollectDraft();tbDraft.steps.push({id:tbId(),title:'',description:'',durationSec:180});tbExpandedId=tbDraft.steps.at(-1).id;tbRenderEditor();tbEl('tb-edit-steps').lastElementChild.querySelector('[data-field="title"]').focus();});
     tbEl('tb-project').addEventListener('click',tbProject);tbEl('tb-exit').addEventListener('click',tbExitProjection);
-    tbEl('tb-start').addEventListener('click',tbStart);tbEl('tb-next-button').addEventListener('click',tbNext);tbEl('tb-add-minute').addEventListener('click',tbAddMinute);tbEl('tb-restart').addEventListener('click',tbRestart);
+    tbEl('tb-start').addEventListener('click',tbStart);tbEl('tb-next-button').addEventListener('click',tbNext);tbEl('tb-add-minute').addEventListener('click',tbAddMinute);tbEl('tb-restart').addEventListener('click',()=>{tbRestart();if(tbEl('tb-restart').hidden)tbEl('tb-start').focus();});
     document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('tb-projecting'))tbEndProjection();});
     document.addEventListener('keydown',e=>{
       if(!document.body.classList.contains('tb-projecting'))return;
@@ -15477,7 +15549,7 @@ function onTimerDone(){
       elModeGroup?.classList.toggle('active', m==='group');
       // ★ 更多選單按鈕同步
       const _moreBtn = document.getElementById('mode-more');
-      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 課堂任務板'};
+      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 任務版'};
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
