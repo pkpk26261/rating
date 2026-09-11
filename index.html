@@ -6461,6 +6461,48 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #group-pane #grp-board .grp-member-select{min-height:44px;padding:4px 8px;gap:8px;}
     #group-pane #grp-board .grp-member-name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     #group-pane #grp-board .grp-avatar{width:26px;height:26px;font-size:13px;}
+
+    #seatwrap{grid-template-columns:minmax(0,1fr);}
+    #unassigned{position:fixed;top:16px;right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - 32px);max-height:calc(100dvh - 32px);box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--card)!important;box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;overflow:hidden;}
+    #unassigned.is-collapsed{transform:translateX(calc(100% + 24px));visibility:hidden;pointer-events:none;}
+    #unassigned.is-collapsed.is-touch-source{visibility:visible;opacity:0;pointer-events:none;}
+    .seat-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    #unassigned h4{margin:0;font-size:17px;}
+    #seat-unassigned-count{font-size:14px;font-weight:400;color:var(--muted);}
+    #seat-panel-collapse{min-height:44px;}
+    #seat-panel-search{width:100%;box-sizing:border-box;min-height:44px;flex-shrink:0;}
+    .seat-panel-hint{display:none;margin:0;font-size:13px;color:var(--muted);}
+    #unassigned-list{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;}
+    #unassigned-list .tile{min-height:52px;box-sizing:border-box;flex-shrink:0;gap:12px;padding:8px 12px;touch-action:pan-y;background:var(--bg);border:1px solid transparent;border-radius:9px;}
+    #unassigned-list .tile[hidden]{display:none;}
+    #unassigned-list:empty::after{content:'全班已安排座位';padding:12px 0;color:var(--muted);}
+    #unassigned-list.no-match::after{content:'沒有符合的學生';padding:12px 0;color:var(--muted);}
+    #seat-unassigned-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:79;width:24px;height:72px;padding:0;border:0;border-radius:8px 0 0 8px;background:color-mix(in srgb,var(--muted) 9%,var(--card));color:var(--muted);box-shadow:none;}
+    #seat-unassigned-tab::before{content:'';display:block;margin:auto;width:3px;height:24px;border-radius:3px;background:currentColor;opacity:.5;}
+    #seat-unassigned-tab span{position:absolute;right:30px;top:50%;transform:translateY(-50%);white-space:nowrap;visibility:hidden;opacity:0;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);transition:opacity 160ms;}
+    #seat-unassigned-tab:is(:hover,:focus-visible,.drag-hover) span{visibility:visible;opacity:1;}
+    #seat-unassigned-tab[hidden]{display:none;}
+    #seat-unassigned-tab.drag-hover,#unassigned.drag-hover{outline:2px solid var(--accent);outline-offset:-2px;}
+    #seat-unassigned-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+    .seat-drag-ghost.visible{opacity:1;transform:none;animation:seat-pickup 300ms cubic-bezier(.22,.68,.32,1);transition:none;}
+    @keyframes seat-pickup{from{transform:translate(var(--pickup-x),var(--pickup-y)) scale(.97);}to{transform:translate(0,0) scale(1);}}
+    .tile.seat-just-dropped{animation:seat-drop 360ms ease-out;}
+    @keyframes seat-drop{from{transform:translateY(-8px) scale(1.03);}to{transform:none;}}
+    @media(pointer:coarse){#seat-unassigned-tab{width:44px;background:transparent;}.seat-panel-hint{display:block;}}
+    @media(prefers-reduced-motion:reduce){#unassigned,#seat-unassigned-tab span{transition:none;}.seat-drag-ghost.visible,.tile.seat-just-dropped{animation:none;}}
+
+    #seatboard .seat-cell .tile{font-size:var(--seat-name-size,16px);gap:.4em;padding:8px 12px;box-sizing:border-box;}
+    #seatboard .seat-cell .student-name{font-size:inherit!important;line-height:1.25;font-weight:600;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+    #seatboard .seat-cell .seat-badge{font-size:.7em!important;line-height:1.2;padding:.1em .45em;flex-shrink:0;}
+
+    body[data-mode="seat"] .main .controls-row{flex-wrap:nowrap;overflow-x:auto;gap:12px;flex-shrink:0;white-space:nowrap;margin-bottom:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-sizing:border-box;}
+    body[data-mode="seat"] .controls-row>label{flex-shrink:0;}
+    body[data-mode="seat"] .controls-row #search-input{flex:0 0 220px;min-width:0;width:220px;}
+    body[data-mode="seat"] .controls-row #class-select{flex-shrink:0;}
+    body[data-mode="seat"] .controls-row #search-input{height:44px;box-sizing:border-box;}
+    body[data-mode="seat"] #seat-controls{flex:0 0 auto;flex-wrap:nowrap;gap:10px;margin:0;padding-left:16px;margin-left:4px;border-left:1px solid var(--line);}
+    body[data-mode="seat"] #seat-controls>.input{flex:0 0 64px;width:64px;min-width:64px;height:44px;box-sizing:border-box;}
+    body[data-mode="seat"] #seat-controls>.btn{flex-shrink:0;min-height:44px;}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -6609,7 +6651,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <button id="btn-view-seat" class="seg-btn active" title="依座位圖排列">🗺️ 座位圖</button>
             <button id="btn-view-order" class="seg-btn" title="依座號排列">🔢 座號</button>
           </div>
-        </div>
 
         <!-- 安排座位 -->
         <div id="seat-controls" class="seat-controls hidden">
@@ -6622,11 +6663,15 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           <button id="btn-clear" class="btn">清空</button>
           <span id="seat-hint" class="hint"></span>
         </div>
+        </div>
 
         <div id="seatwrap" class="seatwrap hidden">
           <div id="seatboard" class="seatboard" role="grid" aria-label="安排座位"></div>
-          <aside id="unassigned" class="unassigned">
-            <h4>未安排名單</h4>
+          <button id="seat-unassigned-tab" type="button" aria-label="展開未安排名單" aria-controls="unassigned" aria-expanded="false" hidden><span aria-hidden="true"></span></button>
+          <aside id="unassigned" class="unassigned" aria-label="未安排名單">
+            <div class="seat-panel-head"><h4>未安排名單 <span id="seat-unassigned-count"></span></h4><button id="seat-panel-collapse" type="button" class="btn">收納 ›</button></div>
+            <input id="seat-panel-search" class="input" type="search" placeholder="搜尋姓名或座號" aria-label="搜尋未安排學生">
+            <p class="seat-panel-hint">橫拖學生可移動，上下滑動瀏覽名單</p>
             <div id="unassigned-list" class="list"></div>
           </aside>
         </div>
@@ -7508,7 +7553,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       el?.classList.add('picked');
       // 視覺提示（在座位模式才顯示）
       const hint = document.getElementById('seat-hint');
-      if (hint) hint.textContent = '已選取：點任一座位格放置；點右側空白區可放回未安排。';
+      if (hint) hint.textContent = '已選取：點任一座位格放置；展開未安排名單後，點名單空白處可放回。';
 
       // ★ 浮動選取列 & 空位高亮
       const seatboard = document.getElementById('seatboard');
@@ -11804,7 +11849,93 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     initThemeToggle();
 
     /* ====== 安排座位模式 ====== */
+    // BEGIN SEAT PANEL
+    var seatPanelClass,seatPanelCollapsed=true,seatPanelTimer=null,seatEdgeGesture=null;
+    function setSeatPanelCollapsed(collapsed){
+      seatPanelCollapsed=collapsed;
+      const panel=document.getElementById('unassigned'),tab=document.getElementById('seat-unassigned-tab');
+      const preserve=collapsed && window._seatDrag?.active && window._seatDrag?.pointerType==='touch';
+      panel.classList.toggle('is-collapsed',collapsed);
+      panel.classList.toggle('is-touch-source',!!preserve);
+      panel.inert=collapsed && !preserve;
+      panel.setAttribute('aria-hidden',String(collapsed));
+      tab.hidden=!collapsed || state.mode!=='seat';tab.setAttribute('aria-expanded',String(!collapsed));
+    }
+    function cancelSeatPanelTimer(){clearTimeout(seatPanelTimer);seatPanelTimer=null;}
+    function hoverSeatPanel(target){
+      if(target?.id!=='seat-unassigned-tab'){cancelSeatPanelTimer();return;}
+      if(seatPanelTimer!==null || !seatPanelCollapsed) return;
+      seatPanelTimer=setTimeout(()=>{seatPanelTimer=null;if(!window._seatDragActive)return;setSeatPanelCollapsed(false);document.getElementById('unassigned').classList.add('drag-hover');},250);
+    }
+    function filterSeatPanel(){
+      const q=document.getElementById('seat-panel-search').value.trim().toLowerCase();
+      let visible=0;
+      document.querySelectorAll('#unassigned-list .tile').forEach(tile=>{tile.hidden=!!q && !tile.textContent.toLowerCase().includes(q);if(!tile.hidden)visible++;});
+      document.getElementById('unassigned-list').classList.toggle('no-match',!!q && !visible);
+    }
+    function syncSeatPanel(cls,count){
+      const changed=seatPanelClass!==cls;
+      if(changed){seatPanelClass=cls;document.getElementById('seat-panel-search').value='';}
+      document.getElementById('seat-unassigned-count').textContent=count+' 人';
+      const tab=document.getElementById('seat-unassigned-tab');tab.querySelector('span').textContent='未安排 · '+count+' 人';tab.setAttribute('aria-label','展開未安排名單，'+count+' 人');
+      setSeatPanelCollapsed(state.mode!=='seat' || (changed ? !count : (!count || seatPanelCollapsed)));
+      filterSeatPanel();
+    }
+    function resetSeatPanel(){
+      _cancelSeatDrag();cancelSeatPanelTimer();seatEdgeGesture=null;seatPanelClass=undefined;setSeatPanelCollapsed(true);
+    }
+    document.getElementById('seat-panel-search').addEventListener('input',filterSeatPanel);
+    document.getElementById('seat-panel-collapse').addEventListener('click',()=>setSeatPanelCollapsed(true));
+    document.getElementById('seat-unassigned-tab').addEventListener('click',()=>setSeatPanelCollapsed(false));
+    document.getElementById('unassigned').addEventListener('click',e=>{
+      if(state.mode!=='seat' || !pickedId || window._seatDragActive || window._seatDragJustEnded || e.target.closest('.tile,button,input'))return;
+      const cls=elSelect.value,st=ensureSeatState(cls);
+      for(const k in st.map)if(st.map[k]===pickedId)delete st.map[k];
+      saveSeatState(cls,st);clearPicked(true);renderSeatUI(cls);renderStudents(cls);renderLeaderboard(cls);
+    });
+    document.addEventListener('touchstart',e=>{
+      seatEdgeGesture=null;
+      if(state.mode!=='seat' || !seatPanelCollapsed || window._seatDrag || e.touches.length!==1)return;
+      const t=e.touches[0],blank=e.target.matches?.('#seatwrap,#seatboard');
+      if(!blank && (t.clientX<innerWidth-28 || t.clientX>innerWidth))return;
+      seatEdgeGesture={id:t.identifier,x:t.clientX,y:t.clientY};e.stopPropagation();
+    },{capture:true,passive:true});
+    document.addEventListener('touchmove',e=>{
+      const g=seatEdgeGesture;if(!g)return;
+      if(state.mode!=='seat' || !seatPanelCollapsed || e.touches.length!==1){seatEdgeGesture=null;return;}
+      const t=e.touches[0];if(t.identifier!==g.id){seatEdgeGesture=null;return;}
+      const dx=g.x-t.clientX,dy=Math.abs(g.y-t.clientY);
+      if(!g.horizontal){if(Math.hypot(dx,dy)<=8)return;if(dx<=dy){seatEdgeGesture=null;return;}g.horizontal=true;}
+      if(e.cancelable)e.preventDefault();
+      if(dx>=24){seatEdgeGesture=null;setSeatPanelCollapsed(false);}
+    },{capture:true,passive:false});
+    document.addEventListener('touchend',()=>{seatEdgeGesture=null;},true);
+    document.addEventListener('touchcancel',()=>{seatEdgeGesture=null;},true);
+    // END SEAT PANEL
+
+    function fitSeatNames(){
+      if(state.mode!=='seat')return;
+      document.querySelectorAll('#seatboard .seat-cell .tile').forEach(tile=>{
+        if(!tile.clientWidth || !tile.clientHeight)return;
+        const name=tile.querySelector('.student-name'),badge=tile.querySelector('.seat-badge');
+        if(!name)return;
+        let size=Math.max(14,Math.min(48,(tile.clientHeight-16)*.4));
+        tile.style.setProperty('--seat-name-size',size+'px');
+        // Measure the full name at the preferred size, then shrink the whole label together.
+        for(let i=0;i<3;i++){
+          const natural=name.scrollWidth+(badge?.getBoundingClientRect().width||0)+(badge?size*.4:0);
+          const available=Math.max(1,tile.clientWidth-24);
+          if(natural<=available)break;
+          size=Math.max(8,size*available/natural);
+          tile.style.setProperty('--seat-name-size',size+'px');
+        }
+      });
+    }
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(fitSeatNames).observe(document.getElementById('seatboard'));
+    document.fonts?.ready.then(fitSeatNames);
+
     function renderSeatUI(cls){
+      if(window._seatDrag)_cancelSeatDrag();
       // 👉 若尚未選班級，直接清空座位區與未安排名單，並設置預設欄數
       if(!cls){
         const defaultRows = clampSize(elRows.value || 6);
@@ -11847,6 +11978,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
         // 右側未安排名單清空即可（沒有學生）
         elUnassignedList.innerHTML = '';
+        syncSeatPanel(cls,0);
         elSeatHint.textContent = '請先上傳學生名單';
         return;
       }
@@ -11904,7 +12036,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           });
           const onTapPlace = (e) => {
             if (state.mode !== 'seat') return;
-            if (window._seatDragActive) return; // 自訂拖曳進行中，跳過
+            if (window._seatDragActive || window._seatDragJustEnded) return; // 拖曳後不再次觸發點選
             e.preventDefault();
             e.stopPropagation();
             const key = r + '-' + c;
@@ -11929,7 +12061,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
 
           // 捕獲階段綁定，行動裝置上更穩定
-          cell.addEventListener('pointerup', onTapPlace, { capture: true });
           cell.addEventListener('click',      onTapPlace, { capture: true });
 
           if(id){ 
@@ -11961,6 +12092,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       const assignedIds=new Set(Object.values(st.map||{}));
       const unassigned=list.filter(s=> !assignedIds.has(s.id));
       unassigned.forEach(s=>{ elUnassignedList.appendChild(createTile(cls, s, q)); });
+      syncSeatPanel(cls,unassigned.length);
 
       // ★ 還原未安排名單中的選取狀態
       if(pickedId){
@@ -11969,22 +12101,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }
 
       // ★ 下一幀移除 no-transition，讓後續互動恢復動畫
-      requestAnimationFrame(()=>{ elSeatboard.classList.remove('no-transition'); });
-
-      /* 原生 dragover/dragleave/drop 已由自訂 pointer 拖曳系統取代 */
-      // 觸控：點未安排名單的空白處 → 把選取的學生放回未安排
-      // ✅ 觸控：點未安排名單的空白處 → 把選取的學生放回未安排（pointerup 版本）
-      const onUnassignedTap = (e)=>{
-          if(!ENABLE_TAP_PICK || !pickedId) return;
-          if(window._seatDragActive) return; // 自訂拖曳進行中，跳過
-          if (e.target.closest('.tile')) return;
-        const st2 = ensureSeatState(cls);
-        for (const k in st2.map){ if (st2.map[k] === pickedId) delete st2.map[k]; }
-        saveSeatState(cls, st2);
-        clearPicked(true);
-        renderSeatUI(cls); renderStudents(cls); renderLeaderboard(cls);
-      };
-      elUnassigned.addEventListener('pointerup', onUnassignedTap);
+      requestAnimationFrame(()=>{ elSeatboard.classList.remove('no-transition');fitSeatNames(); });
 
       renderStudents(cls);
 
@@ -12005,13 +12122,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       // ★ 自訂 pointer 拖曳（取代原生 HTML5 DnD）
       tile.addEventListener('pointerdown', (e)=>{
-        if(e.button !== 0 || state.mode !== 'seat') return;
+        if(e.button !== 0 || e.isPrimary===false || state.mode !== 'seat') return;
         if(window._seatDrag) _cancelSeatDrag();
         try{ tile.setPointerCapture(e.pointerId); }catch{}
         const rect = tile.getBoundingClientRect();
         window._seatDrag = {
           id: s.id, tile, cls,
-          pointerId: e.pointerId,
+          pointerId: e.pointerId, pointerType:e.pointerType,
           startX: e.clientX, startY: e.clientY,
           offsetX: e.clientX - rect.left,
           offsetY: e.clientY - rect.top,
@@ -12067,7 +12184,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     function _teardownSeatDrag(d) {
       if (!d) return;
-      _clearSeatDragHL();
+      _clearSeatDragHL();cancelSeatPanelTimer();
+      document.getElementById('unassigned').classList.remove('drag-hover');
+      if (d.active)setSeatPanelCollapsed(true);
       if (d.ghost) {
         d.ghost.classList.remove('visible');
         d.ghost.remove();
@@ -12083,6 +12202,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       window._seatDrag = null;
       _teardownSeatDrag(d);
       window._seatDragActive = false;
+      if(d?.active)_markSeatDragEnded();
       return d;
     }
 
@@ -12091,6 +12211,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       setTimeout(() => { window._seatDragJustEnded = false; }, 250);
     }
 
+    document.addEventListener('pointerdown',e=>{if(e.isPrimary===false)_cancelSeatDrag();},true);
     document.addEventListener('pointermove', (e) => {
       const d = window._seatDrag;
       if (!d) return;
@@ -12100,7 +12221,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       // 未達拖曳門檻 → 不啟動
       if (!d.active) {
-        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        if(d.pointerType==='touch'){
+          if(Math.hypot(dx,dy)<=8)return;
+          if(Math.abs(dx)<=Math.abs(dy)){_cancelSeatDrag();return;}
+        }else if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         // ── 開始拖曳 ──
         d.active = true;
         window._seatDragActive = true;
@@ -12110,16 +12234,21 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const ghost = document.createElement('div');
         ghost.className = 'seat-drag-ghost';
         ghost.innerHTML = d.tile.innerHTML;
+        const origin=d.tile.getBoundingClientRect();
+        ghost.style.setProperty('--pickup-x',(origin.left-e.clientX-4)+'px');
+        ghost.style.setProperty('--pickup-y',(origin.top-e.clientY-4)+'px');
         document.body.appendChild(ghost);
         d.ghost = ghost;
         requestAnimationFrame(() => ghost.classList.add('visible'));
         d.tile.classList.add('dragging-src');
+        setSeatPanelCollapsed(true);
       }
 
+      if(e.cancelable)e.preventDefault();
       // 定位幽靈
       if (d.ghost) {
-        d.ghost.style.left = (e.clientX - d.offsetX) + 'px';
-        d.ghost.style.top  = (e.clientY - d.offsetY) + 'px';
+        d.ghost.style.left = (e.clientX + 4) + 'px';
+        d.ghost.style.top  = (e.clientY + 4) + 'px';
       }
 
       // 高亮 drop 目標
@@ -12139,12 +12268,12 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }
 
       // ── 拖曳結束：執行 drop ──
+      const target = document.elementFromPoint(e.clientX, e.clientY);
       _teardownSeatDrag(d);
 
-      // 找出滑鼠下方的目標元素
-      const target = document.elementFromPoint(e.clientX, e.clientY);
+      // Resolve the target before the drawer retracts.
       const cell = target?.closest('.seat-cell');
-      const unArea = target?.closest('.unassigned');
+      const unArea = target?.closest('#unassigned,#seat-unassigned-tab');
 
       if (cell && !cell.classList.contains('seat-disabled')) {
         const r = parseInt(cell.dataset.r);
@@ -12160,6 +12289,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       window._seatDragActive = false;
       _markSeatDragEnded();
+      document.querySelectorAll('#seatwrap .tile').forEach(tile=>{if(tile.dataset.id===d.id){tile.classList.add('seat-just-dropped');setTimeout(()=>tile.classList.remove('seat-just-dropped'),400);}});
     });
 
     document.addEventListener('pointercancel', (e) => {
@@ -12171,17 +12301,18 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     // Esc 取消拖曳
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && window._seatDrag?.active) {
-        _cancelSeatDrag();
+      if (e.key === 'Escape') {
+        _cancelSeatDrag();cancelSeatPanelTimer();seatEdgeGesture=null;
       }
     });
 
     window.addEventListener('blur', () => {
       if (window._seatDrag) _cancelSeatDrag();
+      cancelSeatPanelTimer();seatEdgeGesture=null;
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && window._seatDrag) _cancelSeatDrag();
+      if(document.hidden){_cancelSeatDrag();cancelSeatPanelTimer();seatEdgeGesture=null;}
     });
 
     function _updateSeatDragHL(e) {
@@ -12192,9 +12323,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       d.ghost.style.display = 'none';
       const el = document.elementFromPoint(e.clientX, e.clientY);
       d.ghost.style.display = '';
-      if (!el) return;
+      if (!el){cancelSeatPanelTimer();return;}
+      hoverSeatPanel(el.closest('#seat-unassigned-tab'));
       const cell = el.closest('.seat-cell');
-      const unArea = el.closest('.unassigned');
+      const unArea = el.closest('#unassigned,#seat-unassigned-tab');
       if (cell && !cell.classList.contains('seat-disabled')) {
         cell.classList.add('drag-hover');
         _lastDragHL = cell;
@@ -13825,8 +13957,10 @@ function onTimerDone(){
       const pane=document.getElementById('group-pane');
       if(e.touches.length!==1 || pane.classList.contains('hidden') || !groupPanelCollapsed || _groupDrag) return;
       const t=e.touches[0];
-      // An invisible edge gesture, without covering group cards or enlarging the handle.
-      if(t.clientX<window.innerWidth-28 || t.clientX>window.innerWidth) return;
+      // Only bare workspace surfaces qualify; member cards and controls keep their own gestures.
+      const blankWorkspace=e.target?.matches?.('#group-pane, #group-pane .grp-workspace, #group-pane .grp-groups-section')===true;
+      const rightEdge=t.clientX>=window.innerWidth-28 && t.clientX<=window.innerWidth;
+      if(!blankWorkspace && !rightEdge) return;
       groupEdgeGesture={id:t.identifier,x:t.clientX,y:t.clientY,cls:groupPanelClass};
       e.stopPropagation();
     },{capture:true,passive:true});
@@ -14762,6 +14896,7 @@ function onTimerDone(){
 
     /* ====== 顯示模式切換 ====== */
     function setMode(m){
+      if(state.mode==='seat' || m==='seat')resetSeatPanel();
       if(state.mode==='group' || m==='group') resetGroupPanel();
       if(m!=='hw')setHWGrading(false);
       if(state.mode === 'manage' && m !== 'manage' && manageEditMode) applyManageEdits();
