@@ -6509,7 +6509,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body.no-data[data-mode="taskboard"] #btn-reset{display:inline-flex !important;}
     #taskboard-pane{display:flex;flex-direction:column;width:100%;min-width:0;min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;scroll-padding-bottom:90px;}
     #taskboard-pane.hidden{display:none;}
-    #tb-stage:not(.tb-projecting){flex:1 0 auto;box-sizing:border-box;}
+    #tb-stage:not(.tb-projecting){flex:1 1 0;box-sizing:border-box;}
     #tb-stage:not(.tb-projecting) .tb-actions{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:12px 0 max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line);}
     #taskboard-pane [hidden],.tb-dialog [hidden]{display:none !important;}
     #taskboard-pane .btn,.tb-dialog .btn,.tb-dialog .input,#tb-library{min-height:44px;}
@@ -6608,6 +6608,16 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #tb-next{margin-bottom:calc(-1 * var(--tb-stage-gap,16px));align-self:stretch;box-sizing:border-box;max-width:100%;padding:18px 24px;border:0;border-top:1px solid var(--line);border-radius:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 6%,transparent),transparent);color:var(--text);font-weight:500;letter-spacing:.025em;line-height:1.6;text-align:center;}
     .tb-stage.tb-projecting #tb-next{margin-bottom:0;}
     .tb-stage.tb-projecting .tb-actions{padding-top:8px;}
+    /* 一般任務版依實際可用高度排版，保留底部操作空間。 */
+    #taskboard-pane:has(#tb-stage:not([hidden])){container-type:size;scroll-padding-bottom:0;}
+    #tb-stage:not(.tb-projecting){min-height:0;--tb-stage-gap:clamp(4px,1.5cqh,16px);padding:clamp(8px,2cqh,24px) clamp(12px,3vw,40px);}
+    #tb-stage:not(.tb-projecting) .tb-focus{min-height:0;gap:clamp(6px,2cqh,18px);padding:clamp(0px,1cqh,12px) 0;}
+    #tb-stage:not(.tb-projecting) .tb-copy h3{font-size:clamp(28px,min(7.2vw,15cqh),132px);margin:0 0 clamp(4px,1.5cqh,14px);}
+    #tb-stage:not(.tb-projecting) #tb-time{font-size:clamp(44px,min(12vw,23cqh),184px);}
+    #tb-stage:not(.tb-projecting) #tb-description{font-size:clamp(16px,min(2vw,4cqh),32px);}
+    #tb-stage:not(.tb-projecting) #tb-status{font-size:clamp(14px,min(1.5vw,3cqh),22px);margin-top:clamp(4px,1cqh,10px);}
+    #tb-stage:not(.tb-projecting) #tb-next{flex-shrink:0;font-size:clamp(14px,min(1.5vw,3cqh),23px);padding:clamp(4px,1.5cqh,18px) 12px;}
+    #tb-stage:not(.tb-projecting) .tb-actions{position:static;flex-shrink:0;padding:clamp(4px,1cqh,12px) 0 max(4px,env(safe-area-inset-bottom));}
     #tb-title{width:100%;white-space:nowrap;overflow:hidden;text-wrap:nowrap;}
     #tb-title-text{display:inline-block;white-space:nowrap;max-width:none;vertical-align:top;}
     #tb-title[data-overflow="true"]{text-align:left;}
@@ -6686,6 +6696,63 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body[data-mode="taskboard"] .controls-row:has(#tb-preparation[hidden]){display:none !important;}
     /* END TASK BOARD STYLE */
 
+
+    #attendance-pane{display:flex;flex-direction:column;min-height:0;min-width:0;flex:1;gap:10px;}
+    #attendance-pane.hidden{display:none;}
+    body[data-mode="attendance"] .main>.controls-row{display:none!important;}
+    .att-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;}
+    .att-board-field{display:flex;align-items:center;gap:10px;margin-right:auto;font-weight:700;min-width:0;}
+    #att-board-select{width:min(340px,45vw);min-width:160px;max-width:100%;}
+    .att-help{margin:0;font-size:13px;color:var(--muted);}
+    .att-class-picker{position:relative;display:inline-flex;min-width:0;max-width:100%;}
+    .att-class-picker .class-select-display{inset:0;width:100%;height:100%;padding:0 14px;font-size:15px;font-weight:650;}
+    #att-board-select{height:48px;border-radius:12px;background-color:var(--card);border-color:var(--line);}
+    .att-summary{display:flex;align-items:center;flex-wrap:wrap;gap:14px;width:fit-content;max-width:100%;font-size:12px;}
+    .att-stat{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+    .att-stat-icon{width:14px;flex-shrink:0;text-align:center;font-size:14px;color:var(--muted);}
+    .att-stat-label{color:var(--muted);white-space:nowrap;}
+    .att-stat[data-status="present"] .att-stat-icon{color:var(--accent);}
+    .att-stat[data-status="absent"] .att-stat-icon{color:var(--bad,#e57585);}
+    .att-stat[data-status="late"] .att-stat-icon{color:var(--warn,#d8a739);}
+    .att-scroll{overflow:auto;min-height:0;max-width:100%;border:1px solid var(--line);border-radius:10px;overscroll-behavior:contain;scrollbar-gutter:stable;}
+    .att-table{table-layout:fixed;border-collapse:separate;border-spacing:0;}
+    .att-table th,.att-table td{box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 4px;text-align:center;background:var(--card);}
+    .att-table thead th{position:sticky;top:0;z-index:2;vertical-align:top;}
+    .att-table tr>:first-child{position:sticky;left:0;width:60px;z-index:3;vertical-align:middle;}
+    .att-table tr>:nth-child(2){position:sticky;left:60px;width:120px;z-index:3;vertical-align:middle;overflow-wrap:anywhere;}
+    .att-table thead th:nth-child(-n+2){z-index:4;}
+    .att-table thead .att-selected{box-shadow:inset 0 3px var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));}
+    .att-column-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;height:56px;min-width:0;padding:5px 0;font:inherit;line-height:1.35;white-space:nowrap;overflow:hidden;background:transparent;color:var(--fg);border:0;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
+    .att-head-date{display:flex;align-items:baseline;justify-content:center;gap:3px;white-space:nowrap;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
+    .att-head-weekday{font-size:10px;font-weight:400;color:var(--muted);}
+    .att-head-subject{font-size:11px;font-weight:500;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .att-head-period{max-width:100%;box-sizing:border-box;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--accent) 8%,var(--card));color:var(--accent);font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .att-head-fallback{font-size:12px;font-weight:650;}
+    .att-mark{width:100%;min-width:44px;height:44px;padding:0;border:0;border-radius:5px;background:transparent;color:inherit;font-size:26px;cursor:pointer;touch-action:pan-x pan-y;-webkit-touch-callout:none;user-select:none;}
+    .att-mark:hover{background:transparent;}
+    .att-mark[data-status="present"]{color:var(--accent);background:transparent;}
+    .att-mark[data-status="absent"]{color:var(--bad,#e57585);background:transparent;}
+    .att-mark[data-status="late"]{color:var(--warn,#d8a739);background:transparent;}
+    #attendance-pane button:focus-visible,.att-menu button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+    .att-dialog{color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;width:390px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);box-sizing:border-box;overflow:auto;}
+    .att-dialog::backdrop{background:#0007;}
+    .att-dialog h2{font-size:20px;margin:0 0 12px;}
+    .att-dialog label{display:flex;flex-direction:column;gap:6px;margin:14px 0;font-size:14px;}
+    .att-dialog input,.att-dialog select{width:100%;min-width:0;box-sizing:border-box;}
+    .att-actions{display:flex;justify-content:flex-end;gap:8px;}
+    .att-dialog .att-delete-column{margin-right:auto;color:var(--bad,#c63948);background:transparent;}
+    .att-dialog .btn,.att-dialog .input,#attendance-pane .btn,#att-board-select{min-height:44px;}
+    .att-dialog .btn,#attendance-pane .btn{background:var(--card);color:var(--fg);border:1px solid var(--line);}
+    .att-dialog .att-primary,#attendance-pane .att-primary{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+    .att-empty{margin:auto;text-align:center;padding:32px 12px;}
+    .att-empty>.att-icon{width:44px;height:44px;margin-bottom:12px;color:var(--accent);}
+    .att-empty h2{font-size:20px;}.att-empty p{color:var(--muted);line-height:1.7;}
+    .att-error,.att-danger{color:#c63948;}
+    .att-menu{position:fixed;z-index:20000;min-width:170px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:0 8px 30px #0003;}
+    .att-menu-item{display:block;width:100%;text-align:left;min-height:44px;padding:8px 12px;color:var(--fg);background:transparent;border:0;border-radius:6px;cursor:pointer;font:inherit;font-size:14px;}
+    .att-menu-item:hover{background:color-mix(in srgb,var(--accent) 12%,var(--card));}.att-menu-item.att-danger{color:#c63948;}
+    @media(max-width:600px){.att-board-field{flex-basis:100%;}#att-board-select{flex:1;width:auto;}.att-summary{gap:6px 10px;}}
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -6746,6 +6813,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <button id="mode-seat-more" class="more-item" data-mode="seat" data-icon="🪑">座位</button>
                 <button id="mode-group" class="more-item" data-mode="group" data-icon="👥">分組</button>
                 <button id="mode-draw" class="more-item" data-mode="draw" data-icon="🎲">抽號</button>
+                <button id="mode-attendance" class="more-item" data-mode="attendance"><svg class="ui-icon att-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M9 4V2h6v2M8 10l1.5 1.5L12 9m2 2h3M8 16l1.5 1.5L12 15m2 2h3"/></svg><span>點名板</span></button>
                 <button id="mode-taskboard" class="more-item" data-mode="taskboard" data-icon="📋">任務版</button>
                 <button id="mode-timer" class="more-item" data-mode="timer" data-icon="⏳">倒數計時</button>
               </div>
@@ -6838,7 +6906,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
           <div id="tb-preparation" class="tb-toolbar tb-preparation" hidden>
             <button class="btn tb-current-flow" id="tb-library-open" aria-label="選擇流程"><span id="tb-prep-name">選擇流程</span><span aria-hidden="true">▾</span></button>
-            <button class="btn" id="tb-edit">編輯任務</button><span id="tb-lock-status" class="tb-state-badge tb-state-locked" role="status" hidden></span><button class="btn primary" id="tb-project">開始並投影</button>
+            <button class="btn" id="tb-edit">編輯任務</button><span id="tb-lock-status" class="tb-state-badge tb-state-locked" role="status" hidden></span><button class="btn primary" id="tb-project">開始投影</button>
           </div>
 
         <!-- 安排座位 -->
@@ -6951,6 +7019,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         </section>
 
         <!-- BEGIN TASK BOARD UI -->
+        <section id="attendance-pane" class="hidden" aria-label="點名板"></section>
         <section id="taskboard-pane" class="hidden" aria-label="任務版">
           <div id="tb-welcome" class="tb-welcome" aria-labelledby="tb-welcome-title">
             <span class="tb-eyebrow">任務版</span>
@@ -7472,6 +7541,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <input type="checkbox" class="clear-cb" value="progress"> 📖 教學進度
           </label>
           <label class="clear-opt" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; cursor:pointer;">
+            <input type="checkbox" class="clear-cb" value="attendance"> 點名紀錄
+          </label><label>
             <input type="checkbox" class="clear-cb" value="taskBoard"> 📋 課堂任務板（流程庫與本次課堂）
           </label>
           <label class="clear-opt" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;">
@@ -7760,6 +7831,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       warningThreshold: 60,
       // ★ 新增：教學進度（跨班勾選）與倒數計時
       progress:{ pages:{}, order:[], active:'' },
+      attendance:{version:2,boards:[],activeBoardId:''},
       taskBoard:{library:[],current:null},
       timer:{ setSec: 300, remainingSec: 300, running:false, endAt: 0 }
     };
@@ -8032,6 +8104,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }
     }
     function writeLocalJSON(key, value){
+      if(key===SESSION_KEY&&saveHealth.attendanceError)return false;
       if(typeof cloudImportStaging!=='undefined' && cloudImportStaging) return true;
       if(!TabLock.isActive()) return false;
       try{
@@ -8084,6 +8157,143 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     // END SAVE STATUS MODEL
 
     // BEGIN FULL BACKUP MODEL
+    // BEGIN ATTENDANCE MODEL
+    function attendanceEmpty(){return {version:2,boards:[],activeBoardId:''};}
+    function attendanceClassTables(data,classes){
+      const byClass=new Map(),used=new Set(data.boards.map(b=>b.id));
+      for(const b of data.boards){
+        const target=byClass.get(b.rosterKey);
+        if(!target){byClass.set(b.rosterKey,b);continue;}
+        const ids=new Set(target.columns.map(c=>c.id));
+        for(const column of b.columns){
+          let id=column.id;
+          if(ids.has(id)){const base=JSON.stringify([b.id,id]);id=base;let n=1;while(ids.has(id))id=base+':'+n++;}
+          target.columns.push(id===column.id?column:{...column,id});ids.add(id);
+        }
+        if(data.activeBoardId===b.id)data.activeBoardId=target.id;
+      }
+      for(const key of Object.keys(classes))if(!byClass.has(key)){
+        const base='class:'+key;let id=base,n=1;while(used.has(id))id=base+':'+n++;
+        used.add(id);byClass.set(key,{id,rosterKey:key,subject:'點名',columns:[]});
+      }
+      data.boards=[...byClass.values()];
+      if(!data.boards.some(b=>b.id===data.activeBoardId))data.activeBoardId=data.boards[0]?.id||'';
+      return data;
+    }
+    function normalizeAttendance(input,classes){
+      const fail=()=>{throw Error('點名板資料格式無效，原紀錄未變更。');};
+      const record=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+      if(input===undefined)input=attendanceEmpty();
+      if(!record(input))fail();
+      let data;
+      if(Object.hasOwn(input,'version')){
+        if(input.version!==2)fail();
+        data=JSON.parse(JSON.stringify(input));
+      }else{
+        data=attendanceEmpty();
+        for(const [cls,lessons]of Object.entries(input)){
+          if(!Object.hasOwn(classes,cls)||!Array.isArray(lessons))fail();
+          const groups=new Map(),ids=new Set();
+          for(const l of lessons){
+            if(!record(l)||typeof l.id!=='string'||!l.id||ids.has(l.id)||typeof l.subject!=='string'||!l.subject.trim())fail();
+            ids.add(l.id);
+            const subject=l.subject.trim();
+            if(!groups.has(subject)){
+              const board={id:'legacy:'+JSON.stringify([cls,subject]),rosterKey:cls,subject,columns:[]};
+              groups.set(subject,board);data.boards.push(board);
+            }
+            groups.get(subject).columns.push(JSON.parse(JSON.stringify(l)));
+          }
+        }
+        data.activeBoardId=data.boards[0]?.id||'';
+      }
+      if(!Array.isArray(data.boards)||typeof data.activeBoardId!=='string')fail();
+      const boardIds=new Set(),pairs=new Set();
+      for(const b of data.boards){
+        if(!record(b)||typeof b.id!=='string'||!b.id||boardIds.has(b.id)||typeof b.rosterKey!=='string'||!Object.hasOwn(classes,b.rosterKey)||typeof b.subject!=='string'||!b.subject.trim()||b.subject.length>80||!Array.isArray(b.columns))fail();
+        const pair=JSON.stringify([b.rosterKey,b.subject.trim()]);if(pairs.has(pair))fail();
+        boardIds.add(b.id);pairs.add(pair);
+        const students=new Set(classes[b.rosterKey].map(s=>s.id)),columnIds=new Set();
+        for(const l of b.columns){
+          if(!record(l)||typeof l.id!=='string'||!l.id||columnIds.has(l.id))fail();
+          columnIds.add(l.id);
+          for(const k of ['date','period','subject'])if(typeof l[k]!=='string'||l[k].length>80)fail();
+          if(l.date&&(!/^\d{4}-\d{2}-\d{2}$/.test(l.date)||!Number.isFinite(Date.parse(l.date))||new Date(l.date).toISOString().slice(0,10)!==l.date))fail();
+          if(!record(l.marks))fail();
+          for(const [id,status]of Object.entries(l.marks))if(!students.has(id)||!['present','absent','late'].includes(status))fail();
+        }
+      }
+      if(data.activeBoardId&&!boardIds.has(data.activeBoardId))fail();
+      return attendanceClassTables(data,classes);
+    }
+    function validateAttendance(data,classes){return normalizeAttendance(data,classes);}
+    function attendanceData(){
+      if(saveHealth.attendanceError)throw Error(saveHealth.attendanceError);
+      if(state.attendance?.version!==2)state.attendance=normalizeAttendance(state.attendance,state.classMap);
+      return attendanceClassTables(state.attendance,state.classMap);
+    }
+    function attendanceBoard(id){const b=attendanceData().boards.find(b=>b.id===id);if(!b)throw Error('找不到點名板，請重新選擇。');return b;}
+    function attendanceWritable(){
+      if(saveHealth.attendanceError)throw Error(saveHealth.attendanceError);
+      if(!TabLock.isActive())throw Error('此視窗為唯讀，請先切換至作用中視窗。');
+      if(saveHealth.busy&&saveHealth.operation==='download')throw Error('正在載入雲端資料，請稍候再點名。');
+    }
+    function attendanceCreateBoard(rosterKey,subject){
+      attendanceWritable();subject=subject.trim();
+      if(!Object.hasOwn(state.classMap,rosterKey)||!subject||subject.length>80)throw Error('請選擇班級並填寫科目（最多 80 字）。');
+      const data=attendanceData(),existing=data.boards.find(b=>b.rosterKey===rosterKey);
+      const board=existing||{id:crypto.randomUUID(),rosterKey,subject,columns:[]};
+      if(!existing)data.boards.push(board);
+      data.activeBoardId=board.id;saveSession(existing?'attendance board select':'attendance board create');return board.id;
+    }
+    function attendanceRenameBoard(id,subject){
+      attendanceWritable();const b=attendanceBoard(id);subject=subject.trim();
+      if(!subject||subject.length>80)throw Error('科目必填，最多 80 字。');
+      if(attendanceData().boards.some(x=>x.id!==id&&x.rosterKey===b.rosterKey&&x.subject===subject))throw Error('此班級與科目的點名板已存在。');
+      b.subject=subject;saveSession('attendance board rename');
+    }
+    function attendanceDeleteBoard(id){
+      attendanceWritable();attendanceBoard(id);const data=attendanceData();data.boards=data.boards.filter(b=>b.id!==id);
+      if(data.activeBoardId===id)data.activeBoardId=data.boards[0]?.id||'';saveSession('attendance board delete');
+    }
+    function attendanceSaveLesson(boardId,input,id=null){
+      attendanceWritable();const b=attendanceBoard(boardId),old=b.columns.find(l=>l.id===id);
+      if(id&&!old)throw Error('找不到這次點名，請重新開啟。');
+      const l={id:old?.id||crypto.randomUUID(),date:input.date.trim(),period:input.period.trim(),subject:input.subject.trim(),marks:old?.marks||{}};
+      const columns=old?b.columns.map(x=>x.id===id?l:x):[...b.columns,l];
+      normalizeAttendance({version:2,boards:[{...b,columns}],activeBoardId:b.id},state.classMap);
+      b.columns=columns;saveSession('attendance column');return l.id;
+    }
+    function attendanceMark(boardId,columnId,studentId,status){
+      attendanceWritable();const b=attendanceBoard(boardId),l=b.columns.find(l=>l.id===columnId);
+      if(!l||!state.classMap[b.rosterKey]?.some(s=>s.id===studentId))throw Error('找不到點名欄或學生，請重新開啟點名板。');
+      if(!['','present','absent','late'].includes(status))throw Error('點名狀態無效。');
+      if(status)l.marks[studentId]=status;else delete l.marks[studentId];saveSession('attendance mark');
+    }
+    function attendanceDeleteLesson(boardId,id){attendanceWritable();const b=attendanceBoard(boardId);b.columns=b.columns.filter(l=>l.id!==id);saveSession('attendance column delete');}
+    function attendanceReconcile(data,classes){
+      // Used after a deliberate roster mutation; validation occurs before imports are applied.
+      const result=JSON.parse(JSON.stringify(data||attendanceEmpty()));
+      if(result.version!==2)return result;
+      result.boards=result.boards.filter(b=>Object.hasOwn(classes,b.rosterKey));
+      for(const b of result.boards){const ids=new Set(classes[b.rosterKey].map(s=>s.id));for(const l of b.columns)for(const id of Object.keys(l.marks))if(!ids.has(id))delete l.marks[id];}
+      if(!result.boards.some(b=>b.id===result.activeBoardId))result.activeBoardId=result.boards[0]?.id||'';
+      return result;
+    }
+    function attendanceGuard(boardId,columnId=null){
+      const board=attendanceBoard(boardId),target=columnId?board.columns.find(c=>c.id===columnId):board;
+      if(!target)throw Error('這次點名已移除，請重新選擇。');
+      const expected=JSON.stringify(target);
+      return ()=>{
+        attendanceWritable();
+        const current=attendanceData().boards.find(b=>b.id===boardId),value=columnId?current?.columns.find(c=>c.id===columnId):current;
+        if(!value||JSON.stringify(value)!==expected)throw Error('點名資料已更新，尚未套用這次修改。請取消後重新開啟。');
+      };
+    }
+    function attendanceRenameRoster(oldName,newName){for(const b of state.attendance?.boards||[])if(b.rosterKey===oldName)b.rosterKey=newName;}
+    function attendanceRemoveStudent(cls,id){for(const b of state.attendance?.boards||[])if(b.rosterKey===cls)for(const l of b.columns)delete l.marks[id];}
+    // END ATTENDANCE MODEL
+
     const BACKUP_FORMAT = 'pscore-full-backup';
     const BACKUP_VERSION = 1;
     const BACKUP_MAX_BYTES = 50 * 1024 * 1024;
@@ -8201,11 +8411,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       record(d.timer,'倒數計時');
       for(const key of ['setSec','remainingSec','endAt']){ num(d.timer[key],'倒數計時'); if(d.timer[key]<0) fail('倒數計時'); }
       if(typeof d.timer.running !== 'boolean') fail('倒數計時');
+      if(d.attendance !== undefined) validateAttendance(d.attendance,d.classMap);
       if(d.taskBoard !== undefined) validateTaskBoard(d.taskBoard,d.timer);
       else if(d.timer.taskOwner != null) fail('缺少計時器所屬任務');
       if(d.warningThreshold != null) num(d.warningThreshold,'預警門檻');
       // 回傳獨立副本，驗證與預覽都不修改使用中的資料。
       const result = JSON.parse(JSON.stringify(input));
+      result.data.attendance=normalizeAttendance(d.attendance,d.classMap);
       // 每個班級明確帶空值，避免還原後讀到本機同名班級的舊快取。
       for(const cls of result.data.classOrder){
         result.data.hw[cls] ||= {cols:['作業1'],data:{}};
@@ -8228,6 +8440,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       d.syncRevision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       d.backupSyncPaused = true;
       d.timer.running = false; d.timer.endAt = 0; d.timer.doneNotified = false;
+      d.attendance = normalizeAttendance(d.attendance,d.classMap);
       d.taskBoard ||= {library:[],current:null};
       d.ts = Date.now();
       return d;
@@ -8239,12 +8452,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       // localStorage 單鍵寫入為提交點；容量不足時不動目前記憶體或其他儲存鍵。
       try{ localStorage.setItem(SESSION_KEY, JSON.stringify(d)); }
       catch(error){ throw new Error('本機空間不足或無法寫入，尚未還原；目前資料保持原樣。請先下載目前資料備份，再處理瀏覽器儲存空間。'); }
+      delete saveHealth.attendanceError;
       if(typeof resetHWGridHistory==='function') resetHWGridHistory();
       gsCancelAutoUpload();
       for(const timer of [_saveTimer, _scoreTimer, _deductionTimer]) if(timer) clearTimeout(timer);
       _saveTimer = _scoreTimer = _deductionTimer = null;
       stopTimerInterval();
-      for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard']) state[key] = d[key];
+      for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard','attendance']) state[key] = d[key];
       if(typeof stopAlarmSound==='function'){stopAlarmSound();hideTimerDoneModal();}
       if(typeof tbExitProjection==='function')tbExitProjection();
       state.backupSyncPaused = true;
@@ -8281,6 +8495,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         // ★ 教學進度 & 倒數計時
         progress: state.progress,
         timer: state.timer,
+        attendance: state.attendance || attendanceEmpty(),
         taskBoard: state.taskBoard || {library:[],current:null},
         selectedClass: elSelect?.value || '',
         mode: state.mode,
@@ -8293,10 +8508,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     /* ★ 節流版 saveSession：避免高頻加分時 JSON.stringify 造成平板卡頓 */
     let _saveTimer = null;
     function saveSession(reason=''){
+      if(saveHealth.attendanceError)return;
       if(typeof cloudImportStaging!=='undefined' && cloudImportStaging) return;
       if(!TabLock.isActive() || !saveHealth.initialized) return;
       saveHealth.pendingLocal = true;
-      const viewOnly = ['class change','mode change','toggle stage in list','toggle stage (checkbox)','list view: seat','list view: order','progress switch page','progress toggle collapse','progress collapse all','progress toggle subject'].includes(reason);
+      const viewOnly = ['attendance board select','class change','mode change','toggle stage in list','toggle stage (checkbox)','list view: seat','list view: order','progress switch page','progress toggle collapse','progress collapse all','progress toggle subject'].includes(reason);
       if(!viewOnly){
       if(saveHealth.cloud === 'downloaded') saveHealth.cloud = 'idle';
       saveHealth.revision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -8311,6 +8527,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     }
     /* 離開或重試時，同時保存完整快照與各功能的本機資料。 */
     function saveSessionNow(){
+      if(saveHealth.attendanceError)return false;
       if(!TabLock.isActive()) return false;
       if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
       if(_scoreTimer){ clearTimeout(_scoreTimer); _scoreTimer = null; }
@@ -8357,6 +8574,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         state.backupSyncPaused = !!s.backupSyncPaused;
         state.cadreOptions = s.cadreOptions || {};
         // ★ 教學進度/倒數計時
+        try{state.attendance=normalizeAttendance(s.attendance,s.classMap||{});delete saveHealth.attendanceError;}
+        catch(error){state.attendance=s.attendance;saveHealth.attendanceError=error.message;saveHealth.failures.set(SESSION_KEY,error.message);}
         state.taskBoard = s.taskBoard || {library:[],current:null};
         state.progress   = s.progress   || { items: [] };
         state.timer      = s.timer      || { setSec: 300, remainingSec: 300, running:false, endAt: 0 };
@@ -8396,7 +8615,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           document.body.classList.remove('no-data');
 
           // 回到老師上次使用的功能，避免重新登錄時還要再找入口。
-          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer','taskboard'];
+          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer','taskboard','attendance'];
           setMode(modes.includes(state.mode) ? state.mode : 'hw');
 
 
@@ -8837,7 +9056,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         const hadExistingClasses = existingOrder.length > 0;
         const prevSelectedClass = elSelect?.value || '';
         if(isSyncImport){
-          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores','timer','warningThreshold','taskBoard'];
+          const keys=['classMap','classOrder','hw','scores','deductions','violations','sidMap','seating','group','notes','cadreOptions','progress','draw','savedScores','savedHW','legacyScores','timer','warningThreshold','taskBoard','attendance'];
           originalCloudState=Object.fromEntries(keys.map(key=>[key,state[key]]));
           cloudImportStaging=true;
           for(const key of keys) if(!['timer','warningThreshold','taskBoard'].includes(key)) state[key]={};
@@ -9193,6 +9412,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
           if(isSyncImport) resetHWGridHistory();
           state.classMap = mergedMap;
+          state.attendance=attendanceReconcile(state.attendance,mergedMap);
           state.classOrder = mergedOrder;
           sortClassOrderByGrade();
           order.forEach(cls => ensureCadreOptions(cls));
@@ -9222,6 +9442,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           if(state.mode==='group')    { try{ renderGroup(nextSelectedClass); }catch(e){} }
           if(state.mode==='progress') { try{ renderProgress(); }catch(e){} }
           if(state.mode==='timer')    { try{ renderTimerUI?.(); }catch(e){} }
+          if(state.mode==='attendance') renderAttendance();
           saveNotes();
           const progMsg = importedProgress ? `（含 ${state.progress.order.length} 個進度分頁）` : '';
           const importVerb = isSyncImport ? '已從試算表載入' : '已匯入';
@@ -9259,6 +9480,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(state.mode==='violations') renderViolations(cls);
       if(state.mode==='hw') renderHW(cls);
       if(state.mode==='draw') renderDraw(cls);
+      if(state.mode==='attendance') renderAttendance();
       if(state.mode==='group') renderGroup(cls);
       saveSession('class change');   // ★ 新增
     });
@@ -9386,6 +9608,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       if(typeof renderHW === 'function') renderHW(activeClass);
       if(state.mode==='seat') renderSeatUI(activeClass);
       if(state.mode==='draw') renderDraw(activeClass);
+      if(state.mode==='attendance') renderAttendance();
       if(state.mode==='group') renderGroup(activeClass);
       if(state.mode==='progress'){ try{ renderProgress(); }catch(_){} }
 
@@ -9553,6 +9776,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
       renameClassBucket(state.seating);
       renameClassBucket(state.hw);
+      attendanceRenameRoster(oldName,newName);
       renameClassBucket(state.group);
       renameClassBucket(state.notes);
       renameClassBucket(state.cadreOptions);
@@ -10013,6 +10237,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         state.progress.order[at]=pageName;
         if(state.progress.active===sheetName) state.progress.active=pageName;
       }
+      state.attendance=attendanceReconcile(normalizeAttendance(original.attendance,original.classMap),map);
       // 舊雲端未表示任務板時保留本機活動與其計時器。
       if(original.taskBoard !== undefined){state.taskBoard=clone(original.taskBoard);state.timer=clone(original.timer);}
       else if(!state.taskBoard?.current || state.taskBoard.current.status!=='active')state.timer=clone(original.timer);
@@ -10206,7 +10431,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           if(downloadRevision!==saveHealth.revision || downloadUrl!==gsConfig.url || downloadToken!==gsConfig.token || !TabLock.isActive())throw new Error('下載期間本機資料已變更，已取消套用。');
           const d=prepareBackupSession(syncSupplement.backup);
           stopTimerInterval();stopAlarmSound();hideTimerDoneModal();
-          for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard'])state[key]=d[key];
+          for(const key of ['classMap','classOrder','scores','deductions','violations','sidMap','seating','hw','group','notes','draw','cadreOptions','progress','timer','taskBoard','attendance'])state[key]=d[key];
           state.savedScores={};state.savedHW={};state.legacyScores={};state.warningThreshold=d.warningThreshold??60;
           resetHWGridHistory();renderClassOptions([]);elSelect.value='';setMode('taskboard');saveSession('after import taskboard');imported=true;
         }else{
@@ -10692,6 +10917,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       state.violations = {};
       state.legacyScores = {};
       state.hw         = {};
+      state.attendance = attendanceEmpty();
       state.savedHW    = {};
       state.cadreOptions = {};
       state.group      = {};
@@ -10794,7 +11020,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       const labels = {
         classMap: '學生名單', scores: '平時分數（含扣分統計）', hw: '作業成績',
         seating: '座位表', notes: '學生備註', progress: '教學進度', timer: '倒數計時',
-        group: '分組名單', violations: '違規紀錄', taskBoard: '課堂任務板'
+        attendance:'點名紀錄', group: '分組名單', violations: '違規紀錄', taskBoard: '課堂任務板'
       };
       const desc = picked.map(k=>labels[k]||k).join('、');
       let confirmMsg = `確定要清除以下資料嗎？\n→ ${desc}`;
@@ -10838,6 +11064,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       }else{
         if(picked.includes('scores')){ state.scores = {}; state.deductions = {}; state.savedScores = {}; state.legacyScores = {}; }
         if(picked.includes('violations')){ state.violations = {}; }
+        if(picked.includes('attendance')) state.attendance=attendanceEmpty();
         if(picked.includes('hw')){ state.hw = {}; state.savedHW = {}; }
         if(picked.includes('seating')){ state.seating = {}; }
         if(picked.includes('notes')){ state.notes = {}; }
@@ -10865,6 +11092,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           try{ renderLeaderboard(cls); }catch(e){}
           try{ renderViolations(cls); }catch(e){}
           if(picked.includes('seating')){ try{ renderSeatUI(cls); }catch(e){} }
+          if(picked.includes('attendance')) renderAttendance();
           if(picked.includes('hw')){ try{ renderHW(cls); }catch(e){} }
           if(picked.includes('group')){ try{ renderGroup(cls); }catch(e){} }
         }
@@ -10874,6 +11102,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         if(state.mode==='list' && cls) try{ renderStudents(cls); }catch(e){}
         else if(state.mode==='seat' && cls) try{ renderSeatUI(cls); }catch(e){}
         else if(state.mode==='violations' && cls) try{ renderViolations(cls); }catch(e){}
+        else if(state.mode==='attendance' && cls) try{ renderAttendance(); }catch(e){}
         else if(state.mode==='hw' && cls) try{ renderHW(cls); }catch(e){}
         else if(state.mode==='progress') try{ renderProgress(); }catch(e){}
         else if(state.mode==='group' && cls) try{ renderGroup(cls); }catch(e){}
@@ -13879,7 +14108,7 @@ classes.forEach((cls, idx)=>{
       tbEl('tb-edit').disabled=!c;tbText('tb-edit',completed?'重新編輯':'編輯任務');tbEl('tb-project').disabled=!c;
       tbEl('tb-lock-status').hidden=!active;
       tbText('tb-lock-status',active?`已開始 ${c.index+1} 步 · 已鎖定`:'');
-      tbText('tb-project',completed?'查看投影':active&&(s?.durationSec===null||state.timer.running)?'放大投影':active?'繼續並投影':'開始並投影');
+      tbText('tb-project',completed?'查看投影':active?'放大投影':'開始投影');
       tbText('tb-name',c?.name||'準備今天的課堂');tbText('tb-position',c?`${completed?'已完成':'步驟'} ${completed?c.steps.length:c.index+1} / ${c.steps.length}`:'');
       tbText('tb-current-label',completed?'課堂完成':'目前任務');tbText('tb-title-text',completed?(c.completionTitle?.trim()||'今天的任務完成了！'):s?.title||'範例流程');
       tbText('tb-description',completed?(c.completionDescription??'回想一下，今天你學到了什麼？'):s?.description||(!c?'選擇共用流程，或新增自己的課堂任務。':''));
@@ -13915,7 +14144,6 @@ classes.forEach((cls, idx)=>{
       if(!tbCurrent())return;tbProjectFocus=document.activeElement;
       document.body.classList.add('tb-projecting');tbEl('tb-stage').classList.add('tb-projecting');tbEl('tb-exit').hidden=false;
       try{await tbEl('tb-stage').requestFullscreen?.();}catch(_){}
-      if(tbCurrent()?.status!=='completed' && (tbCurrent()?.status==='ready'||tbOwnsTimer()&&!state.timer.running&&tbStep()?.durationSec!==null))await tbStart();
       tbEl('tb-exit').focus();
     }
     function tbEndProjection(){
@@ -15515,6 +15743,7 @@ function onTimerDone(){
       }
       delete state.seating[cls];
       delete state.hw[cls];
+      state.attendance=attendanceReconcile(state.attendance,state.classMap);
       delete state.group[cls];
       if(state.cadreOptions) delete state.cadreOptions[cls];
       if(state.notes) delete state.notes[cls];
@@ -15562,7 +15791,143 @@ function onTimerDone(){
     });
 
     /* ====== 顯示模式切換 ====== */
+    // BEGIN ATTENDANCE UI
+    const attView={selected:new Map(),scroll:new Map(),press:null,menu:null,suppress:null};
+    const ATT_STATUSES=[['','未點',''],['present','已到','✓'],['absent','缺席','○'],['late','遲到','×']];
+    function attNode(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+    function attendanceButton(text,action,cls='btn'){const b=attNode('button',cls,text);b.type='button';if(action)b.onclick=action;return b;}
+    function attCancelPress(suppress=false){if(attView.press){clearTimeout(attView.press.timer);if(suppress)attView.suppress=attView.press.button;}attView.press=null;}
+    function attCloseMenu(focus=false){const m=attView.menu;if(!m)return;m.node.remove();m.anchor?.setAttribute('aria-expanded','false');attView.menu=null;if(focus&&m.anchor?.isConnected)m.anchor.focus({preventScroll:true});}
+    function attCleanup(){attCancelPress();attCloseMenu();attView.suppress=null;}
+    function attMenu(anchor,items){
+      attCancelPress();attCloseMenu();const menu=attNode('div','att-menu');menu.setAttribute('role','menu');menu.setAttribute('aria-label','點名操作');
+      for(const [label,action,danger]of items){const b=attendanceButton(label,async()=>{attCloseMenu(true);try{await action();}catch(e){appAlert(e.message);}},danger?'att-menu-item att-danger':'att-menu-item');b.setAttribute('role','menuitem');menu.append(b);}
+      document.body.append(menu);attView.menu={node:menu,anchor};anchor.setAttribute('aria-expanded','true');
+      const rect=anchor.getBoundingClientRect(),width=menu.offsetWidth,height=menu.offsetHeight;
+      menu.style.left=Math.max(8,Math.min(rect.left,innerWidth-width-8))+'px';menu.style.top=Math.max(8,Math.min(rect.bottom+4,innerHeight-height-8))+'px';menu.firstElementChild?.focus({preventScroll:true});
+      menu.onkeydown=e=>{const buttons=[...menu.querySelectorAll('button')],i=buttons.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();buttons[(i+(e.key==='ArrowDown'?1:buttons.length-1))%buttons.length]?.focus();}if(e.key==='Tab')attCloseMenu();};
+    }
+    document.addEventListener('pointerdown',e=>{if(attView.menu&&!attView.menu.node.contains(e.target)&&!attView.menu.anchor.contains(e.target))attCloseMenu();},true);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){attCancelPress(true);if(attView.menu){e.preventDefault();e.stopPropagation();attCloseMenu(true);}}},true);
+    window.addEventListener('blur',()=>attCancelPress(true));
+    window.addEventListener('resize',()=>{attCancelPress(true);attCloseMenu();});
+    function attendanceDialog(title){
+      attCleanup();const d=attNode('dialog','att-dialog');d.setAttribute('aria-label',title);d.append(attNode('h2','',title));document.body.append(d);d.addEventListener('close',()=>d.remove());d.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();d.close();}});return d;
+    }
+    function attForm(d,fields,commit){
+      const form=attNode('form'),inputs={};
+      for(const field of fields){const wrap=attNode('label','',field.label),input=attNode(field.options?'select':'input','input');input.id='att-'+field.key;input.name=field.key;
+        if(field.options)for(const [value,label]of field.options){const o=attNode('option','',label);o.value=value;input.append(o);}else{input.type=field.type||'text';input.maxLength=80;}
+        input.required=!!field.required;input.value=field.value||'';wrap.append(input);form.append(wrap);inputs[field.key]=input;
+      }
+      const error=attNode('p','att-error');error.setAttribute('role','alert');form.append(error);const actions=attNode('div','att-actions');actions.append(attendanceButton('取消',()=>d.close()));const submit=attendanceButton('儲存',null,'btn att-primary');submit.type='submit';actions.append(submit);form.append(actions);
+      form.onsubmit=e=>{e.preventDefault();try{commit(Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])));d.close();}catch(errorValue){error.textContent=errorValue.message;}};
+      d.append(form);d.showModal();return inputs;
+    }
+    function attendanceEditBoard(id=null){
+      let board;try{attendanceWritable();board=id?attendanceBoard(id):null;}catch(e){appAlert(e.message);return;}
+      const check=board?attendanceGuard(board.id):()=>{};
+      const d=attendanceDialog(board?'修改點名板科目':'新增點名板');
+      const fields=board?[]:[{key:'roster',label:'班級名單',value:elSelect.value,required:true,options:state.classOrder.map(c=>[c,c])}];
+      fields.push({key:'board-subject',label:'科目',required:true,value:board?.subject||splitClassSubject(elSelect.value).subject});
+      attForm(d,fields,values=>{check();if(board)attendanceRenameBoard(board.id,values['board-subject']);else attendanceCreateBoard(values.roster,values['board-subject']);renderAttendance();});
+    }
+    function attendanceEdit(boardId,id=null){
+      let board;try{attendanceWritable();board=attendanceBoard(boardId);}catch(e){appAlert(e.message);return;}
+      const old=board.columns.find(l=>l.id===id);if(id&&!old){appAlert('找不到這次點名。');return;}
+      const check=attendanceGuard(boardId,id);
+      const d=attendanceDialog(old?'編輯點名':'新增點名');d.append(attNode('p','att-help',old?'修改欄頭不影響已登錄的點名紀錄。':'節次、日期皆可留空；每次儲存新增一欄。'));
+      attForm(d,[{key:'period',label:'節次',value:old?.period||''},{key:'date',label:'日期',type:'date',value:old?old.date:getTodayInputDateValue()}],values=>{
+        check();const next=attendanceSaveLesson(boardId,{...values,subject:old?old.subject:board.subject},id);attView.selected.set(boardId,next);renderAttendance({reveal:!id});
+      });
+      if(old){
+        const remove=attendanceButton('刪除此欄',async()=>{
+          try{
+            check();if(!await appConfirm(`確定刪除「${attColumnTitle(old,board.columns.indexOf(old))}」的點名紀錄？`))return;
+            check();attendanceDeleteLesson(boardId,id);d.close();renderAttendance();
+          }catch(error){d.querySelector('.att-error').textContent=error.message;}
+        },'btn att-delete-column');
+        d.querySelector('.att-actions').prepend(remove);
+      }
+    }
+    function attPeriodLabel(value){const text=String(value||'').trim();return /^[0-9０-９]+$/.test(text)?`第 ${text} 節`:text;}
+    function attHeaderContent(title,column,index){
+      if(column.date){
+        const parts=column.date.split('-'),date=attNode('span','att-head-date',`${Number(parts[1])}/${Number(parts[2])}`);
+        const weekday='日一二三四五六'[new Date(column.date+'T12:00:00').getDay()];
+        date.append(attNode('span','att-head-weekday',`週${weekday}`));title.append(date);
+      }
+      if(column.period)title.append(attNode('span','att-head-period',attPeriodLabel(column.period)));
+      if(!title.children.length)title.append(attNode('span','att-head-fallback',`點名 ${index+1}`));
+      title.title=attColumnTitle(column,index);
+    }
+    function attColumnTitle(column,index){return [column.date,attPeriodLabel(column.period)].filter(Boolean).join(' · ')||`點名 ${index+1}`;}
+    function attBoardLabel(board){return board.rosterKey;}
+    function attCurrent(){const data=attendanceData();return data.boards.find(b=>b.id===data.activeBoardId)||data.boards[0];}
+    function attSummary(){
+      const summary=document.getElementById('att-summary');if(!summary||summary.children.length)return;
+      for(const [value,label,symbol]of ATT_STATUSES){const item=attNode('span','att-stat');item.dataset.status=value;const icon=attNode('span','att-stat-icon',symbol||'—');icon.setAttribute('aria-hidden','true');item.append(icon,attNode('span','att-stat-label',label));summary.append(item);}
+    }
+    function attSelectColumn(board,id){
+      attView.selected.set(board.id,id);const pane=document.getElementById('attendance-pane');for(const h of pane.querySelectorAll('[data-column-head]')){const selected=h.dataset.columnHead===id;h.classList.toggle('att-selected',selected);h.querySelector('.att-column-title').setAttribute('aria-pressed',String(selected));}attSummary(board);
+    }
+    function attUpdateMark(button,board,column,student){
+      const value=column.marks[student.id]||'',entry=ATT_STATUSES.find(s=>s[0]===value);button.dataset.status=value;button.textContent=entry[2];button.setAttribute('aria-label',`${student.name} ${attColumnTitle(column,board.columns.indexOf(column))}：${entry[1]}`);
+    }
+    function attChangeMark(button,value){
+      try{const board=attendanceBoard(button.dataset.board),column=board.columns.find(l=>l.id===button.dataset.lesson),student=state.classMap[board.rosterKey]?.find(s=>s.id===button.dataset.student);attendanceMark(board.id,button.dataset.lesson,button.dataset.student,value);attUpdateMark(button,board,column,student);attSelectColumn(board,column.id);button.focus({preventScroll:true});}catch(e){appAlert(e.message);}
+    }
+    function attStatusMenu(button){attCancelPress();attView.suppress=button;attMenu(button,ATT_STATUSES.map(([v,label,symbol])=>[`${symbol||'空白'} ${label}`,()=>attChangeMark(button,v)]));}
+    function attBindGrid(pane,scroller){
+      const mark=e=>e.target.closest?.('.att-mark');
+      const header=e=>e.target.closest?.('[data-column-head]')?.querySelector('.att-column-title');
+      const editHeader=button=>{attCancelPress();if(document.querySelector('.att-dialog[open]'))return;try{const b=attendanceBoard(button.dataset.board);attSelectColumn(b,button.dataset.lesson);attendanceEdit(b.id,button.dataset.lesson);}catch(error){appAlert(error.message);}};
+      pane.onpointerdown=e=>{attCancelPress();const button=mark(e)||header(e);attView.suppress=null;if(!button||e.button!==0)return;attView.press={button,x:e.clientX,y:e.clientY,timer:setTimeout(()=>button.classList.contains('att-mark')?attStatusMenu(button):editHeader(button),500)};};
+      pane.onpointermove=e=>{const p=attView.press;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>10)attCancelPress(true);};
+      pane.onpointerup=()=>attCancelPress();pane.onpointercancel=()=>attCancelPress(true);pane.onpointerleave=()=>attCancelPress(true);
+      pane.onclick=e=>{const button=mark(e);if(!button)return;if(attView.suppress===button){attView.suppress=null;return;}const index=ATT_STATUSES.findIndex(([value])=>value===button.dataset.status);attChangeMark(button,ATT_STATUSES[(index+1)%ATT_STATUSES.length][0]);};
+      pane.oncontextmenu=e=>{const button=mark(e),head=header(e);if(button||head){e.preventDefault();button?attStatusMenu(button):editHeader(head);}};
+      pane.onkeydown=e=>{const head=header(e);if(head&&((e.shiftKey&&e.key==='F10')||e.key==='ContextMenu')){e.preventDefault();editHeader(head);return;}const button=mark(e);if(!button)return;if((e.shiftKey&&e.key==='F10')||e.key==='ContextMenu'){e.preventDefault();attStatusMenu(button);}else if(e.key==='Enter'||e.key===' ')attView.suppress=null;};
+      scroller.addEventListener('scroll',()=>{attCancelPress(true);attCloseMenu();attView.scroll.set(scroller.dataset.board,[scroller.scrollLeft,scroller.scrollTop]);},{passive:true});
+    }
+    function renderAttendance({reveal=false}={}){
+      const pane=document.getElementById('attendance-pane');if(!pane)return;attCleanup();
+      const previous=pane.querySelector('.att-scroll');if(previous)attView.scroll.set(previous.dataset.board,[previous.scrollLeft,previous.scrollTop]);pane.replaceChildren();
+      let data;try{data=attendanceData();}catch(e){const error=attNode('p','att-error',e.message+' 已停止自動儲存以保留原始檔案，請從「資料與同步」還原有效的完整備份。');error.setAttribute('role','alert');pane.append(error);return;}
+      const board=attCurrent(),bar=attNode('div','att-toolbar'),label=attNode('label','att-board-field','點名板'),select=attNode('select','input');label.prepend(document.querySelector('#mode-attendance .att-icon').cloneNode(true));select.id='att-board-select';select.setAttribute('aria-label','點名板');
+      if(!data.boards.length){const option=attNode('option','','尚無班級');option.value='';select.append(option);select.disabled=true;}
+      for(const b of [...data.boards].sort((a,b)=>compareClassByGrade(a.rosterKey,b.rosterKey))){const option=attNode('option','',attBoardLabel(b));option.value=b.id;option.title=b.rosterKey;select.append(option);}if(board)select.value=board.id;
+      select.onchange=()=>{attCleanup();attendanceData().activeBoardId=select.value;saveSession('attendance board select');renderAttendance();};const picker=attNode('span','att-class-picker'),display=attNode('span','class-select-display');select.classList.add('class-color-select');display.setAttribute('aria-hidden','true');display.innerHTML=board?renderClassLabel(board.rosterKey):'尚無班級';picker.append(select,display);label.append(picker);bar.append(label);
+      const add=attendanceButton('＋ 新增點名',()=>attendanceEdit(board.id),'btn att-primary');add.id='att-add-column';add.disabled=!board;bar.append(add);
+      const edit=attendanceButton('編輯點名',()=>{const current=attCurrent();if(current)attendanceEdit(current.id,attView.selected.get(current.id));});edit.id='att-edit-column';edit.disabled=!board?.columns.length;bar.append(edit);
+      pane.append(bar);
+      if(!board){const empty=attNode('div','att-empty');empty.append(attNode('h2','','尚無班級'),attNode('p','','請先在學生管理新增或匯入班級名單，每個班級都會自動有一張點名表。'));pane.append(empty);return;}
+      // Keep shared roster-dependent actions consistent while this page uses its own board selector.
+      elSelect.value=board.rosterKey;
+      const summary=attNode('div','att-summary');summary.id='att-summary';summary.setAttribute('role','group');summary.setAttribute('aria-label','點名狀態圖例');pane.append(summary);attSummary();
+      if(!board.columns.length){const empty=attNode('div','att-empty');empty.append(attNode('h2','','新增第一次點名'),attNode('p','','每欄都是獨立紀錄，同一天也可以新增多次。'),attendanceButton('新增點名',()=>attendanceEdit(board.id),'btn'));pane.append(empty);return;}
+      if(!board.columns.some(l=>l.id===attView.selected.get(board.id)))attView.selected.set(board.id,board.columns[board.columns.length-1].id);
+      const students=[...(state.classMap[board.rosterKey]||[])].sort((a,b)=>String(a.seat??'').localeCompare(String(b.seat??''),'zh-Hant',{numeric:true}));
+      const scroller=attNode('div','att-scroll');scroller.dataset.board=board.id;const table=attNode('table','att-table');table.setAttribute('aria-label',attBoardLabel(board)+' 點名板');table.style.width=(180+80*board.columns.length)+'px';
+      const cg=attNode('colgroup');for(const w of [60,120,...board.columns.map(()=>80)]){const col=attNode('col');col.style.width=w+'px';cg.append(col);}table.append(cg);
+      const head=table.createTHead().insertRow();for(const text of ['座號','姓名']){const th=attNode('th','',text);th.scope='col';head.append(th);}
+      board.columns.forEach((l,index)=>{
+        const th=attNode('th');th.scope='col';th.dataset.columnHead=l.id;
+        const title=attendanceButton('',()=>attSelectColumn(board,l.id),'att-column-title');title.setAttribute('aria-label',attColumnTitle(l,index)+'，選取此欄');
+        title.dataset.board=board.id;title.dataset.lesson=l.id;title.setAttribute('aria-haspopup','dialog');attHeaderContent(title,l,index);title.title+='（右鍵或長按編輯）';th.append(title);
+        head.append(th);
+      });
+      const body=table.createTBody();for(const student of students){const row=body.insertRow();row.insertCell().textContent=student.seat??'';const name=attNode('th','',student.name);name.scope='row';row.append(name);
+        for(const column of board.columns){const cell=row.insertCell(),button=attendanceButton('',null,'att-mark');button.dataset.board=board.id;button.dataset.lesson=column.id;button.dataset.student=student.id;button.setAttribute('aria-haspopup','menu');attUpdateMark(button,board,column,student);cell.append(button);}
+      }
+      scroller.append(table);pane.append(scroller);attBindGrid(pane,scroller);attSelectColumn(board,attView.selected.get(board.id));const pos=attView.scroll.get(board.id)||[0,0];scroller.scrollLeft=reveal?scroller.scrollWidth:pos[0];scroller.scrollTop=pos[1];
+    }
+    // END ATTENDANCE UI
+
     function setMode(m){
+      attCleanup();
+      document.getElementById('attendance-pane')?.classList.toggle('hidden',m!=='attendance');
+      document.getElementById('mode-attendance')?.classList.toggle('active',m==='attendance');
       if(m!=='taskboard'&&document.body.classList.contains('tb-projecting'))tbExitProjection();
       if(state.mode==='seat' || m==='seat')resetSeatPanel();
       if(state.mode==='group' || m==='group') resetGroupPanel();
@@ -15601,7 +15966,7 @@ function onTimerDone(){
       elModeGroup?.classList.toggle('active', m==='group');
       // ★ 更多選單按鈕同步
       const _moreBtn = document.getElementById('mode-more');
-      const _moreModes = {seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 任務版'};
+      const _moreModes = {attendance:'點名板',seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 任務版'};
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
@@ -15651,6 +16016,7 @@ function onTimerDone(){
       else if(m==='warning'){ renderWarning(); }
       else if(m==='draw'){ renderDraw(cls); }
       else if(m==='timer'){ renderTimerUI(); }
+      else if(m==='attendance'){renderAttendance();}
       else if(m==='taskboard'){renderTimerUI();renderTaskBoard();}
       else if(m==='group'){ renderGroup(cls); }
       else if(m==='manage'){ renderManage(); }
@@ -15664,6 +16030,7 @@ function onTimerDone(){
     document.getElementById('mode-seat-more')?.addEventListener('click', ()=> setMode('seat'));
     document.getElementById('mode-hw').addEventListener('click', ()=> setMode('hw'));
     document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
+    document.getElementById('mode-attendance')?.addEventListener('click',()=>setMode('attendance'));
     document.getElementById('mode-taskboard')?.addEventListener('click',()=>setMode('taskboard'));
     document.getElementById('mode-timer')?.addEventListener('click', ()=> setMode('timer'));
     document.getElementById('mode-group')?.addEventListener('click', ()=> setMode('group'));
@@ -18582,6 +18949,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const student = { id, sid, name, seat, titles: [], row: null, sheet: cls, createdAt };
       list.push(student);
       state.classMap[cls] = list;
+      attendanceRemoveStudent(cls,id);
       ensureCadreOptions(cls);
       state.sidMap[id] = { sid, sheet: cls, seat, name };
       setScore(cls, id, 0);
@@ -18688,6 +19056,7 @@ elProgAdd?.addEventListener('click', ()=>{
       // 從班級名單移除
       list.splice(idx,1);
       state.classMap[cls] = list;
+      attendanceRemoveStudent(cls,id);
 
       // sidMap
       if(state.sidMap) delete state.sidMap[id];
