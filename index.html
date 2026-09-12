@@ -6861,7 +6861,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #exam-pane .btn:hover{background:color-mix(in srgb,var(--ex-input) 80%,var(--ex-fg) 20%);transform:none;}
     #exam-pane :is(button,input,textarea):focus-visible{outline:3px solid var(--ex-cyan);outline-offset:2px;}
     #exam-pane .exam-icon{width:calc(20px * var(--ex-scale));height:calc(20px * var(--ex-scale));flex:0 0 calc(20px * var(--ex-scale));vertical-align:middle;}
-    #exam-pane :is(#exam-collapse,#exam-previous,#exam-next,#exam-zoom-in,#exam-zoom-out)>.exam-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+    #exam-pane :is(#exam-collapse,#exam-zoom-in,#exam-zoom-out)>.exam-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
     .exam-toolbar{grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.9fr) minmax(0,1fr);align-items:center;gap:var(--ex-gap);padding:var(--ex-gap) calc(20px * var(--ex-scale));border-bottom:3px solid var(--ex-pink);background:#0002;}
     #exam-pane h2{display:flex;align-items:center;gap:10px;color:var(--ex-pink);font-size:calc(28px * var(--ex-scale));font-weight:800;white-space:nowrap;}
     .exam-title-icon{width:1.15em;height:1.15em;flex-shrink:0;}
@@ -6869,7 +6869,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #exam-clock{font:700 48px/1.12 Consolas,monospace;white-space:nowrap;letter-spacing:0;text-shadow:0 0 14px #ffffff24;}
     #exam-date{font-size:var(--ex-font);color:var(--ex-muted);margin-top:5px;white-space:nowrap;}
     .exam-actions{display:flex;gap:var(--ex-gap);align-items:center;flex-wrap:wrap;}
-    .exam-toolbar>.exam-actions{display:grid;grid-template-columns:calc(88px * var(--ex-scale)) calc(152px * var(--ex-scale)) calc(128px * var(--ex-scale));justify-content:end;gap:calc(8px * var(--ex-scale));}
+    .exam-toolbar>.exam-actions{display:grid;grid-template-columns:calc(152px * var(--ex-scale)) calc(128px * var(--ex-scale));justify-content:end;gap:calc(8px * var(--ex-scale));}
+    #exam-pane:not(.exam-projecting) #exam-theme{display:none;}
+    #exam-pane.exam-projecting .exam-toolbar>.exam-actions{grid-template-columns:calc(88px * var(--ex-scale)) calc(152px * var(--ex-scale)) calc(128px * var(--ex-scale));}
     #exam-pane .exam-toolbar .btn{height:var(--ex-button);padding:6px;border-radius:calc(10px * var(--ex-scale));}
     #exam-pane #exam-theme,#exam-pane #exam-settings-open{background:var(--ex-surface);border-color:var(--ex-line);color:var(--ex-fg);}
     #exam-pane #exam-project,#exam-pane #exam-exit{background:#009fc5;border-color:#009fc5;color:#fff;}
@@ -6877,9 +6879,9 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .exam-notices:has(#exam-error:not([hidden])),.exam-notices:has(#exam-end-alert:not([hidden])){display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-height:25vh;overflow:auto;}
     #exam-error{color:var(--ex-red);font-size:var(--ex-font);}
     #exam-end-alert{display:flex;align-items:center;gap:14px;font-size:var(--ex-font);white-space:pre-wrap;}
-    .exam-layout{grid-row:3;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-height:0;gap:var(--ex-gap);padding:var(--ex-gap);}
-    .exam-schedule{position:relative;display:flex;min-width:0;min-height:0;background:var(--ex-surface);border-radius:calc(14px * var(--ex-scale));padding:calc(10px * var(--ex-scale));}
-    #exam-table-wrap{min-width:0;width:100%;overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;}
+    .exam-layout{position:relative;grid-row:3;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-height:0;gap:var(--ex-gap);padding:var(--ex-gap);}
+    .exam-schedule{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--ex-surface);border-radius:calc(14px * var(--ex-scale));padding:calc(10px * var(--ex-scale));}
+    #exam-table-wrap{flex:1;min-height:0;min-width:0;width:100%;overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;}
     .exam-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 calc(7px * var(--ex-scale));margin-top:calc(-7px * var(--ex-scale));}
     .exam-table th{position:sticky;top:0;z-index:1;background:color-mix(in srgb,var(--ex-pink) 27%,#24273e);color:#fff;height:var(--ex-button);padding:4px;font-size:var(--ex-font);white-space:nowrap;}
     .exam-table th:first-child{width:14%;border-radius:12px 0 0 12px;}.exam-table th:nth-child(2){width:28%;}.exam-table th:nth-child(3){width:44%;}.exam-table th:last-child{width:14%;border-radius:0 12px 12px 0;}
@@ -6899,8 +6901,17 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .exam-subject-label{color:var(--ex-fg);font-weight:650;}
     .exam-subject-label>.exam-icon{margin-right:calc(7px * var(--ex-scale));color:#d58aea;}.exam-subject-label>.exam-label{vertical-align:middle;}
     :root[data-theme="light"] #exam-pane tr:is([data-kind="morning"],[data-kind="lunch"]) :is(td:first-child,.exam-icon){color:#8c399e;}
-    #exam-pane #exam-collapse{position:absolute;right:-22px;top:50%;transform:translateY(-50%);width:44px;min-width:44px;min-height:calc(56px * var(--ex-scale));padding:0;z-index:3;border:0;border-radius:0 10px 10px 0;background:linear-gradient(90deg,transparent 7px,var(--ex-pink) 7px,var(--ex-pink) 37px,transparent 37px);color:#fff;}
-    .exam-collapsed{grid-template-columns:28px minmax(0,1fr);}.exam-collapsed .exam-schedule{padding:0;}.exam-collapsed .exam-schedule::before{content:'考試節次';writing-mode:vertical-rl;position:absolute;top:20px;left:4px;color:var(--ex-pink);font-size:var(--ex-font);}
+    .exam-schedule-head{display:flex;align-items:center;justify-content:space-between;gap:var(--ex-gap);padding-bottom:var(--ex-gap);flex-shrink:0;}
+    #exam-pane .exam-schedule-head h3{font-size:var(--ex-label);font-weight:700;color:var(--ex-fg);}
+    #exam-pane #exam-collapse{width:var(--ex-button);height:var(--ex-button);padding:0;border:1px solid var(--ex-line);border-radius:10px;color:var(--ex-muted);background:var(--ex-input);}
+    #exam-pane #exam-collapse:hover{color:var(--ex-pink);border-color:var(--ex-pink);}
+    .exam-layout.exam-collapsed{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;touch-action:pan-y pinch-zoom;}
+    .exam-collapsed .exam-schedule{display:none !important;}
+    #exam-pane #exam-reveal{position:absolute;left:0;top:clamp(22px,var(--exam-reveal-y,50%),calc(100% - 22px));transform:translateY(-50%);width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:1px solid var(--ex-line);border-radius:12px;background:var(--ex-bg);color:var(--ex-fg);opacity:0;pointer-events:none;z-index:5;}
+    #exam-pane.exam-edge-ready #exam-reveal,#exam-pane #exam-reveal:focus-visible{opacity:1;pointer-events:auto;}
+    #exam-pane #exam-reveal>.exam-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+    #exam-pane #exam-reveal:hover{color:var(--ex-cyan);border-color:var(--ex-cyan);}#exam-pane.exam-edge-dragging{cursor:grabbing;user-select:none;}
+    .exam-edge-dragging .exam-layout::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--exam-edge-distance,0px);max-width:100px;z-index:4;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--ex-cyan) 28%,transparent),transparent);border-left:3px solid var(--ex-cyan);}
     .exam-focus{display:grid;grid-template-rows:minmax(130px,.85fr) minmax(0,2.15fr);gap:var(--ex-gap);min-width:0;min-height:0;}
     .exam-countdowns{display:grid;grid-template-columns:1fr 1fr;gap:var(--ex-gap);min-width:0;min-height:0;}.exam-countdowns.exam-single-countdown{grid-template-columns:1fr;}
     .exam-countdown{display:flex;flex-direction:column;justify-content:center;gap:calc(6px * var(--ex-scale));text-align:center;padding:calc(10px * var(--ex-scale));background:var(--ex-surface);border-radius:calc(14px * var(--ex-scale));min-width:0;min-height:0;overflow:auto;}
@@ -6909,18 +6920,25 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .exam-countdown strong{display:block;font:700 42px/1.12 Consolas,monospace;flex-shrink:0;letter-spacing:0;white-space:nowrap;color:var(--ex-yellow);text-shadow:0 0 10px color-mix(in srgb,currentColor 20%,transparent);}
     .exam-current strong{color:var(--ex-red);}
     #exam-pane .exam-countdown p{display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:calc(20px * var(--ex-scale));line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ex-cyan);}
-    .exam-info{display:flex;flex-direction:column;min-width:0;min-height:0;border-radius:calc(14px * var(--ex-scale));background:var(--ex-surface);padding:calc(10px * var(--ex-scale));position:relative;overflow:hidden;}
-    .exam-section-head{display:flex;align-items:center;flex-wrap:wrap;gap:calc(6px * var(--ex-scale));min-height:var(--ex-button);border-bottom:2px solid var(--ex-line);padding-bottom:calc(6px * var(--ex-scale));flex-shrink:0;}
+    .exam-info{container-type:inline-size;display:flex;flex-direction:column;min-width:0;min-height:0;border-radius:calc(14px * var(--ex-scale));background:var(--ex-surface);padding:calc(10px * var(--ex-scale));position:relative;overflow:hidden;}
+    #exam-carousel{padding:var(--ex-gap);padding-bottom:20px;}
+    .exam-section-head{display:flex;align-items:center;flex-wrap:nowrap;gap:calc(6px * var(--ex-scale));min-height:var(--ex-button);border-bottom:2px solid var(--ex-line);padding-bottom:calc(6px * var(--ex-scale));flex-shrink:0;}
+    .exam-heading{display:flex;align-items:center;gap:calc(14px * var(--ex-scale));min-width:0;flex-shrink:0;}
+    #exam-pane .exam-section-head .btn{height:var(--ex-button);box-sizing:border-box;}
+    @container(max-width:480px){.exam-info-tools{gap:8px;}.exam-heading{gap:6px;}}
     #exam-info-title{font-size:calc(20px * var(--ex-scale));color:var(--ex-pink);white-space:nowrap;justify-content:flex-start !important;}
     .exam-zoom{display:flex;gap:4px;align-items:center;font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);}
     #exam-pane .exam-zoom .btn{padding:4px;}
-    .exam-carousel-actions{margin-left:auto;display:flex;align-items:center;gap:calc(6px * var(--ex-scale));}
-    #exam-pane .exam-carousel-actions .btn{border-radius:50%;padding:0;background:#0002;}
-    .exam-page-indicators{display:flex;gap:5px;background:#0002;padding:0 8px;border-radius:30px;}
-    #exam-pane .exam-dot{position:relative;border:0;background:transparent;min-width:var(--ex-button);min-height:var(--ex-button);cursor:pointer;padding:0;}
-    .exam-dot::after{content:'';position:absolute;left:0;right:0;top:calc(50% - 3px);height:6px;border-radius:4px;background:var(--ex-muted);opacity:.6;}.exam-dot[aria-pressed="true"]::after{background:var(--ex-pink);opacity:1;}
+    .exam-info-tools{display:flex;align-items:center;gap:var(--ex-gap);margin-left:auto;}
+    .exam-zoom{margin-left:0;}
+    .exam-page-indicators{display:flex;justify-content:center;gap:4px;}
+    #exam-pane .exam-dot{pointer-events:auto;display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;width:var(--ex-button);min-width:44px;height:44px;min-height:44px;padding:0 0 6px;border:0;background:transparent;border-radius:8px;cursor:pointer;}
+    .exam-toggle-line{display:block;width:calc(28px * var(--ex-scale));height:4px;border-radius:4px;background:var(--ex-muted);opacity:.45;}
+    .exam-toggle-line.is-current{background:var(--ex-pink);opacity:1;}
+    #exam-pane .exam-dot:hover .exam-toggle-line{opacity:1;}
+    #exam-pane .exam-dot:focus-visible{outline-offset:-3px;}
     #exam-attendance,#exam-rules-panel{flex:1;min-height:0;overflow:auto;}
-    #exam-attendance{display:grid;grid-template-rows:auto minmax(44px,1fr);container-type:size;gap:calc(8px * var(--ex-scale));padding-top:calc(8px * var(--ex-scale));}
+    #exam-attendance{display:grid;grid-template-rows:auto minmax(44px,1fr);container-type:size;gap:var(--ex-gap);padding-top:var(--ex-gap);}
     .exam-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ex-gap);}
     .exam-counts label{text-align:center;color:var(--ex-muted);font-size:var(--ex-font);}
     #exam-pane .exam-counts input,#exam-pane .exam-counts output{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;min-width:0;min-height:50px;height:clamp(50px,30cqh,calc(100px * var(--ex-scale)));margin-top:calc(5px * var(--ex-scale));padding:4px;font-size:30px !important;line-height:1.12;font-weight:750;font-family:Consolas,monospace;transition:border-color .15s,background-color .15s;text-align:center;color:var(--ex-fg);background:var(--ex-input);border:3px solid #37a5c5;border-radius:calc(12px * var(--ex-scale));}
@@ -6929,11 +6947,24 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #exam-pane .exam-counts #exam-actual{border-color:#509363;}#exam-pane .exam-counts output{border-color:#bc5365;background:#b847591a;}
     .exam-field{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:var(--ex-font);}.exam-remarks-field{min-height:44px;}
     #exam-pane textarea{box-sizing:border-box;width:100%;background:var(--ex-input);color:var(--ex-fg);border:1px solid var(--ex-line);border-radius:calc(12px * var(--ex-scale));padding:calc(10px * var(--ex-scale));line-height:1.6;}
-    #exam-pane #exam-remarks{flex:1;min-height:44px;resize:none;font-size:calc(18px * var(--ex-scale) * var(--exam-remarks-scale,1)) !important;}
-    #exam-rules-panel{padding-top:var(--ex-gap);}#exam-rules{padding-left:1.4em;margin:0 0 12px;font-size:calc(20px * var(--ex-scale) * var(--exam-rules-scale,1));line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;}
-    .exam-info-footer{display:flex;justify-content:flex-end;flex-shrink:0;font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);}
-    .exam-info-footer label{display:flex;align-items:center;min-height:44px;gap:6px;cursor:pointer;}.exam-info-footer input{width:calc(16px * var(--ex-scale));height:calc(16px * var(--ex-scale));}
-    .exam-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--ex-pink),var(--ex-cyan));transform:scaleX(var(--exam-progress,0));transform-origin:left;}
+    #exam-pane #exam-remarks{padding:var(--ex-gap);padding-bottom:calc(var(--ex-gap) + 24px);flex:1;min-height:44px;resize:none;font-size:calc(18px * var(--ex-scale) * var(--exam-remarks-scale,1)) !important;}
+    #exam-rules-panel{display:flex;padding-top:var(--ex-gap);}
+    #exam-pane #exam-rules{flex:1;min-width:0;min-height:44px;margin:0;padding:4px 8px 28px;resize:none;border:1px solid transparent;border-radius:8px;background:transparent;font-size:calc(20px * var(--ex-scale) * var(--exam-rules-scale,1)) !important;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;}
+    #exam-pane #exam-rules:hover{border-color:var(--ex-line);}
+    #exam-pane #exam-rules:focus{border-color:var(--ex-cyan);background:var(--ex-input);}
+
+    .exam-info-footer{pointer-events:none;position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-end;height:44px;}
+
+    .exam-rotation-control{position:relative;display:flex;align-items:center;gap:calc(8px * var(--ex-scale));min-height:var(--ex-button);cursor:pointer;flex-shrink:0;border-radius:8px;}
+    #exam-auto-rotate{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:1;}
+    .exam-rotation-track{position:relative;box-sizing:border-box;width:calc(38px * var(--ex-scale));height:calc(22px * var(--ex-scale));flex-shrink:0;border-radius:30px;border:1px solid var(--ex-line);background:color-mix(in srgb,var(--ex-muted) 25%,transparent);transition:background-color .15s;}
+    .exam-rotation-track::after{content:'';position:absolute;top:calc(3px * var(--ex-scale) - 1px);left:calc(3px * var(--ex-scale) - 1px);width:calc(16px * var(--ex-scale));height:calc(16px * var(--ex-scale));border-radius:50%;background:var(--ex-fg);transition:transform .15s;}
+    #exam-auto-rotate:checked+.exam-rotation-track{background:var(--ex-cyan);border-color:var(--ex-cyan);}
+    #exam-auto-rotate:checked+.exam-rotation-track::after{background:#fff;transform:translateX(calc(16px * var(--ex-scale)));}
+    #exam-auto-rotate:focus-visible+.exam-rotation-track{outline:3px solid var(--ex-cyan);outline-offset:3px;}
+    .exam-rotation-copy{display:flex;flex-direction:column;gap:2px;white-space:nowrap;font-size:max(13px,calc(14px * var(--ex-scale)));color:var(--ex-fg);line-height:1.3;}
+    #exam-rotation-status{font-size:max(12px,calc(12px * var(--ex-scale)));color:var(--ex-muted);font-weight:400;}
+    .exam-progress{pointer-events:none;position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--ex-pink),var(--ex-cyan));transform:scaleX(var(--exam-progress,0));transform-origin:left;}
     #exam-controlbar{grid-row:4;display:flex;align-items:center;justify-content:space-between;gap:var(--ex-gap);padding:calc(10px * var(--ex-scale)) calc(16px * var(--ex-scale));border-top:2px solid var(--ex-line);background:#0002;}
     #exam-pane #exam-save{background:#359743;color:#fff;border-color:transparent;}#exam-pane #exam-load{background:#e58100;color:#fff;border-color:transparent;}#exam-pane #exam-clear{background:#dc3935;color:#fff;border-color:transparent;}
     .exam-offset-panel{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;padding:calc(6px * var(--ex-scale));background:var(--ex-surface);border-radius:10px;}
@@ -6944,7 +6975,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .exam-dialog{width:min(620px,calc(100vw - 40px));max-height:85dvh;box-sizing:border-box;overflow:auto;background:#25334c;color:#f5f6ff;border:1px solid var(--ex-line);border-radius:16px;padding:22px;box-shadow:0 12px 48px #0006;}
     :root[data-theme="light"] .exam-dialog{background:#edf3fa;color:#25364d;}.exam-dialog::backdrop{background:#0008;}.exam-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
     #exam-pane .exam-dialog p{font-size:16px;line-height:1.7;margin:12px 0;white-space:pre-wrap;}.exam-time-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-    #exam-pane .exam-time-fields input{min-height:44px;width:100%;min-width:0;box-sizing:border-box;padding:8px;font-size:20px !important;background:var(--ex-input);color:inherit;border:1px solid var(--ex-line);border-radius:8px;}#exam-rules-form>button{margin-top:16px;}
+    #exam-pane .exam-time-fields input{min-height:44px;width:100%;min-width:0;box-sizing:border-box;padding:8px;font-size:20px !important;background:var(--ex-input);color:inherit;border:1px solid var(--ex-line);border-radius:8px;}
     :root[data-theme="light"] #exam-pane .exam-table th{background:color-mix(in srgb,var(--ex-pink) 15%,#eef3f9);color:var(--ex-fg);}
     :root[data-theme="light"] #exam-pane :is(.exam-toolbar,#exam-controlbar){background:#ffffffa8;}:root[data-theme="light"] #exam-pane :is(#exam-clock,.exam-countdown strong){text-shadow:none;}
     body.exam-projecting{overflow:hidden;}#exam-pane.exam-projecting{position:fixed;inset:0;z-index:50000;height:100dvh;width:100%;border-radius:0;box-sizing:border-box;}
@@ -6952,8 +6983,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     /* The projection pane is fixed; its non-scrolling header keeps the exit beside the other controls. */
     #exam-pane.exam-projecting #exam-exit{grid-column:3;}
     @media(max-width:1250px){#exam-controlbar{flex-wrap:wrap;gap:8px;}.exam-offset-panel{margin-left:auto;}.exam-storage-line{width:100%;text-align:right;}}
-    @media(max-width:1150px){.exam-toolbar{grid-template-columns:minmax(0,1fr) minmax(220px,.85fr);gap:8px;padding:10px 16px;}.exam-clock{grid-column:2;grid-row:1 / 3;}.exam-toolbar>.exam-actions{grid-column:1;justify-content:start;}.exam-zoom>span:first-child,.exam-page-indicators{display:none;}.exam-layout{gap:12px;padding:10px;}.exam-schedule{padding:8px;}}
-    @media(max-width:850px){.exam-layout{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) minmax(370px,1.7fr);overflow:auto;}.exam-schedule{min-height:180px;}.exam-focus{min-height:370px;grid-template-rows:120px minmax(0,1fr);}.exam-countdown{padding:6px;}.exam-info{padding:8px;}#exam-controlbar>.exam-actions{width:100%;}.exam-offset-panel{margin:0;}.exam-storage-line{width:auto;margin-left:auto;}.exam-collapsed{grid-template-columns:28px 1fr;grid-template-rows:1fr;}.exam-collapsed .exam-focus{grid-template-rows:minmax(140px,.85fr) minmax(0,2.15fr);}.exam-collapsed .exam-schedule{min-height:0;}}
+    @media(max-width:1150px){.exam-toolbar{grid-template-columns:minmax(0,1fr) minmax(220px,.85fr);gap:8px;padding:10px 16px;}.exam-clock{grid-column:2;grid-row:1 / 3;}.exam-toolbar>.exam-actions{grid-column:1;justify-content:start;}.exam-layout{gap:12px;padding:10px;}.exam-schedule{padding:8px;}}
+    @media(max-width:850px){.exam-layout{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) minmax(370px,1.7fr);overflow:auto;}.exam-schedule{min-height:180px;}.exam-focus{min-height:370px;grid-template-rows:120px minmax(0,1fr);}.exam-countdown{padding:6px;}.exam-info{padding:8px;}#exam-controlbar>.exam-actions{width:100%;}.exam-offset-panel{margin:0;}.exam-storage-line{width:auto;margin-left:auto;}.exam-layout.exam-collapsed{grid-template-columns:1fr;grid-template-rows:1fr;}.exam-collapsed .exam-focus{grid-template-rows:minmax(140px,.85fr) minmax(0,2.15fr);}.exam-collapsed .exam-schedule{min-height:0;}}
     @media(max-height:650px) and (min-width:851px){.exam-layout{overflow:auto;}.exam-focus,.exam-schedule{min-height:350px;}.exam-focus{grid-template-rows:120px minmax(0,1fr);}}
     /* END EXAM DASHBOARD STYLE */
 
@@ -7233,10 +7264,10 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <div class="exam-actions"><button class="btn" id="exam-theme">切換主題</button><button class="btn" id="exam-settings-open" aria-controls="exam-controlbar" aria-expanded="true">隱藏控制列</button><button class="btn" id="exam-project">全螢幕</button><button class="btn" id="exam-exit" hidden>退出投影</button></div>
           </header>
           <div class="exam-notices"><p id="exam-error" role="alert" hidden></p><button id="exam-retry" class="btn" hidden>重試儲存</button><div id="exam-end-alert" role="alert" hidden><span></span><button class="btn" id="exam-dismiss-alert">知道了</button></div></div>
-          <div class="exam-layout">
-            <section class="exam-schedule" aria-label="考試節次">
+          <div class="exam-layout"><button class="btn" id="exam-reveal" hidden aria-label="展開考試節次" aria-controls="exam-table-wrap">展開節次</button>
+            <section class="exam-schedule" aria-label="考試節次"><header class="exam-schedule-head"><h3>考試節次</h3><button id="exam-collapse" class="btn" aria-label="收合節次" title="收合節次" aria-expanded="true" aria-controls="exam-table-wrap">◀</button></header>
               <div id="exam-table-wrap"><table class="exam-table"><thead><tr><th scope="col">節次</th><th scope="col">考試科目</th><th scope="col">考試時間</th><th scope="col">時長</th></tr></thead><tbody id="exam-periods"></tbody></table></div>
-              <button id="exam-collapse" class="btn" aria-label="收合節次" title="收合節次" aria-expanded="true" aria-controls="exam-table-wrap">◀</button>
+
             </section>
             <div class="exam-focus">
               <section class="exam-countdowns" aria-label="考試倒數">
@@ -7244,13 +7275,13 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <div class="exam-countdown exam-current"><span id="exam-current-title">本節剩餘時間</span><strong id="exam-remaining">--:--:--</strong><p id="exam-current-info"></p></div>
               </section>
               <section id="exam-carousel" class="exam-info" aria-label="考場資訊">
-                <div class="exam-section-head"><h3 id="exam-info-title">人數統計</h3><div class="exam-zoom"><span id="exam-zoom-label">備註</span><button class="btn" id="exam-zoom-out" aria-label="縮小資訊文字">−</button><span id="exam-zoom-value">100%</span><button class="btn" id="exam-zoom-in" aria-label="放大資訊文字">＋</button></div><div class="exam-carousel-actions"><div class="exam-page-indicators"><button class="exam-dot" data-exam-slide="0" aria-label="人數統計" aria-pressed="true"></button><button class="exam-dot" data-exam-slide="1" aria-label="考試規則" aria-pressed="false"></button></div><button class="btn" id="exam-previous" aria-label="上一頁資訊">‹</button><button class="btn" id="exam-next" aria-label="下一頁資訊">›</button></div></div>
+                <div class="exam-section-head"><div class="exam-heading"><h3 id="exam-info-title">人數統計</h3><div class="exam-zoom"><button class="btn" id="exam-zoom-out" aria-label="縮小資訊文字">−</button><span id="exam-zoom-value">100%</span><button class="btn" id="exam-zoom-in" aria-label="放大資訊文字">＋</button></div></div><div class="exam-info-tools"><label class="exam-rotation-control" title="每 8 秒切換資訊；編輯或停留在資訊區時暫停"><input type="checkbox" id="exam-auto-rotate" role="switch" aria-label="自動輪播" aria-describedby="exam-rotation-status"><span class="exam-rotation-track" aria-hidden="true"></span><span class="exam-rotation-copy"><strong>自動輪播</strong><span id="exam-rotation-status">已開啟</span></span></label></div></div>
                 <div id="exam-attendance">
                   <div class="exam-counts"><label>應到人數<input id="exam-expected" type="number" min="0" max="9999" step="1" class="input"></label><label>實到人數<input id="exam-actual" type="number" min="0" max="9999" step="1" class="input"></label><label>缺席人數<output id="exam-absent">0</output></label></div>
                   <label class="exam-field exam-remarks-field"><textarea id="exam-remarks" aria-label="備註" rows="3" maxlength="20000" placeholder="備註事項（如：特殊情況、違規紀錄等）"></textarea></label>
                 </div>
-                <div id="exam-rules-panel" hidden><ul id="exam-rules"></ul><button id="exam-rules-edit" class="btn">編輯規則</button></div>
-                <div class="exam-info-footer"><label><input type="checkbox" id="exam-auto-rotate"> 自動輪播</label></div><div class="exam-progress" aria-hidden="true"></div>
+                <div id="exam-rules-panel" hidden><textarea id="exam-rules" aria-label="考試規則" maxlength="20000" placeholder="直接輸入考試規則，每行一項" spellcheck="false"></textarea></div>
+                <div class="exam-info-footer"><div class="exam-page-indicators" role="group" aria-label="切換考試資訊"><button class="exam-dot" data-exam-slide="0" aria-label="人數統計" aria-controls="exam-attendance" aria-pressed="true"><span class="exam-toggle-line is-current" aria-hidden="true"></span></button><button class="exam-dot" data-exam-slide="1" aria-label="考試規則" aria-controls="exam-rules-panel" aria-pressed="false"><span class="exam-toggle-line" aria-hidden="true"></span></button></div></div><div class="exam-progress" aria-hidden="true"></div>
               </section>
             </div>
           </div>
@@ -7260,7 +7291,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
             <span id="exam-save-status" class="exam-storage-line" role="status">僅存本機</span>
           </footer>
           <dialog id="exam-time-dialog" class="exam-dialog" aria-labelledby="exam-time-title"><form id="exam-time-form"><header><h3 id="exam-time-title">節次時間</h3><button class="btn" type="button" id="exam-time-cancel">取消</button></header><div class="exam-time-fields"><label class="exam-field">開始時間<input id="exam-start-input" type="time" required></label><label class="exam-field">結束時間<input id="exam-end-input" type="time" required></label></div><p id="exam-time-error" role="alert"></p><button class="btn primary" type="submit">儲存時間</button></form></dialog>
-          <dialog id="exam-rules-dialog" class="exam-dialog" aria-labelledby="exam-rules-title"><form id="exam-rules-form"><header><h3 id="exam-rules-title">編輯考試規則</h3><button class="btn" type="button" id="exam-rules-cancel">取消</button></header><label class="exam-field">每行一項規則<textarea id="exam-rules-input" rows="9" maxlength="20000"></textarea></label><button class="btn primary" type="submit">儲存規則</button><p id="exam-rules-error" role="alert"></p></form></dialog>
           <dialog id="exam-confirm" class="exam-dialog" aria-label="確認考試資料操作"><form method="dialog"><p id="exam-confirm-message"></p><div class="exam-actions"><button class="btn" value="cancel" autofocus>取消</button><button class="btn primary" value="confirm">確定</button></div></form></dialog>
         </section>
         <!-- END EXAM DASHBOARD VIEW -->
@@ -16333,6 +16363,7 @@ function onTimerDone(){
       const iconPaths={
         moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
         sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',
+        switch:'<path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/>',
         controls:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>',
         expand:'<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>',
         exit:'<path d="M3 8h5V3m13 5h-5V3M8 21v-5H3m13 5v-5h5"/>',
@@ -16355,7 +16386,7 @@ function onTimerDone(){
         const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');svg.setAttribute('aria-hidden','true');svg.classList.add('exam-icon');svg.innerHTML=iconPaths[icon];
         const span=document.createElement('span');span.className='exam-label';span.textContent=label;target.replaceChildren(svg,span);
       }
-      for(const [id,icon] of Object.entries({'theme':'moon','settings-open':'controls','project':'expand','exit':'exit','save':'save','load':'folder','clear':'trash','offset-reset':'reset','next-title':'bell','current-title':'clock','info-title':'people','rules-edit':'edit','retry':'reset','collapse':'left','previous':'left','next':'right','zoom-in':'plus','zoom-out':'minus'}))decorate(id,icon);
+      for(const [id,icon] of Object.entries({'theme':'moon','settings-open':'controls','project':'expand','exit':'exit','save':'save','load':'folder','clear':'trash','offset-reset':'reset','next-title':'bell','current-title':'clock','info-title':'people','retry':'reset','collapse':'left','reveal':'right','zoom-in':'plus','zoom-out':'minus'}))decorate(id,icon);
       decorate('offset-label','clock');
       let fitFrame=null;
       const measure=document.createElement('canvas').getContext('2d');
@@ -16429,6 +16460,7 @@ function onTimerDone(){
       }
       let editingPeriod=0,timeSignature='';
       function openTimeEditor(index){
+        cancelEdgeDrag();
         editingPeriod=index;timeSignature=JSON.stringify(store.data.periods);const p=store.data.periods[index];
         text('time-title',EXAM_PERIODS[index][1]+'時間');el('start-input').value=p.start;el('end-input').value=p.end;text('time-error','');el('time-dialog').showModal();
       }
@@ -16453,14 +16485,15 @@ function onTimerDone(){
         decorate('info-title',slide===0?'people':'rules');text('info-title',slide===0?'人數統計':'考試規則');text('zoom-value',(slide===0?d.remarksZoom:d.rulesZoom)+'%');
         el('zoom-out').disabled=(slide===0?d.remarksZoom:d.rulesZoom)<=50;el('zoom-in').disabled=(slide===0?d.remarksZoom:d.rulesZoom)>=200;
         pane.style.setProperty('--exam-remarks-scale',d.remarksZoom/100);pane.style.setProperty('--exam-rules-scale',d.rulesZoom/100);
-        el('auto-rotate').checked=d.autoRotate;text('zoom-label',slide===0?'備註':'規則');
-        pane.querySelectorAll('[data-exam-slide]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.examSlide)===slide)));
+        el('auto-rotate').checked=d.autoRotate;text('rotation-status',d.autoRotate?'已開啟':'已關閉');
+        pane.querySelectorAll('[data-exam-slide]').forEach(b=>{const selected=Number(b.dataset.examSlide)===slide;b.setAttribute('aria-pressed',String(selected));b.querySelector('.exam-toggle-line')?.classList.toggle('is-current',selected);});
       }
       function render(){
+        cancelEdgeDrag();
         const d=store.data;renderPeriods();
         el('expected').value=d.expected;el('actual').value=d.actual;el('remarks').value=d.remarks;text('absent',Math.max(0,d.expected-d.actual));
-        el('rules').replaceChildren(...d.rules.split('\n').filter(line=>line.trim()).map(line=>{const li=document.createElement('li');li.textContent=line;return li;}));
-        el('table-wrap').hidden=d.collapsed;pane.querySelector('.exam-layout').classList.toggle('exam-collapsed',d.collapsed);
+        el('rules').value=d.rules;
+        el('table-wrap').hidden=d.collapsed;el('reveal').hidden=!d.collapsed;pane.querySelector('.exam-layout').classList.toggle('exam-collapsed',d.collapsed);
         decorate('collapse',d.collapsed?'right':'left');text('collapse',d.collapsed?'展開節次':'收合節次');el('collapse').setAttribute('aria-expanded',String(!d.collapsed));el('collapse').setAttribute('aria-label',d.collapsed?'展開節次':'收合節次');el('collapse').title=d.collapsed?'展開節次':'收合節次';
         renderControls();
         renderInfo();health();tick();
@@ -16501,10 +16534,12 @@ function onTimerDone(){
       }
       function flip(){if(change(d=>{d.slide=1-d.slide;})){rotationAt=Date.now();renderInfo();}}
       function examConfirm(message){
+        cancelEdgeDrag();
         const dialog=el('confirm');text('confirm-message',message);dialog.returnValue='';dialog.showModal();
         return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));
       }
       function endProjection(){
+        cancelEdgeDrag();
         pane.classList.remove('exam-projecting');document.body.classList.remove('exam-projecting');el('exit').hidden=true;el('project').hidden=false;
         if(active)projectionFocus?.focus();projectionFocus=null;
       }
@@ -16513,6 +16548,7 @@ function onTimerDone(){
         if(document.fullscreenElement===pane)try{await document.exitFullscreen();}catch(_){}
       }
       async function project(){
+        cancelEdgeDrag();
         projectionFocus=document.activeElement;const request=++projectRequest;
         pane.classList.add('exam-projecting');document.body.classList.add('exam-projecting');el('exit').hidden=false;el('project').hidden=true;
         try{await pane.requestFullscreen?.();}catch(_){}
@@ -16524,16 +16560,82 @@ function onTimerDone(){
         if(ticker!==null)clearInterval(ticker);active=true;previous=null;lastScrollAnchor=null;rotationAt=Date.now();render();ticker=setInterval(tick,1000);
       }
       function deactivate(){
+        cancelEdgeDrag();
         active=false;if(ticker!==null)clearInterval(ticker);ticker=null;previous=null;if(fitFrame!==null){cancelAnimationFrame(fitFrame);fitFrame=null;}
         pane.querySelectorAll('dialog[open]').forEach(d=>d.close('cancel'));
         if(pane.classList.contains('exam-projecting'))exitProjection();
       }
-      el('settings-open').addEventListener('click',()=>{if(change(d=>{d.controlsHidden=!d.controlsHidden;}))renderControls();});
+      el('settings-open').addEventListener('click',()=>{cancelEdgeDrag();if(change(d=>{d.controlsHidden=!d.controlsHidden;}))renderControls();});
       pane.querySelectorAll('[data-exam-slide]').forEach(b=>b.addEventListener('click',()=>{if(change(d=>{d.slide=Number(b.dataset.examSlide);})){rotationAt=Date.now();renderInfo();}}));
       el('project').addEventListener('click',project);el('exit').addEventListener('click',exitProjection);
       el('dismiss-alert').addEventListener('click',()=>el('end-alert').hidden=true);
-      el('collapse').addEventListener('click',()=>{if(change(d=>{d.collapsed=!d.collapsed;}))render();});
-      el('previous').addEventListener('click',flip);el('next').addEventListener('click',flip);
+      function setCollapsed(collapsed,focus=false){
+        if(change(d=>{d.collapsed=collapsed;})){lastScrollAnchor=null;render();if(focus)el(collapsed?'reveal':'collapse').focus();}
+      }
+      el('collapse').addEventListener('click',()=>setCollapsed(true,true));
+      el('reveal').addEventListener('click',event=>{if(!suppressRevealClick||event.detail===0)setCollapsed(false,true);});
+      let edgeDrag=null,revealHideTimer=null,suppressRevealClick=false;
+      const edgeInteractive='button,input,textarea,select,a,[contenteditable]';
+      function clearRevealTimer(){if(revealHideTimer!==null)clearTimeout(revealHideTimer);revealHideTimer=null;}
+      function hideEdgeReveal(){
+        clearRevealTimer();pane.classList.remove('exam-edge-ready');pane.style.removeProperty('--exam-reveal-y');
+      }
+      function deferHideEdgeReveal(){
+        if(revealHideTimer===null)revealHideTimer=setTimeout(hideEdgeReveal,250);
+      }
+      function cancelEdgeDrag(){
+        const drag=edgeDrag;edgeDrag=null;hideEdgeReveal();pane.classList.remove('exam-edge-dragging');pane.style.removeProperty('--exam-edge-distance');
+        if(drag&&pane.hasPointerCapture?.(drag.id))pane.releasePointerCapture(drag.id);
+      }
+      function updateEdgeReveal(event){
+        if(!active||!store.data.collapsed||hasDialog()||event.pointerType!=='mouse'){hideEdgeReveal();return;}
+        const r=pane.querySelector('.exam-layout').getBoundingClientRect();
+        const onReveal=!!event.target.closest('#exam-reveal');
+        const onEdge=event.clientX>=r.left&&event.clientX<=r.left+44&&event.clientY>=r.top&&event.clientY<=r.bottom&&!event.target.closest(edgeInteractive);
+        if(onReveal||onEdge){
+          clearRevealTimer();
+          if(!pane.classList.contains('exam-edge-ready')){
+            pane.style.setProperty('--exam-reveal-y',Math.max(22,Math.min(r.height-22,event.clientY-r.top))+'px');
+            pane.classList.add('exam-edge-ready');
+          }
+        }else deferHideEdgeReveal();
+      }
+      pane.addEventListener('pointerdown',event=>{
+        suppressRevealClick=false;
+        if(event.pointerType!=='mouse')hideEdgeReveal();
+        if(!active||!store.data.collapsed||hasDialog()||!event.isPrimary||event.button!==0)return;
+        if(event.target.closest(edgeInteractive)&&!event.target.closest('#exam-reveal')){hideEdgeReveal();return;}
+        const r=pane.querySelector('.exam-layout').getBoundingClientRect();
+        if(event.clientX<r.left||event.clientX>r.left+44||event.clientY<r.top||event.clientY>r.bottom)return;
+        edgeDrag={id:event.pointerId,x:event.clientX,y:event.clientY,horizontal:false};clearRevealTimer();
+      });
+      pane.addEventListener('pointermove',event=>{
+        if(!edgeDrag){updateEdgeReveal(event);return;}
+        if(event.pointerId!==edgeDrag.id)return;
+        const dx=event.clientX-edgeDrag.x,dy=Math.abs(event.clientY-edgeDrag.y);
+        if(dx< -12||(dy>12&&dy>Math.abs(dx))){suppressRevealClick=true;cancelEdgeDrag();return;}
+        if(dx>12&&dx>dy*1.5){
+          edgeDrag.horizontal=true;suppressRevealClick=true;event.preventDefault();
+          // Capture only an intentional drag, so a normal arrow click retains native button behavior.
+          pane.setPointerCapture(event.pointerId);hideEdgeReveal();pane.classList.add('exam-edge-dragging');pane.style.setProperty('--exam-edge-distance',Math.min(dx,100)+'px');
+        }
+      });
+      pane.addEventListener('pointerup',event=>{
+        if(!edgeDrag||event.pointerId!==edgeDrag.id)return;
+        const dx=event.clientX-edgeDrag.x,dy=Math.abs(event.clientY-edgeDrag.y),open=edgeDrag.horizontal&&dx>=56&&dx>dy*1.5;
+        // Keep the button in place until the browser dispatches its click.
+        if(!edgeDrag.horizontal&&!suppressRevealClick){edgeDrag=null;return;}
+        cancelEdgeDrag();if(open)setCollapsed(false);
+      });
+      pane.addEventListener('pointerleave',()=>{if(!edgeDrag)deferHideEdgeReveal();});
+      pane.addEventListener('pointercancel',()=>{suppressRevealClick=true;cancelEdgeDrag();});
+      pane.addEventListener('lostpointercapture',event=>{if(event.target===pane)cancelEdgeDrag();});
+      window.addEventListener('pointerup',()=>{if(edgeDrag)cancelEdgeDrag();});
+      window.addEventListener('blur',cancelEdgeDrag);
+      window.addEventListener('resize',cancelEdgeDrag);
+      pane.addEventListener('scroll',cancelEdgeDrag,true);
+      el('reveal').addEventListener('blur',()=>{if(!el('reveal').matches(':hover'))hideEdgeReveal();});
+
       el('auto-rotate').addEventListener('change',()=>{change(d=>{d.autoRotate=el('auto-rotate').checked;});rotationAt=Date.now();renderInfo();});
       for(const key of ['expected','actual','remarks'])el(key).addEventListener('input',()=>{
         const value=key==='remarks'?el(key).value:el(key).value===''?NaN:Number(el(key).value);
@@ -16544,10 +16646,8 @@ function onTimerDone(){
         change(d=>{const key=d.slide===0?'remarksZoom':'rulesZoom';d[key]=Math.max(50,Math.min(200,d[key]+amount));});renderInfo();
       });
       el('carousel').addEventListener('mouseenter',()=>hovered=true);el('carousel').addEventListener('mouseleave',()=>{hovered=false;rotationAt=Date.now();});
-      el('rules-edit').addEventListener('click',()=>{el('rules-input').value=store.data.rules;text('rules-error','');el('rules-dialog').showModal();});
-      el('rules-cancel').addEventListener('click',()=>el('rules-dialog').close());
-      el('rules-form').addEventListener('submit',event=>{
-        event.preventDefault();if(change(d=>{d.rules=el('rules-input').value;})){el('rules-dialog').close();render();}else text('rules-error',inputError||store.error);
+      el('rules').addEventListener('input',()=>{
+        const ok=change(d=>{d.rules=el('rules').value;});el('rules').setAttribute('aria-invalid',String(!ok));
       });
       for(const b of pane.querySelectorAll('[data-exam-offset]'))b.addEventListener('click',()=>{
         if(change(d=>{d.offset+=Number(b.dataset.examOffset);})){previous=null;tick();}
