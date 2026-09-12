@@ -2452,7 +2452,18 @@
       outline:none;
       box-shadow:0 0 0 3px rgba(129,140,248,.18);
     }
-    .viol-reset-row[disabled]{ opacity:.45; cursor:not-allowed; }
+    #viol-table thead th{ background:var(--card) !important; color:var(--fg); border-bottom:1px solid var(--line) !important; }
+    #viol-table .viol-reset-row{
+      appearance:none; display:inline-flex; align-items:center; justify-content:center;
+      min-width:64px; min-height:44px; box-sizing:border-box; padding:6px 12px;
+      border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line)); border-radius:8px;
+      background:var(--card); color:var(--accent); font:inherit; font-weight:600;
+      cursor:pointer; transition:background-color .15s,border-color .15s;
+    }
+    #viol-table .viol-reset-row:hover:not(:disabled){ background:color-mix(in srgb,var(--accent) 10%,var(--card)); border-color:var(--accent); }
+    #viol-table .viol-reset-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+    #viol-table .viol-reset-row:disabled{ opacity:1; color:var(--muted); background:var(--bg); border-color:var(--line); cursor:not-allowed; }
+
     #viol-note-mask .modal{ width:min(760px, 94vw); max-height:86vh; }
     #viol-note-mask .content{ display:flex; flex-direction:column; gap:12px; }
     #viol-note-mask .viol-note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
@@ -5802,6 +5813,32 @@
       #progress-pane .prog-page-menuwrap .menu { right:auto; left:0; }
     }
 
+    /* 主題固定單列，進度依文字自動增高；次要操作集中於列選單。 */
+    #progress-pane .prog-topic-wrap { gap:6px; overflow:visible; }
+    #progress-pane .prog-topic-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #progress-pane .prog-topic-input { height:44px; min-height:44px; box-sizing:border-box; padding:8px; border:1px solid transparent; border-radius:8px; font-weight:700; }
+    #progress-pane .prog-topic-input:hover { border-color:var(--line); }
+    #progress-pane .prog-input { box-sizing:border-box; min-height:44px; height:44px; padding:9px 10px; line-height:24px; resize:none; overflow:hidden; overflow-wrap:anywhere; transition:border-color .15s,box-shadow .15s !important; }
+    #progress-pane .prog-inputwrap .prog-title { white-space:pre-wrap; }
+    #progress-pane .prog-inputwrap { gap:6px; align-items:flex-start; box-sizing:border-box; }
+    #progress-pane .prog-child-row .prog-inputwrap { padding-left:16px; border-left:2px solid color-mix(in srgb,var(--accent) 35%,var(--line)); }
+    #progress-pane .prog-topic-icon { flex:0 0 20px; }
+    #progress-pane .prog-drag-handle { width:18px; height:44px; }
+    #progress-pane .prog-topic-count { margin:0; font-size:11px; }
+    #progress-pane :is(.prog-topic-add,.prog-topic-arrow,.prog-actions-trigger) { width:44px; min-width:44px; height:44px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; }
+    #progress-pane .prog-topic-add { color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent); font-size:22px; }
+    #progress-pane .prog-actions-trigger { font-size:22px; }
+    #progress-pane :is(.prog-actions-trigger,.prog-topic-arrow):hover { color:var(--fg); background:color-mix(in srgb,var(--muted) 12%,transparent); }
+    #progress-pane:not(.prog-editing) .prog-actions-trigger { display:none; }
+    #progress-pane .prog-actions-popover { position:fixed; inset:auto; margin:0; box-sizing:border-box; width:180px; padding:6px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--fg); box-shadow:var(--shadow); }
+    #progress-pane .prog-actions-popover:popover-open { display:flex; flex-direction:column; gap:2px; }
+    #progress-pane .prog-actions-popover .prog-move-btns { display:flex !important; flex-direction:column; gap:2px; }
+    #progress-pane .prog-actions-popover :is(.prog-move-btn,.prog-topic-del,.prog-row-del) { display:flex; justify-content:flex-start; width:100%; height:44px; min-height:44px; padding:0 12px; border:0; border-radius:7px; font:inherit; font-size:14px; background:transparent; color:var(--fg); opacity:1; transform:none; pointer-events:auto; }
+    #progress-pane .prog-actions-popover :is(.prog-topic-del,.prog-row-del) { color:var(--bad); border-top:1px solid var(--line); border-radius:0 0 7px 7px; }
+    #progress-pane .prog-actions-popover button:hover { background:color-mix(in srgb,var(--muted) 12%,transparent); }
+    #progress-pane .prog-move-btn:disabled { opacity:.35; cursor:default; }
+    @media (max-width:700px) { #progress-pane.prog-editing .prog-topic-count { display:none; } #progress-pane.prog-editing .prog-drag-handle { display:none; } }
+
     /* ===== 老師工作介面：一致導覽、低干擾背景與清楚輸入焦點 ===== */
     :root{ --bg:#101b27; --card:#182635; --fg:#edf3f6; --muted:#a8b9c6; --line:#344655; --accent:#66cfbf; --accent-2:#66cfbf; --page-x:18px; --shadow:0 4px 16px rgba(0,0,0,.12); }
     :root[data-theme="light"]{ --bg:#f3f6f5; --card:#fff; --fg:#223932; --muted:#586e65; --line:#dce5e0; --accent:#197565; --accent-2:#197565; --shadow:0 3px 12px rgba(31,66,51,.04); }
@@ -6291,15 +6328,16 @@
       body .app .modebar .more-menu{ position:static; }
     }
     body .app #dt-display{ display:flex !important; justify-content:flex-end; align-self:stretch; gap:6px; color:var(--muted); font-size:13px; font-weight:500; line-height:1.4; font-variant-numeric:tabular-nums; letter-spacing:.03em; }
-    #btn-data{ gap:10px; white-space:nowrap; }
-    #data-status{ font-size:12px; font-weight:500; color:var(--muted); }
+    #btn-data{ --data-status-color:var(--muted); gap:10px; white-space:nowrap; }
+    #data-status{ font-size:12px; font-weight:500; color:var(--data-status-color); }
     #data-status::before{ content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:6px; vertical-align:middle; }
-    #data-status[data-kind="saved"]{ color:var(--ok); }
-    #data-status[data-kind="pending"], #data-status[data-kind="busy"]{ color:var(--seat); }
-    #data-status[data-kind="error"]{ color:var(--bad); }
-    :root[data-theme="light"] #data-status[data-kind="saved"]{ color:#047857; }
-    :root[data-theme="light"] #data-status:is([data-kind="pending"],[data-kind="busy"]){ color:#1d4ed8; }
-    :root[data-theme="light"] #data-status[data-kind="error"]{ color:#b91c1c; }
+    #btn-data:has(#data-status[data-kind="saved"]){ --data-status-color:var(--ok); }
+    #btn-data:has(#data-status:is([data-kind="pending"],[data-kind="busy"])){ --data-status-color:var(--seat); }
+    #btn-data:has(#data-status[data-kind="error"]){ --data-status-color:var(--bad); }
+    :root[data-theme="light"] #btn-data:has(#data-status[data-kind="saved"]){ --data-status-color:#047857; }
+    :root[data-theme="light"] #btn-data:has(#data-status:is([data-kind="pending"],[data-kind="busy"])){ --data-status-color:#1d4ed8; }
+    :root[data-theme="light"] #btn-data:has(#data-status[data-kind="error"]){ --data-status-color:#b91c1c; }
+    body .app #btn-data:has(#data-status:is([data-kind="saved"],[data-kind="pending"],[data-kind="busy"],[data-kind="error"])){ border-color:var(--data-status-color); }
     #data-dropdown{ left:auto; right:0; width:min(320px,calc(100vw - 32px)); min-width:0; }
     #data-dropdown .data-inner{ max-height:calc(100dvh - 90px); overflow-y:auto; background:var(--card); border-color:var(--line); padding:8px; }
     #data-dropdown .save-health{ display:flex; flex-direction:column; align-items:stretch; gap:10px; padding:10px 10px 12px; border-top:0; }
@@ -6593,7 +6631,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     .tb-editor-footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px;}
     #tb-editor-error{color:#e56e64;}
     .tb-name-dialog{max-width:440px;}
-    #timer-task-owner{padding:10px 16px;border:1px solid var(--line);border-radius:12px;}
     @media(max-width:700px){
       .tb-toolbar-spacer{display:none;}.tb-toolbar{gap:8px;}.tb-library-label{flex:1;min-width:100%;}#tb-library{max-width:none;width:100%;}
       .tb-stage{gap:18px;padding:20px;min-height:0;}.tb-heading{gap:8px;padding-bottom:14px;}.tb-heading .tb-eyebrow{width:100%;}
@@ -7130,7 +7167,6 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
         <!-- ⏳ 倒數計時 -->
         <section id="timer-pane" class="hidden" aria-label="倒數計時">
           <div class="timer-wrap">
-            <div id="timer-task-owner" hidden><span id="timer-task-label"></span> <button type="button" class="btn" onclick="setMode('taskboard')">前往任務板</button></div>
             <!-- 圓形進度環 -->
             <div class="timer-ring-box" id="timer-ring-box">
               <svg class="timer-ring-svg" viewBox="0 0 200 200">
@@ -13315,6 +13351,50 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       return box;
     }
 
+    function fitProgressInput(input){
+      if(!input.getClientRects().length) return;
+      input.style.height = '44px';
+      input.style.height = Math.max(44, input.scrollHeight + 2) + 'px';
+    }
+    const progressInputWidths = new WeakMap();
+    const progressInputObserver = new ResizeObserver(entries=>{
+      entries.forEach(({target,contentRect})=>{
+        if(contentRect.width > 0 && progressInputWidths.get(target) !== contentRect.width){
+          progressInputWidths.set(target,contentRect.width);
+          fitProgressInput(target);
+        }
+      });
+    });
+
+    function createProgressActions(moveBtns, del, idx, isTopic){
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'prog-actions-trigger';
+      trigger.textContent = '⋯';
+      trigger.title = isTopic ? '主題操作' : '進度操作';
+      trigger.setAttribute('aria-label',trigger.title);
+      trigger.setAttribute('aria-expanded','false');
+      const panel = document.createElement('div');
+      panel.id = 'prog-actions-' + idx;
+      panel.className = 'prog-actions-popover';
+      panel.setAttribute('popover','auto');
+      panel.setAttribute('aria-label',trigger.title);
+      trigger.popoverTargetElement = panel;
+      trigger.setAttribute('aria-controls',panel.id);
+      moveBtns.children[0].textContent = '↑　上移';
+      moveBtns.children[1].textContent = '↓　下移';
+      del.textContent = isTopic ? '刪除主題標題' : '刪除進度';
+      panel.append(moveBtns,del);
+      panel.addEventListener('beforetoggle',e=>{
+        trigger.setAttribute('aria-expanded',String(e.newState === 'open'));
+        if(e.newState !== 'open') return;
+        const rect = trigger.getBoundingClientRect();
+        panel.style.left = Math.max(8,Math.min(rect.right - 180,innerWidth - 188)) + 'px';
+        panel.style.top = Math.max(8,rect.bottom + 156 <= innerHeight ? rect.bottom + 4 : rect.top - 156) + 'px';
+      });
+      return [trigger,panel];
+    }
+
     // ★ 拖移狀態
     let __progDragIdx = null;
     let __progDragIsTopic = false;
@@ -13538,6 +13618,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       collapse.textContent = topics.length && topics.every(it=>it.collapsed) ? '展開主題' : '收合主題';
       collapse.disabled = !topics.length;
       applyProgressFilters();
+      elProgTable.querySelectorAll('.prog-input').forEach(fitProgressInput);
     }
 
     function prepareProgressAdd(pg){
@@ -13548,6 +13629,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     }
 
     function renderProgress(){
+      progressInputObserver.disconnect();
       const prog = ensureProgressState();
       if(!elProgTable) return;
 
@@ -13753,8 +13835,8 @@ classes.forEach((cls, idx)=>{
           icon.title = isCollapsed ? '展開主題' : '收合主題';
           icon.setAttribute('aria-hidden','true');
 
-          const inp = document.createElement('textarea');
-          inp.rows = 2;
+          const inp = document.createElement('input');
+          inp.type = 'text';
           inp.setAttribute('aria-label','主題名稱');
           inp.className = 'prog-topic-input';
           inp.placeholder = '輸入主題名稱...';
@@ -13789,11 +13871,11 @@ classes.forEach((cls, idx)=>{
           countBadge.textContent = childCount > 0 ? `(${childCount})` : '';
 
           wrap.appendChild(handle);
-          wrap.appendChild(moveBtns);
           wrap.appendChild(icon);
           const title = document.createElement('span');
           title.className = 'prog-title prog-topic-title';
           title.textContent = it.title || '未命名主題';
+          title.title = it.title || '未命名主題';
           wrap.appendChild(title);
           wrap.appendChild(inp);
           wrap.appendChild(countBadge);
@@ -13812,7 +13894,7 @@ classes.forEach((cls, idx)=>{
             elProgTable.querySelector(`tr[data-idx="${childEnd}"] .prog-input`)?.focus();
           });
           wrap.appendChild(addHere);
-          wrap.appendChild(del);
+          wrap.append(...createProgressActions(moveBtns,del,idx,true));
 
           // ★ 右側收合/展開箭頭
           const arrow = document.createElement('button');
@@ -13894,7 +13976,7 @@ classes.forEach((cls, idx)=>{
 
         // 右側：進度名稱
         const inp = document.createElement('textarea');
-        inp.rows = 2;
+        inp.rows = 1;
         inp.setAttribute('aria-label','進度內容');
         inp.className = 'prog-input';
         inp.placeholder = '輸入進度...';
@@ -13902,17 +13984,18 @@ classes.forEach((cls, idx)=>{
         inp.addEventListener('input', ()=>{
           it.title = inp.value;
           tr.querySelectorAll('.prog-check-native').forEach((cb,i)=>cb.setAttribute('aria-label',`${classes[i]} - ${it.title || '進度'}`));
+          fitProgressInput(inp);
           saveSession('progress title');
         });
 
         wrap.appendChild(handle);
-        wrap.appendChild(moveBtns);
-        wrap.appendChild(del);
         const title = document.createElement('span');
         title.className = 'prog-title';
         title.textContent = it.title || '未命名進度';
         wrap.appendChild(title);
         wrap.appendChild(inp);
+        wrap.append(...createProgressActions(moveBtns,del,idx,false));
+        progressInputObserver.observe(inp);
         td0.appendChild(wrap);
         tr.appendChild(td0);
 
@@ -14209,8 +14292,7 @@ classes.forEach((cls, idx)=>{
       tbText('tb-next-button',c?.index===c?.steps.length-1?'完成課堂':'下一步');
       tbEl('tb-restart').hidden=!(completed||active&&timed&&tbOwnsTimer()&&!state.timer.running);
       tbEl('tb-restart').title=completed?'回到第一步，準備重新開始':'目前步驟恢復原訂時間，按開始後倒數';
-      const owner=tbOwnsTimer();tbEl('timer-task-owner').hidden=!owner;
-      tbText('timer-task-label',owner?`課堂任務：${c.name} · ${s.title}`:'');
+      const owner=tbOwnsTimer();
       document.querySelectorAll('#timer-pane .timer-presets button,#timer-pane .timer-set input,#timer-pane .timer-set button').forEach(el=>el.disabled=owner);
       [elTimerStart,elTimerPause,elTimerReset].forEach(el=>{if(el)el.disabled=owner&&s.durationSec===null;});
     }
