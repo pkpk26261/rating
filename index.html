@@ -2797,6 +2797,12 @@
       user-select:none;
     }
 
+    .dc-sound .dc-toggle{ min-height:44px; box-sizing:border-box; }
+    .dc-volume{ display:flex; align-items:center; gap:8px; padding:0 10px; font-size:12px; color:var(--muted); }
+    .dc-volume input{ flex:1; min-width:0; width:100%; height:44px; margin:0; accent-color:var(--accent); }
+    .dc-volume output{ min-width:3ch; text-align:right; font-variant-numeric:tabular-nums; }
+    .dc-sound input:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
     /* --- 主抽籤按鈕 --- */
     .dc-draw-btn{
       width:100%;
@@ -7568,6 +7574,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                   <input id="draw-slowdown" type="checkbox" checked>
                   <span class="dc-toggle-label">緩停效果</span>
                 </label>
+              </div>
+
+              <div class="dc-section dc-sound">
+                <label class="dc-toggle"><input id="draw-sound" type="checkbox" checked><span class="dc-toggle-label">抽號音效</span></label>
+                <div class="dc-volume"><label for="draw-volume">音量</label><input id="draw-volume" type="range" min="0" max="100" step="1" value="35"><output id="draw-volume-value" for="draw-volume">35%</output></div>
               </div>
 
               <!-- 主按鈕 -->
@@ -16685,6 +16696,7 @@ function onTimerDone(){
     // END EXAM DASHBOARD UI
 
     function setMode(m){
+      if(state.mode==='draw' && m!=='draw') document.dispatchEvent(new Event('drawsoundstop'));
       ExamDashboard.deactivate();
       attCleanup();
       document.getElementById('attendance-pane')?.classList.toggle('hidden',m!=='attendance');
@@ -18904,6 +18916,127 @@ elProgAdd?.addEventListener('click', ()=>{
       }
     }
 
+    /* BEGIN DRAW SOUND: 本機偏好，不進入班級資料或雲端快照。 */
+    function createDrawSoundController(){
+      const key = 'pscore_draw_sound_v1';
+      let settings = { enabled:true, volume:35 };
+      try{
+        const saved = JSON.parse(localStorage.getItem(key));
+        if(saved && typeof saved.enabled==='boolean') settings.enabled = saved.enabled;
+        if(saved && typeof saved.volume==='number' && Number.isFinite(saved.volume)) settings.volume = Math.max(0,Math.min(100,saved.volume));
+      }catch(_){}
+      let ctx=null, master=null, active=false, finished=false, generation=0, lastClick=-Infinity, revealCount=0;
+      const voices = new Set();
+      function stop(){
+        active=false; generation++;
+        for(const voice of voices){
+          try{
+            const now=ctx.currentTime;
+            voice.gain.gain.cancelScheduledValues(now);
+            voice.gain.gain.setTargetAtTime(0,now,.004);
+            voice.osc.stop(now+.025);
+          }catch(_){}
+        }
+        voices.clear();
+      }
+      function tone(freq, delay, duration, level, type='sine', endFreq=freq){
+        if(!active || !settings.enabled || settings.volume===0 || ctx?.state!=='running') return;
+        try{
+          const t=ctx.currentTime+delay, osc=ctx.createOscillator(), gain=ctx.createGain();
+          const voice={osc,gain}; voices.add(voice);
+          osc.type=type; osc.frequency.setValueAtTime(freq,t);
+          osc.frequency.exponentialRampToValueAtTime(endFreq,t+duration);
+          gain.gain.setValueAtTime(0,t);
+          gain.gain.linearRampToValueAtTime(level,t+.008);
+          gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+          gain.gain.linearRampToValueAtTime(0,t+duration+.01);
+          osc.connect(gain); gain.connect(master);
+          osc.onended=()=>{voices.delete(voice);osc.disconnect();gain.disconnect();};
+          osc.start(t); osc.stop(t+duration+.02);
+        }catch(_){stop();}
+      }
+      function begin(){
+        stop(); finished=false; revealCount=0; lastClick=-Infinity;
+        if(!settings.enabled || settings.volume===0 || document.hidden) return;
+        try{
+          const AC=window.AudioContext || window.webkitAudioContext;
+          if(!AC) return;
+          if(!ctx || ctx.state==='closed'){
+            ctx=new AC(); master=ctx.createGain(); master.connect(ctx.destination);
+          }
+          master.gain.setValueAtTime(settings.volume/100*.55,ctx.currentTime);
+          active=true;
+          const token=generation;
+          const start=()=>{if(active && token===generation) tone(440,0,.2,.24,'sine',880);};
+          if(ctx.state==='suspended') Promise.resolve(ctx.resume()).then(start,()=>{if(token===generation)stop();});
+          else start();
+        }catch(_){stop();}
+      }
+      function roll(){
+        if(!active || !ctx || ctx.currentTime-lastClick<.065) return;
+        lastClick=ctx.currentTime;
+        tone(460,0,.045,.13,'triangle',280);
+      }
+      function reveal(){
+        const notes=[523.25,659.25,783.99,1046.5,1318.51,1567.98];
+        const f=notes[Math.min(revealCount++,notes.length-1)];
+        tone(f,0,.22,.23); tone(f*2,0,.12,.045);
+      }
+      function finish(){
+        if(finished) return;
+        finished=true;
+        [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.055+i*.12,i===3?.37:.18,.19));
+        tone(523.25,.415,.37,.08);
+      }
+      function configure(enabled,volume){
+        settings={enabled:!!enabled,volume:Math.max(0,Math.min(100,Number(volume)||0))};
+        try{localStorage.setItem(key,JSON.stringify(settings));}catch(_){}
+        if(!settings.enabled || settings.volume===0) stop();
+        if(master && ctx){try{master.gain.setTargetAtTime(settings.volume/100*.55,ctx.currentTime,.015);}catch(_){}}
+      }
+      return {begin,roll,reveal,finish,stop,configure,getSettings:()=>({...settings})};
+    }
+    const drawSound=createDrawSoundController();
+    const elDrawSound=document.getElementById('draw-sound'), elDrawVolume=document.getElementById('draw-volume');
+    const elDrawVolumeValue=document.getElementById('draw-volume-value');
+    function renderDrawSoundSettings(){
+      const pref=drawSound.getSettings();
+      elDrawSound.checked=pref.enabled; elDrawVolume.value=String(pref.volume);
+      elDrawVolumeValue.textContent=pref.volume+'%'; elDrawVolume.disabled=!pref.enabled;
+      elDrawVolume.setAttribute('aria-valuetext',pref.volume+'%');
+    }
+    function updateDrawSoundSettings(){
+      drawSound.configure(elDrawSound.checked,elDrawVolume.value); renderDrawSoundSettings();
+    }
+    elDrawSound.addEventListener('change',updateDrawSoundSettings);
+    elDrawVolume.addEventListener('input',updateDrawSoundSettings);
+    document.addEventListener('drawsoundstop',()=>drawSound.stop());
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)drawSound.stop();});
+    window.addEventListener('pagehide',()=>drawSound.stop());
+    elSelect.addEventListener('change',()=>drawSound.stop());
+    elBtnDrawUndo?.addEventListener('click',()=>{if(!_drawAnimating)drawSound.stop();});
+    elBtnDrawReset?.addEventListener('click',()=>{if(!_drawAnimating)drawSound.stop();});
+    renderDrawSoundSettings();
+    /* END DRAW SOUND */
+
+    // 速度積分與位移一致；距離短時降低最高速度，避免提早撞到終點。
+    function drawMotion(totalDist,idx,slowdown){
+      const accel=300, decel=slowdown?2800+idx*300:800+idx*120;
+      const power=slowdown?5:2;
+      const speed=Math.min(5500,totalDist/(accel/2000+decel/(power*1000)));
+      const accelDist=speed*accel/2000, decelDist=speed*decel/(power*1000);
+      const cruiseDist=Math.max(0,totalDist-accelDist-decelDist);
+      const cruise=cruiseDist/speed*1000, duration=accel+cruise+decel;
+      return {duration,position(t){
+        if(t<=0)return 0;
+        if(t>=duration)return totalDist;
+        if(t<=accel)return accelDist*Math.pow(t/accel,2);
+        if(t<=accel+cruise)return accelDist+(t-accel)*speed/1000;
+        const p=(t-accel-cruise)/decel;
+        return accelDist+cruiseDist+decelDist*(1-Math.pow(1-p,power));
+      }};
+    }
+
     /* ===== 🎰 抽籤動畫引擎 ===== */
     let _drawAnimating = false;
 
@@ -19026,35 +19159,13 @@ elProgAdd?.addEventListener('click', ()=>{
 
         const delay = idx * STAGGER;
 
-        // 使用 requestAnimationFrame 做: 先加速 → 勻速 → 減速 停在目標位置
-        const ACCEL_TIME  = 300;           // 加速期 (ms)
-        const totalDist   = Math.abs(targetY); // 要滾的總距離 (px)
-        const MAX_SPEED   = 5500;            // 最大速度 px/s
-        const accelDist   = MAX_SPEED * ACCEL_TIME / 2000;
-
-        let DECEL_TIME, decelDist, cruiseDist, cruiseTime, totalTime;
-
-        if(slowdown){
-          // === 緩停模式 ===
-          // 拉長減速期，讓最後 8~12 個學生名字一個一個慢慢滾過
-          DECEL_TIME  = 2800 + idx*300;
-          decelDist   = MAX_SPEED * DECEL_TIME / 2000;
-          cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
-          cruiseTime  = cruiseDist / MAX_SPEED * 1000;
-          totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
-        } else {
-          // === 標準模式 ===
-          DECEL_TIME  = 800 + idx*120;
-          decelDist   = MAX_SPEED * DECEL_TIME / 2000;
-          cruiseDist  = Math.max(0, totalDist - accelDist - decelDist);
-          cruiseTime  = cruiseDist / MAX_SPEED * 1000;
-          totalTime   = ACCEL_TIME + cruiseTime + DECEL_TIME;
-        }
+        const motion=drawMotion(Math.abs(targetY),idx,slowdown);
+        let lastCell=0;
 
         let startTime = null;
 
         function tick(now){
-          if(!startTime) startTime = now;
+          if(startTime===null) startTime = now;
           const elapsed = now - startTime;
 
           // 延遲
@@ -19064,45 +19175,23 @@ elProgAdd?.addEventListener('click', ()=>{
           }
 
           const t = elapsed - delay; // 這個 slot 自己的運動時間
-          let dist;
+          const dist=motion.position(t);
+          reel.style.transform = `translateY(${-dist}px)`;
+          const cell=Math.floor(dist/ITEM_H);
+          // 只由尚在滾動的第一輪帶節奏；掉幀不追補過期聲音。
+          if(cell!==lastCell && t<motion.duration && slots.find(s=>!s.done)===slot) drawSound.roll();
+          lastCell=cell;
 
-          if(t <= ACCEL_TIME){
-            // 加速階段: 二次加速 0 → MAX_SPEED
-            const p = t / ACCEL_TIME;
-            dist = accelDist * p * p;
-          } else if(t <= ACCEL_TIME + cruiseTime){
-            // 勻速階段
-            const ct = t - ACCEL_TIME;
-            dist = accelDist + (ct / 1000) * MAX_SPEED;
-          } else if(t <= totalTime){
-            // 減速階段
-            const dt = t - ACCEL_TIME - cruiseTime;
-            const p = dt / DECEL_TIME;
-            if(slowdown){
-              // 緩停：使用五次方緩出 (quintic ease-out)
-              // 最後約 30% 時間只移動不到 5% 距離 → 名字一格一格慢慢滾
-              const eased = 1 - Math.pow(1 - p, 5);
-              dist = accelDist + cruiseDist + decelDist * eased;
-            } else {
-              // 標準：二次減速
-              dist = accelDist + cruiseDist + decelDist * (2*p - p*p);
-            }
-          } else {
-            dist = totalDist;
-          }
-
-          // 套用偏移
-          const y = -Math.min(dist, totalDist);
-          reel.style.transform = `translateY(${y}px)`;
-
-          if(t >= totalTime){
+          if(t >= motion.duration){
             // === 停在最終位置 ===
             reel.style.transform = `translateY(${targetY}px)`;
             el.classList.remove('spinning');
             el.classList.add('revealed');
+            slot.done=true;
+            drawSound.reveal();
             completed++;
             if(completed === slots.length){
-              setTimeout(onComplete, 150);
+              onComplete();
             }
             return;
           }
@@ -19155,6 +19244,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
       // ===  開始動畫 ===
       _drawAnimating = true;
+      drawSound.begin();
       elBtnDraw.disabled = true;
       elBtnDraw.textContent = '🎰 抽籤中...';
       elDrawResult.innerHTML = '';
@@ -19167,21 +19257,22 @@ elProgAdd?.addEventListener('click', ()=>{
       const slots = buildSlots(count, list);
 
       // 播放滾動動畫
-      const totalDur = 1800 + (count-1)*350 + 200;
       animateSlots(slots, picks, list, ()=>{
         // === 動畫完成 → 揭曉 ===
+        drawSound.finish();
         _drawAnimating = false;
         elBtnDraw.disabled = false;
         elBtnDraw.textContent = '🎰 開始抽籤！';
 
         elDrawStage?.classList.remove('spinning');
-        elDrawStage?.classList.add('celebrate');
+        const showingDraw=state.mode==='draw' && elSelect.value===cls;
+        if(showingDraw) elDrawStage?.classList.add('celebrate');
 
         // 放彩紙
-        fireConfetti(elDrawConfetti, 2000);
+        if(showingDraw) fireConfetti(elDrawConfetti, 2000);
 
         // 顯示結果 chips
-        elDrawResult.innerHTML = picks.map((s, i)=>{
+        if(showingDraw) elDrawResult.innerHTML = picks.map((s, i)=>{
           const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
           return `<span class="chip big pop" style="animation-delay:${i*80}ms"><span class="seat-badge">${seat}</span>${renderStudentName(s, cls)}</span>`;
         }).join('');
@@ -19207,7 +19298,7 @@ elProgAdd?.addEventListener('click', ()=>{
         }
 
         saveDrawToLS(cls);
-        renderDraw(cls);
+        if(state.mode==='draw') renderDraw(elSelect.value);
       });
     });
 
