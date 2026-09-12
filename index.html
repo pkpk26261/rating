@@ -6578,7 +6578,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     body[data-mode="seat"] #seat-controls>.btn{flex-shrink:0;min-height:44px;}
     /* BEGIN TASK BOARD STYLE */
     body.no-data .modebar{display:flex !important;}
-    body.no-data .modebar [data-mode]:not([data-mode="taskboard"]):not([data-mode="timer"]):not([data-mode="manage"]){display:none;}
+    body.no-data .modebar [data-mode]:not([data-mode="exam"]):not([data-mode="taskboard"]):not([data-mode="timer"]):not([data-mode="manage"]){display:none;}
     body.no-data[data-mode="taskboard"] #btn-reset{display:inline-flex !important;}
     #taskboard-pane{display:flex;flex-direction:column;width:100%;min-width:0;min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;scroll-padding-bottom:90px;}
     #taskboard-pane.hidden{display:none;}
@@ -6850,6 +6850,107 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
       :is(#hw-table,.att-table) tr>:nth-child(-n+2){padding:8px;}
     }
 
+    /* BEGIN EXAM DASHBOARD STYLE */
+    body[data-mode="exam"] .controls-row{display:none !important;}
+    body[data-mode="exam"] .app .main{padding:0;border:0;background:transparent;box-shadow:none;}
+    #exam-pane{--ex-scale:1;--ex-button:44px;--ex-gap:12px;--ex-font:16px;--ex-label:20px;--ex-time:22px;--ex-row-height:60px;--ex-pink:#f05270;--ex-yellow:#ffc83d;--ex-cyan:#35d9ff;--ex-red:#ff5148;--ex-fg:#f6f8ff;--ex-muted:#bac4d8;--ex-line:#ffffff2b;--ex-surface:#ffffff0f;--ex-row:#ffffff12;--ex-input:#ffffff0f;--ex-bg:linear-gradient(135deg,#1a1a2e,#16213e 50%,#0f3460);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;min-width:0;min-height:0;height:100%;overflow:hidden;color:var(--ex-fg);background:var(--ex-bg);border:1px solid var(--ex-line);border-radius:16px;}
+    :root[data-theme="light"] #exam-pane{--ex-fg:#25364d;--ex-muted:#596c85;--ex-line:#25456430;--ex-surface:#ffffffb0;--ex-row:#fff9;--ex-input:#fff9;--ex-bg:linear-gradient(135deg,#f0edf4,#e4ecf6 50%,#d8e9f5);--ex-yellow:#976000;--ex-cyan:#007b9e;--ex-pink:#c72a50;--ex-red:#d52d28;}
+    #exam-pane.hidden,#exam-pane [hidden]{display:none !important;}
+    #exam-pane h2,#exam-pane h3,#exam-pane p{margin:0;}
+    #exam-pane .btn{min-width:var(--ex-button);min-height:var(--ex-button);padding:calc(8px * var(--ex-scale)) calc(12px * var(--ex-scale));white-space:nowrap;color:var(--ex-fg);background:var(--ex-input);border:1px solid var(--ex-line);border-radius:calc(8px * var(--ex-scale));font-size:var(--ex-font) !important;gap:calc(7px * var(--ex-scale));box-shadow:none !important;transition:background-color .15s;}
+    #exam-pane .btn:hover{background:color-mix(in srgb,var(--ex-input) 80%,var(--ex-fg) 20%);transform:none;}
+    #exam-pane :is(button,input,textarea):focus-visible{outline:3px solid var(--ex-cyan);outline-offset:2px;}
+    #exam-pane .exam-icon{width:calc(20px * var(--ex-scale));height:calc(20px * var(--ex-scale));flex:0 0 calc(20px * var(--ex-scale));vertical-align:middle;}
+    #exam-pane :is(#exam-collapse,#exam-previous,#exam-next,#exam-zoom-in,#exam-zoom-out)>.exam-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+    .exam-toolbar{grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.9fr) minmax(0,1fr);align-items:center;gap:var(--ex-gap);padding:var(--ex-gap) calc(20px * var(--ex-scale));border-bottom:3px solid var(--ex-pink);background:#0002;}
+    #exam-pane h2{display:flex;align-items:center;gap:10px;color:var(--ex-pink);font-size:calc(28px * var(--ex-scale));font-weight:800;white-space:nowrap;}
+    .exam-title-icon{width:1.15em;height:1.15em;flex-shrink:0;}
+    .exam-clock{display:flex;flex-direction:column;justify-content:center;height:calc(80px * var(--ex-scale));min-width:0;text-align:center;font-variant-numeric:tabular-nums;}
+    #exam-clock{font:700 48px/1.12 Consolas,monospace;white-space:nowrap;letter-spacing:0;text-shadow:0 0 14px #ffffff24;}
+    #exam-date{font-size:var(--ex-font);color:var(--ex-muted);margin-top:5px;white-space:nowrap;}
+    .exam-actions{display:flex;gap:var(--ex-gap);align-items:center;flex-wrap:wrap;}
+    .exam-toolbar>.exam-actions{justify-content:flex-end;flex-wrap:nowrap;gap:calc(8px * var(--ex-scale));}
+    #exam-pane #exam-theme{border-radius:40px;}
+    #exam-pane #exam-settings-open{background:#f28b00;border-color:#f28b00;color:#fff;}
+    #exam-pane #exam-project,#exam-pane #exam-exit{background:#009fc5;border-color:#009fc5;color:#fff;}
+    .exam-notices{grid-row:2;display:none;padding:8px 16px;background:var(--ex-surface);}
+    .exam-notices:has(#exam-error:not([hidden])),.exam-notices:has(#exam-end-alert:not([hidden])){display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-height:25vh;overflow:auto;}
+    #exam-error{color:var(--ex-red);font-size:var(--ex-font);}
+    #exam-end-alert{display:flex;align-items:center;gap:14px;font-size:var(--ex-font);white-space:pre-wrap;}
+    .exam-layout{grid-row:3;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-height:0;gap:var(--ex-gap);padding:var(--ex-gap);}
+    .exam-schedule{position:relative;display:flex;min-width:0;min-height:0;background:var(--ex-surface);border-radius:calc(14px * var(--ex-scale));padding:calc(10px * var(--ex-scale));}
+    #exam-table-wrap{min-width:0;width:100%;overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;}
+    .exam-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 calc(7px * var(--ex-scale));margin-top:calc(-7px * var(--ex-scale));}
+    .exam-table th{position:sticky;top:0;z-index:1;background:color-mix(in srgb,var(--ex-pink) 27%,#24273e);color:#fff;height:var(--ex-button);padding:4px;font-size:var(--ex-font);white-space:nowrap;}
+    .exam-table th:first-child{width:14%;border-radius:12px 0 0 12px;}.exam-table th:nth-child(2){width:28%;}.exam-table th:nth-child(3){width:44%;}.exam-table th:last-child{width:14%;border-radius:0 12px 12px 0;}
+    .exam-table td{padding:calc(5px * var(--ex-scale));background:var(--ex-row);height:var(--ex-row-height);box-sizing:border-box;text-align:center;font-size:var(--ex-label);}
+    .exam-table td:first-child{border-left:calc(5px * var(--ex-scale)) solid var(--ex-yellow);border-radius:8px 0 0 8px;color:var(--ex-pink);font-weight:750;white-space:nowrap;font-size:var(--ex-label);}
+    .exam-table td:last-child{border-radius:0 8px 8px 0;color:var(--ex-yellow);font-weight:750;white-space:nowrap;font-size:var(--ex-font);}
+    .exam-table tr[data-status="done"] td:first-child{border-left-color:#68ba83;}
+    .exam-table tr[data-status="active"] td{background:color-mix(in srgb,var(--ex-row) 65%,var(--ex-pink) 18%);}
+    .exam-table tr[data-status="active"] td:first-child{border-left-color:var(--ex-pink);}
+    .exam-table tr[data-kind="lunch"] td,.exam-table tr[data-kind="morning"] td{background:color-mix(in srgb,var(--ex-row) 70%,#953ab5 14%);}
+    .exam-table tr[data-kind="lunch"] td:first-child,.exam-table tr[data-kind="morning"] td:first-child{border-left-color:#b85bdd;color:#d58aea;}
+    #exam-pane .exam-table input{min-height:var(--ex-button);height:calc(var(--ex-row-height) - 12px * var(--ex-scale));width:100%;min-width:0;box-sizing:border-box;text-align:center;color:var(--ex-fg);background:var(--ex-input);border:1px solid var(--ex-line);border-radius:8px;padding:4px;font-size:var(--ex-label) !important;font-weight:650;}
+    #exam-pane input::placeholder,#exam-pane textarea::placeholder{color:var(--ex-muted);opacity:1;}
+    #exam-pane .exam-time-edit{display:flex;width:100%;padding:0;border:0;background:transparent;gap:calc(4px * var(--ex-scale));justify-content:center;font-size:var(--ex-time) !important;font-weight:750;font-variant-numeric:tabular-nums;}
+    .exam-time-edit span{display:flex;align-items:center;justify-content:center;min-height:var(--ex-button);height:calc(var(--ex-row-height) - 12px * var(--ex-scale));flex:1;min-width:0;border:1px solid color-mix(in srgb,var(--ex-line),var(--ex-fg) 16%);border-radius:8px;background:var(--ex-input);white-space:nowrap;line-height:1.2;}
+    .exam-time-edit i{font-style:normal;color:var(--ex-muted);font-size:var(--ex-font);}
+    .exam-subject-label{color:var(--ex-fg);font-weight:650;}
+    #exam-pane #exam-collapse{position:absolute;right:-22px;top:50%;transform:translateY(-50%);width:44px;min-width:44px;min-height:calc(56px * var(--ex-scale));padding:0;z-index:3;border:0;border-radius:0 10px 10px 0;background:linear-gradient(90deg,transparent 7px,var(--ex-pink) 7px,var(--ex-pink) 37px,transparent 37px);color:#fff;}
+    .exam-collapsed{grid-template-columns:28px minmax(0,1fr);}.exam-collapsed .exam-schedule{padding:0;}.exam-collapsed .exam-schedule::before{content:'考試節次';writing-mode:vertical-rl;position:absolute;top:20px;left:4px;color:var(--ex-pink);font-size:var(--ex-font);}
+    .exam-focus{display:grid;grid-template-rows:minmax(130px,.85fr) minmax(0,2.15fr);gap:var(--ex-gap);min-width:0;min-height:0;}
+    .exam-countdowns{display:grid;grid-template-columns:1fr 1fr;gap:var(--ex-gap);min-width:0;min-height:0;}.exam-countdowns.exam-single-countdown{grid-template-columns:1fr;}
+    .exam-countdown{display:flex;flex-direction:column;justify-content:center;gap:calc(6px * var(--ex-scale));text-align:center;padding:calc(10px * var(--ex-scale));background:var(--ex-surface);border-radius:calc(14px * var(--ex-scale));min-width:0;min-height:0;overflow:auto;}
+    #exam-pane :is(#exam-next-title,#exam-current-title,#exam-info-title,#exam-offset-label){display:flex;align-items:center;justify-content:center;gap:calc(7px * var(--ex-scale));}
+    .exam-countdown>span{color:var(--ex-muted);font-size:var(--ex-font);font-weight:650;}
+    .exam-countdown strong{display:block;font:700 42px/1.12 Consolas,monospace;flex-shrink:0;letter-spacing:0;white-space:nowrap;color:var(--ex-yellow);text-shadow:0 0 10px color-mix(in srgb,currentColor 20%,transparent);}
+    .exam-current strong{color:var(--ex-red);}
+    #exam-pane .exam-countdown p{font-size:calc(20px * var(--ex-scale));line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ex-cyan);}
+    .exam-info{display:flex;flex-direction:column;min-width:0;min-height:0;border-radius:calc(14px * var(--ex-scale));background:var(--ex-surface);padding:calc(10px * var(--ex-scale));position:relative;overflow:hidden;}
+    .exam-section-head{display:flex;align-items:center;flex-wrap:wrap;gap:calc(6px * var(--ex-scale));min-height:var(--ex-button);border-bottom:2px solid var(--ex-line);padding-bottom:calc(6px * var(--ex-scale));flex-shrink:0;}
+    #exam-info-title{font-size:calc(20px * var(--ex-scale));color:var(--ex-pink);white-space:nowrap;justify-content:flex-start !important;}
+    .exam-zoom{display:flex;gap:4px;align-items:center;font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);}
+    #exam-pane .exam-zoom .btn{padding:4px;}
+    .exam-carousel-actions{margin-left:auto;display:flex;align-items:center;gap:calc(6px * var(--ex-scale));}
+    #exam-pane .exam-carousel-actions .btn{border-radius:50%;padding:0;background:#0002;}
+    .exam-page-indicators{display:flex;gap:5px;background:#0002;padding:0 8px;border-radius:30px;}
+    #exam-pane .exam-dot{position:relative;border:0;background:transparent;min-width:calc(28px * var(--ex-scale));min-height:var(--ex-button);cursor:pointer;padding:0;}
+    .exam-dot::after{content:'';position:absolute;left:0;right:0;top:calc(50% - 3px);height:6px;border-radius:4px;background:var(--ex-muted);opacity:.6;}.exam-dot[aria-pressed="true"]::after{background:var(--ex-pink);opacity:1;}
+    #exam-attendance,#exam-rules-panel{flex:1;min-height:0;overflow:auto;}
+    #exam-attendance{display:grid;grid-template-rows:auto minmax(44px,1fr);container-type:size;gap:calc(8px * var(--ex-scale));padding-top:calc(8px * var(--ex-scale));}
+    .exam-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ex-gap);}
+    .exam-counts label{text-align:center;color:var(--ex-muted);font-size:var(--ex-font);}
+    #exam-pane .exam-counts input,#exam-pane .exam-counts output{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;min-width:0;min-height:50px;height:clamp(50px,30cqh,calc(100px * var(--ex-scale)));margin-top:calc(5px * var(--ex-scale));padding:4px;font-size:30px !important;line-height:1.12;font-weight:750;text-align:center;color:var(--ex-fg);background:var(--ex-input);border:3px solid #37a5c5;border-radius:calc(12px * var(--ex-scale));}
+    #exam-pane .exam-counts #exam-actual{border-color:#509363;}#exam-pane .exam-counts output{border-color:#bc5365;background:#b847591a;}
+    .exam-field{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:var(--ex-font);}.exam-remarks-field{min-height:44px;}
+    #exam-pane textarea{box-sizing:border-box;width:100%;background:var(--ex-input);color:var(--ex-fg);border:1px solid var(--ex-line);border-radius:calc(12px * var(--ex-scale));padding:calc(10px * var(--ex-scale));line-height:1.6;}
+    #exam-pane #exam-remarks{flex:1;min-height:44px;resize:none;font-size:calc(18px * var(--ex-scale) * var(--exam-remarks-scale,1)) !important;}
+    #exam-rules-panel{padding-top:var(--ex-gap);}#exam-rules{padding-left:1.4em;margin:0 0 12px;font-size:calc(20px * var(--ex-scale) * var(--exam-rules-scale,1));line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;}
+    .exam-info-footer{display:flex;justify-content:flex-end;flex-shrink:0;font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);}
+    .exam-info-footer label{display:flex;align-items:center;min-height:32px;gap:6px;cursor:pointer;}.exam-info-footer input{width:calc(16px * var(--ex-scale));height:calc(16px * var(--ex-scale));}
+    .exam-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--ex-pink),var(--ex-cyan));transform:scaleX(var(--exam-progress,0));transform-origin:left;}
+    #exam-controlbar{grid-row:4;display:flex;align-items:center;justify-content:space-between;gap:var(--ex-gap);padding:calc(10px * var(--ex-scale)) calc(16px * var(--ex-scale));border-top:2px solid var(--ex-line);background:#0002;}
+    #exam-pane #exam-save{background:#359743;color:#fff;border-color:transparent;}#exam-pane #exam-load{background:#e58100;color:#fff;border-color:transparent;}#exam-pane #exam-clear{background:#dc3935;color:#fff;border-color:transparent;}
+    .exam-offset-panel{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;padding:calc(6px * var(--ex-scale));background:var(--ex-surface);border-radius:10px;}
+    .exam-offset-label{font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);}.exam-offset-actions{display:flex;align-items:center;gap:4px;}
+    #exam-pane .exam-offset-actions .btn{padding:5px;font-size:calc(14px * var(--ex-scale)) !important;}
+    #exam-offset{padding:10px 8px;border-radius:5px;background:#0002;white-space:nowrap;font-size:var(--ex-font);font-variant-numeric:tabular-nums;}
+    .exam-storage-line{font-size:calc(13px * var(--ex-scale));color:var(--ex-muted);white-space:nowrap;}.exam-storage-line::before{content:'●';color:#52b975;margin-right:6px;}
+    .exam-dialog{width:min(620px,calc(100vw - 40px));max-height:85dvh;box-sizing:border-box;overflow:auto;background:#25334c;color:#f5f6ff;border:1px solid var(--ex-line);border-radius:16px;padding:22px;box-shadow:0 12px 48px #0006;}
+    :root[data-theme="light"] .exam-dialog{background:#edf3fa;color:#25364d;}.exam-dialog::backdrop{background:#0008;}.exam-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+    #exam-pane .exam-dialog p{font-size:16px;line-height:1.7;margin:12px 0;white-space:pre-wrap;}.exam-time-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    #exam-pane .exam-time-fields input{min-height:44px;width:100%;min-width:0;box-sizing:border-box;padding:8px;font-size:20px !important;background:var(--ex-input);color:inherit;border:1px solid var(--ex-line);border-radius:8px;}#exam-rules-form>button{margin-top:16px;}
+    :root[data-theme="light"] #exam-pane .exam-table th{background:color-mix(in srgb,var(--ex-pink) 15%,#eef3f9);color:var(--ex-fg);}
+    :root[data-theme="light"] #exam-pane :is(.exam-toolbar,#exam-controlbar){background:#ffffffa8;}:root[data-theme="light"] #exam-pane :is(#exam-clock,.exam-countdown strong){text-shadow:none;}
+    body.exam-projecting{overflow:hidden;}#exam-pane.exam-projecting{position:fixed;inset:0;z-index:50000;height:100dvh;width:100%;border-radius:0;box-sizing:border-box;}
+    #exam-pane.exam-projecting .exam-toolbar{padding-right:calc(140px * var(--ex-scale));}#exam-pane.exam-projecting #exam-exit{position:fixed;right:max(16px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));z-index:50001;}
+    @media(max-width:1250px){#exam-controlbar{flex-wrap:wrap;gap:8px;}.exam-offset-panel{margin-left:auto;}.exam-storage-line{width:100%;text-align:right;}}
+    @media(max-width:1150px){.exam-toolbar{grid-template-columns:minmax(0,1fr) minmax(220px,.85fr);gap:8px;padding:10px 16px;}.exam-clock{grid-column:2;grid-row:1 / 3;}.exam-toolbar>.exam-actions{justify-content:flex-start;grid-column:1;}.exam-zoom>span:first-child,.exam-page-indicators{display:none;}.exam-layout{gap:12px;padding:10px;}.exam-schedule{padding:8px;}}
+    @media(max-width:850px){.exam-layout{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) minmax(370px,1.7fr);overflow:auto;}.exam-schedule{min-height:180px;}.exam-focus{min-height:370px;grid-template-rows:120px minmax(0,1fr);}.exam-countdown{padding:6px;}.exam-info{padding:8px;}#exam-controlbar>.exam-actions{width:100%;}.exam-offset-panel{margin:0;}.exam-storage-line{width:auto;margin-left:auto;}.exam-collapsed{grid-template-columns:28px 1fr;grid-template-rows:1fr;}.exam-collapsed .exam-focus{grid-template-rows:minmax(140px,.85fr) minmax(0,2.15fr);}.exam-collapsed .exam-schedule{min-height:0;}}
+    @media(max-height:650px) and (min-width:851px){.exam-layout{overflow:auto;}.exam-focus,.exam-schedule{min-height:350px;}.exam-focus{grid-template-rows:120px minmax(0,1fr);}}
+    /* END EXAM DASHBOARD STYLE */
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -6913,6 +7014,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
                 <button id="mode-attendance" class="more-item" data-mode="attendance"><svg class="ui-icon att-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M9 4V2h6v2M8 10l1.5 1.5L12 9m2 2h3M8 16l1.5 1.5L12 15m2 2h3"/></svg><span>點名板</span></button>
                 <button id="mode-taskboard" class="more-item" data-mode="taskboard" data-icon="📋">任務版</button>
                 <button id="mode-timer" class="more-item" data-mode="timer" data-icon="⏳">倒數計時</button>
+                <button id="mode-exam" class="more-item" data-mode="exam"><svg class="ui-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M7 3V1h6v2M6 8h7M6 12h3M6 16h2"/><circle cx="17" cy="16" r="5"/><path d="M17 13v3l2 1"/></svg><span>考試時間表</span></button>
               </div>
             </div>
           </nav>
@@ -7117,6 +7219,46 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
         <!-- BEGIN TASK BOARD UI -->
         <section id="attendance-pane" class="hidden" aria-label="點名板"></section>
+        <!-- BEGIN EXAM DASHBOARD VIEW -->
+        <section id="exam-pane" class="hidden" aria-labelledby="exam-title">
+          <header class="exam-toolbar">
+            <h2 id="exam-title"><svg class="exam-title-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M7 3V1h6v2M6 8h7M6 12h3M6 16h2"/><circle cx="17" cy="16" r="5"/><path d="M17 13v3l2 1"/></svg>考試時間表</h2>
+            <div class="exam-clock"><time id="exam-clock">--:--:--</time><span id="exam-date"></span></div>
+            <div class="exam-actions"><button class="btn" id="exam-theme">切換主題</button><button class="btn" id="exam-settings-open" aria-controls="exam-controlbar" aria-expanded="true">隱藏控制列</button><button class="btn" id="exam-project">全螢幕</button><button class="btn" id="exam-exit" hidden>退出投影</button></div>
+          </header>
+          <div class="exam-notices"><p id="exam-error" role="alert" hidden></p><button id="exam-retry" class="btn" hidden>重試儲存</button><div id="exam-end-alert" role="alert" hidden><span></span><button class="btn" id="exam-dismiss-alert">知道了</button></div></div>
+          <div class="exam-layout">
+            <section class="exam-schedule" aria-label="考試節次">
+              <div id="exam-table-wrap"><table class="exam-table"><thead><tr><th scope="col">節次</th><th scope="col">考試科目</th><th scope="col">考試時間</th><th scope="col">時長</th></tr></thead><tbody id="exam-periods"></tbody></table></div>
+              <button id="exam-collapse" class="btn" aria-label="收合節次" title="收合節次" aria-expanded="true" aria-controls="exam-table-wrap">◀</button>
+            </section>
+            <div class="exam-focus">
+              <section class="exam-countdowns" aria-label="考試倒數">
+                <div class="exam-countdown"><span id="exam-next-title">距離下一節考試</span><strong id="exam-next-time">--:--:--</strong><p id="exam-next-info"></p></div>
+                <div class="exam-countdown exam-current"><span id="exam-current-title">本節剩餘時間</span><strong id="exam-remaining">--:--:--</strong><p id="exam-current-info"></p></div>
+              </section>
+              <section id="exam-carousel" class="exam-info" aria-label="考場資訊">
+                <div class="exam-section-head"><h3 id="exam-info-title">人數統計</h3><div class="exam-zoom"><span id="exam-zoom-label">備註</span><button class="btn" id="exam-zoom-out" aria-label="縮小資訊文字">−</button><span id="exam-zoom-value">100%</span><button class="btn" id="exam-zoom-in" aria-label="放大資訊文字">＋</button></div><div class="exam-carousel-actions"><div class="exam-page-indicators"><button class="exam-dot" data-exam-slide="0" aria-label="人數統計" aria-pressed="true"></button><button class="exam-dot" data-exam-slide="1" aria-label="考試規則" aria-pressed="false"></button></div><button class="btn" id="exam-previous" aria-label="上一頁資訊">‹</button><button class="btn" id="exam-next" aria-label="下一頁資訊">›</button></div></div>
+                <div id="exam-attendance">
+                  <div class="exam-counts"><label>應到人數<input id="exam-expected" type="number" min="0" max="9999" step="1" class="input"></label><label>實到人數<input id="exam-actual" type="number" min="0" max="9999" step="1" class="input"></label><label>缺席人數<output id="exam-absent">0</output></label></div>
+                  <label class="exam-field exam-remarks-field"><textarea id="exam-remarks" aria-label="備註" rows="3" maxlength="20000" placeholder="備註事項（如：特殊情況、違規紀錄等）"></textarea></label>
+                </div>
+                <div id="exam-rules-panel" hidden><ul id="exam-rules"></ul><button id="exam-rules-edit" class="btn">編輯規則</button></div>
+                <div class="exam-info-footer"><label><input type="checkbox" id="exam-auto-rotate"> 自動輪播</label></div><div class="exam-progress" aria-hidden="true"></div>
+              </section>
+            </div>
+          </div>
+          <footer id="exam-controlbar">
+            <div class="exam-actions"><button class="btn" id="exam-save">儲存資料</button><button class="btn" id="exam-load">載入資料</button><button class="btn" id="exam-clear">清除資料</button></div>
+            <div class="exam-offset-panel"><span class="exam-offset-label" id="exam-offset-label">時間誤差調整</span><div class="exam-offset-actions"><button class="btn" data-exam-offset="-60">−1分</button><button class="btn" data-exam-offset="-10">−10秒</button><button class="btn" data-exam-offset="-1">−1秒</button><output id="exam-offset"></output><button class="btn" data-exam-offset="1">＋1秒</button><button class="btn" data-exam-offset="10">＋10秒</button><button class="btn" data-exam-offset="60">＋1分</button><button class="btn" id="exam-offset-reset">重置</button></div></div>
+            <span id="exam-save-status" class="exam-storage-line" role="status">僅存本機</span>
+          </footer>
+          <dialog id="exam-time-dialog" class="exam-dialog" aria-labelledby="exam-time-title"><form id="exam-time-form"><header><h3 id="exam-time-title">節次時間</h3><button class="btn" type="button" id="exam-time-cancel">取消</button></header><div class="exam-time-fields"><label class="exam-field">開始時間<input id="exam-start-input" type="time" required></label><label class="exam-field">結束時間<input id="exam-end-input" type="time" required></label></div><p id="exam-time-error" role="alert"></p><button class="btn primary" type="submit">儲存時間</button></form></dialog>
+          <dialog id="exam-rules-dialog" class="exam-dialog" aria-labelledby="exam-rules-title"><form id="exam-rules-form"><header><h3 id="exam-rules-title">編輯考試規則</h3><button class="btn" type="button" id="exam-rules-cancel">取消</button></header><label class="exam-field">每行一項規則<textarea id="exam-rules-input" rows="9" maxlength="20000"></textarea></label><button class="btn primary" type="submit">儲存規則</button><p id="exam-rules-error" role="alert"></p></form></dialog>
+          <dialog id="exam-confirm" class="exam-dialog" aria-label="確認考試資料操作"><form method="dialog"><p id="exam-confirm-message"></p><div class="exam-actions"><button class="btn" value="cancel" autofocus>取消</button><button class="btn primary" value="confirm">確定</button></div></form></dialog>
+        </section>
+        <!-- END EXAM DASHBOARD VIEW -->
+
         <section id="taskboard-pane" class="hidden" aria-label="任務版">
           <div id="tb-welcome" class="tb-welcome" aria-labelledby="tb-welcome-title">
             <span class="tb-eyebrow">任務版</span>
@@ -8676,7 +8818,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           document.body.classList.remove('no-data');
 
           // 回到老師上次使用的功能，避免重新登錄時還要再找入口。
-          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer','taskboard','attendance'];
+          const modes=['hw','list','progress','manage','warning','violations','seat','group','draw','timer','taskboard','attendance','exam'];
           setMode(modes.includes(state.mode) ? state.mode : 'hw');
 
 
@@ -8687,6 +8829,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
           setStatus('已從本機暫存還原。');
           return true;
         }
+        if(state.mode==='exam'){setMode('exam');return true;}
         if(state.mode==='taskboard'||state.taskBoard?.current||state.taskBoard?.library?.length){setMode('taskboard');return true;}
       }catch(e){
         console.warn('還原暫存失敗', e);
@@ -16086,7 +16229,349 @@ function onTimerDone(){
     }
     // END ATTENDANCE UI
 
+
+    // BEGIN EXAM DASHBOARD MODEL
+    const EXAM_STORAGE_KEY = 'pscore_exam_dashboard_v1';
+    const EXAM_PERIODS = [
+      ['morning','早自習','07:30','08:00','morning'],
+      ['1','第一節','08:15','09:00','exam'], ['2','第二節','09:15','10:00','exam'],
+      ['3','第三節','10:15','11:00','exam'], ['4','第四節','11:10','11:55','exam'],
+      ['lunch','午休','12:40','13:05','lunch'],
+      ['5','第五節','13:15','14:00','exam'], ['6','第六節','14:15','15:00','exam'],
+      ['7','第七節','15:20','16:05','exam']
+    ];
+    function examDefaults(){
+      return {version:1,periods:EXAM_PERIODS.map(([id,label,start,end,type])=>({id,start,end,subject:''})),
+        expected:0,actual:0,remarks:'',rules:[
+          '考生應於預備鐘響時準時進入試場','作答時不得交談、窺視他人答案','考試時間不得交換文具、紙張',
+          '違規者依校規處理，情節嚴重者該科以零分計算','寫完考卷時，請至少詳細檢查一次'
+        ].join('\n'),offset:0,collapsed:false,controlsHidden:false,slide:0,autoRotate:true,remarksZoom:100,rulesZoom:100};
+    }
+    function examSeconds(time){return Number(time.slice(0,2))*3600+Number(time.slice(3))*60;}
+    function examValidate(value){
+      const fail=message=>{throw new Error(message);};
+      if(!value || value.version!==1 || !Array.isArray(value.periods) || value.periods.length!==EXAM_PERIODS.length)fail('考試資料格式不正確。');
+      const result=examDefaults(); let lastEnd=0;
+      result.periods=EXAM_PERIODS.map(([id,label],i)=>{
+        const p=value.periods[i];
+        if(!p || p.id!==id || typeof p.subject!=='string' || p.subject.length>200)fail(label+'科目資料不正確。');
+        if(![p.start,p.end].every(t=>typeof t==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(t)))fail(label+'請填寫完整時間。');
+        const start=examSeconds(p.start),end=examSeconds(p.end);
+        if(end<=start)fail(label+'結束時間須晚於開始時間。');
+        if(start<lastEnd)fail(label+'時間不可與上一節重疊。');
+        lastEnd=end;return {id,start:p.start,end:p.end,subject:p.subject};
+      });
+      for(const key of ['expected','actual']){
+        if(!Number.isInteger(value[key])||value[key]<0||value[key]>9999)fail('人數須為 0 至 9999 的整數。');
+        result[key]=value[key];
+      }
+      for(const key of ['remarks','rules']){
+        if(typeof value[key]!=='string'||value[key].length>20000)fail('備註或規則文字過長或格式不正確。');
+        result[key]=value[key];
+      }
+      if(!Number.isInteger(value.offset)||Math.abs(value.offset)>86400)fail('時間校正限正負 24 小時內。');
+      result.offset=value.offset;
+      if(value.controlsHidden!==undefined&&typeof value.controlsHidden!=='boolean')fail('控制列設定不正確。');
+      result.controlsHidden=value.controlsHidden??false;
+      for(const key of ['collapsed','autoRotate']){if(typeof value[key]!=='boolean')fail('顯示設定不正確。');result[key]=value[key];}
+      if(![0,1].includes(value.slide))fail('輪播設定不正確。');result.slide=value.slide;
+      for(const key of ['remarksZoom','rulesZoom']){if(!Number.isInteger(value[key])||value[key]<50||value[key]>200||value[key]%10)fail('文字大小設定不正確。');result[key]=value[key];}
+      return result;
+    }
+    function examIsStudy(subject){return /自習|自修|複習|温習|溫習|休息|空堂|午休|午餐/.test(subject);}
+    function examAt(data,stamp=Date.now()){
+      const now=new Date(stamp+data.offset*1000),day=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+      const seconds=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+      const periods=data.periods.map((p,i)=>({...p,label:EXAM_PERIODS[i][1],
+        study:EXAM_PERIODS[i][4]!=='exam'||examIsStudy(p.subject),startSec:examSeconds(p.start),endSec:examSeconds(p.end)}));
+      const current=periods.find(p=>seconds>=p.startSec&&seconds<p.endSec)||null;
+      return {now,day,seconds,periods,current,next:periods.find(p=>p.startSec>seconds)||null,
+        nextExam:periods.find(p=>p.startSec>seconds&&!p.study)||null};
+    }
+    function examFormat(seconds){return seconds==null?'--:--:--':[Math.floor(Math.max(0,seconds)/3600),Math.floor(Math.max(0,seconds)%3600/60),Math.floor(Math.max(0,seconds)%60)].map(n=>String(n).padStart(2,'0')).join(':');}
+    // Compare timestamps instead of requiring an interval to fire at exactly :00.
+    function examEnded(previous,current,seen){
+      if(!previous||previous.day!==current.day||current.seconds<=previous.seconds)return [];
+      return current.periods.filter(p=>{
+        const key=current.day+':'+p.id+':'+p.end;
+        if(p.study||p.endSec<=previous.seconds||p.endSec>current.seconds||seen.has(key))return false;
+        seen.add(key);return true;
+      });
+    }
+    function examCreateStore(storage){
+      let data=examDefaults(),blocked=false,error='',dirty=false;
+      const load=()=>{
+        try{const raw=storage.getItem(EXAM_STORAGE_KEY);const next=raw===null?examDefaults():examValidate(JSON.parse(raw));data=next;blocked=false;dirty=false;error='';return true;}
+        catch(e){blocked=true;error='無法載入考試資料，原始資料已保留。'+e.message;return false;}
+      };
+      const save=()=>{
+        if(blocked)return false;
+        try{storage.setItem(EXAM_STORAGE_KEY,JSON.stringify(data));dirty=false;error='';return true;}
+        catch(e){dirty=true;error='考試資料儲存失敗，請重試；目前內容仍留在此頁。';return false;}
+      };
+      return {load,save,get data(){return data;},get error(){return error;},get blocked(){return blocked;},get dirty(){return dirty;},
+        change(next){if(blocked)throw new Error(error);data=examValidate(next);dirty=true;return save();},
+        reset(){const next=examDefaults();try{storage.setItem(EXAM_STORAGE_KEY,JSON.stringify(next));data=next;blocked=false;dirty=false;error='';return true;}catch(e){error='無法清除考試資料，原本內容保持不變。';return false;}}
+      };
+    }
+    // END EXAM DASHBOARD MODEL
+
+    // BEGIN EXAM DASHBOARD UI
+    const ExamDashboard=(()=>{
+      const el=id=>document.getElementById('exam-'+id),pane=el('pane');
+      // The adapter also catches browsers that deny access to the localStorage getter itself.
+      const store=examCreateStore({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
+      let initialized=false,active=false,ticker=null,previous=null,rotationAt=0,projectionFocus=null,projectRequest=0;
+      const ended=new Set();let inputError='',hovered=false,lastScrollAnchor=null;
+      const text=(id,value)=>{const target=el(id);(target.querySelector(':scope > .exam-label')||target).textContent=value;};
+      const iconPaths={
+        moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+        sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',
+        controls:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>',
+        expand:'<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>',
+        exit:'<path d="M3 8h5V3m13 5h-5V3M8 21v-5H3m13 5v-5h5"/>',
+        save:'<path d="M4 3h13l4 4v14H3V3Z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/>',
+        folder:'<path d="M3 8V5h6l2 3h10v3M3 11h19l-3 10H2Z"/>',
+        trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+        book:'<path d="M12 5C8 3 5 3 2 4v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-3-1-6-1-10 1Zm0 0v15"/>',
+        coffee:'<path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5ZM17 9h2a3 3 0 0 1 0 6h-2M2 22h19M8 2v3m5-3v3"/>',
+        clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
+        bell:'<path d="M5 16h14l-2-3V9a5 5 0 0 0-10 0v4ZM10 20h4M12 2v2"/>',
+        people:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-4a6 6 0 0 1 12 0v4M17 4a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 4v4"/>',
+        rules:'<rect x="4" y="3" width="16" height="19" rx="2"/><path d="M8 8h1m3 0h4M8 13h1m3 0h4M8 18h1m3 0h4"/>',
+        edit:'<path d="m14 4 6 6M4 20l5-1L21 7l-5-5L4 14Z"/>',
+        reset:'<path d="M3 10a9 9 0 1 1 2 8M3 3v7h7"/>',
+        left:'<path d="m14 5-7 7 7 7"/>',right:'<path d="m10 5 7 7-7 7"/>',
+        plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>'
+      };
+      function decorate(id,icon){
+        const target=el(id);if(target.dataset.examIcon===icon&&target.querySelector('svg'))return;target.dataset.examIcon=icon;const label=target.querySelector(':scope > .exam-label')?.textContent??target.textContent;
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');svg.setAttribute('aria-hidden','true');svg.classList.add('exam-icon');svg.innerHTML=iconPaths[icon];
+        const span=document.createElement('span');span.className='exam-label';span.textContent=label;target.replaceChildren(svg,span);
+      }
+      for(const [id,icon] of Object.entries({'theme':'moon','settings-open':'controls','project':'expand','exit':'exit','save':'save','load':'folder','clear':'trash','offset-reset':'reset','next-title':'bell','current-title':'clock','info-title':'people','rules-edit':'edit','retry':'reset','collapse':'left','previous':'left','next':'right','zoom-in':'plus','zoom-out':'minus'}))decorate(id,icon);
+      decorate('offset-label','clock');
+      let fitFrame=null;
+      const measure=document.createElement('canvas').getContext('2d');
+      function fitNumber(node,value,width,height){
+        if(!measure||width<=0||height<=0)return;
+        const style=getComputedStyle(node);measure.font=style.fontWeight+' 100px '+style.fontFamily;
+        const unit=measure.measureText(String(value||'0')).width/100;
+        const size=Math.max(12,Math.floor(Math.min(width/Math.max(.1,unit),height/1.12)));
+        if(node.style.fontSize!==size+'px')node.style.setProperty('font-size',size+'px','important');
+      }
+      function fitNumbers(){
+        fitFrame=null;if(!active)return;
+        const scale=Math.max(.85,Math.min(2.6,pane.clientWidth/1280,pane.clientHeight/700));
+        const values={'--ex-scale':scale.toFixed(3),'--ex-button':Math.max(44,Math.round(44*scale))+'px','--ex-gap':Math.max(8,Math.round(12*scale))+'px','--ex-font':Math.max(15,Math.round(16*scale))+'px','--ex-label':Math.max(16,Math.round(20*scale))+'px','--ex-time':Math.max(18,Math.round(24*scale))+'px','--ex-row-height':Math.max(54,Math.round(62*scale))+'px'};
+        for(const [key,value] of Object.entries(values))if(pane.style.getPropertyValue(key)!==value)pane.style.setProperty(key,value);
+        const clock=el('clock'),clockBox=clock.parentElement,date=el('date'),dateStyle=getComputedStyle(date);
+        fitNumber(clock,clock.textContent,clockBox.clientWidth,clockBox.clientHeight-date.getBoundingClientRect().height-parseFloat(dateStyle.marginTop||0));
+        pane.querySelectorAll('.exam-countdown').forEach(box=>{
+          if(box.hidden)return;const number=box.querySelector('strong'),label=box.querySelector(':scope > span'),info=box.querySelector('p'),style=getComputedStyle(box);
+          const width=box.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+          const height=box.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom)-label.getBoundingClientRect().height-info.getBoundingClientRect().height-2*parseFloat(style.rowGap||0);
+          fitNumber(number,number.textContent,width,height);
+        });
+        for(const id of ['expected','actual','absent']){
+          const node=el(id),style=getComputedStyle(node);
+          fitNumber(node,node.value??node.textContent,node.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)-8,node.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom));
+        }
+      }
+      function queueFit(){if(fitFrame===null)fitFrame=requestAnimationFrame(fitNumbers);}
+      const fitObserver=new ResizeObserver(queueFit);
+      [pane,pane.querySelector('.exam-clock'),...pane.querySelectorAll('.exam-countdown'),pane.querySelector('.exam-counts')].forEach(node=>fitObserver.observe(node));
+      function health(){
+        text('save-status',store.error?'考試資料未存妥':store.dirty?'尚未儲存 · 僅存本機':'已存本機 · 不同步 Google');
+        el('retry').hidden=!store.error;text('retry',store.blocked?'重試載入':'重試儲存');
+        const message=inputError||store.error;text('error',message);el('error').hidden=!message;
+
+      }
+      function writable(){
+        if(!TabLock.isActive()){inputError='此視窗為唯讀，請先改用此視窗再編輯。';health();return false;}
+        return true;
+      }
+      function change(mutate){
+        if(!writable())return false;
+        try{const next=JSON.parse(JSON.stringify(store.data));mutate(next);store.change(next);inputError='';health();queueFit();return true;}
+        catch(error){inputError=error.message;health();return false;}
+      }
+      function button(label,action){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=label;b.addEventListener('click',action);return b;}
+      function renderPeriods(){
+        el('periods').replaceChildren(...store.data.periods.map((p,i)=>{
+          const [,label,,,type]=EXAM_PERIODS[i],row=document.createElement('tr');row.dataset.period=p.id;
+          row.dataset.kind=type;
+          const name=row.insertCell();name.textContent=label;
+          const subject=row.insertCell();
+          if(type==='exam'){
+            const input=document.createElement('input');input.type='text';input.value=p.subject;input.maxLength=200;input.placeholder='考試科目';input.dataset.subject=p.id;input.setAttribute('aria-label',label+'科目');
+            input.addEventListener('input',()=>{if(change(d=>{d.periods[i].subject=input.value;})){previous=null;tick();}});subject.append(input);
+          }else{subject.textContent=label;subject.className='exam-subject-label';}
+          const times=row.insertCell(),edit=button('',()=>openTimeEditor(i));edit.classList.add('exam-time-edit');
+          for(const value of [p.start,'～',p.end]){const part=document.createElement(value==='～'?'i':'span');part.textContent=value;edit.append(part);}
+          edit.setAttribute('aria-label',label+'時間 '+p.start+' 至 '+p.end+'，編輯時間');times.append(edit);
+          const duration=row.insertCell();duration.dataset.duration=p.id;return row;
+        }));
+      }
+      let editingPeriod=0,timeSignature='';
+      function openTimeEditor(index){
+        editingPeriod=index;timeSignature=JSON.stringify(store.data.periods);const p=store.data.periods[index];
+        text('time-title',EXAM_PERIODS[index][1]+'時間');el('start-input').value=p.start;el('end-input').value=p.end;text('time-error','');el('time-dialog').showModal();
+      }
+      el('time-cancel').addEventListener('click',()=>el('time-dialog').close());
+      el('time-form').addEventListener('submit',event=>{
+        event.preventDefault();
+        if(timeSignature!==JSON.stringify(store.data.periods)){text('time-error','節次資料已更新，請關閉後重新編輯。');return;}
+        if(change(d=>{d.periods[editingPeriod].start=el('start-input').value;d.periods[editingPeriod].end=el('end-input').value;})){
+          previous=null;el('time-dialog').close();render();
+        }else text('time-error',inputError||store.error);
+      });
+      function renderControls(){
+        el('controlbar').hidden=store.data.controlsHidden;text('settings-open',store.data.controlsHidden?'顯示控制列':'隱藏控制列');
+        el('settings-open').setAttribute('aria-expanded',String(!store.data.controlsHidden));
+      }
+      function renderTheme(){const light=document.documentElement.dataset.theme==='light';decorate('theme',light?'moon':'sun');text('theme',light?'深色':'淺色');el('theme').setAttribute('aria-label',light?'切換為深色主題':'切換為淺色主題');}
+      el('theme').addEventListener('click',()=>document.getElementById('btn-theme').click());
+      new MutationObserver(renderTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});renderTheme();
+      function renderInfo(){
+        const d=store.data,slide=d.slide;
+        el('attendance').hidden=slide!==0;el('rules-panel').hidden=slide!==1;
+        decorate('info-title',slide===0?'people':'rules');text('info-title',slide===0?'人數統計':'考試規則');text('zoom-value',(slide===0?d.remarksZoom:d.rulesZoom)+'%');
+        el('zoom-out').disabled=(slide===0?d.remarksZoom:d.rulesZoom)<=50;el('zoom-in').disabled=(slide===0?d.remarksZoom:d.rulesZoom)>=200;
+        pane.style.setProperty('--exam-remarks-scale',d.remarksZoom/100);pane.style.setProperty('--exam-rules-scale',d.rulesZoom/100);
+        el('auto-rotate').checked=d.autoRotate;text('zoom-label',slide===0?'備註':'規則');
+        pane.querySelectorAll('[data-exam-slide]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.examSlide)===slide)));
+      }
+      function render(){
+        const d=store.data;renderPeriods();
+        el('expected').value=d.expected;el('actual').value=d.actual;el('remarks').value=d.remarks;text('absent',Math.max(0,d.expected-d.actual));
+        el('rules').replaceChildren(...d.rules.split('\n').filter(line=>line.trim()).map(line=>{const li=document.createElement('li');li.textContent=line;return li;}));
+        el('table-wrap').hidden=d.collapsed;pane.querySelector('.exam-layout').classList.toggle('exam-collapsed',d.collapsed);
+        decorate('collapse',d.collapsed?'right':'left');text('collapse',d.collapsed?'展開節次':'收合節次');el('collapse').setAttribute('aria-expanded',String(!d.collapsed));el('collapse').setAttribute('aria-label',d.collapsed?'展開節次':'收合節次');el('collapse').title=d.collapsed?'展開節次':'收合節次';
+        renderControls();
+        renderInfo();health();tick();
+      }
+      function hasDialog(){return !!pane.querySelector('dialog[open]');}
+      function tick(){
+        if(!active)return;queueFit();
+        const at=examAt(store.data),p=at.current,next=at.next,exam=at.nextExam;
+        text('clock',at.now.toLocaleTimeString('zh-TW',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+        text('date',at.now.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'})+(store.data.offset?' · 已校正':''));
+        text('offset',(store.data.offset>0?'+':'')+store.data.offset+' 秒');
+        const single=!!(p&&!p.study);pane.querySelector('.exam-countdowns').classList.toggle('exam-single-countdown',single);el('next-title').parentElement.hidden=single;
+        decorate('current-title',p?.id==='morning'?'book':p?.id==='lunch'?'moon':p?'clock':'coffee');
+        const breakTime=next?Math.max(0,next.startSec-at.seconds-(next.id==='lunch'?0:180)):null;
+        text('current-title',p?(p.study?p.label+'剩餘時間':'本節剩餘時間'):next?(next.id==='lunch'?'用餐時間倒數':'下課時間倒數'):'今日課程已結束');
+        text('remaining',examFormat(p?p.endSec-at.seconds:breakTime));
+        text('current-info',p?(p.id==='morning'?'請把握時間複習':p.id==='lunch'?'請好好休息':p.label+'：'+(p.subject||'未設定科目')):next?(next.id==='lunch'?'請把握時間用餐':breakTime>0?'距離預備鐘響起':'預備鐘已響\n請準備'+(next.study?'複習':'考試')):'今日所有節次已結束');
+        text('next-title',exam&&exam.startSec-at.seconds<=180?'預備鐘倒數':'距離下一節考試');
+        text('next-time',examFormat(exam?exam.startSec-at.seconds:null));
+        text('next-info',exam?exam.label+'：'+(exam.subject||'未設定科目'):'今日已無下一節考試');
+        for(const period of at.periods){
+          const row=el('periods').querySelector('[data-period="'+period.id+'"]');if(!row)continue;
+          const status=at.seconds>=period.endSec?'done':at.seconds>=period.startSec?'active':'waiting';row.dataset.status=status;
+          row.setAttribute('aria-label',period.label+'，'+(status==='done'?'已結束':status==='active'?(period.study?'進行中':'考試中'):'未開始'));
+          row.querySelector('[data-duration]').textContent=Math.round((period.endSec-period.startSec)/60)+'分鐘';
+        }
+        const anchor=p?.id||next?.id;
+        if(anchor&&anchor!==lastScrollAnchor){
+          lastScrollAnchor=anchor;
+          requestAnimationFrame(()=>{if(!active||store.data.collapsed)return;const wrap=el('table-wrap'),row=el('periods').querySelector('[data-period="'+anchor+'"]');if(!row)return;const top=row.getBoundingClientRect().top-wrap.getBoundingClientRect().top+wrap.scrollTop;wrap.scrollTop=Math.max(0,top-wrap.clientHeight*.3);});
+        }
+        const crossed=examEnded(previous,at,ended);previous=at;
+        if(crossed.length){el('end-alert').querySelector('span').textContent=crossed.map(p=>p.label+' '+(p.subject||'考試')+'已結束，請停止作答。').join('\n');el('end-alert').hidden=false;}
+        const now=Date.now(),editing=pane.contains(document.activeElement)&&document.activeElement.matches('input,textarea,[contenteditable="true"]');
+        if(hovered||editing||hasDialog())rotationAt=now;
+        else if(store.data.autoRotate&&now-rotationAt>=8000&&!store.blocked&&!store.error&&TabLock.isActive())flip();
+        pane.style.setProperty('--exam-progress',store.data.autoRotate?Math.max(0,Math.min(1,(now-rotationAt)/8000)):0);
+      }
+      function flip(){if(change(d=>{d.slide=1-d.slide;})){rotationAt=Date.now();renderInfo();}}
+      function examConfirm(message){
+        const dialog=el('confirm');text('confirm-message',message);dialog.returnValue='';dialog.showModal();
+        return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));
+      }
+      function endProjection(){
+        pane.classList.remove('exam-projecting');document.body.classList.remove('exam-projecting');el('exit').hidden=true;el('project').hidden=false;
+        if(active)projectionFocus?.focus();projectionFocus=null;
+      }
+      async function exitProjection(){
+        projectRequest++;endProjection();
+        if(document.fullscreenElement===pane)try{await document.exitFullscreen();}catch(_){}
+      }
+      async function project(){
+        projectionFocus=document.activeElement;const request=++projectRequest;
+        pane.classList.add('exam-projecting');document.body.classList.add('exam-projecting');el('exit').hidden=false;el('project').hidden=true;
+        try{await pane.requestFullscreen?.();}catch(_){}
+        if(!active||request!==projectRequest){if(document.fullscreenElement===pane)try{await document.exitFullscreen();}catch(_){}return;}
+        el('exit').focus();
+      }
+      function activate(){
+        if(!initialized){store.load();initialized=true;}
+        if(ticker!==null)clearInterval(ticker);active=true;previous=null;lastScrollAnchor=null;rotationAt=Date.now();render();ticker=setInterval(tick,1000);
+      }
+      function deactivate(){
+        active=false;if(ticker!==null)clearInterval(ticker);ticker=null;previous=null;if(fitFrame!==null){cancelAnimationFrame(fitFrame);fitFrame=null;}
+        pane.querySelectorAll('dialog[open]').forEach(d=>d.close('cancel'));
+        if(pane.classList.contains('exam-projecting'))exitProjection();
+      }
+      el('settings-open').addEventListener('click',()=>{if(change(d=>{d.controlsHidden=!d.controlsHidden;}))renderControls();});
+      pane.querySelectorAll('[data-exam-slide]').forEach(b=>b.addEventListener('click',()=>{if(change(d=>{d.slide=Number(b.dataset.examSlide);})){rotationAt=Date.now();renderInfo();}}));
+      el('project').addEventListener('click',project);el('exit').addEventListener('click',exitProjection);
+      el('dismiss-alert').addEventListener('click',()=>el('end-alert').hidden=true);
+      el('collapse').addEventListener('click',()=>{if(change(d=>{d.collapsed=!d.collapsed;}))render();});
+      el('previous').addEventListener('click',flip);el('next').addEventListener('click',flip);
+      el('auto-rotate').addEventListener('change',()=>{change(d=>{d.autoRotate=el('auto-rotate').checked;});rotationAt=Date.now();renderInfo();});
+      for(const key of ['expected','actual','remarks'])el(key).addEventListener('input',()=>{
+        const value=key==='remarks'?el(key).value:el(key).value===''?NaN:Number(el(key).value);
+        const ok=change(d=>{d[key]=value;});el(key).setAttribute('aria-invalid',String(!ok));
+        if(ok)text('absent',Math.max(0,store.data.expected-store.data.actual));
+      });
+      for(const [id,amount] of [['zoom-out',-10],['zoom-in',10]])el(id).addEventListener('click',()=>{
+        change(d=>{const key=d.slide===0?'remarksZoom':'rulesZoom';d[key]=Math.max(50,Math.min(200,d[key]+amount));});renderInfo();
+      });
+      el('carousel').addEventListener('mouseenter',()=>hovered=true);el('carousel').addEventListener('mouseleave',()=>{hovered=false;rotationAt=Date.now();});
+      el('rules-edit').addEventListener('click',()=>{el('rules-input').value=store.data.rules;text('rules-error','');el('rules-dialog').showModal();});
+      el('rules-cancel').addEventListener('click',()=>el('rules-dialog').close());
+      el('rules-form').addEventListener('submit',event=>{
+        event.preventDefault();if(change(d=>{d.rules=el('rules-input').value;})){el('rules-dialog').close();render();}else text('rules-error',inputError||store.error);
+      });
+      for(const b of pane.querySelectorAll('[data-exam-offset]'))b.addEventListener('click',()=>{
+        if(change(d=>{d.offset+=Number(b.dataset.examOffset);})){previous=null;tick();}
+      });
+      el('offset-reset').addEventListener('click',()=>{if(change(d=>{d.offset=0;})){previous=null;tick();}});
+      el('save').addEventListener('click',()=>{if(writable()){store.save();health();}});
+      el('retry').addEventListener('click',()=>{if(!writable())return;if(store.blocked){if(store.load()){inputError='';render();}}else store.save();health();});
+      el('load').addEventListener('click',async()=>{
+        if(!writable())return;const before=JSON.stringify(store.data);
+        if(!await examConfirm('載入此瀏覽器已儲存的考試資料？尚未儲存的考試內容將被取代。'))return;
+        if(!writable()||before!==JSON.stringify(store.data))return;
+        inputError='';if(store.load()){previous=null;render();}health();
+      });
+      el('clear').addEventListener('click',async()=>{
+        if(!writable())return;const before=JSON.stringify(store.data);
+        if(!await examConfirm('清除考試資料並恢復預設時間與規則？只影響考試時間表，不會清除成績、名單或 Google 資料。'))return;
+        if(!writable()||before!==JSON.stringify(store.data))return;
+        if(store.reset()){inputError='';previous=null;el('end-alert').hidden=true;render();}health();
+      });
+      document.addEventListener('keydown',event=>{
+        if(!active||hasDialog()||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+        if(event.key==='Escape'&&pane.classList.contains('exam-projecting')){event.preventDefault();exitProjection();}
+        else if(event.key==='F11'){event.preventDefault();pane.classList.contains('exam-projecting')?exitProjection():project();}
+        else if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();flip();}
+      });
+      document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&pane.classList.contains('exam-projecting'))endProjection();});
+      window.addEventListener('storage',event=>{
+        if(event.key!==EXAM_STORAGE_KEY||!initialized||store.dirty)return;
+        store.load();if(active){previous=null;render();}
+      });
+      window.addEventListener('pagehide',deactivate);
+      window.addEventListener('pageshow',()=>{if(state.mode==='exam'&&!active)activate();});
+      return {activate,deactivate};
+    })();
+    // END EXAM DASHBOARD UI
+
     function setMode(m){
+      ExamDashboard.deactivate();
       attCleanup();
       document.getElementById('attendance-pane')?.classList.toggle('hidden',m!=='attendance');
       document.getElementById('mode-attendance')?.classList.toggle('active',m==='attendance');
@@ -16097,7 +16582,7 @@ function onTimerDone(){
       if(state.mode === 'manage' && m !== 'manage' && manageEditMode) applyManageEdits();
       // ★ 無資料時，只允許切到 list、timer 和 manage
       const hasData = state.classOrder && state.classOrder.length > 0;
-      if(!hasData && m!=='list' && m!=='timer' && m!=='manage' && m!=='taskboard'){
+      if(!hasData && m!=='list' && m!=='timer' && m!=='manage' && m!=='taskboard' && m!=='exam'){
         m = 'list'; // 強制回到列表(歡迎引導)
       }
       // ★ 同步 body.no-data 狀態
@@ -16128,7 +16613,7 @@ function onTimerDone(){
       elModeGroup?.classList.toggle('active', m==='group');
       // ★ 更多選單按鈕同步
       const _moreBtn = document.getElementById('mode-more');
-      const _moreModes = {attendance:'點名板',seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 任務版'};
+      const _moreModes = {exam:'考試時間表',attendance:'點名板',seat:'🪑 座位', group:'👥 分組', draw:'🎲 抽號', timer:'⏳ 倒數計時', taskboard:'📋 任務版'};
       if(_moreBtn){
         const isMore = m in _moreModes;
         _moreBtn.classList.toggle('active', isMore);
@@ -16148,6 +16633,8 @@ function onTimerDone(){
       document.getElementById('board-deduct')?.classList.toggle('hidden', m!=='list');
       elViolBoard?.classList.toggle('hidden', m!=='violations');
 
+      document.getElementById('exam-pane').classList.toggle('hidden',m!=='exam');
+      document.getElementById('mode-exam').classList.toggle('active',m==='exam');
       // 各頁顯示/隱藏
       document.getElementById('students').classList.toggle('hidden', m!=='list');
       const _seatNotice = document.getElementById('seat-notice');
@@ -16177,6 +16664,7 @@ function onTimerDone(){
       else if(m==='hw'){ renderHW(cls); }
       else if(m==='warning'){ renderWarning(); }
       else if(m==='draw'){ renderDraw(cls); }
+      else if(m==='exam'){ ExamDashboard.activate(); }
       else if(m==='timer'){ renderTimerUI(); }
       else if(m==='attendance'){renderAttendance();}
       else if(m==='taskboard'){renderTimerUI();renderTaskBoard();}
@@ -16194,6 +16682,7 @@ function onTimerDone(){
     document.getElementById('mode-draw').addEventListener('click', ()=> setMode('draw'));
     document.getElementById('mode-attendance')?.addEventListener('click',()=>setMode('attendance'));
     document.getElementById('mode-taskboard')?.addEventListener('click',()=>setMode('taskboard'));
+    document.getElementById('mode-exam').addEventListener('click',()=>setMode('exam'));
     document.getElementById('mode-timer')?.addEventListener('click', ()=> setMode('timer'));
     document.getElementById('mode-group')?.addEventListener('click', ()=> setMode('group'));
     document.getElementById('mode-manage')?.addEventListener('click', ()=> setMode('manage'));
