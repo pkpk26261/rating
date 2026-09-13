@@ -2573,13 +2573,15 @@
     .viol-note-form{
       display:grid;
       grid-template-columns:170px minmax(0, 1fr) auto;
-      gap:10px;
+      gap:14px;
       align-items:end;
     }
     .viol-note-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
     .viol-note-field > span{ font-size:12px; color:var(--muted); }
     .viol-note-input{
       width:100%;
+      min-width:0;
+      max-width:100%;
       height:var(--btn-h);
       padding:0 12px;
       border:1px solid var(--line);
@@ -2588,6 +2590,12 @@
       color:var(--fg);
       outline:none;
       box-sizing:border-box;
+    }
+    /* 平板先保留輸入空間，新增操作另起一排；避免原生日期欄位撐開格線。 */
+    @media (max-width: 1100px), (pointer: coarse){
+      .viol-note-form{ grid-template-columns:170px minmax(0, 1fr); }
+      #viol-note-add{ grid-column:1/-1; justify-self:end; min-height:44px; }
+      .viol-note-input{ min-height:44px; font-size:16px; }
     }
     .viol-note-input:focus{
       border-color:color-mix(in oklab, var(--accent) 55%, white);
@@ -2805,10 +2813,10 @@
 
     /* ===== 🎲 抽號模式（新版：抽籤動畫） ===== */
     .draw-wrap{
-      display:grid; grid-template-columns: 340px 1fr; gap:18px; margin-top:12px; align-items:stretch;
+      display:grid; grid-template-columns: 340px minmax(0,1fr); gap:18px; margin-top:12px; align-items:stretch;
       flex: 1 1 auto; min-height: 0;
     }
-    @media (max-width: 980px){ .draw-wrap{ grid-template-columns: 1fr; } }
+    @media (max-width: 980px){ .draw-wrap{ grid-template-columns: minmax(0,1fr); } }
 
     .controls-card,
     .spotlight-card{
@@ -2872,6 +2880,8 @@
       box-shadow:0 0 0 3px rgba(129,140,248,.1);
     }
     .dc-input::placeholder{ color:var(--muted); opacity:.6; }
+    #draw-seq[aria-invalid="true"]{border-color:var(--bad);}
+    #draw-seq-error{color:var(--bad);font-size:13px;line-height:1.5;margin-top:6px;}
 
     /* --- Toggle 開關 --- */
     .dc-toggles{ gap:8px; }
@@ -2918,35 +2928,37 @@
     .dc-volume output{ min-width:3ch; text-align:right; font-variant-numeric:tabular-nums; }
     .dc-sound input:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
-    /* --- 主抽籤按鈕 --- */
+    /* --- 主抽籤按鈕：深色使用亮底深字，淺色使用深底白字 --- */
     .dc-draw-btn{
-      width:100%;
+      --draw-button-start:#68d5c2;--draw-button-end:#a5b4fc;--draw-button-ink:#102b35;
+      width:100%;min-height:48px;
       padding:14px 18px;
-      font-size:17px; font-weight:900;
-      letter-spacing:.06em;
-      border:none; border-radius:14px;
-      background:linear-gradient(135deg, var(--accent), #818cf8);
-      color:#fff; cursor:pointer;
-      box-shadow:0 4px 20px rgba(129,140,248,.35);
-      transition:transform .15s, box-shadow .15s;
-      position:relative; overflow:hidden;
+      font-size:17px;font-weight:900;letter-spacing:.06em;
+      border:1px solid transparent;border-radius:14px;
+      background:linear-gradient(135deg,var(--draw-button-start),var(--draw-button-end));
+      color:var(--draw-button-ink);cursor:pointer;
+      box-shadow:0 4px 16px rgba(104,213,194,.16);
+      transition:transform .15s,box-shadow .15s;
+      position:relative;overflow:hidden;
+    }
+    :root[data-theme="light"] .dc-draw-btn{
+      --draw-button-start:#0f766e;--draw-button-end:#4f46e5;--draw-button-ink:#fff;
+      box-shadow:0 4px 14px rgba(79,70,229,.18);
     }
     .dc-draw-btn::after{
-      content:''; position:absolute; inset:0;
-      background:linear-gradient(135deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
-      transform:translateX(-100%);
-      transition:transform .4s;
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);
+      transform:translateX(-100%);transition:transform .4s;
     }
-    .dc-draw-btn:hover::after{ transform:translateX(100%); }
-    .dc-draw-btn:hover{
-      transform:translateY(-2px);
-      box-shadow:0 6px 28px rgba(129,140,248,.45);
+    .dc-draw-btn:hover:not(:disabled)::after{transform:translateX(100%);}
+    .dc-draw-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px color-mix(in srgb,var(--draw-button-start) 25%,transparent);}
+    .dc-draw-btn:active:not(:disabled){transform:scale(.97);}
+    .dc-draw-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
+    .dc-draw-btn:disabled,:root[data-theme="light"] .dc-draw-btn:disabled{
+      opacity:1;cursor:not-allowed;transform:none;transition:none;
+      color:var(--muted);background:var(--card);border-color:var(--line);box-shadow:none;
     }
-    .dc-draw-btn:active{ transform:scale(.97); }
-    .dc-draw-btn:disabled{
-      opacity:.6; cursor:not-allowed;
-      transform:none !important;
-    }
+    .dc-draw-btn:disabled::after{display:none;}
 
     /* --- 底部小按鈕 --- */
     .dc-bottom{
@@ -3109,6 +3121,12 @@
       max-width: 100px;
       margin-top: 4px;
     }
+    /* 一次最多六位維持單列；只縮放寬度，滾輪每格仍為 120px，避免揭曉位置偏移。 */
+    .draw-drum.single-row{flex-wrap:nowrap;width:100%;min-width:0;box-sizing:border-box;gap:clamp(4px,1vw,14px);padding:24px clamp(8px,2vw,24px);}
+    .draw-drum.single-row .drum-slot{flex:0 1 120px;min-width:0;container-type:inline-size;}
+    .draw-drum.single-row .slot-item{width:100%;min-width:0;}
+    .draw-drum.single-row .slot-seat{font-size:clamp(18px,24cqw,28px);}
+    .draw-drum.single-row .slot-name{font-size:clamp(10px,13cqw,14px);max-width:calc(100% - 8px);}
     /* 快速滾動時上下邊緣動態模糊遮罩 */
     .drum-slot.spinning::before,
     .drum-slot.spinning::after{
@@ -6188,8 +6206,11 @@
     .grp-toolbar h2{ margin:0; font-size:22px; letter-spacing:.02em; flex-shrink:0; }
     .grp-head-actions{ display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0; }
     #group-pane .btn{ min-height:44px; font-size:14px; }
-    #group-pane .grp-toolbar{ justify-content:flex-start; flex-wrap:nowrap; margin:0; padding:12px 16px; gap:20px; box-shadow:none; flex-shrink:0; max-width:100%; overflow-x:auto; white-space:nowrap; }
-    #group-pane .grp-toolbar-left{ gap:16px; align-items:center; flex-wrap:nowrap; flex-shrink:0; }
+    #group-pane .grp-toolbar{ justify-content:flex-start; flex-wrap:wrap; margin:0; padding:12px 16px; gap:12px; box-shadow:none; flex-shrink:0; min-width:0; max-width:100%; box-sizing:border-box; }
+    #group-pane .grp-toolbar-left{ gap:8px 16px; align-items:center; flex-wrap:wrap; flex:1 1 420px; min-width:0; max-width:100%; }
+    #group-pane .grp-head-actions{ flex-wrap:wrap; max-width:100%; }
+    #group-pane .grp-toolbar .grp-action-icon{ width:44px; height:44px; padding:0; flex:0 0 44px; }
+    #group-pane .grp-toolbar .grp-action-svg{ width:20px; height:20px; flex:none; }
     .grp-setup-field{ display:flex; align-items:center; flex-direction:row; flex-shrink:0; gap:8px; color:var(--muted); font-size:14px; font-weight:700; }
     #group-pane .grp-class-select{ height:44px; width:180px; min-width:140px; font-size:15px; border:1px solid var(--line); border-radius:10px; background-color:var(--bg); padding-left:12px; }
     #group-pane .grp-stepper{ height:44px; gap:6px; border:0; border-radius:0; background:transparent; overflow:visible; box-shadow:none; }
@@ -6235,7 +6256,10 @@
     #group-pane .grp-unassigned{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:8px;min-height:64px;flex:1;overflow:auto;overscroll-behavior:contain;}
     #group-pane .grp-unassigned:empty::after{content:attr(data-empty);padding:12px 0;font-size:14px;color:var(--muted);}
     #group-pane #grp-unassigned-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:79;display:flex;align-items:center;justify-content:center;width:24px;height:72px;min-height:0;padding:0;border:0;border-radius:8px 0 0 8px;background:color-mix(in srgb,var(--muted) 9%,var(--card));color:var(--muted);box-shadow:none;cursor:pointer;}
-    @media(pointer:coarse){#group-pane #grp-unassigned-tab{width:44px;background:transparent;}#grp-unassigned-tab::before{width:4px;}}
+    @media(any-pointer:coarse){
+      #group-pane #grp-unassigned-tab{width:44px;background:color-mix(in srgb,var(--muted) 22%,var(--card));color:var(--fg);border:1px solid var(--line);border-right:0;box-sizing:border-box;touch-action:manipulation;}
+      #group-pane #grp-unassigned-tab::before{width:4px;opacity:1;}
+    }
     .grp-touch-hint{display:none;margin:0;font-size:12px;color:var(--muted);}
     @media(any-pointer:coarse){.grp-touch-hint{display:block;}}
     #grp-unassigned-tab::before{content:'';width:3px;height:24px;border-radius:3px;background:currentColor;opacity:.5;}
@@ -6262,6 +6286,30 @@
     @media(min-width:700px) and (max-width:1000px){
       #draw-pane .draw-wrap{ grid-template-columns:250px minmax(0,1fr); gap:12px; }
       #draw-pane .dc-draw-btn, #draw-pane .dc-num-btn{ min-height:44px; }
+    }
+
+    /* 抽號各層可縮到容器內；六位學生在動畫、結果與歷史皆維持同一列。 */
+    #draw-pane,#draw-pane .draw-wrap,#draw-pane .controls-card,#draw-pane .spotlight-card,
+    #draw-pane .draw-stage,#draw-pane .draw-result-wrap,#draw-pane .draw-history-wrap,
+    #draw-pane .draw-history,#draw-pane .draw-row{min-width:0;max-width:100%;box-sizing:border-box;}
+    #draw-pane .draw-stage{flex-shrink:0;}
+    #draw-pane .draw-result-wrap,#draw-pane .draw-history-wrap{container-type:inline-size;}
+    #draw-pane .draw-result,#draw-pane .draw-row .chips{
+      display:grid;grid-template-columns:repeat(var(--draw-cols,6),minmax(0,1fr));
+      width:min(100%,calc(var(--draw-cols,6) * 160px));min-width:0;gap:8px;align-items:stretch;
+    }
+    #draw-pane .draw-result .chip,#draw-pane .draw-row .chip{
+      min-width:0;max-width:100%;box-sizing:border-box;justify-content:center;gap:6px;padding:8px 6px!important;
+    }
+    #draw-pane .chip .student-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    @container (max-width:760px){
+      #draw-pane .draw-result .chip,#draw-pane .draw-row .chip{flex-direction:column;gap:4px;border-radius:12px;font-size:13px!important;}
+      #draw-pane .chip .student-name{max-width:100%;}
+    }
+    @container (max-width:420px){
+      #draw-pane .draw-result,#draw-pane .draw-row .chips{gap:4px;}
+      #draw-pane .draw-result .chip,#draw-pane .draw-row .chip{padding:8px 2px!important;font-size:11px!important;}
+      #draw-pane .draw-row{padding:8px 4px;}
     }
 
     :root .manage-tbl td{ background:var(--card) !important; }
@@ -6699,7 +6747,11 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     @keyframes seat-pickup{from{transform:translate(var(--pickup-x),var(--pickup-y)) scale(.97);}to{transform:translate(0,0) scale(1);}}
     .tile.seat-just-dropped{animation:seat-drop 360ms ease-out;}
     @keyframes seat-drop{from{transform:translateY(-8px) scale(1.03);}to{transform:none;}}
-    @media(pointer:coarse){#seat-unassigned-tab{width:44px;background:transparent;}.seat-panel-hint{display:block;}}
+    @media(any-pointer:coarse){
+      #seat-unassigned-tab{width:44px;background:color-mix(in srgb,var(--muted) 22%,var(--card));color:var(--fg);border:1px solid var(--line);border-right:0;box-sizing:border-box;touch-action:manipulation;}
+      #seat-unassigned-tab::before{width:4px;opacity:1;}
+      .seat-panel-hint{display:block;}
+    }
     @media(prefers-reduced-motion:reduce){#unassigned,#seat-unassigned-tab span{transition:none;}.seat-drag-ghost.visible,.tile.seat-just-dropped{animation:none;}}
 
     #seatboard .seat-cell .tile{font-size:var(--seat-name-size,16px);gap:.4em;padding:8px 12px;box-sizing:border-box;}
@@ -7361,11 +7413,11 @@ body[data-mode="seat"] .room-modes .active{background:var(--accent);color:var(--
 .room-door[data-wall="left"] .room-door-symbol{left:var(--door-wall-offset);transform:translate(-50%,-50%) rotate(180deg);}
 .room-door[data-wall="top"] .room-door-symbol{top:var(--door-wall-offset);transform:translate(-50%,-50%) rotate(-90deg);}
 .room-door[data-wall="bottom"] .room-door-symbol{top:calc(100% - var(--door-wall-offset));transform:translate(-50%,-50%) rotate(90deg);}
-/* 座位工具集中在同一列；窄畫面收進工具選單。 */
+/* 常用教室選單維持單列，視圖工具由箭頭展開浮層。 */
 body[data-mode="seat"] .main .controls-row{flex-wrap:nowrap;gap:8px;min-height:64px;}
-body[data-mode="seat"] .controls-row>#room-view-tools{flex:1 0 auto;gap:8px;margin:0;min-height:44px;flex-wrap:nowrap;}
-body[data-mode="seat"] .controls-row #room-edit-tools{flex-wrap:nowrap;}
-body[data-mode="seat"] .controls-row #seat-controls{flex-wrap:nowrap;gap:6px;margin:0 0 0 auto;flex-shrink:0;}
+body[data-mode="seat"] .controls-row>#room-view-tools{flex:0 0 auto;gap:8px;margin:0;min-height:44px;flex-wrap:nowrap;}
+body[data-mode="seat"] .controls-row #room-edit-tools{flex-wrap:nowrap;gap:6px;}
+body[data-mode="seat"] .controls-row #seat-controls{flex-wrap:nowrap;gap:6px;margin:0 0 0 auto;min-width:0;}
 body[data-mode="seat"] .controls-row .room-modes{flex-wrap:nowrap;}
 body[data-mode="seat"] .controls-row>#search-input{flex:0 0 180px;width:180px;}
 #room-toolbar-menu[hidden],#room-toolbar-menu-panel[hidden]{display:none!important;}
@@ -7374,6 +7426,19 @@ body[data-mode="seat"] .controls-row>#search-input{flex:0 0 180px;width:180px;}
 #room-toolbar-menu-panel #room-edit-tools,#room-toolbar-menu-panel #room-arrange-tools,#room-toolbar-menu-panel #room-picked-tools{flex-wrap:wrap;gap:6px;max-height:none;overflow:visible;}
 #room-toolbar-menu-panel #room-zoom-tools{margin:0;justify-content:flex-start;padding-top:10px;border-top:1px solid var(--line);}
 #room-toolbar-menu-panel .room-history-tools{margin:0;}
+#room-view-menu{width:44px;min-width:44px;padding:0;}
+body[data-mode="seat"] #room-view-tools #room-multi{width:44px;min-width:44px;height:44px;padding:0;flex:0 0 44px;}
+#room-view-menu[aria-expanded="true"] svg{transform:rotate(180deg);}
+#room-view-menu-panel{width:max-content;max-width:calc(100vw - 16px);}
+#room-view-menu-panel #room-zoom-tools{flex-wrap:wrap;margin:0;gap:6px;}
+#room-view-menu-panel .btn{min-width:44px;min-height:44px;}
+@media(max-width:1100px){
+  body[data-mode="seat"] .controls-row>label[for="class-select"]{display:none;}
+  body[data-mode="seat"] .controls-row>#search-input{flex:1 1 80px;width:80px;min-width:60px;}
+  body[data-mode="seat"] :is(#room-layout-menu,#room-add-menu,.room-modes .btn){width:44px;min-width:44px;padding:0;gap:0;}
+  body[data-mode="seat"] :is(#room-layout-menu,#room-add-menu,.room-modes .btn) .room-control-label,
+  body[data-mode="seat"] #room-add-menu svg:last-child{display:none;}
+}
 @media(max-width:900px){body[data-mode="seat"] .controls-row>label[for="class-select"]{display:none;}body[data-mode="seat"] .controls-row>#search-input{flex:1 1 100px;width:100px;min-width:80px;}body[data-mode="seat"] .controls-row #class-select{max-width:160px;}}
 /* 畫布內直接拖曳大小，44px 觸控範圍。 */
 .room-resizable{outline:1px solid var(--accent);outline-offset:-1px;}
@@ -7412,7 +7477,8 @@ body[data-mode="seat"] .controls-row>#search-input{flex:0 0 180px;width:180px;}
 .room-object-resizable>.room-resize-height{top:calc(100% - 22px);bottom:auto;left:50%;}
 .room-object-resizable>.room-resize-top{top:-22px;left:50%;}
 .room-object-resizable>.room-resize-both{left:calc(100% - 22px);top:calc(100% - 22px);right:auto;bottom:auto;}
-.room-rotate-grip{position:absolute;left:-22px;top:-22px;z-index:7;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:#facc15;display:none;align-items:center;justify-content:center;cursor:grab;touch-action:none;}
+.room-desk>.room-resize-both,.room-teacher>.room-resize-both{left:-22px;top:-22px;}
+.room-rotate-grip{position:absolute;left:calc(100% - 22px);top:calc(100% - 22px);z-index:7;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:#facc15;display:none;align-items:center;justify-content:center;cursor:grab;touch-action:none;}
 .room-selected>.room-rotate-grip{display:flex;}
 .room-rotate-grip[hidden]{display:none!important;}
 .room-rotate-grip>span{display:flex;align-items:center;justify-content:center;width:24px;height:24px;box-sizing:border-box;border-radius:50%;border:1px solid #a16207;background:#facc15;color:#422006;font-size:20px;line-height:22px;box-shadow:0 1px 4px #0004;pointer-events:none;}
@@ -7438,10 +7504,13 @@ body[data-mode="seat"] .controls-row>#search-input{flex:0 0 180px;width:180px;}
 .room-history-tools{display:flex;align-items:center;gap:4px;margin-right:6px;flex-shrink:0;}
 .room-history-tools .btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
 .room-history-tools svg{pointer-events:none;}
+#room-canvas-tools .room-history-tools .btn:disabled{color:var(--muted);background:transparent;border-color:color-mix(in srgb,var(--line) 45%,transparent);box-shadow:none;cursor:not-allowed;}
+#room-canvas-tools .room-history-tools .btn:disabled svg{opacity:.35;}
+#room-canvas-tools .room-history-tools .btn:not(:disabled) svg{opacity:1;}
 #room-canvas-tools{position:absolute;right:12px;top:8px;z-index:20;display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:0 3px 12px #0002;}
 #room-canvas-tools[hidden],#room-canvas-tools .room-history-tools[hidden]{display:none!important;}
 #room-canvas-tools .room-history-tools{margin:0;}
-#room-canvas-tools #room-rotation-tools{position:static;z-index:auto;margin:0;padding:0 0 0 8px;border:0;border-left:1px solid var(--line);border-radius:0;background:none;box-shadow:none;}
+#room-canvas-tools #room-rotation-tools{position:static;z-index:auto;margin:0;padding:0 8px 0 0;border:0;border-right:1px solid var(--line);border-radius:0;background:none;box-shadow:none;}
 #room-arrange-menu-panel{width:360px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;gap:12px;box-sizing:border-box;padding:14px;}
 #room-arrange-menu-panel p{margin:0;font-size:13px;line-height:1.5;color:var(--muted);}
 .room-arrange-tabs{display:flex;gap:4px;padding:3px;background:var(--bg);border-radius:10px;}
@@ -7932,8 +8001,11 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
               </div></div>
               <p id="grp-plan" class="grp-plan"></p>
             </div>
-            <button id="btn-grp-random" class="btn grp-primary">隨機分組</button>
-            <div class="grp-head-actions"><button id="btn-grp-undo" class="btn" disabled>復原上一步</button><button id="btn-grp-clear" class="btn grp-clear" disabled>清空分組</button></div>
+            <div class="grp-head-actions">
+              <button id="btn-grp-random" class="btn grp-primary" type="button" aria-label="隨機分組" title="隨機分組"><svg class="grp-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h3c5 0 7 12 12 12h3M17 14l4 4-4 4M3 18h3c2 0 4-2 5-4m2-4c1-2 3-4 5-4h3M17 2l4 4-4 4"/></svg><span class="grp-random-label">隨機分組</span></button>
+              <button id="btn-grp-undo" class="btn grp-action-icon" type="button" aria-label="復原上一步" title="復原上一步" disabled><svg class="grp-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 4L4 9l5 5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+              <button id="btn-grp-clear" class="btn grp-clear grp-action-icon" type="button" aria-label="清空分組" title="清空分組" disabled><svg class="grp-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+            </div>
           </div>
           <p id="grp-message" class="grp-message" tabindex="-1" role="status" aria-live="polite"></p>
           <div class="grp-workspace">
@@ -8017,7 +8089,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <aside class="controls-card">
               <!-- 人數選擇 -->
               <div class="dc-section">
-                <div class="dc-label">抽選人數</div>
+                <div class="dc-label">抽選人數 <span class="dc-label-hint">（每次最多 6 人）</span></div>
                 <input id="draw-count" type="hidden" value="1">
                 <div class="dc-num-group">
                   <button class="dc-num-btn" data-preset="1">1</button>
@@ -8032,7 +8104,8 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
               <!-- 序列 -->
               <div class="dc-section">
                 <div class="dc-label">序列模式 <span class="dc-label-hint">（選填）</span></div>
-                <input id="draw-seq" class="dc-input" type="text" placeholder="例：2,3,2,4">
+                <input id="draw-seq" class="dc-input" type="text" placeholder="例：2,3,2,4" title="每次最多 6 人" aria-describedby="draw-seq-error">
+                <div id="draw-seq-error" role="status" hidden></div>
               </div>
 
               <!-- 選項開關 -->
@@ -8053,7 +8126,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
 
               <div class="dc-section dc-sound">
                 <label class="dc-toggle"><input id="draw-sound" type="checkbox" checked><span class="dc-toggle-label">抽號音效</span></label>
-                <div class="dc-volume"><label for="draw-volume">音量</label><input id="draw-volume" type="range" min="0" max="100" step="1" value="35"><output id="draw-volume-value" for="draw-volume">35%</output></div>
+                <div class="dc-volume"><label for="draw-volume">音量</label><input id="draw-volume" type="range" min="0" max="100" step="1" value="80"><output id="draw-volume-value" for="draw-volume">80%</output></div>
               </div>
 
               <!-- 主按鈕 -->
@@ -8346,7 +8419,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
         </div>
 
         <!-- 自動同步 -->
-        <p id="gs-backup-scope" style="font-size:13px;line-height:1.7;color:var(--muted);margin:0 0 12px;">包含座位表與教室配置：學生座位、桌子位置與方向、門、講台、老師桌、佈告欄及自訂範本，都會與班級資料一起備份。開啟自動上傳與自動載入後，下次可直接恢復。</p>
+        <p id="gs-backup-scope" style="font-size:13px;line-height:1.7;color:var(--muted);margin:0 0 12px;">包含座位表與教室配置：學生座位、桌子位置與方向、門、講台、老師桌、佈告欄及新增的座位圖範例（自訂範本），都會與班級資料一起備份。開啟自動上傳與自動載入後，下次可直接恢復。</p>
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
           <input type="checkbox" id="gs-auto"> 變更後自動上傳到試算表（停止編輯約 1 秒後送出）
         </label>
@@ -8611,7 +8684,7 @@ const ClassroomLayout = (() => {
       if(f.type==='door'&&f.doorStyle!==undefined&&!['left','right','blocked'].includes(f.doorStyle))fail();
       if(f.type==='door' && Math.abs(({top:f.y,left:f.x,right:l.width-f.width-f.x,bottom:l.height-f.height-f.y})[f.wall])>0.01)fail();
     }
-    if(stages>1||bulletins>1||(l.version===2&&teachers<1))fail();
+    if(stages>1||bulletins>1)fail();
   }
   function template(type,count,rows=6,cols=6,groupSize=4) {
     count=Math.max(1,Math.min(81,Math.round(count||1)));
@@ -8697,7 +8770,7 @@ const ClassroomLayout = (() => {
   function upgrade(s) {
     const doors=s.layout?.fixtures?.filter(f=>f.type==='door'&&Math.abs((['left','right'].includes(f.wall)?f.width/f.height:f.height/f.width)-.75)>.00001)||[];
     if(s.layout?.version===1||doors.length){
-      const next=clone(s);next.layout.version=2;if(!next.layout.fixtures.some(f=>f.type==='teacher'))addTeacher(next.layout);
+      const next=clone(s);next.layout.version=2;if(s.layout.version===1&&!next.layout.fixtures.some(f=>f.type==='teacher'))addTeacher(next.layout);
       for(const f of next.layout.fixtures)if(f.type==='door')compactDoor(next.layout,f);
       validate(next);s.layout=next.layout;
     }
@@ -8753,7 +8826,8 @@ const ClassroomLayout = (() => {
   }
   function resizedLayout(base,target,axis,dx,dy){
     const l=clone(base);
-    const horizontal=['width','left','both'].includes(axis),vertical=['height','top','both'].includes(axis);
+    const fromStart=axis==='both-start',both=axis==='both'||fromStart;
+    const horizontal=['width','left','both','both-start'].includes(axis),vertical=['height','top','both','both-start'].includes(axis);
     if(target==='room'&&['left','top'].includes(axis)){
       const x=axis==='left',position=x?'x':'y',size=x?'width':'height',edge=x?'left':'top',delta=snap(x?dx:dy);
       const fixed=[...Object.values(l.desks),...l.fixtures.filter(f=>f.type!=='door'||(x?['top','bottom']:['left','right']).includes(f.wall))];
@@ -8765,18 +8839,18 @@ const ClassroomLayout = (() => {
     }
     if(target==='room'){resizeRoom(l,horizontal?Math.max(400,Math.min(10000,snap(l.width+(axis==='left'?-dx:dx)))):l.width,vertical?Math.max(400,Math.min(10000,snap(l.height+(axis==='top'?-dy:dy)))):l.height);return l;}
     const f=target.startsWith('f:')?l.fixtures.find(f=>'f:'+f.id===target):l.desks[target];if(!f)return l;
-    if(![dx,dy].every(Number.isFinite)||!['width','left','height','top','both'].includes(axis))throw new Error('尺寸調整格式錯誤。');
+    if(![dx,dy].every(Number.isFinite)||!['width','left','height','top','both','both-start'].includes(axis))throw new Error('尺寸調整格式錯誤。');
     const oldW=f.width||160,oldH=f.height||100,cx=f.x+oldW/2,cy=f.y+oldH/2,a=(f.angle||0)*Math.PI/180,localX=dx*Math.cos(a)+dy*Math.sin(a),localY=-dx*Math.sin(a)+dy*Math.cos(a);
     f.width=oldW;f.height=oldH;
-    if(horizontal)f.width=Math.max(40,Math.min(l.width,snap(oldW+(axis==='left'?-localX:localX))));if(vertical)f.height=Math.max(40,Math.min(l.height,snap(oldH+(axis==='top'?-localY:localY))));
-    if(axis==='both'&&!f.type){
-      const factor=Math.max(40/oldW,40/oldH,Math.min(l.width/oldW,l.height/oldH,1+(localX*oldW+localY*oldH)/(oldW*oldW+oldH*oldH)));
+    if(horizontal)f.width=Math.max(40,Math.min(l.width,snap(oldW+(axis==='left'||fromStart?-localX:localX))));if(vertical)f.height=Math.max(40,Math.min(l.height,snap(oldH+(axis==='top'||fromStart?-localY:localY))));
+    if(both&&!f.type){
+      const factor=Math.max(40/oldW,40/oldH,Math.min(l.width/oldW,l.height/oldH,1+(fromStart?-1:1)*(localX*oldW+localY*oldH)/(oldW*oldW+oldH*oldH)));
       f.width=oldW*factor;f.height=oldH*factor;fitObjectSize(l,f,true);
     }else if(f.type==='door'){
-      const factor=Math.max(40/oldW,40/oldH,Math.min(l.width/oldW,l.height/oldH,axis==='both'?Math.max(f.width/oldW,f.height/oldH):horizontal?f.width/oldW:f.height/oldH));
+      const factor=Math.max(40/oldW,40/oldH,Math.min(l.width/oldW,l.height/oldH,both?Math.max(f.width/oldW,f.height/oldH):horizontal?f.width/oldW:f.height/oldH));
       f.width=oldW*factor;f.height=oldH*factor;
     }else fitObjectSize(l,f);
-    const ox=(f.width-oldW)/2*(axis==='left'?-1:1),oy=(f.height-oldH)/2*(axis==='top'?-1:1);f.x=cx+ox*Math.cos(a)-oy*Math.sin(a)-f.width/2;f.y=cy+ox*Math.sin(a)+oy*Math.cos(a)-f.height/2;
+    const ox=(f.width-oldW)/2*(axis==='left'||fromStart?-1:1),oy=(f.height-oldH)/2*(axis==='top'||fromStart?-1:1);f.x=cx+ox*Math.cos(a)-oy*Math.sin(a)-f.width/2;f.y=cy+ox*Math.sin(a)+oy*Math.cos(a)-f.height/2;
     if(f.type==='door'){
       if(f.wall==='left')f.x=0;if(f.wall==='right')f.x=l.width-f.width;if(f.wall==='top')f.y=0;if(f.wall==='bottom')f.y=l.height-f.height;
       f.x=Math.max(0,Math.min(l.width-f.width,f.x));f.y=Math.max(0,Math.min(l.height-f.height,f.y));
@@ -8825,31 +8899,21 @@ const ClassroomLayout = (() => {
   }
   function distributeUnits(l,selection,axis){
     if(!['x','y'].includes(axis))throw new Error('排列方向錯誤。');
-    if(axis==='x'){
-      // 以最左單位為水平基準，固定左右外框；群組內桌子保持相對位置。
-      const units=arrangementUnits(l,selection).sort((a,b)=>a.left-b.left||a.top-b.top||a.keys[0].localeCompare(b.keys[0]));
-      if(units.length<2)return;
-      const left=units[0].left,right=Math.max(...units.map(u=>u.right)),total=units.reduce((n,u)=>n+u.right-u.left,0);
-      const gap=(right-left-total)/(units.length-1),centerY=(units[0].top+units[0].bottom)/2;
-      if(gap<-.000001)throw new Error('左右端點之間空間不足，請先把最左或最右的桌子拉開，再按水平等距。');
-      let cursor=left;
-      const moves=units.map((u,i)=>{
-        const target=i===units.length-1?right-(u.right-u.left):cursor;
-        const dx=target-u.left,dy=centerY-(u.top+u.bottom)/2;
-        cursor=target+u.right-u.left+Math.max(0,gap);
-        if(target<-.01||u.right+dx>l.width+.01||u.top+dy<-.01||u.bottom+dy>l.height+.01)throw new Error('水平排列的可用空間不足，請先將最左側桌子移向教室中央或放大教室。');
-        return {u,dx,dy};
-      });
-      // 先驗證全部目標，避免只移動一部分；微小浮點差異不累積成漂移。
-      for(const {u,dx,dy} of moves)for(const k of u.keys){if(Math.abs(dx)>1e-9)l.desks[k].x+=dx;if(Math.abs(dy)>1e-9)l.desks[k].y+=dy;}
-      return;
-    }
-    const start=axis==='x'?'left':'top',end=axis==='x'?'right':'bottom',limit=axis==='x'?l.width:l.height,units=arrangementUnits(l,selection).sort((a,b)=>a[start]-b[start]);
+    // 固定指定方向的兩端，只平均該方向的邊緣間距；允許投影重疊，另一軸保持原位。
+    const horizontal=axis==='x',start=horizontal?'left':'top',end=horizontal?'right':'bottom',cross=horizontal?'top':'left',limit=horizontal?l.width:l.height;
+    const units=arrangementUnits(l,selection).sort((a,b)=>a[start]-b[start]||a[cross]-b[cross]||a.keys[0].localeCompare(b.keys[0]));
     if(units.length<2)return;
-    const total=units.reduce((n,u)=>n+u[end]-u[start],0),gap=Math.max(20,(units.at(-1)[end]-units[0][start]-total)/(units.length-1));
-    if(units[0][start]+total+gap*(units.length-1)>limit+.01)throw new Error('可用空間不足，請先放大教室或將群組移到較空的位置。');
-    let cursor=units[0][start];
-    for(const u of units){const delta=cursor-u[start];for(const k of u.keys)l.desks[k][axis]+=delta;cursor+=u[end]-u[start]+gap;}
+    const first=units[0][start],last=units.at(-1)[end],total=units.reduce((n,u)=>n+u[end]-u[start],0);
+    const gap=(last-first-total)/(units.length-1);
+    let cursor=first;
+    const moves=units.map((u,i)=>{
+      const target=i===units.length-1?last-(u[end]-u[start]):cursor,delta=target-u[start];
+      cursor=target+u[end]-u[start]+gap;
+      if(target<-.01||u[end]+delta>limit+.01)throw new Error('排列的可用空間不足，請先將桌子移入教室或放大教室。');
+      return {u,delta};
+    });
+    // 先驗證全部目標，避免只移動一部分；微小浮點差異不累積成漂移。
+    for(const {u,delta} of moves)for(const k of u.keys){if(Math.abs(delta)>1e-9)l.desks[k][axis]+=delta;}
   }
   function addDesk(s,source) {
     const used=new Set(Object.keys(s.layout.desks));let key=keys(s.rows,s.cols).find(k=>!used.has(k));
@@ -16191,7 +16255,7 @@ function onTimerDone(){
       const search=document.getElementById('grp-search');
       if(search.dataset.cls !== cls){search.value='';search.dataset.cls=cls;groupMessage('');}
       const low=Math.floor(list.length/desiredCount),high=Math.ceil(list.length/desiredCount);
-      document.getElementById('grp-plan').textContent=`${list.length} 位學生 · 每組約 ${low === high ? low : low+'–'+high} 人`;
+      document.getElementById('grp-plan').textContent=`${list.length} 人 · 每組 ${low === high ? low : low+'–'+high} 人`;
       document.getElementById('btn-grp-random').disabled=!list.length;
       document.getElementById('btn-grp-clear').disabled=!g.groups.some(arr=>arr.length);
       document.getElementById('btn-grp-undo').disabled=!_groupUndo?.has(cls);
@@ -16300,7 +16364,10 @@ function onTimerDone(){
         const mem = _buildGroupMember(cls, s, -1, g, -1, mi);
         newUn.appendChild(mem);
       });
-      document.getElementById('btn-grp-random').textContent=assignedIds.size ? '重新隨機分組' : '隨機分組';
+      const randomButton=document.getElementById('btn-grp-random');
+      randomButton.querySelector('.grp-random-label').textContent=assignedIds.size ? '重新分組' : '隨機分組';
+      randomButton.title=assignedIds.size ? '重新隨機分組' : '隨機分組';
+      randomButton.setAttribute('aria-label',randomButton.title);
       paintGroupSelection(cls);
       fitGroupBoard();
     }
@@ -19744,7 +19811,7 @@ elProgAdd?.addEventListener('click', ()=>{
       d.unique    = !!d.unique;
       d.seqText   = String(d.seqText ?? '');
       d.seqPos    = Number(d.seqPos ?? 0) || 0;
-      d.lastCount = Math.max(1, Number(d.lastCount ?? 1) || 1);
+      d.lastCount = Math.max(1, Math.min(6, Math.floor(Number(d.lastCount ?? 1)) || 1));
       d.autoScore = !!d.autoScore;
       d.slowdown  = d.slowdown !== undefined ? !!d.slowdown : true;
       d.history   = Array.isArray(d.history) ? d.history : [];
@@ -19756,12 +19823,22 @@ elProgAdd?.addEventListener('click', ()=>{
       saveSession('draw change');
     }
 
+    function drawSequenceExceedsLimit(text){
+      return String(text||'').split(/[，、,\s]+/).some(value=>Number(value)>6);
+    }
+    function syncDrawSequenceValidation(){
+      const invalid=drawSequenceExceedsLimit(elDrawSeq.value),message=document.getElementById('draw-seq-error');
+      elDrawSeq.setAttribute('aria-invalid',String(invalid));
+      message.hidden=!invalid;message.textContent=invalid?'每次最多抽取 6 人，請將超過 6 的數值改為 1～6。':'';
+      elBtnDraw.disabled=_drawAnimating||invalid||!elSelect.value;
+      return !invalid;
+    }
     function parseSeq(text){
       return String(text||'')
         .split(/[，、,\s]+/)
         .map(s=>Number(s))
         .filter(n=>Number.isFinite(n) && n>=1)
-        .map(n=>Math.floor(n));
+        .map(n=>Math.min(6,Math.floor(n)));
     }
     function pickN(arr, n){
       n = Math.max(0, Math.min(n, arr.length));
@@ -19821,6 +19898,7 @@ elProgAdd?.addEventListener('click', ()=>{
       // 同步 UI 控制
       elDrawCount.value = d.lastCount;
       elDrawSeq.value   = d.seqText;
+      const sequenceValid=syncDrawSequenceValidation();
       elDrawUnique.checked = d.unique;
       elDrawAuto.checked   = d.autoScore;
       if(elDrawSlowdown) elDrawSlowdown.checked = d.slowdown;
@@ -19837,7 +19915,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
       const seq = parseSeq(d.seqText);
       const nextN = seq.length ? seq[d.seqPos % seq.length] : d.lastCount;
-      elDrawNext.textContent = String(nextN);
+      elDrawNext.textContent = sequenceValid?String(Math.min(nextN,candidates.length)):'—';
 
       const tips = d.unique
         ? `可抽名額：${candidates.length}/${list.length}（不重覆）`
@@ -19858,7 +19936,7 @@ elProgAdd?.addEventListener('click', ()=>{
             const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
             return `<span class="chip"><span class="seat-badge">${seat}</span>${renderStudentName(s, cls)}</span>`;
           }).join('');
-          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtDateTime(h.ts||Date.now())}</div><div class="chips">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
+          return `<div class="draw-row"><div class="time">(${h.count}人) ${fmtDateTime(h.ts||Date.now())}</div><div class="chips" style="--draw-cols:${Math.max(1,Math.min(6,(h.ids||[]).filter(id=>byId.has(id)).length))}">${chips||'<span class="hint">（已不在名單）</span>'}</div></div>`;
         }).join('');
       }
     }
@@ -19866,7 +19944,7 @@ elProgAdd?.addEventListener('click', ()=>{
     /* BEGIN DRAW SOUND: 本機偏好，不進入班級資料或雲端快照。 */
     function createDrawSoundController(){
       const key = 'pscore_draw_sound_v1';
-      let settings = { enabled:true, volume:35 };
+      let settings = { enabled:true, volume:80 };
       try{
         const saved = JSON.parse(localStorage.getItem(key));
         if(saved && typeof saved.enabled==='boolean') settings.enabled = saved.enabled;
@@ -20041,6 +20119,7 @@ elProgAdd?.addEventListener('click', ()=>{
     function buildSlots(count, allStudents){
       if(!elDrawDrum) return [];
       elDrawDrum.innerHTML = '';
+      elDrawDrum.classList.toggle('single-row',count<=6);
       const slots = [];
       const ITEM_H = 120;
 
@@ -20153,6 +20232,7 @@ elProgAdd?.addEventListener('click', ()=>{
     // === 事件：抽！（含動畫） ===
     elBtnDraw?.addEventListener('click', ()=>{
       if(_drawAnimating) return; // 防止連點
+      if(!syncDrawSequenceValidation()){elDrawSeq.focus();return;}
       const cls = elSelect.value;
       if(!cls) return appAlert('請先選擇班級');
       const d = ensureDrawState(cls);
@@ -20163,18 +20243,12 @@ elProgAdd?.addEventListener('click', ()=>{
       // 決定本次人數
       const seq = parseSeq(elDrawSeq.value);
       let count;
-      // 人數上限：非序列最多 5 人
+      // 一般抽取與序列模式皆為每次最多 6 人
       if(seq.length){
         count = seq[d.seqPos % seq.length];
-        // 序列模式：不能超過班級人數的一半
-        const halfClass = Math.max(1, Math.floor(list.length / 2));
-        if(count > halfClass){
-          appAlert(`序列值 ${count} 超過班級人數的一半（${halfClass}），已自動調整。`);
-          count = halfClass;
-        }
         d.seqPos++;
       }else{
-        count = Math.max(1, Math.min(6, Number(elDrawCount.value)||1));
+        count = Math.max(1, Math.min(6, Math.floor(Number(elDrawCount.value))||1));
       }
       d.lastCount = count;
 
@@ -20219,6 +20293,7 @@ elProgAdd?.addEventListener('click', ()=>{
         if(showingDraw) fireConfetti(elDrawConfetti, 2000);
 
         // 顯示結果 chips
+        if(showingDraw) elDrawResult.style.setProperty('--draw-cols',String(picks.length));
         if(showingDraw) elDrawResult.innerHTML = picks.map((s, i)=>{
           const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
           return `<span class="chip big pop" style="animation-delay:${i*80}ms"><span class="seat-badge">${seat}</span>${renderStudentName(s, cls)}</span>`;
@@ -20326,7 +20401,7 @@ elProgAdd?.addEventListener('click', ()=>{
     elDrawCount?.addEventListener('change', ()=>{
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
-      const n = Math.max(1, Math.min(6, Number(elDrawCount.value)||1));
+      const n = Math.max(1, Math.min(6, Math.floor(Number(elDrawCount.value))||1));
       d.lastCount = n; elDrawCount.value = n;
       saveDrawToLS(cls); renderDraw(cls);
     });
@@ -21319,6 +21394,7 @@ initWebAppGuide();
   const board=$('seatboard'), students=$('students'), controls=$('seat-controls');
   let editing=false,multi=false,tool='select',selected=new Set(),activeClass='',gesture=null,suppressClick=false,selectedScore=null,lastDoorTap=null,lastStudentTap=null;
   let presentation=null,selectedScoreClass='',scoreAnchor=null,resizeViewport=null;
+  const roomTouches=new Map();let pinch=null,pinchFrame=0;
   const views={seat:1,score:1}, histories=new Map();
   const originalFitName=fitName;
   fitName=function(name){
@@ -21416,7 +21492,8 @@ initWebAppGuide();
     ['room-edit','佈置教室',true,'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/>']
   ]){
     const b=button(id,label,()=>setEditing(edit),modes);
-    b.insertAdjacentHTML('afterbegin',`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`);
+    b.setAttribute('aria-label',label);b.title=label;
+    b.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg><span class="room-control-label">${label}</span>`;
   }
   const historyTools=document.createElement('div');historyTools.className='room-history-tools';historyTools.setAttribute('role','group');historyTools.setAttribute('aria-label','復原與重做');$('seatwrap').append(historyTools);
   for(const [id,title,redo] of [['room-undo','復原',false],['room-redo','重做',true]]){
@@ -21435,10 +21512,10 @@ initWebAppGuide();
   button('room-duplicate','複製整組桌子',()=>commit(s=>{selected=new Set(M.duplicateDesks(s,[...selected]));}),editTools);
   button('room-group','組成群組',()=>commit(s=>{const keys=[...selected].filter(k=>s.layout.desks[k]);if(keys.length<2)return;const id='g-'+crypto.randomUUID();for(const k of keys)s.layout.desks[k].groupId=id;multi=false;announce(`已將 ${keys.length} 張桌子組成群組`);}),editTools);
   button('room-ungroup','解除群組',()=>commit(s=>{for(const k of selected)if(s.layout.desks[k])delete s.layout.desks[k].groupId;announce('已解除群組');}),editTools);
-  button('room-delete','刪除',()=>commit(s=>{if(s.layout.fixtures.some(f=>f.type==='teacher'&&selected.has('f:'+f.id)))throw new Error('老師桌不可刪除，可移動位置。');for(const key of selected){if(key.startsWith('f:'))s.layout.fixtures=s.layout.fixtures.filter(f=>f.id!==key.slice(2)||f.type==='teacher');else{delete s.layout.desks[key];delete s.map[key];if(!s.disabled.includes(key))s.disabled.push(key);}}selected.clear();}),editTools);
+  button('room-delete','刪除',()=>commit(s=>{for(const key of selected){if(key.startsWith('f:'))s.layout.fixtures=s.layout.fixtures.filter(f=>f.id!==key.slice(2));else{delete s.layout.desks[key];delete s.map[key];if(!s.disabled.includes(key))s.disabled.push(key);}}selected.clear();}),editTools);
   button('room-toggle-desk','啟用／停用',()=>commit(s=>{const keys=[...selected].filter(k=>s.layout.desks[k]);const enable=keys.every(k=>s.disabled.includes(k));for(const key of keys){if(enable)s.disabled=s.disabled.filter(k=>k!==key);else{if(!s.disabled.includes(key))s.disabled.push(key);delete s.map[key];}}}),editTools);
   button('room-multi','多選',()=>{multi=!multi;closeMenus();syncTools();},editTools);
-  button('room-align-x','水平等距',()=>distribute('x'),editTools).title='排成同一水平列，以最左側桌子為基準，固定左右端點並平均間距；群組整組移動';button('room-align-y','垂直等距',()=>distribute('y'),editTools);
+  button('room-align-x','水平等距',()=>distribute('x'),editTools).title='固定左右兩端，平均水平間距；上下位置不變，群組整組移動';button('room-align-y','垂直等距',()=>distribute('y'),editTools).title='固定上下兩端，平均垂直間距；左右位置不變，群組整組移動';
   button('room-teacher','＋老師桌',()=>commit(s=>{selected=new Set(['f:'+M.addTeacher(s.layout)]);}),editTools);
   button('room-door','＋出入口',()=>commit(s=>{const id='door-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);selected=new Set(['f:'+M.addDoor(s.layout,id)]);}),editTools);
   const label=document.createElement('label');label.className='room-label';label.textContent='設施名稱 ';const input=document.createElement('input');input.id='room-fixture-label';input.className='input';input.maxLength=30;input.setAttribute('aria-label','設施名稱');label.append(input);editTools.append(label);
@@ -21479,7 +21556,7 @@ initWebAppGuide();
   angleInput.addEventListener('change',()=>{const angle=Number(angleInput.value);if(!angleInput.value||!Number.isFinite(angle)||angle<0||angle>359){announce('角度請輸入 0 至 359 度。');return;}commit(s=>{s.layout=M.rotatedLayout(s.layout,[...selected],angle,true);});});
   angleInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();angleInput.blur();}});
   const rotationTools=document.createElement('div');rotationTools.id='room-rotation-tools';rotationTools.setAttribute('role','group');rotationTools.setAttribute('aria-label','選取桌椅的旋轉角度');rotationTools.hidden=true;
-  rotationTools.append(angleLabel);const canvasTools=document.createElement('div');canvasTools.id='room-canvas-tools';canvasTools.setAttribute('role','group');canvasTools.setAttribute('aria-label','教室編輯操作');canvasTools.hidden=true;canvasTools.append(historyTools,rotationTools);$('seatwrap').append(canvasTools);
+  rotationTools.append(angleLabel);const canvasTools=document.createElement('div');canvasTools.id='room-canvas-tools';canvasTools.setAttribute('role','group');canvasTools.setAttribute('aria-label','教室編輯操作');canvasTools.hidden=true;canvasTools.append(rotationTools,historyTools);$('seatwrap').append(canvasTools);
   const stageDialog=document.createElement('dialog');stageDialog.id='room-stage-dialog';stageDialog.className='room-dialog';
   stageDialog.innerHTML=`<form method="dialog"><div class="room-dialog-head"><h2>調整講台大小</h2><button class="btn" value="cancel">取消</button></div><p>調整講台的寬度與高度；講台可移動，也可刪除後重新新增。</p><label class="room-size-slider">寬度<input id="room-stage-width" type="range" min="40" step="1" aria-label="講台寬度"><output id="room-stage-width-value"></output></label><label class="room-size-slider">高度<input id="room-stage-height" type="range" min="40" step="1" aria-label="講台高度"><output id="room-stage-height-value"></output></label><div id="room-stage-preview" style="height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden"></div><p id="room-stage-error" role="status"></p><button id="room-stage-apply" type="button" class="btn primary">套用講台大小</button></form>`;document.body.append(stageDialog);
   let stageTarget=null;
@@ -21537,22 +21614,24 @@ initWebAppGuide();
   $('room-pan').innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg>';$('room-pan').title='開啟後可拖動畫面；再按一次結束';
   const zoomTools=document.createElement('div');zoomTools.id='room-zoom-tools';zoomTools.setAttribute('role','group');zoomTools.setAttribute('aria-label','座位圖拖移與縮放');
   const zoomLabel=document.createElement('output');zoomLabel.id='room-zoom-level';zoomLabel.setAttribute('aria-label','相對完整教室的縮放比例');
-  zoomTools.append($('room-multi'),$('room-pan'),$('room-zoom-out'),zoomLabel,$('room-zoom-in'),$('room-fit'));viewTools.append(zoomTools);
+  zoomTools.append($('room-pan'),$('room-zoom-out'),zoomLabel,$('room-zoom-in'),$('room-fit'));viewTools.append(zoomTools);editTools.insertBefore($('room-multi'),$('room-selection-menu'));
   for(const [id,zoomIn] of [['room-zoom-out',false],['room-zoom-in',true],['room-score-minus',false],['room-score-plus',true]]){
     const control=$(id),label=zoomIn?'放大座位圖':'縮小座位圖';control.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5M7 10.5h7${zoomIn?'m-3.5-3.5v7':''}"/></svg>`;control.title=label;control.setAttribute('aria-label',label);
   }
   for(const id of ['room-fit','room-score-fit']){const fit=$(id);fit.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5M3 3l5 5M21 3l-5 5M21 21l-5-5M3 21l5-5"/></svg>';fit.title='完整顯示教室（還原縮放與位置）';fit.setAttribute('aria-label','完整顯示教室');}
   const toolbarRow=controls.closest('.controls-row'),searchPlaceholder=elSearch.placeholder;
-  const toolbarOverflow=menu('room-toolbar-menu','工具',[],controls);
-  toolbarOverflow.classList.add('room-toolbar-overflow');
-  const compactToolbar=matchMedia('(max-width:1700px)');
-  function placeToolbar(){
-    closeMenus();
-    $('room-toolbar-menu').hidden=!compactToolbar.matches;
-    if(compactToolbar.matches){toolbarOverflow.append(viewTools);controls.insertBefore($('room-toolbar-menu'),modes);}
-    else{toolbarRow.insertBefore(viewTools,controls);}
-  }
-  compactToolbar.addEventListener('change',placeToolbar);placeToolbar();
+  toolbarRow.insertBefore(viewTools,controls);
+  $('room-layout-menu').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v18M12 3v18M20 3v18M1 8h6M9 16h6M17 8h6"/></svg><span class="room-control-label">教室設定 ▾</span>';
+  $('room-layout-menu').setAttribute('aria-label','教室設定');$('room-layout-menu').title='教室設定';
+  $('room-add-menu').querySelector('span').classList.add('room-control-label');$('room-add-menu').setAttribute('aria-label','新增物件');
+  // 選取物件的次要調整沿用既有選單，不因選取而擠出第二排。
+  selectionMenu.append($('room-group'),$('room-ungroup'),stageSizeButton,$('room-delete'));
+  $('room-selection-menu').innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+  $('room-selection-menu').setAttribute('aria-label','更多調整');$('room-selection-menu').title='更多調整';
+  menu('room-view-menu','視圖工具',[zoomTools],viewTools);
+  $('room-view-menu').innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  $('room-view-menu').setAttribute('aria-label','展開或收合視圖工具');$('room-view-menu').title='平移與縮放；也可在作業區用雙指縮放';
+  $('room-multi').innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 5V3H3v13h2m7-2 2 2 4-5"/></svg>';
   document.addEventListener('pointerdown',e=>{if(!menus.some(m=>m.panel.contains(e.target)||m.trigger.contains(e.target)))closeMenus();},true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=menus.find(m=>!m.panel.hidden);if(m){closeMenus(menus.filter(parent=>parent.panel.contains(m.trigger)));m.trigger.focus({preventScroll:true});e.preventDefault();}}});
   window.addEventListener('resize',closeMenus);
@@ -21586,8 +21665,8 @@ initWebAppGuide();
     let added;const count=text===lastPasteText?pasteCount+1:1;commit(s=>{added=M.pasteDesks(s,payload.desks,40*count);selected=new Set(added);tool='select';});
     if(added){lastPasteText=text;pasteCount=count;announce(`已貼上 ${added.length} 張空桌；可拖曳調整位置`);}
   });
-  function distribute(axis){if(commit(s=>M.distributeUnits(s.layout,[...selected],axis)))announce(axis==='x'?'已排成同一水平列，左右端點固定、間距相同':'已調整垂直間距');}
-  function setEditing(value){if(!elSelect.value)return;resizeViewport=null;cancelGesture();editing=value;selected.clear();multi=false;tool='select';clearPicked();if(value)setSeatPanelCollapsed(true);closeMenus();refresh();}
+  function distribute(axis){if(commit(s=>M.distributeUnits(s.layout,[...selected],axis)))announce(axis==='x'?'已調整水平間距，上下位置不變':'已調整垂直間距，左右位置不變');}
+  function setEditing(value){if(!elSelect.value)return;cancelPinch();resizeViewport=null;cancelGesture();editing=value;selected.clear();multi=false;tool='select';clearPicked();if(value)setSeatPanelCollapsed(true);closeMenus();refresh();}
   function zoom(kind,delta){resizeViewport=null;views[kind]=Math.max(.4,Math.min(8,views[kind]+delta));if(kind==='seat')renderSeatUI(elSelect.value);else renderStudents(elSelect.value);}
   function positionGroupRotationGrips(){
     const nodes=[...board.querySelectorAll('.room-desk')];
@@ -21622,7 +21701,10 @@ initWebAppGuide();
     const pickedStudent=roster.find(s=>s.id===pickedId);pickedLabel.textContent=pickedStudent?`${pickedStudent.seat ? '#'+pickedStudent.seat+' ' : ''}${pickedStudent.name}`:'';
     $('room-return').disabled=!assigned.has(pickedId);
     $('seat-hint').hidden=true;
-    const h=histories.get(cls);$('room-undo').disabled=!h?.past.length;$('room-redo').disabled=!h?.future.length;
+    const h=histories.get(cls);
+    for(const [id,available,label,limit] of [['room-undo',!!h?.past.length,'復原','已到最早紀錄，無法再復原'],['room-redo',!!h?.future.length,'重做','已到最新紀錄，無法再重做']]){
+      const b=$(id);b.disabled=!available;b.title=available?label:limit;b.setAttribute('aria-label',available?label:limit);
+    }
     $('room-pan').setAttribute('aria-label',tool==='pan'?'結束拖動畫面':'拖動畫面');$('room-pan').title=tool==='pan'?'結束拖動畫面':'拖動畫面';$('room-pan').disabled=!cls;$('room-edit').disabled=!cls;$('room-arrange').disabled=!cls;
     for(const [id,on] of [['room-multi',multi],['room-pan',tool==='pan']]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',String(on));}
     if(state.mode!=='list'||state.listViewMode==='order'||selectedScoreClass!==cls)selectedScore=null;
@@ -21641,17 +21723,20 @@ initWebAppGuide();
     for(const id of ['room-align-x','room-align-y'])$(id).disabled=!currentLayout||M.arrangementUnits(currentLayout,desks).length<2;
     const doors=currentLayout?.fixtures.filter(f=>f.type==='door').length||0;$('room-door').disabled=doors>=2;$('room-door').textContent=`＋出入口（${doors}/2）`;
     const teachers=currentLayout?.fixtures.filter(f=>f.type==='teacher')||[],onlyStage=selected.size===1&&currentLayout?.fixtures.some(f=>f.type==='stage'&&selected.has('f:'+f.id));
-    const protectedSelected=currentLayout?.fixtures.some(f=>f.type==='teacher'&&selected.has('f:'+f.id));
-    $('room-delete').textContent=desks.length===selected.size&&desks.length?'刪除 '+desks.length+' 張桌子':'刪除選取';$('room-delete').disabled=!selected.size||!!protectedSelected;$('room-delete').title=protectedSelected?'老師桌不可刪除，可移動位置':'';
-    $('room-bulletin-add').disabled=!!currentLayout?.fixtures.some(f=>f.type==='bulletin');
-    $('room-stage-add').disabled=!!currentLayout?.fixtures.some(f=>f.type==='stage');
+    $('room-delete').textContent=desks.length===selected.size&&desks.length?'刪除 '+desks.length+' 張桌子':'刪除選取';$('room-delete').disabled=!selected.size;$('room-delete').title='刪除選取的桌椅或設施；可復原';
+    for(const [id,type,name] of [['room-bulletin-add','bulletin','佈告欄'],['room-stage-add','stage','講台']]){
+      const count=currentLayout?.fixtures.filter(f=>f.type===type).length||0;
+      $(id).textContent=`＋${name}（${count}/1）`;$(id).disabled=count>=1;
+      $(id).title=`${name}目前 ${count} 個，每間教室最多 1 個`;
+    }
     stageSizeButton.hidden=!onlyStage;
-    $('room-selection-menu').disabled=!selected.size;$('room-selection-menu').hidden=!selected.size;$('room-selection-menu').textContent='更多調整 ▾';$('room-delete').hidden=!selected.size;$('room-multi').textContent=multi?'結束多選':'選取多張';
+    $('room-selection-menu').disabled=!selected.size;$('room-selection-menu').hidden=!selected.size;$('room-delete').hidden=!selected.size;
+    $('room-multi').title=multi?'結束多選':'選取多張';$('room-multi').setAttribute('aria-label',$('room-multi').title);
     $('room-toggle-desk').textContent=desks.length&&desks.every(k=>state.seating[cls]?.disabled.includes(k))?'啟用桌位':'停用桌位';
     const s=state.seating[cls],f=selected.size===1?currentLayout?.fixtures.find(f=>selected.has('f:'+f.id)):null;
 
     label.hidden=!f;if(f&&document.activeElement!==input)input.value=fixtureLabel(f);
-    announce(!hasStudentDesks?(editing?'尚未放置學生桌，請按「＋學生桌」或從「配置」選擇範本。':'尚未放置學生桌，請先切換「佈置教室」新增。'):editing?(tool==='move'?'點選畫布上的目的位置':selected.size?`已選 ${selected.size} 個 · 拖動可一起移動`:'移動桌椅：直接拖曳；點選桌子後可調整角度或刪除。'):(pickedId?'點另一張桌子即可交換，點空桌即可入座':'換位：先點學生，再點另一桌；也可以直接拖曳。'));
+    announce(!hasStudentDesks?(editing?'尚未放置學生桌，請按「＋學生桌」或從「配置」選擇範本。':'尚未放置學生桌，請先切換「佈置教室」新增。'):editing?(tool==='move'?'點選畫布上的目的位置':selected.size?`已選 ${selected.size} 個 · 拖動可一起移動`:'移動桌椅：直接拖曳；點選桌子後可調整角度或刪除。'):(pickedId?'點另一張桌子即可交換，點空桌即可入座':''));
     const groupRepresentatives=new Map();
     for(const [key,d] of Object.entries(currentLayout?.desks||{}))if(d.groupId&&selected.has(key)&&!groupRepresentatives.has(d.groupId))groupRepresentatives.set(d.groupId,key);
     board.querySelectorAll('[data-room-id]').forEach(n=>{
@@ -21663,9 +21748,11 @@ initWebAppGuide();
     positionGroupRotationGrips();
     if(editing){$('unassigned').hidden=true;$('seat-unassigned-tab').hidden=true;}else $('unassigned').hidden=false;
   }
-  function resetClass(cls){if(activeClass===cls)return;resizeViewport=null;cancelGesture();activeClass=cls;oldClear();closeMenus();selectedScore=null;editing=false;selected.clear();multi=false;tool='select';views.seat=views.score=1;}
+  function resetClass(cls){if(activeClass===cls)return;cancelPinch();resizeViewport=null;cancelGesture();activeClass=cls;oldClear();closeMenus();selectedScore=null;editing=false;selected.clear();multi=false;tool='select';views.seat=views.score=1;}
+  // 寬版的右側空間可容納編輯工具；窄版保留工具高度，避免蓋住佈告欄與門。
+  function editorTopSpace(host){return host.clientWidth<1100?54:22;}
   function floorLayout(host,s){
-    const l=M.clone(s.layout||M.legacy(s));if(l.fitToViewport===false)return l;const w=Math.max(1,host.clientWidth-(editing?68:24)),h=Math.max(1,host.clientHeight-(editing?108:32)),fit=Math.min(w/l.width,h/l.height);
+    const l=M.clone(s.layout||M.legacy(s));if(l.fitToViewport===false)return l;const w=Math.max(1,host.clientWidth-(editing?68:24)),h=Math.max(1,host.clientHeight-(editing?54+editorTopSpace(host):32)),fit=Math.min(w/l.width,h/l.height);
     if(!Number.isFinite(fit)||fit<=0)return l;
     const width=Math.min(10000,Math.max(l.width,Math.floor(w/fit))),height=Math.min(10000,Math.max(l.height,Math.floor(h/fit))),dx=M.snap((width-l.width)/2),dy=M.snap((height-l.height)/2);
     for(const d of [...Object.values(l.desks),...l.fixtures]){d.x+=dx;d.y+=dy;}
@@ -21693,14 +21780,16 @@ initWebAppGuide();
     if(!isScore)presentation={cls,source:signature(s),layout:M.clone(l)};
     const nodes=[...host.children];host.classList.add('room-board');host.style.gridTemplateRows='none';
     const surface=document.createElement('div');surface.className='room-surface';surface.dataset.roomKind=kind;
-    const availableW=Math.max(1,host.clientWidth-(!isScore&&editing?68:32)),availableH=Math.max(1,host.clientHeight-(!isScore&&editing?108:32));
+    const topSpace=!isScore&&editing?editorTopSpace(host):2;
+    const availableW=Math.max(1,host.clientWidth-(!isScore&&editing?68:32)),availableH=Math.max(1,host.clientHeight-(!isScore&&editing?54+topSpace:32));
     const viewWidth=l.width,viewHeight=l.height,bulletins=l.fixtures.filter(f=>f.type==='bulletin');
     const outside={left:Math.max(0,...bulletins.map(f=>-f.x)),top:Math.max(0,...bulletins.map(f=>-f.y)),right:Math.max(0,...bulletins.map(f=>f.x+f.width-l.width)),bottom:Math.max(0,...bulletins.map(f=>f.y+f.height-l.height))};
     const fit=Math.min(availableW/(viewWidth+outside.left+outside.right),availableH/(viewHeight+outside.top+outside.bottom)),scale=(!isScore&&editing&&resizeViewport?resizeViewport.scale:fit)*views[kind],compact=isScore&&Object.values(l.desks).some(d=>{const size=M.contentSize(d.angle,d.width||160,d.height||100);return size.width*scale<115||size.height*scale<110;});
     host.classList.toggle('room-score-compact',compact);
+    if(!isScore&&editing)surface.style.marginTop=topSpace+'px';
     if(!isScore&&editing&&resizeViewport){surface.style.marginLeft=resizeViewport.left+'px';surface.style.marginTop=resizeViewport.top+'px';}
     if(Object.values(outside).some(Boolean)){
-      const spare=Math.max(0,(host.clientWidth-30-(viewWidth+outside.left+outside.right)*scale)/2),top=!isScore&&editing?54:2,bottom=!isScore&&editing?22:2;
+      const spare=Math.max(0,(host.clientWidth-30-(viewWidth+outside.left+outside.right)*scale)/2),top=topSpace,bottom=!isScore&&editing?22:2;
       surface.style.marginLeft=Math.max(parseFloat(surface.style.marginLeft)||0,spare+outside.left*scale+2)+'px';
       surface.style.marginRight=(spare+outside.right*scale+2)+'px';
       surface.style.marginTop=Math.max(parseFloat(surface.style.marginTop)||0,top+outside.top*scale)+'px';
@@ -21725,7 +21814,7 @@ initWebAppGuide();
     for(const f of l.fixtures)surface.append(createRoomFixture(f,scale,!isScore&&editing));
     if(!isScore&&editing){
       surface.classList.add('room-resizable');
-      function grips(host,target){for(const [axis,label] of [['left','左邊'],['width','右邊'],['top','上邊'],['height','下邊'],['both','右下角']]){const grip=document.createElement('button');grip.type='button';grip.className='room-resize-grip room-resize-'+axis;grip.dataset.resizeTarget=target;grip.dataset.resizeAxis=axis;grip.textContent='';grip.setAttribute('aria-label',(target==='room'?'教室':host.classList.contains('room-desk')?'學生桌':host.title)+'調整'+(axis==='both'?'寬高':label));grip.title='拖曳調整；方向鍵微調，Shift 加大幅度';host.append(grip);}}
+      function grips(host,target){for(const [axis,label] of [['left','左邊'],['width','右邊'],['top','上邊'],['height','下邊'],['both','右下角']]){const grip=document.createElement('button');grip.type='button';grip.className='room-resize-grip room-resize-'+axis;grip.dataset.resizeTarget=target;grip.dataset.resizeAxis=axis==='both'&&host.matches('.room-desk,.room-teacher')?'both-start':axis;grip.textContent='';grip.setAttribute('aria-label',(target==='room'?'教室':host.classList.contains('room-desk')?'學生桌':host.title)+'調整'+(axis==='both'?'寬高':label));grip.title='拖曳調整；方向鍵微調，Shift 加大幅度';host.append(grip);}}
       grips(surface,'room');for(const n of surface.querySelectorAll('[data-room-id]')){n.classList.add('room-object-resizable');grips(n,n.dataset.roomId);}
       for(const n of surface.querySelectorAll('.room-desk,.room-teacher')){
         const grip=document.createElement('button');grip.type='button';grip.className='room-rotate-grip';grip.dataset.rotateTarget=n.dataset.roomId;grip.setAttribute('aria-label','拖曳旋轉桌子');grip.title='拖曳旋轉；Shift 每 15 度吸附；方向鍵微調';const icon=document.createElement('span');icon.textContent='↻';grip.append(icon);n.append(grip);
@@ -21800,7 +21889,7 @@ initWebAppGuide();
       if(candidates.length){grip=candidates[0].n;node=grip.closest('[data-room-id]');}
       const r=grip.getBoundingClientRect(),a=(Number(node?.dataset.angle)||0)*Math.PI/180,dx=e.clientX-r.x-r.width/2,dy=e.clientY-r.y-r.height/2;
       const x=dx*Math.cos(a)+dy*Math.sin(a),y=-dx*Math.sin(a)+dy*Math.cos(a),axis=grip.dataset.resizeAxis;
-      const onMark=grip.dataset.rotateTarget?Math.hypot(x,y)<=14:['top','height'].includes(axis)?Math.abs(x)<=16&&Math.abs(y)<=8:axis==='both'?Math.hypot(x,y)<=10:Math.abs(x)<=8&&Math.abs(y)<=16;
+      const onMark=grip.dataset.rotateTarget?Math.hypot(x,y)<=14:['top','height'].includes(axis)?Math.abs(x)<=16&&Math.abs(y)<=8:['both','both-start'].includes(axis)?Math.hypot(x,y)<=10:Math.abs(x)<=8&&Math.abs(y)<=16;
       {
         const body=document.elementsFromPoint(e.clientX,e.clientY).map(n=>n.closest('[data-room-id]')).find(n=>{
           if(!n||!board.contains(n))return false;
@@ -21842,6 +21931,55 @@ initWebAppGuide();
     }
     board.setPointerCapture(e.pointerId);
   }
+  // 雙指操作只改變視圖。第二指落下先取消單指拖曳預覽，避免放開時移動桌椅或學生。
+  function cancelPinch(){
+    cancelAnimationFrame(pinchFrame);pinchFrame=0;if(pinch)setTimeout(()=>{suppressClick=false;},0);pinch=null;
+    for(const id of roomTouches.keys())if(board.hasPointerCapture(id))board.releasePointerCapture(id);
+    roomTouches.clear();
+  }
+  function applyPinch(){
+    pinchFrame=0;const p=pinch;if(!p||p.ids.some(id=>!roomTouches.has(id)))return;
+    if(state.mode!=='seat'||p.cls!==elSelect.value||p.source!==signature(ensureSeatState(p.cls))){cancelPinch();return;}
+    const [a,b]=p.ids.map(id=>roomTouches.get(id)),center={clientX:(a.x+b.x)/2,clientY:(a.y+b.y)/2};
+    views.seat=Math.max(.4,Math.min(8,p.zoom*Math.hypot(a.x-b.x,a.y-b.y)/p.distance));
+    renderSeatUI(p.cls);
+    const surface=board.querySelector('.room-surface');if(!surface)return;
+    const r=surface.getBoundingClientRect(),scale=Number(surface.dataset.scale);
+    board.scrollLeft+=r.left+surface.clientLeft+p.anchor.x*scale-center.clientX;
+    board.scrollTop+=r.top+surface.clientTop+p.anchor.y*scale-center.clientY;
+  }
+  document.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch'||state.mode!=='seat'||!board.contains(e.target))return;
+    roomTouches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(roomTouches.size<2&&!pinch)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    if(!pinch){
+      cancelGesture();_cancelSeatDrag();renderSeatUI(elSelect.value);closeMenus();
+      const ids=[...roomTouches.keys()].slice(0,2),[a,b]=ids.map(id=>roomTouches.get(id));
+      const anchor=localPoint({clientX:(a.x+b.x)/2,clientY:(a.y+b.y)/2});if(!anchor){cancelPinch();return;}
+      pinch={ids,anchor,distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),zoom:views.seat,cls:elSelect.value,source:signature(ensureSeatState(elSelect.value))};
+      lastDoorTap=null;lastStudentTap=null;suppressClick=true;
+    }
+    for(const id of roomTouches.keys())board.setPointerCapture(id);
+  },{capture:true,passive:false});
+  document.addEventListener('pointermove',e=>{
+    if(!roomTouches.has(e.pointerId))return;roomTouches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(!pinch)return;e.preventDefault();e.stopImmediatePropagation();
+    if(!pinchFrame)pinchFrame=requestAnimationFrame(applyPinch);
+  },{capture:true,passive:false});
+  function finishPinchPointer(e){
+    if(!roomTouches.has(e.pointerId))return;
+    if(pinch){
+      e.preventDefault();e.stopImmediatePropagation();
+      cancelAnimationFrame(pinchFrame);pinchFrame=0;if(e.type!=='pointercancel')applyPinch();
+      roomTouches.delete(e.pointerId);if(board.hasPointerCapture(e.pointerId))board.releasePointerCapture(e.pointerId);
+      // 保持雙指手勢狀態直到全部放開，剩餘單指不接續拖動物件。
+      if(!roomTouches.size){cancelPinch();setTimeout(()=>{suppressClick=false;},0);}
+    }else roomTouches.delete(e.pointerId);
+  }
+  document.addEventListener('pointerup',finishPinchPointer,{capture:true,passive:false});
+  document.addEventListener('pointercancel',finishPinchPointer,{capture:true,passive:false});
+  window.addEventListener('blur',cancelPinch);
   board.addEventListener('pointerdown',e=>beginPointer(e),true);
   rosterHost.addEventListener('pointerdown',e=>beginPointer(e,true),true);
   document.addEventListener('pointermove',e=>{
@@ -21932,7 +22070,7 @@ initWebAppGuide();
     if(e.key==='Delete'&&selected.size){e.preventDefault();$('room-delete').click();}
   });
   window.addEventListener('keydown',e=>{if(state.mode!=='seat'||e.target.closest('input,textarea,[contenteditable]'))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo(e.shiftKey);}if(e.key==='Escape'){if(!arrangePanel.hidden){closeMenus();$('room-arrange-menu').focus({preventScroll:true});}abortPointer();if(pickedId)clearPicked();}});
-  const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelGesture();closeMenus();oldClear();editing=false;selected.clear();tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
+  const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelPinch();cancelGesture();closeMenus();oldClear();editing=false;selected.clear();tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
   let resizeFrame;new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(gesture)return;if(state.mode==='seat')renderSeatUI(elSelect.value);});}).observe(board);
   let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order')renderStudents(elSelect.value);});}).observe(students);
 
@@ -22004,8 +22142,8 @@ initWebAppGuide();
     for(const t of templateList()){const o=document.createElement('option');o.value='saved:'+t.id;o.textContent=t.name;group.append(o);}
   }
   const nameDialog=document.createElement('dialog');nameDialog.className='room-dialog';nameDialog.id='room-template-name-dialog';
-  nameDialog.innerHTML='<form><h2 id="room-template-name-title">儲存為範本</h2><label>範本名稱 <input id="room-template-name" class="input" maxlength="80" required></label><p id="room-template-name-error" role="status"></p><button class="btn" type="button" id="room-template-name-cancel">取消</button> <button class="btn primary" type="submit">儲存</button></form>';
-  nameDialog.setAttribute('aria-labelledby','room-template-name-title');document.body.append(nameDialog);
+  nameDialog.innerHTML='<form><h2 id="room-template-name-title">儲存為範本</h2><p id="room-template-backup-help">新增的座位圖範例也會包含在 Google 備份中。開啟「資料與同步」的自動上傳後，新增、改名與刪除都會自動同步；下次載入即可使用。</p><label>範本名稱 <input id="room-template-name" class="input" maxlength="80" required></label><p id="room-template-name-error" role="status"></p><button class="btn" type="button" id="room-template-name-cancel">取消</button> <button class="btn primary" type="submit">儲存</button></form>';
+  nameDialog.setAttribute('aria-labelledby','room-template-name-title');nameDialog.setAttribute('aria-describedby','room-template-backup-help');document.body.append(nameDialog);
   let naming=null;
   function openTemplateName(id=null){
     closeMenus();const item=templateList().find(t=>t.id===id);
