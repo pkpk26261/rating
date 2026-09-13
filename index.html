@@ -2006,13 +2006,14 @@
     .gs-loading-desc{ font-size:14px; line-height:1.7; color:var(--muted); margin:0; }
     @keyframes gsLoadingSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
-    /* 未入座提示置於加扣分工具列，直接前往安排。 */
-    .controls-row .seat-notice{display:flex;align-items:center;flex:0 0 auto;margin:0;padding:0;}
+    /* 未入座提示獨立放在工具列下方，不佔用工具按鈕的寬度。 */
+    .seat-notice{display:flex;align-items:center;flex:0 0 auto;min-width:0;width:100%;max-width:100%;margin:6px 0 0;padding:0;}
+    .seat-notice .notice-btn{width:100%;box-sizing:border-box;}
     .seat-notice .notice-btn{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:6px;border:1px solid color-mix(in srgb,var(--gold) 70%,var(--line));border-left:4px solid var(--gold);background:color-mix(in srgb,var(--gold) 18%,var(--card));color:var(--text);font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;}
     .seat-notice .notice-btn svg{flex-shrink:0;color:var(--gold);}
     .seat-notice .notice-btn b{margin-right:4px;}
     .seat-notice .notice-action{border-left:1px solid color-mix(in srgb,var(--gold) 45%,var(--line));padding-left:8px;font-size:12px;}
-    @media(max-width:900px){.seat-notice .notice-action{display:none;}.seat-notice .notice-btn{gap:5px;padding-inline:7px;font-size:13px;}}
+    @media(max-width:900px){.seat-notice .notice-btn{gap:5px;padding-inline:7px;font-size:13px;}}
     .seat-notice .notice-btn:hover{background:color-mix(in srgb,var(--gold) 24%,var(--card));}
 
     /* ===== ★ 作業成績（表格） ===== */
@@ -7342,7 +7343,8 @@ body[data-mode="seat"] #room-edit-tools{display:flex;flex-wrap:nowrap;border:0;p
 #room-view-tools #room-fit{margin-left:auto;white-space:nowrap;}
 #room-view-tools .btn{font-size:13px;}
 #room-picked-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#seatwrap{position:relative;}
+/* 畫布工具的圖層只作用於座位區，避免蓋住頂部資料選單。 */
+#seatwrap{position:relative;isolation:isolate;}
 #room-status{position:absolute;left:16px;bottom:5px;right:16px;pointer-events:none;color:var(--muted);font-size:12px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 body[data-mode="seat"] #pick-bar{display:none!important;}
 body[data-mode="seat"].pick-active .main{padding-bottom:18px;}
@@ -13110,7 +13112,7 @@ const ClassroomLayout = (() => {
           notice.className = 'seat-notice';
           notice.id = 'seat-notice';
           notice.innerHTML = `<button class="notice-btn" id="notice-go-seat" title="尚有 ${_unCount} 位學生未安排座位，點此前往安排座位" aria-label="尚有 ${_unCount} 位學生未安排座位，前往安排座位"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3v.01"/></svg><span><b>${_unCount} 人</b>未入座</span><span class="notice-action" aria-hidden="true">安排 →</span></button>`;
-          document.querySelector('.controls-row').insertBefore(notice, document.getElementById('room-score-tools') || document.getElementById('list-view-seg'));
+          document.querySelector('.controls-row').after(notice);
           document.getElementById('notice-go-seat')?.addEventListener('click', ()=> setMode('seat'));
         }
       }
