@@ -6289,6 +6289,22 @@
       #draw-pane .dc-draw-btn, #draw-pane .dc-num-btn{ min-height:44px; }
     }
 
+    #draw-pane .controls-card{gap:6px;padding:12px;}
+    #draw-pane .dc-toggles{gap:0;}
+    #draw-pane .dc-section{gap:2px;}
+    #draw-pane .dc-toggle{min-height:44px;box-sizing:border-box;}
+    #draw-chance-settings[hidden], #draw-chance-panel[hidden]{display:none;}
+    .draw-chance-panel{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid #d4a537;border-radius:14px;background:linear-gradient(110deg,rgba(245,180,40,.16),rgba(245,180,40,.04));}
+    .draw-chance-panel strong{display:block;color:#ffd97d;font-size:20px;}
+    .draw-chance-panel span{display:block;color:var(--fg);font-size:13px;margin-top:4px;}
+    .draw-chance-actions{display:flex;gap:8px;flex-shrink:0;}
+    #draw-chance-panel button{min-height:44px;padding:8px 14px;}
+    #btn-draw-chance{background:#f4cf76;color:#302207;border-color:#f4cf76;font-weight:800;}
+    #draw-pane .drum-slot.chance-selected{border-color:#efbd4f;box-shadow:0 0 0 2px #efbd4f,0 0 24px rgba(239,189,79,.45);}
+    :root[data-theme="light"] .draw-chance-panel strong{color:#805500;}
+    @media(max-width:1100px){.draw-chance-panel{align-items:stretch;flex-direction:column;}.draw-chance-actions button{flex:1;}}
+    @media(prefers-reduced-motion:reduce){#draw-pane .pop,#draw-pane .revealed{animation:none!important;}}
+
     /* 抽號各層可縮到容器內；六位學生在動畫、結果與歷史皆維持同一列。 */
     #draw-pane,#draw-pane .draw-wrap,#draw-pane .controls-card,#draw-pane .spotlight-card,
     #draw-pane .draw-stage,#draw-pane .draw-result-wrap,#draw-pane .draw-history-wrap,
@@ -8126,6 +8142,11 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                 </label>
               </div>
 
+              <div class="dc-section dc-chance">
+                <label class="dc-toggle"><input id="draw-chance" type="checkbox"><span class="dc-toggle-label">機會時間</span></label>
+                <div id="draw-chance-settings" class="dc-volume" hidden><label for="draw-chance-rate">機率</label><input id="draw-chance-rate" type="range" min="5" max="100" step="5" value="20"><output id="draw-chance-value" for="draw-chance-rate">20%</output></div>
+              </div>
+
               <div class="dc-section dc-sound">
                 <label class="dc-toggle"><input id="draw-sound" type="checkbox" checked><span class="dc-toggle-label">抽號音效</span></label>
                 <div class="dc-volume"><label for="draw-volume">音量</label><input id="draw-volume" type="range" min="0" max="100" step="1" value="80"><output id="draw-volume-value" for="draw-volume">80%</output></div>
@@ -8158,6 +8179,10 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                 </div>
               </div>
 
+              <div id="draw-chance-panel" class="draw-chance-panel" hidden>
+                <div role="status" aria-live="polite"><strong id="draw-chance-title">機會時間！</strong><span id="draw-chance-message">可以讓本次其中一位同學重新抽選。</span></div>
+                <div class="draw-chance-actions"><button id="btn-draw-chance" class="dc-action-btn">啟動重抽</button><button id="btn-draw-keep" class="dc-action-btn">保留結果</button></div>
+              </div>
               <div class="draw-result-wrap">
                 <div class="draw-subtitle">✨ 本次結果</div>
                 <div id="draw-result" class="draw-result"></div>
@@ -11529,6 +11554,7 @@ const ClassroomLayout = (() => {
 
     /* ★ 下載：從 Google 試算表讀回資料，組成 workbook 後沿用既有匯入流程 */
     async function gsDownload(opts={}){
+      if(_drawAnimating){gsSetSyncStatus('請先完成抽號或機會時間選擇，再載入雲端資料。', 'error');return false;}
       if(saveHealth.busy) return false;
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()){
         gsSetSyncStatus('此視窗為唯讀狀態（已在另一個視窗開啟），無法下載。', 'error');
@@ -19889,6 +19915,8 @@ elProgAdd?.addEventListener('click', ()=>{
     }
 
     function renderDraw(cls){
+      if(pendingDraw && !drawRoundIsCurrent(pendingDraw)) cancelDrawRound();
+      if(pendingDraw){cls=pendingDraw.cls;elSelect.value=cls;}
       syncDrawClassSelect(cls);
 
       if(!cls){
@@ -19910,6 +19938,8 @@ elProgAdd?.addEventListener('click', ()=>{
       elDrawAuto.checked   = d.autoScore;
       if(elDrawSlowdown) elDrawSlowdown.checked = d.slowdown;
       if(typeof _syncNumBtnActive === 'function') _syncNumBtnActive(d.lastCount);
+
+      renderDrawRound();
 
       // 名單 & 候選
       const list = (state.classMap[cls]||[]).slice();
@@ -19987,7 +20017,7 @@ elProgAdd?.addEventListener('click', ()=>{
           osc.start(t); osc.stop(t+duration+.02);
         }catch(_){stop();}
       }
-      function begin(){
+      function begin(cue='normal'){
         stop(); finished=false; revealCount=0; lastClick=-Infinity;
         if(!settings.enabled || settings.volume===0 || document.hidden) return;
         try{
@@ -19999,7 +20029,7 @@ elProgAdd?.addEventListener('click', ()=>{
           master.gain.setValueAtTime(settings.volume/100*.55,ctx.currentTime);
           active=true;
           const token=generation;
-          const start=()=>{if(active && token===generation) tone(440,0,.2,.24,'sine',880);};
+          const start=()=>{if(active && token===generation){if(cue==='normal') tone(440,0,.2,.24,'sine',880);else chanceCue(cue);}};
           if(ctx.state==='suspended') Promise.resolve(ctx.resume()).then(start,()=>{if(token===generation)stop();});
           else start();
         }catch(_){stop();}
@@ -20020,13 +20050,31 @@ elProgAdd?.addEventListener('click', ()=>{
         [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.055+i*.12,i===3?.37:.18,.19));
         tone(523.25,.415,.37,.08);
       }
+      function chanceCue(cue){
+        if(cue==='intro'){
+          tone(330,0,.55,.15,'sine',1320);
+          [659.25,830.61,987.77].forEach(f=>tone(f,.48,.7,.1,'triangle'));
+        }else if(cue==='start'){
+          tone(392,0,.12,.18,'triangle',784);tone(1174.66,.13,.16,.16);
+        }else if(cue==='win'){
+          [587.33,739.99,880,1174.66].forEach((f,i)=>tone(f,i*.1,i===3?.48:.16,.16));
+          [587.33,739.99,880].forEach(f=>tone(f,.3,.48,.065));
+        }else if(cue==='keep'){
+          tone(659.25,0,.12,.14);tone(880,.1,.2,.14);
+        }
+      }
+      function chanceRoll(){
+        if(!active || !ctx || ctx.currentTime-lastClick<.065) return;
+        lastClick=ctx.currentTime;
+        tone(784,0,.05,.12,'triangle',392);tone(196,0,.07,.06);
+      }
       function configure(enabled,volume){
         settings={enabled:!!enabled,volume:Math.max(0,Math.min(100,Number(volume)||0))};
         try{localStorage.setItem(key,JSON.stringify(settings));}catch(_){}
         if(!settings.enabled || settings.volume===0) stop();
         if(master && ctx){try{master.gain.setTargetAtTime(settings.volume/100*.55,ctx.currentTime,.015);}catch(_){}}
       }
-      return {begin,roll,reveal,finish,stop,configure,getSettings:()=>({...settings})};
+      return {begin,roll,reveal,finish,stop,configure,chanceCue,chanceRoll,getSettings:()=>({...settings})};
     }
     const drawSound=createDrawSoundController();
     const elDrawSound=document.getElementById('draw-sound'), elDrawVolume=document.getElementById('draw-volume');
@@ -20157,31 +20205,32 @@ elProgAdd?.addEventListener('click', ()=>{
       }
       return slots;
     }
-    function _makeSlotItem(s){
+    function _makeSlotItem(s, cls=elSelect.value){
       const item = document.createElement('div');
       item.className = 'slot-item';
       const seatNum = s.seat ? `#${padSeat(s.seat)}` : '--';
-      item.innerHTML = `<span class="slot-seat">${seatNum}</span>${renderStudentName(s, elSelect.value, 'slot-name')}`;
+      item.innerHTML = `<span class="slot-seat">${seatNum}</span>${renderStudentName(s, cls, 'slot-name')}`;
       return item;
     }
 
     /* 執行真正的垂直捲動動畫 */
-    function animateSlots(slots, picks, allStudents, onComplete){
+    function animateSlots(slots, picks, allStudents, onComplete, options={}){
       const ITEM_H = 120;
       const STAGGER = 400;
       let completed = 0;
 
       // 讀取緩停設定
-      const cls = elSelect.value;
+      const cls = options.cls || elSelect.value;
       const drawState = cls ? ensureDrawState(cls) : null;
-      const slowdown = drawState ? drawState.slowdown : true;
+      const slowdown = options.slowdown ?? (drawState ? drawState.slowdown : true);
+      const reduced = typeof window!=='undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
       slots.forEach((slot, idx)=>{
         const { el, reel, reelCount } = slot;
         const pick = picks[idx];
 
         // 在 reel 末端加上最終結果
-        reel.appendChild(_makeSlotItem(pick));
+        reel.appendChild(_makeSlotItem(pick, cls));
         const totalItems = reelCount + 1; // 含最終結果
 
         // 目標偏移：讓最後一格（pick）剛好顯示在 slot 視窗中
@@ -20190,7 +20239,7 @@ elProgAdd?.addEventListener('click', ()=>{
         el.classList.add('spinning');
         reel.style.transform = 'translateY(0)';
 
-        const delay = idx * STAGGER;
+        const delay = reduced ? 0 : idx * STAGGER;
 
         const motion=drawMotion(Math.abs(targetY),idx,slowdown);
         let lastCell=0;
@@ -20207,12 +20256,12 @@ elProgAdd?.addEventListener('click', ()=>{
             return;
           }
 
-          const t = elapsed - delay; // 這個 slot 自己的運動時間
+          const t = reduced ? motion.duration : elapsed - delay; // 這個 slot 自己的運動時間
           const dist=motion.position(t);
           reel.style.transform = `translateY(${-dist}px)`;
           const cell=Math.floor(dist/ITEM_H);
           // 只由尚在滾動的第一輪帶節奏；掉幀不追補過期聲音。
-          if(cell!==lastCell && t<motion.duration && slots.find(s=>!s.done)===slot) drawSound.roll();
+          if(cell!==lastCell && t<motion.duration && slots.find(s=>!s.done)===slot) (options.chance ? drawSound.chanceRoll() : drawSound.roll());
           lastCell=cell;
 
           if(t >= motion.duration){
@@ -20221,7 +20270,7 @@ elProgAdd?.addEventListener('click', ()=>{
             el.classList.remove('spinning');
             el.classList.add('revealed');
             slot.done=true;
-            drawSound.reveal();
+            if(!options.chance) drawSound.reveal();
             completed++;
             if(completed === slots.length){
               onComplete();
@@ -20236,99 +20285,149 @@ elProgAdd?.addEventListener('click', ()=>{
       });
     }
 
+    /* 機會時間：本機偏好；未確認的一輪只存在記憶體。 */
+    const drawChanceKey='pscore_draw_chance_v1';
+    let drawChanceSettings={enabled:false,rate:20};
+    try{
+      const pref=JSON.parse(localStorage.getItem(drawChanceKey));
+      if(pref && typeof pref.enabled==='boolean') drawChanceSettings.enabled=pref.enabled;
+      if(pref && Number.isFinite(pref.rate)) drawChanceSettings.rate=Math.max(5,Math.min(100,Math.round(pref.rate/5)*5));
+    }catch(_){}
+    let pendingDraw=null;
+    const elDrawChance=document.getElementById('draw-chance'),elDrawChanceRate=document.getElementById('draw-chance-rate');
+    const elChancePanel=document.getElementById('draw-chance-panel');
+    const elChanceStart=document.getElementById('btn-draw-chance'),elChanceKeep=document.getElementById('btn-draw-keep');
+    function renderChanceSettings(){
+      elDrawChance.checked=drawChanceSettings.enabled;
+      document.getElementById('draw-chance-settings').hidden=!drawChanceSettings.enabled;
+      elDrawChanceRate.value=drawChanceSettings.rate;
+      document.getElementById('draw-chance-value').textContent=drawChanceSettings.rate+'%';
+      elDrawChanceRate.setAttribute('aria-valuetext',drawChanceSettings.rate+'%');
+    }
+    function saveChanceSettings(){
+      if(pendingDraw) return renderChanceSettings();
+      drawChanceSettings={enabled:elDrawChance.checked,rate:Math.max(5,Math.min(100,Math.round(Number(elDrawChanceRate.value)/5)*5))};
+      writeLocalJSON(drawChanceKey,drawChanceSettings);renderChanceSettings();
+    }
+    elDrawChance.addEventListener('change',saveChanceSettings);
+    elDrawChanceRate.addEventListener('input',saveChanceSettings);
+    renderChanceSettings();
+    function renderDrawRound(){
+      const round=pendingDraw;
+      document.querySelectorAll('#draw-pane .dc-num-btn,#draw-count,#draw-seq,#draw-unique,#draw-auto,#draw-slowdown,#draw-chance,#draw-chance-rate,#draw-class-select,#btn-draw-undo,#btn-draw-reset').forEach(el=>el.disabled=!!round);
+      elBtnDraw.disabled=!!round || drawSequenceExceedsLimit(elDrawSeq.value) || !elSelect.value;
+      elBtnDraw.textContent=!round?'🎰 開始抽籤！':round.phase==='waiting'?'等待機會時間選擇…':'🎰 抽籤中...';
+      elChancePanel.hidden=!round || round.phase==='initial';
+      if(!round) return;
+      const waiting=round.phase==='waiting';
+      elChanceStart.disabled=elChanceKeep.disabled=!waiting;
+      document.getElementById('draw-chance-title').textContent=waiting?'機會時間！':'機會時間 · 重抽中';
+      document.getElementById('draw-chance-message').textContent=waiting?'可以讓本次其中一位同學重新抽選。':'只替換亮起的這一格，其餘同學保留。';
+      if(state.mode==='draw'){
+        if(round.slots.some(slot=>slot.el.parentNode!==elDrawDrum)) elDrawDrum.replaceChildren(...round.slots.map(slot=>slot.el));
+        if(round.phase==='waiting') showDrawPicks(round.picks,round.cls);
+      }
+    }
+    function showDrawPicks(picks,cls){
+      if(state.mode!=='draw' || elSelect.value!==cls) return;
+      elDrawResult.style.setProperty('--draw-cols',String(picks.length));
+      elDrawResult.innerHTML=picks.map((s,i)=>{
+        const seat=s.seat?`#${padSeat(s.seat)}`:'--';
+        return `<span class="chip big pop" style="animation-delay:${i*80}ms"><span class="seat-badge">${seat}</span>${renderStudentName(s,cls)}</span>`;
+      }).join('');
+    }
+    function commitDrawResult(round){
+      const {cls,picks,count}=round,d=ensureDrawState(cls);
+      const ids=picks.map(s=>s.id);
+      d.seqPos=round.nextSeqPos;d.lastCount=round.lastCount;
+      d.history.unshift({ts:Date.now(),count,ids,autoScoreApplied:round.autoScore,uniqueApplied:round.unique});
+      if(d.history.length>200)d.history.length=200;
+      if(round.unique)d.drawn=Array.from(new Set([...round.drawn,...ids]));
+      if(round.autoScore){
+        ids.forEach(id=>setScore(cls,id,getScore(cls,id)+1));
+        renderLeaderboard(cls);
+        if(state.mode==='list')renderStudents(cls);
+      }
+      saveDrawToLS(cls);
+    }
+    function drawRoundIsCurrent(round){
+      const list=state.classMap[round.cls];
+      return state.draw?.[round.cls]===round.drawState && Array.isArray(list)
+        && list.length===round.list.length && list.every((s,i)=>s.id===round.list[i].id)
+        && round.drawState.seqPos===round.originalSeqPos
+        && JSON.stringify(round.drawState.drawn)===JSON.stringify(round.drawn);
+    }
+    function cancelDrawRound(){
+      pendingDraw=null;_drawAnimating=false;drawSound.stop();
+      elDrawStage?.classList.remove('spinning','celebrate');elDrawDrum.replaceChildren();elDrawResult.replaceChildren();
+      renderDrawRound();setStatus('班級名單或抽號資料已變更，本輪尚未確認的抽取已取消，未加分。');
+    }
+    function finishDrawRound(round){
+      if(pendingDraw!==round || round.committed) return;
+      if(!drawRoundIsCurrent(round)) return cancelDrawRound();
+      round.committed=true;
+      const {cls,picks}=round;
+      commitDrawResult(round);
+      pendingDraw=null;_drawAnimating=false;
+      elDrawStage?.classList.remove('spinning');
+      const showing=state.mode==='draw' && elSelect.value===cls;
+      if(showing){
+        showDrawPicks(picks,cls);elDrawStage?.classList.add('celebrate');
+        if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) fireConfetti(elDrawConfetti,2000);
+      }
+      if(state.mode==='draw') renderDraw(elSelect.value);
+      renderDrawRound();
+      if(showing)elBtnDraw.focus({preventScroll:true});
+    }
+    function startChanceRedraw(){
+      const round=pendingDraw;
+      if(!round || round.phase!=='waiting') return;
+      if(!drawRoundIsCurrent(round)) return cancelDrawRound();
+      round.phase='redraw';renderDrawRound();
+      const index=pickN(round.picks.map((_,i)=>i),1)[0];
+      const replacement=pickN(round.alternatives,1)[0];
+      const slot=round.slots[index];
+      slot.done=false;slot.el.classList.remove('revealed');slot.el.classList.add('chance-selected');
+      slot.reel.replaceChildren();slot.reelCount=round.slowdown?70:40;
+      for(let i=0;i<slot.reelCount;i++) slot.reel.appendChild(_makeSlotItem(round.alternatives[Math.floor(Math.random()*round.alternatives.length)],round.cls));
+      round.picks[index]=replacement;
+      if(state.mode==='draw') drawSound.begin('start');
+      animateSlots([slot],[replacement],round.list,()=>{
+        if(pendingDraw!==round)return;
+        if(state.mode==='draw' && !document.hidden) drawSound.chanceCue('win');
+        finishDrawRound(round);
+      },{cls:round.cls,slowdown:round.slowdown,chance:true});
+    }
+    elChanceStart.addEventListener('click',startChanceRedraw);
+    elChanceKeep.addEventListener('click',()=>{
+      const round=pendingDraw;if(!round || round.phase!=='waiting') return;
+      round.phase='confirmed';drawSound.begin('keep');finishDrawRound(round);
+    });
     // === 事件：抽！（含動畫） ===
     elBtnDraw?.addEventListener('click', ()=>{
-      if(_drawAnimating) return; // 防止連點
+      if(_drawAnimating || saveHealth.busy || !TabLock.isActive()) return;
       if(!syncDrawSequenceValidation()){elDrawSeq.focus();return;}
-      const cls = elSelect.value;
-      if(!cls) return appAlert('請先選擇班級');
-      const d = ensureDrawState(cls);
-
-      const list = (state.classMap[cls]||[]).slice();
+      const cls=elSelect.value;if(!cls) return appAlert('請先選擇班級');
+      const d=ensureDrawState(cls),list=(state.classMap[cls]||[]).slice();
       if(!list.length) return appAlert('此班級沒有名單');
-
-      // 決定本次人數
-      const seq = parseSeq(elDrawSeq.value);
-      let count;
-      // 一般抽取與序列模式皆為每次最多 6 人
-      if(seq.length){
-        count = seq[d.seqPos % seq.length];
-        d.seqPos++;
-      }else{
-        count = Math.max(1, Math.min(6, Math.floor(Number(elDrawCount.value))||1));
-      }
-      d.lastCount = count;
-
-      // 候選
-      const drawnSet = new Set(d.drawn);
-      const candidates = d.unique ? list.filter(s=>!drawnSet.has(s.id)) : list;
-      if(candidates.length===0){
-        appAlert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
-        return;
-      }
-      if(count>candidates.length) count = candidates.length;
-
-      const picks = pickN(candidates, count);
-
-      // ===  開始動畫 ===
-      _drawAnimating = true;
-      drawSound.begin();
-      elBtnDraw.disabled = true;
-      elBtnDraw.textContent = '🎰 抽籤中...';
-      elDrawResult.innerHTML = '';
-
-      // 舞台進入旋轉狀態
-      elDrawStage?.classList.add('spinning');
-      elDrawStage?.classList.remove('celebrate');
-
-      // 建立滾輪
-      const slots = buildSlots(count, list);
-
-      // 播放滾動動畫
-      animateSlots(slots, picks, list, ()=>{
-        // === 動畫完成 → 揭曉 ===
-        drawSound.finish();
-        _drawAnimating = false;
-        elBtnDraw.disabled = false;
-        elBtnDraw.textContent = '🎰 開始抽籤！';
-
+      const seq=parseSeq(elDrawSeq.value),lastCount=seq.length?seq[d.seqPos%seq.length]:Math.max(1,Math.min(6,Math.floor(Number(elDrawCount.value))||1));
+      const candidates=d.unique?list.filter(s=>!d.drawn.includes(s.id)):list;
+      if(!candidates.length) return appAlert('已無可抽的人選（不重覆模式）。請按「重置」或取消「不重覆抽取」。');
+      const count=Math.min(lastCount,candidates.length),picks=pickN(candidates,count);
+      const alternatives=candidates.filter(s=>!picks.some(p=>p.id===s.id));
+      const round={drawState:d,originalSeqPos:d.seqPos,cls,list,picks,alternatives,count,lastCount,drawn:d.drawn.slice(),unique:d.unique,autoScore:d.autoScore,slowdown:d.slowdown,nextSeqPos:d.seqPos+(seq.length?1:0),chance:{...drawChanceSettings},phase:'initial',committed:false};
+      pendingDraw=round;_drawAnimating=true;drawSound.begin();
+      elDrawResult.innerHTML='';elDrawStage?.classList.add('spinning');elDrawStage?.classList.remove('celebrate');
+      round.slots=buildSlots(count,list);renderDrawRound();
+      animateSlots(round.slots,picks,list,()=>{
+        if(pendingDraw!==round)return;
+        if(!drawRoundIsCurrent(round))return cancelDrawRound();
         elDrawStage?.classList.remove('spinning');
-        const showingDraw=state.mode==='draw' && elSelect.value===cls;
-        if(showingDraw) elDrawStage?.classList.add('celebrate');
-
-        // 放彩紙
-        if(showingDraw) fireConfetti(elDrawConfetti, 2000);
-
-        // 顯示結果 chips
-        if(showingDraw) elDrawResult.style.setProperty('--draw-cols',String(picks.length));
-        if(showingDraw) elDrawResult.innerHTML = picks.map((s, i)=>{
-          const seat = s.seat ? `#${padSeat(s.seat)}` : '--';
-          return `<span class="chip big pop" style="animation-delay:${i*80}ms"><span class="seat-badge">${seat}</span>${renderStudentName(s, cls)}</span>`;
-        }).join('');
-
-        // 歷史 + 已抽
-        const ids = picks.map(s=>s.id);
-        d.history.unshift({ ts: Date.now(), count, ids, autoScoreApplied: !!d.autoScore });
-        if(d.history.length > 200) d.history.length = 200;
-
-        if(d.unique){
-          for(const id of ids) drawnSet.add(id);
-          d.drawn = Array.from(drawnSet);
-        }
-
-        // 抽到即 +1 分（可選）
-        if(d.autoScore && Array.isArray(ids)){
-          ids.forEach(id => {
-            const cur = typeof getScore === 'function' ? getScore(cls, id) : 0;
-            if(typeof setScore === 'function') setScore(cls, id, cur + 1);
-          });
-          if(typeof renderLeaderboard === 'function') renderLeaderboard(cls);
-          if(state.mode==='list' && typeof renderStudents === 'function') renderStudents(cls);
-        }
-
-        saveDrawToLS(cls);
-        if(state.mode==='draw') renderDraw(elSelect.value);
-      });
+        if(round.chance.enabled && alternatives.length && Math.random()*100<round.chance.rate){
+          round.phase='waiting';renderDrawRound();
+          if(state.mode==='draw' && !document.hidden){drawSound.begin('intro');elChanceStart.focus({preventScroll:true});}
+        }else{drawSound.finish();finishDrawRound(round);}
+      },{cls,slowdown:round.slowdown});
     });
 
     // === 事件：撤銷最近一次 ===
@@ -20338,7 +20437,8 @@ elProgAdd?.addEventListener('click', ()=>{
       const d = ensureDrawState(cls);
       const last = d.history.shift();
       if(!last){ appAlert('沒有可撤銷的紀錄'); return; }
-      if(d.unique && Array.isArray(last.ids)){
+      const uniqueApplied=typeof last.uniqueApplied==='boolean'?last.uniqueApplied:d.unique;
+      if(uniqueApplied && Array.isArray(last.ids)){
         const set = new Set(d.drawn);
         last.ids.forEach(id=> set.delete(id));
         d.drawn = Array.from(set);
@@ -20378,6 +20478,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
     // ★ 抽號班級切換（draw-class-select）
     elDrawClassPill?.addEventListener('change', ()=>{
+      if(_drawAnimating) return;
       const newCls = elDrawClassPill.value;
       if(!newCls) return;
       // 同步主選擇器
@@ -20386,26 +20487,31 @@ elProgAdd?.addEventListener('click', ()=>{
     });
 
     elDrawUnique?.addEventListener('change', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.unique = !!elDrawUnique.checked;
       saveDrawToLS(cls); renderDraw(cls);
     });
     elDrawAuto?.addEventListener('change', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.autoScore = !!elDrawAuto.checked;
       saveDrawToLS(cls); renderDraw(cls);
     });
     elDrawSlowdown?.addEventListener('change', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.slowdown = !!elDrawSlowdown.checked;
       saveDrawToLS(cls); renderDraw(cls);
     });
     elDrawSeq?.addEventListener('input', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls); d.seqText = String(elDrawSeq.value||''); d.seqPos = 0;
       saveDrawToLS(cls); renderDraw(cls);
     });
     elDrawCount?.addEventListener('change', ()=>{
+      if(_drawAnimating) return;
       const cls = elSelect.value; if(!cls) return;
       const d = ensureDrawState(cls);
       const n = Math.max(1, Math.min(6, Math.floor(Number(elDrawCount.value))||1));
