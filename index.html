@@ -6247,7 +6247,7 @@
     #group-pane .grp-member.is-selected{ border-color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,var(--card)); }
     #group-pane .grp-member.is-selected .grp-member-select::after{ content:'✓'; }
     #group-pane :is(button,select,input):focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
-    #group-pane .grp-unassigned-wrap{position:fixed;top:16px;right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - 32px);max-height:calc(100dvh - 32px);box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;}
+    #group-pane .grp-unassigned-wrap{position:fixed;top:var(--roster-panel-top, 80px);right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - var(--roster-panel-top, 80px) - 16px);max-height:calc(100dvh - var(--roster-panel-top, 80px) - 16px);min-height:0;box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;}
     #group-pane .grp-unassigned-wrap.is-collapsed{transform:translateX(calc(100% + 24px));visibility:hidden;pointer-events:none;}
     #group-pane .grp-unassigned-wrap.is-collapsed.is-touch-source{visibility:visible;opacity:0;pointer-events:none;}
     #group-pane .grp-unassigned-wrap .grp-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;}
@@ -6723,7 +6723,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #group-pane #grp-board .grp-avatar{width:26px;height:26px;font-size:13px;}
 
     #seatwrap{grid-template-columns:minmax(0,1fr);}
-    #unassigned{position:fixed;top:16px;right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - 32px);max-height:calc(100dvh - 32px);box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--card)!important;box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;overflow:hidden;}
+    #unassigned{position:fixed;top:var(--roster-panel-top, 80px);right:12px;width:420px;max-width:calc(100vw - 24px);height:calc(100dvh - var(--roster-panel-top, 80px) - 16px);max-height:calc(100dvh - var(--roster-panel-top, 80px) - 16px);min-height:0;box-sizing:border-box;z-index:80;display:flex;flex-direction:column;gap:12px;padding:16px;margin:0;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--card)!important;box-shadow:0 12px 40px #0004;transition:transform 220ms ease,visibility 220ms;overflow:hidden;}
     #unassigned.is-collapsed{transform:translateX(calc(100% + 24px));visibility:hidden;pointer-events:none;}
     #unassigned.is-collapsed.is-touch-source{visibility:visible;opacity:0;pointer-events:none;}
     .seat-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
@@ -22224,6 +22224,25 @@ initWebAppGuide();
   ensureSeatState(elSelect.value);refresh();
 })();
 // END CLASSROOM EDITOR
+
+// Keep both roster drawers below the sticky navigation, including wrapped mobile layouts.
+(() => {
+  const topbar = document.querySelector('.topbar');
+  if (!topbar) return;
+  let frame = 0;
+  function updateRosterPanelTop() {
+    frame = 0;
+    const top = Math.max(16, Math.ceil(topbar.getBoundingClientRect().bottom) + 12);
+    document.documentElement.style.setProperty('--roster-panel-top', top + 'px');
+  }
+  function scheduleUpdate() {
+    if (!frame) frame = requestAnimationFrame(updateRosterPanelTop);
+  }
+  new ResizeObserver(scheduleUpdate).observe(topbar);
+  window.addEventListener('resize', scheduleUpdate, { passive: true });
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  updateRosterPanelTop();
+})();
 
 </script>
 </body>
