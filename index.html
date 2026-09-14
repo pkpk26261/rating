@@ -8353,7 +8353,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="scores"><span class="clear-option-icon" aria-hidden="true">⭐</span><span class="clear-option-copy"><strong>平時分數</strong><small>分數與扣分統計</small></span></label>
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="violations"><span class="clear-option-icon" aria-hidden="true">🚨</span><span class="clear-option-copy"><strong>違規紀錄簿</strong><small>學生違規紀錄</small></span></label>
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="hw"><span class="clear-option-icon" aria-hidden="true">📝</span><span class="clear-option-copy"><strong>作業成績</strong><small>作業項目與成績</small></span></label>
-          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="seating"><span class="clear-option-icon" aria-hidden="true">🪑</span><span class="clear-option-copy"><strong>座位表</strong><small>座位格數與配位</small></span></label>
+          <label class="clear-opt"><input type="checkbox" class="clear-cb" value="seating"><span class="clear-option-icon" aria-hidden="true">🪑</span><span class="clear-option-copy"><strong>座位表</strong><small>班級座位配置；保留自訂範本</small></span></label>
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="notes"><span class="clear-option-icon" aria-hidden="true">📌</span><span class="clear-option-copy"><strong>學生備註</strong><small>各學生的備註內容</small></span></label>
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="progress"><span class="clear-option-icon" aria-hidden="true">📖</span><span class="clear-option-copy"><strong>教學進度</strong><small>各班教學進度紀錄</small></span></label>
           <label class="clear-opt"><input type="checkbox" class="clear-cb" value="attendance"><span class="clear-option-icon" aria-hidden="true">📋</span><span class="clear-option-copy"><strong>點名紀錄</strong><small>點名欄位與出席狀態</small></span></label>
@@ -12073,11 +12073,10 @@ const ClassroomLayout = (() => {
     // 取得按鈕
     const elReset = document.getElementById('btn-reset');
 
-    // 清除本系統使用到的 localStorage（不影響主題 KEY）
-    // ✅ 完全清空本系統使用到的 localStorage（保留主題 KEY）
+    // 清除分項暫存；完整快照由清除流程立即更新，保留自訂範本與主題設定。
     function clearAllAppStorage(){
       try{
-        removeLocalKey(SESSION_KEY);          // 整份快照
+        // 保留完整快照（含自訂範本），清除完成後立即覆寫，避免先刪後存的空檔。
         removeLocalKey('scores_v1');          // 平時分數
         removeLocalKey('scores_v2');   // ★ 新版分數也清掉
         removeLocalKey('deductions_v1');      // ★ 扣分排行榜統計
@@ -12234,6 +12233,9 @@ const ClassroomLayout = (() => {
       };
       const desc = picked.map(k=>labels[k]||k).join('、');
       let confirmMsg = `確定要清除以下資料嗎？\n→ ${desc}`;
+      if(picked.includes('seating') || picked.includes('classMap')){
+        confirmMsg += '\n已建立的自訂座位範本會保留。';
+      }
       if(typeof gsReady === 'function' && gsReady()){
         confirmMsg += `\n\n☁️ 此清除只會刪除「本機」資料，不會更動 Google 試算表內容。`;
         if(gsConfig.autoSync){
@@ -12257,7 +12259,7 @@ const ClassroomLayout = (() => {
 
       closeClearModal();
 
-      const clearAll = picked.length===6; // 全部勾選
+      // 自訂範本獨立於班級座位；任何清除勾選都不刪除 classroomTemplates。
 
       // 清除學生名單（連帶清全部）
       if(picked.includes('classMap')){
@@ -12323,6 +12325,9 @@ const ClassroomLayout = (() => {
         saveSession('partial clear');
         setStatus(`已清除：${desc}。`);
       }
+
+      // 在清除操作結束前保存含範本的完整快照，不等待節流計時器。
+      saveSessionNow();
 
       // 清除勾選狀態
       clearMask.querySelectorAll('.clear-cb').forEach(cb=> cb.checked=false);
@@ -21395,7 +21400,10 @@ initWebAppGuide();
   const M=ClassroomLayout, $=id=>document.getElementById(id);
   const board=$('seatboard'), students=$('students'), controls=$('seat-controls');
   board.tabIndex=0;
-  let editing=false,multi=false,tool='select',selected=new Set(),activeClass='',gesture=null,suppressClick=false,selectedScore=null,lastDoorTap=null,lastStudentTap=null;
+  // 裝置介面偏好，獨立於班級資料與 Google 備份。
+  const editorModeKey='pscore_classroom_editor_mode_v1';
+  function readEditorMode(){try{return localStorage.getItem(editorModeKey)==='edit';}catch{return false;}}
+  let editing=readEditorMode(),multi=false,tool='select',selected=new Set(),activeClass='',gesture=null,suppressClick=false,selectedScore=null,lastDoorTap=null,lastStudentTap=null;
   let presentation=null,selectedScoreClass='',scoreAnchor=null,resizeViewport=null;
   const roomTouches=new Map();let pinch=null,pinchFrame=0;
   const views={seat:1,score:1}, histories=new Map();
@@ -21669,7 +21677,7 @@ initWebAppGuide();
     if(added){lastPasteText=text;pasteCount=count;announce(`已貼上 ${added.length} 張空桌；可拖曳調整位置`);}
   });
   function distribute(axis){if(commit(s=>M.distributeUnits(s.layout,[...selected],axis)))announce(axis==='x'?'已調整水平間距，上下位置不變':'已調整垂直間距，左右位置不變');}
-  function setEditing(value){if(!elSelect.value)return;cancelPinch();resizeViewport=null;cancelGesture();editing=value;selected.clear();multi=false;tool='select';clearPicked();if(value)setSeatPanelCollapsed(true);closeMenus();refresh();}
+  function setEditing(value){if(!elSelect.value)return;cancelPinch();resizeViewport=null;cancelGesture();editing=value;try{localStorage.setItem(editorModeKey,value?'edit':'arrange');}catch{}selected.clear();multi=false;tool='select';clearPicked();if(value)setSeatPanelCollapsed(true);closeMenus();refresh();}
   function zoom(kind,delta){resizeViewport=null;views[kind]=Math.max(.4,Math.min(8,views[kind]+delta));if(kind==='seat')renderSeatUI(elSelect.value);else renderStudents(elSelect.value);}
   function positionGroupRotationGrips(){
     const nodes=[...board.querySelectorAll('.room-desk')];
@@ -21751,7 +21759,7 @@ initWebAppGuide();
     positionGroupRotationGrips();
     if(editing){$('unassigned').hidden=true;$('seat-unassigned-tab').hidden=true;}else $('unassigned').hidden=false;
   }
-  function resetClass(cls){if(activeClass===cls)return;cancelPinch();resizeViewport=null;cancelGesture();activeClass=cls;oldClear();closeMenus();selectedScore=null;editing=false;selected.clear();multi=false;tool='select';views.seat=views.score=1;}
+  function resetClass(cls){if(activeClass===cls)return;cancelPinch();resizeViewport=null;cancelGesture();activeClass=cls;oldClear();closeMenus();selectedScore=null;selected.clear();multi=false;tool='select';views.seat=views.score=1;}
   // 寬版的右側空間可容納編輯工具；窄版保留工具高度，避免蓋住佈告欄與門。
   function editorTopSpace(host){return host.clientWidth<1100?54:22;}
   function floorLayout(host,s){
@@ -22075,7 +22083,7 @@ initWebAppGuide();
     if(delta&&selected.size){e.preventDefault();commit(s=>M.move(s.layout,[...selected],...delta));}
   });
   window.addEventListener('keydown',e=>{if(state.mode!=='seat'||e.target.closest('input,textarea,[contenteditable]'))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo(e.shiftKey);}if(e.key==='Escape'){if(!arrangePanel.hidden){closeMenus();$('room-arrange-menu').focus({preventScroll:true});}abortPointer();if(pickedId)clearPicked();}});
-  const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelPinch();cancelGesture();closeMenus();oldClear();editing=false;selected.clear();tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
+  const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelPinch();cancelGesture();closeMenus();oldClear();selected.clear();multi=false;tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
   let resizeFrame;new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(gesture)return;if(state.mode==='seat')renderSeatUI(elSelect.value);});}).observe(board);
   let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order')renderStudents(elSelect.value);});}).observe(students);
 
