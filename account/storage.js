@@ -18,6 +18,26 @@
     if(unpack(encoded)!==value)throw Error('帳號快取壓縮驗證失敗，原始資料已保留。');
     return encoded.length<value.length||value.startsWith(compressed)?encoded:value;
   }
+  function compactAccountCache(native,owner,nextEpoch){
+    const base='rating-account:'+owner+':',changes=[];
+    for(let i=0;i<native.length;i++){
+      const key=native.key(i);
+      if(!key?.startsWith(base)||['epoch','last-workspace','google-connection'].includes(key.slice(base.length)))continue;
+      const before=native.getItem(key);
+      if(!before||before.startsWith(compressed)||before.length<1024)continue;
+      const after=pack(before);
+      if(after.length<before.length)changes.push({key,before,after});
+    }
+    if(!changes.length)return;
+    // Fence documents that still read the old representation. Each replacement
+    // is smaller, atomic and verified; interrupted migration remains readable.
+    if(native.getItem(base+'epoch'))native.setItem(base+'epoch',nextEpoch);
+    for(const {key,before,after} of changes){
+      if(native.getItem(key)!==before)throw Error('帳號資料已變更，請重新載入後重試。');
+      native.setItem(key,after);
+      if(unpack(native.getItem(key))!==before)throw Error('帳號快取驗證失敗，請停止操作並保留本機資料。');
+    }
+  }
   function scopedStorage(native, owner){
     const prefix = owner ? 'rating-account:' + owner + ':' : '';
     const keys = () => Array.from({length:native.length},(_,i)=>native.key(i))
@@ -130,7 +150,7 @@
       clear(){check();scoped.clear();}
     };
   }
-  if(typeof module==='object' && module.exports){module.exports={scopedStorage,accountStorage,resetGuestWorkspace,guestStorage,clearAccountLocalData};return;}
+  if(typeof module==='object' && module.exports){module.exports={scopedStorage,accountStorage,resetGuestWorkspace,guestStorage,clearAccountLocalData,compactAccountCache};return;}
   let owner='';
   try{
     // Migrate the previous per-tab login once, then keep login across reopening.
@@ -155,6 +175,7 @@
   root.RatingResetGuestWorkspace=()=>resetGuestWorkspace(native);
   root.RatingAccount={owner,ready:false,busy:false,initializationError:''};
   try{
+    if(owner)compactAccountCache(native,owner,crypto.randomUUID());
     root.RatingStorage=owner?accountStorage(native,sessionStorage,owner,crypto.randomUUID(),performance.getEntriesByType('navigation')[0]?.type==='reload'):guestStorage(native);
     root.RatingAccount.ready=!owner;
   }catch(error){
@@ -173,7 +194,8 @@
       root.RatingAccount.ready=false;
       root.RatingBridge?.cancelGoogle();
       document.documentElement.dataset.accountPending='true';
-      clearAccountSession(sessionStorage,owner);
+      // A format upgrade preserves the tab's saved workspace; logout removes it.
+      if(!native.getItem('rating-account:'+owner+':epoch'))clearAccountSession(sessionStorage,owner);
       root.location.reload();
     };
     root.addEventListener('storage',event=>{if(event.key===null||event.key==='rating-account:'+owner+':epoch')leaveClearedAccount();});
