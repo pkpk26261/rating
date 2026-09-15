@@ -1,0 +1,65 @@
+html[data-account-pending="true"] .app{visibility:hidden;pointer-events:none}
+#account-dialog{color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:20px;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:24px;box-sizing:border-box;box-shadow:var(--shadow)}
+#account-dialog::backdrop{background:rgba(0,0,0,.6)}
+#account-dialog h2{margin:0;font-size:22px}
+#account-dialog p{color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
+.account-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#account-form{display:grid;gap:16px}
+#account-form label{display:grid;gap:7px;font-size:14px}
+#account-form input{box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit}
+.account-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+#account-dialog .btn{min-height:44px;justify-content:center}
+#account-submit{width:100%;background:var(--accent);color:var(--bg);font-weight:700}
+#account-feedback{white-space:pre-line;min-height:24px;color:var(--fg)}
+#account-feedback[data-error="true"]{color:var(--bad)}
+#account-cloud-summary{padding:12px;background:var(--bg);border-radius:10px}
+#account-identity{overflow-wrap:anywhere}
+#account-status[data-pending="true"]{color:var(--gold)}
+#data-dropdown .data-inner .storage-choices{display:grid;gap:2px;padding:0 0 6px;border-bottom:1px solid var(--line)}
+.storage-choices-title{padding:0 8px 2px;color:var(--muted);font-size:12px;font-weight:600}
+#data-dropdown .data-inner .storage-choice{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 12px;border:0;border-radius:8px;background:transparent;color:var(--fg);text-align:left;width:100%;box-sizing:border-box}
+#data-dropdown .data-inner .storage-choice:hover{border-color:var(--accent)}
+#data-dropdown .data-inner .storage-choice:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.storage-choice .ui-icon{flex:0 0 22px;width:22px;height:22px}
+.storage-choice-copy{display:grid;gap:5px;flex:1;min-width:0}
+.storage-choice-copy strong{font-size:14px;font-weight:600}
+.storage-choice-copy small{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+#account-dialog [hidden]{display:none!important}
+
+.storage-choice-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px 8px}
+.storage-choice-line .save-health-badge{font-size:11px;color:var(--muted)}
+
+#account-status[data-kind="error"]{color:var(--bad)}
+#account-status[data-kind="saved"]{color:var(--ok)}
+#account-advanced{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+#account-advanced summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--muted)}
+
+/* 常用操作直接顯示；備份工具收合，錯誤與重試仍在主選單。 */
+#data-dropdown .data-inner .storage-choice-copy small{display:none}
+#data-dropdown .data-inner .storage-choice-line{flex-wrap:nowrap}
+#data-dropdown .data-inner .storage-choice-line strong{font-size:14px;white-space:nowrap}
+#data-dropdown .data-inner .storage-choice-line .save-health-badge{max-width:130px;line-height:1.4;text-align:right}
+#data-dropdown .data-inner .storage-choice:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+#data-dropdown .data-inner .data-item{min-height:44px;font-weight:500}
+#data-dropdown .data-inner .save-health{padding:4px 12px 6px;gap:6px;font-size:12px}
+#data-dropdown .data-inner .save-health-summary{gap:4px}
+#data-dropdown .data-inner .save-health-detail[data-kind="notice"]{color:var(--muted)}
+#data-dropdown #data-more{margin:0;padding:0}
+#data-more>summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;cursor:pointer;list-style:none;font-size:13px;color:var(--muted);border-radius:8px}
+#data-more>summary::-webkit-details-marker{display:none}
+#data-more>summary:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+#data-more>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#data-more[open]>summary span{transform:rotate(180deg)}
+#data-more .data-more-content{border-top:1px solid var(--line);padding-top:4px}
+#data-more #btn-reset{margin-top:4px;border-top:1px solid var(--line);border-radius:0}
+body .app #data-more #dt-display{font-size:11px;padding:4px 12px;box-sizing:border-box;white-space:normal;flex-wrap:wrap}
+#account-feedback:empty{display:none}
+#account-workspace>.account-actions:has(#account-check[hidden]){display:none}
+
+/* 同步方式互斥，標示目前選擇。 */
+#data-dropdown .storage-choices-title{margin:0;padding:6px 12px;font-size:12px;line-height:1.5}
+#data-dropdown .data-inner .storage-choice[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:inset 3px 0 var(--accent)}
+
+#data-dropdown .data-inner .storage-choice-copy small{display:block}
+.sync-method-indicator{flex:0 0 16px;height:16px;border:2px solid var(--muted);border-radius:50%;box-sizing:border-box}
+[aria-pressed="true"]>.sync-method-indicator{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--card)}
