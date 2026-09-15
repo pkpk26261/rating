@@ -23024,6 +23024,7 @@ window.RatingBridge = {
     <details id="account-advanced"><summary>進階同步與備份 <span aria-hidden="true">⌄</span></summary><p>多分頁依最後修改時間保留較新的整份資料，載入前會留下本機備份。</p><div class="account-actions"><button id="account-backup" class="btn" type="button">下載本機備份</button><button id="account-upload" class="btn" type="button">手動上傳</button><button id="account-download" class="btn" type="button">下載雲端版本</button></div><p>帶入原本的本機資料：先在 Google 試算表／本機空間下載完整備份，再登入並還原。</p></details>
   </section>
   <p id="account-feedback" role="status" aria-live="polite"></p>
+  <button id="account-reload" class="btn" type="button" hidden>重新載入</button>
   <div class="account-actions"><button id="account-exit" class="btn" type="button" hidden>登出，清空並返回本機空間</button></div>
 </div>
 </dialog>
@@ -23083,7 +23084,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // 沒有帳號、本機資料或完整 Google 設定時顯示引導；訪客選擇只保留於本次頁面。
   let workspaceChosen=false;
   try{sessionStorage.removeItem('rating-entry-workspace');}catch{}
-  let client,user=null,mode='login',working=false,cloud=null,epoch=0;
+  let client,user=null,mode='login',working=false,cloud=null,epoch=0,switchingOwner=false;
   const metaKey='rating-cloud-meta';
   const mailWaitKey='rating-auth-mail-wait';
   let mailWaitUntil=0;
@@ -23286,6 +23287,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     message('');update();paintMailWait();
   }
   function update(){
+    if(switchingOwner)return;
     const signed=!!user && user.id===A.owner;
     $('account-form').hidden=signed&&mode!=='reset';
     $('account-login-links').hidden=signed||mode==='reset';
@@ -23328,18 +23330,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(A.ready&&window.RatingBridge&&!RatingBridge.isReadonly()&&!RatingBridge.flush())throw Error('本機儲存尚未完成，請先下載完整備份或重試儲存。');
   }
   function switchOwner(id){
-    saveBeforeSwitch();RatingBridge.cancelGoogle();A.ready=false;$('app').inert=true;
-    document.documentElement.dataset.accountPending='true';
+    if(switchingOwner)return;
+    saveBeforeSwitch();
     sessionStorage.removeItem('rating-entry-workspace');
     RatingRememberOwner(id);sessionStorage.setItem('rating-owner',id);
+    switchingOwner=true;RatingBridge.cancelGoogle();A.ready=false;busy(true);
+    document.documentElement.dataset.accountPending='true';
+    refreshEntry();
+    $('account-title').textContent='正在開啟帳號空間';
+    for(const name of ['account-form','account-login-links','account-workspace','account-help','account-code-actions','account-close'])$(name).hidden=true;
+    message('登入成功，正在載入您的資料…');
+    if(!dialog.open)dialog.showModal();
+    // A slow or interrupted navigation must retain a visible way to continue.
+    setTimeout(()=>{
+      message('登入成功，頁面載入較久。請點「重新載入」繼續。');
+      $('account-reload').hidden=false;$('account-reload').disabled=false;
+    },10000);
     // Keep submitted values until successful navigation so the browser can save credentials.
-    $('account-form').hidden=true;location.reload();
+    location.reload();
   }
   async function verify(){
-    if(stopped||(A.owner&&!RatingStorage.isActive()))return;
+    if(stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
     const ticket=++epoch;
     const {data,error}=await client.auth.getSession();if(error)throw error;
-    if(stopped||(A.owner&&!RatingStorage.isActive()))return;
+    if(ticket!==epoch||stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
     if(!data.session){
       user=null;
       if(A.owner){A.ready=false;$('app').inert=true;document.documentElement.dataset.accountPending='true';RatingBridge.refreshAccess();open();message('登入已失效，請重新登入；也可以返回未登入的本機空間。');}
@@ -23347,12 +23361,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return;
     }
     const result=await client.auth.getUser();if(result.error)throw result.error;
-    if(ticket!==epoch||stopped||(A.owner&&!RatingStorage.isActive()))return;
+    if(ticket!==epoch||stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
+    const wasReady=A.ready;
     user=result.data.user;
     if(user.id!==A.owner){switchOwner(user.id);return;}
     A.ready=true;RatingRememberOwner(user.id);delete document.documentElement.dataset.accountPending;$('app').inert=false;
     RatingBridge.refreshAccess();
     if(sessionStorage.getItem('rating-recovery')){mode='reset';open();setMode('reset');}
+    else if(!wasReady&&dialog.open)dialog.close();
     update();startSync();
   }
   async function authenticated(){
@@ -23368,13 +23384,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return data;
   }
   async function run(action){
-    if(working)return;
+    if(working||switchingOwner)return;
     working=true;
     if(syncPromise)await syncPromise;
-    try{busy(true);await action();}catch(e){message(explain(e),true);}finally{busy(false);update();paintMailWait();}
+    try{busy(true);await action();}catch(e){message(explain(e),true);}finally{if(!switchingOwner){busy(false);update();paintMailWait();}}
   }
   $('btn-account').onclick=open;
   $('account-close').onclick=close;
+  $('account-reload').onclick=()=>location.reload();
   dialog.addEventListener('close',()=>{if(A.ready)$(entry.hidden?'btn-data':'account-email').focus();});
   dialog.addEventListener('cancel',e=>{if(!A.ready||working)e.preventDefault();});
   $('account-switch').onclick=()=>setMode(mode==='login'?'signup':'login');
