@@ -2,6 +2,22 @@
  * Authentication has its own reserved storage; no secret key is used. */
 (function(root){
   'use strict';
+  const codec=typeof module==='object'&&module.exports?require('../vendor/lz-string-1.5.0.min.js'):root.LZString;
+  const compressed='\u0001rating-lz1:';
+  function unpack(value){
+    if(!value?.startsWith(compressed))return value;
+    const decoded=codec.decompressFromUTF16(value.slice(compressed.length));
+    if(decoded===null)throw Error('帳號快取無法讀取，原始資料已保留。');
+    return decoded;
+  }
+  function pack(value){
+    value=String(value);
+    if(value.length<1024&&!value.startsWith(compressed))return value;
+    const encoded=compressed+codec.compressToUTF16(value);
+    // Only commit an independently verified, lossless representation.
+    if(unpack(encoded)!==value)throw Error('帳號快取壓縮驗證失敗，原始資料已保留。');
+    return encoded.length<value.length||value.startsWith(compressed)?encoded:value;
+  }
   function scopedStorage(native, owner){
     const prefix = owner ? 'rating-account:' + owner + ':' : '';
     const keys = () => Array.from({length:native.length},(_,i)=>native.key(i))
@@ -9,8 +25,8 @@
     return {
       get length(){return keys().length;},
       key(i){const k=keys()[i];return k == null ? null : k.slice(prefix.length);},
-      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : native.getItem(prefix+k);},
-      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,String(v));},
+      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : prefix?unpack(native.getItem(prefix+k)):native.getItem(k);},
+      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,prefix?pack(v):String(v));},
       removeItem(k){if(prefix || !String(k).startsWith('rating-account:'))native.removeItem(prefix+k);},
       clear(){for(const k of keys())native.removeItem(k);}
     };
@@ -62,7 +78,7 @@
     const base='rating-account:'+owner+':',sessionKey='rating-workspace:'+owner;
     const epochKey=base+'epoch';
     const epoch=native.getItem(epochKey)||id;
-    native.setItem(epochKey,epoch);
+    if(!native.getItem(epochKey))native.setItem(epochKey,epoch);
     const isActive=()=>native.getItem(epochKey)===epoch;
     const check=()=>{if(!isActive())throw Error('帳號已登出並清除，請重新整理此分頁。');};
     const ownPrevious=session.getItem(sessionKey);
@@ -76,7 +92,8 @@
       if(!key?.startsWith(source))continue;
       const short=key.slice(source.length);
       if(!previous&&(short==='epoch'||short==='last-workspace'||short==='google-connection'||short.startsWith('workspace:')))continue;
-      native.setItem(prefix+short,native.getItem(key));
+      // Do not allocate a second uncompressed copy of a large teaching snapshot.
+      native.setItem(prefix+short,pack(unpack(native.getItem(key))));
     }session.setItem(sessionKey,id);}catch(error){
       for(const key of Array.from({length:native.length},(_,i)=>native.key(i)))if(prefix!==source&&key?.startsWith(prefix))native.removeItem(key);
       throw error;

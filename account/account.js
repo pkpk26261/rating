@@ -139,11 +139,18 @@
     window.RatingBridge?.refreshAccess();
     if(!value&&!A.owner)RatingBridge.resumeGoogle();
   }
+  function refreshToolbar(state=RatingBridge.entryState()){
+    const signed=!!(user&&user.id===A.owner&&A.ready);
+    $('mode-manage').hidden=!signed;
+    const toolsVisible=(signed||(!A.owner&&state.googleConfigured))&&state.hasClasses;
+    $('more-menu').hidden=!toolsVisible;
+    if(!toolsVisible){$('more-dropdown').hidden=true;$('mode-more').setAttribute('aria-expanded','false');}
+  }
   function refreshEntry(){
     const state=RatingBridge.entryState();
     const show=!A.owner&&!user&&!workspaceChosen&&!state.hasData&&!state.hasGoogle;
     entry.hidden=!show;document.body.classList.toggle('account-entry-visible',show);
-    $('btn-account-direct').textContent=user&&user.id===A.owner?'我的帳號':'登入帳號';
+    refreshToolbar(state);
     $('entry-theme').textContent=$('btn-theme').textContent;
     $('entry-theme').setAttribute('aria-pressed',$('btn-theme').getAttribute('aria-pressed')||'false');
     if(show){
@@ -167,11 +174,10 @@
     update();
     if(!user)$('account-email').focus();
   }
-  function close(){if(A.ready&&!working){dialog.close();if(!user)setMode('login');$('btn-account-direct').focus();}}
+  function close(){if(A.ready&&!working){dialog.close();if(!user)setMode('login');$('btn-data').focus();}}
   $('entry-local').onclick=()=>chooseWorkspace();
   $('entry-google').onclick=()=>chooseWorkspace(true);
   $('entry-theme').onclick=()=>{$('btn-theme').click();refreshEntry();};
-  $('btn-account-direct').onclick=open;
   $('account-password-toggle').onclick=()=>{
     const input=$('account-password'),show=input.type==='password';input.type=show?'text':'password';
     $('account-password-toggle').textContent=show?'隱藏':'顯示';
@@ -229,6 +235,7 @@
     refreshEntry();updateStatus();
   }
   function updateStatus(){
+    refreshToolbar();
     const signed=user&&user.id===A.owner;
     const accountMode=!!A.owner;
     $('btn-account').setAttribute('aria-pressed',String(accountMode));
@@ -301,7 +308,7 @@
   }
   $('btn-account').onclick=open;
   $('account-close').onclick=close;
-  dialog.addEventListener('close',()=>{if(A.ready)$(entry.hidden?'btn-account-direct':'account-email').focus();});
+  dialog.addEventListener('close',()=>{if(A.ready)$(entry.hidden?'btn-data':'account-email').focus();});
   dialog.addEventListener('cancel',e=>{if(!A.ready||working)e.preventDefault();});
   $('account-switch').onclick=()=>setMode(mode==='login'?'signup':'login');
   $('account-forgot').onclick=()=>setMode('forgot');

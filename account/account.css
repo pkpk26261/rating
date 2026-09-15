@@ -52,7 +52,7 @@ html[data-account-pending="true"] .app{visibility:hidden;pointer-events:none}
 #data-more[open]>summary span{transform:rotate(180deg)}
 #data-more .data-more-content{border-top:1px solid var(--line);padding-top:4px}
 #data-more #btn-reset{margin-top:4px;border-top:1px solid var(--line);border-radius:0}
-body .app #data-more #dt-display{font-size:11px;padding:4px 12px;box-sizing:border-box;white-space:normal;flex-wrap:wrap}
+body .app #data-dropdown #dt-display{justify-content:flex-start;font-size:12px;padding:10px 12px 8px;margin:0 0 4px;border-bottom:1px solid var(--line);box-sizing:border-box;white-space:normal;flex-wrap:wrap}
 #account-feedback:empty{display:none}
 #account-workspace>.account-actions:has(#account-check[hidden]){display:none}
 
@@ -114,3 +114,7 @@ body.account-entry-visible{overflow:auto!important}
 .entry-alternatives .btn:hover,.entry-header .btn:hover{background:color-mix(in srgb,var(--accent) 8%,var(--card));border-color:var(--accent)}
 
 #account-form input::placeholder{color:var(--muted);opacity:1}
+
+body .app #mode-manage[hidden]{display:none!important}
+
+body .app #more-menu[hidden]{display:none!important}
