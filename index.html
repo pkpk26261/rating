@@ -222,10 +222,10 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
 </script>
 <!-- END ACCOUNT STORAGE BOOTSTRAP -->
   <script>const localStorage = window.RatingStorage;</script>
-  <link rel="stylesheet" href="account/account.css?v=d87200d842279cfc">
+  <link rel="stylesheet" href="account/account.css?v=c9fd64fd2f6506d8">
   <script defer src="vendor/supabase-2.116.0.js?v=84ee9bf45695c1dd"></script>
   <script defer src="account/sync-policy.js?v=c6b4f568b0b83613"></script>
-  <script defer src="account/account.js?v=1ffc0e6478f95bbd"></script>
+  <script defer src="account/account.js?v=dd76bfd4500b12a0"></script>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -7866,19 +7866,8 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
               <div class="data-inner">
 
         <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
-          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
+          <span>今天</span><span id="dt-date"></span> <span id="dt-time"></span>
         </time>
-                <section class="storage-choices" aria-label="同步方式" aria-describedby="sync-method-help">
-                  <p id="sync-method-help" class="storage-choices-title">同步方式（一次只能選擇一種）</p>
-                  <button type="button" class="data-item storage-choice" id="btn-gsheet" aria-haspopup="dialog" aria-controls="gsheet-mask" aria-pressed="true">
-                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
-                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong>Google 試算表</strong><span id="save-cloud-status" class="save-health-badge">未設定同步</span></span><small id="google-entry-detail">設定連線、上傳與下載</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
-                  </button>
-                  <button id="btn-account" class="data-item storage-choice" type="button" aria-haspopup="dialog" aria-controls="account-dialog" aria-pressed="false">
-                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
-                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong id="account-entry-title">系統帳號</strong><span id="account-status" class="save-health-badge" role="status">未登入</span></span><small id="account-entry-detail">登入／註冊，使用帳號雲端空間</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
-                  </button>
-                </section>
                 <div id="save-health" class="save-health" aria-label="儲存與同步狀態">
                   <div class="save-health-summary">
                     <div class="data-status-row"><span>本機儲存</span><span id="save-local-status" class="save-health-badge">尚無資料</span></div>
@@ -7886,12 +7875,23 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                   </div>
                   <button id="save-retry" class="save-health-retry" type="button" hidden>重試</button>
                 </div>
+                <section class="storage-choices" aria-label="同步方式" aria-describedby="sync-method-help">
+                  <p id="sync-method-help" class="storage-choices-title">選擇同步方式</p>
+                  <button id="btn-account" class="data-item storage-choice" type="button" aria-haspopup="dialog" aria-controls="account-dialog" aria-pressed="false">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong id="account-entry-title">系統帳號</strong><span id="account-status" class="save-health-badge" role="status">未登入</span></span><small id="account-entry-detail">登入／註冊，使用帳號雲端空間</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="data-item storage-choice" id="btn-gsheet" aria-haspopup="dialog" aria-controls="gsheet-mask" aria-pressed="true">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
+                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong>Google 試算表</strong><span id="save-cloud-status" class="save-health-badge">未設定同步</span></span><small id="google-entry-detail">設定連線、上傳與下載</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
+                  </button>
+                </section>
                 <div class="data-section" aria-label="檔案操作">
                   <button type="button" class="data-item" id="btn-import-roster">📂 匯入名單</button>
                   <button type="button" class="data-item" id="btn-manual-sync" title="匯出目前所有班級的成績">💾 匯出成績報表</button>
                 </div>
                 <details id="data-more" class="data-section">
-                  <summary>更多工具<span aria-hidden="true">⌄</span></summary>
+                  <summary>備份與資料管理<span aria-hidden="true">⌄</span></summary>
                   <div class="data-more-content">
                   <button type="button" class="data-item" id="btn-backup-export">💾 下載完整備份</button>
                   <button type="button" class="data-item" id="btn-backup-restore">📥 還原完整備份</button>
@@ -8643,55 +8643,17 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
 
   <!-- ★ Google 試算表同步彈窗 -->
   <div id="gsheet-mask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="gsheet-title">
-    <div class="modal" role="document" style="width:min(640px, 94vw);">
-      <header>
-        <h3 id="gsheet-title">☁️ Google 試算表同步</h3>
-        <button id="gsheet-close" class="close" aria-label="關閉">✕</button>
-      </header>
+    <div class="modal gs-panel" role="document">
+      <header><div><span class="sync-eyebrow">資料與同步</span><h3 id="gsheet-title">Google 試算表</h3></div><button id="gsheet-close" class="close" aria-label="關閉">✕</button></header>
       <div class="content">
-        <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
-          要同步時，先在 Google 試算表做一次設定，再把網址和同步密碼貼回來就可以了。
-        </p>
-
-        <!-- 網址 -->
-        <div style="margin-bottom:12px;">
-          <label for="gs-url" style="font-weight:700; font-size:14px;">網頁應用程式網址</label>
-          <input id="gs-url" type="url" placeholder="https://script.google.com/macros/s/AKfyc.../exec"
-            style="width:100%; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
-        </div>
-
-        <!-- 密碼 token -->
-        <div style="margin-bottom:12px;">
-          <label for="gs-token" style="font-weight:700; font-size:14px;">同步密碼（請填入剛才在程式碼中設定的密碼）</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-          <input id="gs-token" type="password" autocomplete="off" placeholder="自訂的密碼"
-            style="width:100%; min-width:0; box-sizing:border-box; margin-top:6px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font-size:13px;">
-          <button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" style="flex-shrink:0;margin-top:6px;min-height:38px;width:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;" title="顯示同步密碼"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-          </div>
-        </div>
-
-        <!-- 自動同步 -->
-        <p id="gs-backup-scope" style="font-size:13px;line-height:1.7;color:var(--muted);margin:0 0 12px;">包含座位表與教室配置：學生座位、桌子位置與方向、門、講台、老師桌、佈告欄及新增的座位圖範例（自訂範本），都會與班級資料一起備份。開啟自動上傳與自動載入後，下次可直接恢復。</p>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
-          <input type="checkbox" id="gs-auto"> 變更後自動上傳到試算表（停止編輯約 1 秒後送出）
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
-          <input type="checkbox" id="gs-autoload"> 開啟網頁時自動從試算表載入最新資料
-        </label>
-
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:14px 0;">
-          <button id="gs-upload" class="btn add">⬆️ 上傳到試算表</button>
-          <button id="gs-download" class="btn">⬇️ 從試算表下載</button>
-          <span id="gs-last-sync" style="font-size:12px; color:var(--muted);">尚未同步</span>
-        </div>
-        <div id="gs-progress" class="gs-progress" hidden><span id="gs-progress-label" class="gs-progress-label" role="status" aria-live="polite"></span><div id="gs-progress-bar" class="gs-progress-track" role="progressbar" aria-label="Google 同步進度" aria-describedby="gs-progress-label"><div class="gs-progress-fill"></div></div></div>
-        <div id="gs-status" style="font-size:13px; min-height:20px; color:var(--muted);"></div>
-
-        <!-- 設定說明 -->
-        <p style="font-size:13px;line-height:1.7;">雲端寫入保護需使用下方新版 Apps Script 並啟用 Google Sheets API。每次成功上傳會保留一份隱藏的上傳前版本；在 Google 試算表重新整理後，可用「成績系統 → 復原最近一次上傳前版本」。復原前請先關閉所有裝置的自動同步，完成後各裝置先下載再編輯。</p>
-        <div class="gs-setup-callout">
-          <details>
-            <summary>📖 第一次設定（點此展開）</summary>
+        <div class="gs-overview"><div><strong id="gs-connection-state">尚未設定連線</strong><p id="gs-connection-hint">先填入連線資料，再選擇上傳或下載。</p></div><span id="gs-last-sync">尚未同步</span></div>
+        <details id="gs-connection" class="sync-disclosure" open>
+          <summary><span>連線設定<small>網址與同步密碼</small></span><span class="disclosure-arrow" aria-hidden="true">⌄</span></summary>
+          <div class="gs-connection-fields">
+            <label for="gs-url">網頁應用程式網址</label><input id="gs-url" type="url" placeholder="https://script.google.com/macros/s/…/exec" aria-describedby="gs-url-hint"><small id="gs-url-hint">貼上 Apps Script 部署網址（結尾為 /exec）。</small>
+            <label for="gs-token">同步密碼</label><div class="gs-token-field"><input id="gs-token" type="password" autocomplete="off" placeholder="填入程式碼中設定的密碼"><button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" title="顯示同步密碼"></button></div>
+            <p class="sync-caption">設定會自動儲存在此瀏覽器。</p>
+            <div class="gs-setup-callout"><details><summary>第一次使用？查看設定步驟</summary>
             <ol style="font-size:13px; line-height:1.7; padding-left:20px; margin-top:10px;">
               <li>開啟 Google 試算表，進入「擴充功能」→「Apps Script」。</li>
               <li>按下方「複製程式碼」，貼到 Apps Script。找到最上方引號內的「<b>在這裡填入你的密碼</b>」，換成自己設定的密碼，<b>保留左右引號</b>。整份程式只需修改這一行，其他地方不用改。</li>
@@ -8705,8 +8667,25 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
               <button id="gs-copy-code" class="btn" style="font-size:12px; padding:3px 10px;">📋 複製程式碼</button>
             </div>
             <pre id="gs-code" style="font-size:11px; line-height:1.5; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
-          </details>
-        </div>
+            </details></div>
+          </div>
+        </details>
+        <section class="gs-transfer" aria-labelledby="gs-transfer-title"><h4 id="gs-transfer-title">同步資料</h4>
+          <div class="gs-transfer-actions">
+            <button id="gs-upload" class="btn add"><span class="transfer-icon" aria-hidden="true">↑</span><span><strong>上傳到試算表</strong><small>將這台裝置的紀錄存到 Google</small></span></button>
+            <button id="gs-download" class="btn"><span class="transfer-icon" aria-hidden="true">↓</span><span><strong>從試算表下載</strong><small>以 Google 資料更新這台裝置</small></span></button>
+          </div><p class="sync-caption">下載會取代這台裝置的資料；有新紀錄時，請先上傳。</p>
+          <div id="gs-progress" class="gs-progress" hidden><span id="gs-progress-label" class="gs-progress-label" role="status" aria-live="polite"></span><div id="gs-progress-bar" class="gs-progress-track" role="progressbar" aria-label="Google 同步進度" aria-describedby="gs-progress-label"><div class="gs-progress-fill"></div></div></div>
+          <div id="gs-status" role="status" aria-live="polite"></div>
+        </section>
+        <section class="gs-automation" aria-labelledby="gs-auto-title"><h4 id="gs-auto-title">自動同步</h4>
+          <label class="gs-option"><span><strong>變更後自動上傳</strong><small>停止編輯約 1 秒後，儲存到試算表</small></span><input type="checkbox" id="gs-auto" role="switch"></label>
+          <label class="gs-option"><span><strong>開啟時自動載入</strong><small>下次開啟網頁時，使用試算表的最新資料</small></span><input type="checkbox" id="gs-autoload" role="switch"></label>
+        </section>
+        <details class="sync-disclosure gs-backup-help"><summary><span>備份範圍與復原方式</span><span class="disclosure-arrow" aria-hidden="true">⌄</span></summary>
+          <p id="gs-backup-scope">包含座位表與教室配置：學生座位、桌子位置與方向、門、講台、老師桌、佈告欄及新增的座位圖範例（自訂範本），都會與班級資料一起備份。開啟自動上傳與自動載入後，下次可直接恢復。</p>
+          <p>雲端寫入保護需使用新版 Apps Script 並啟用 Google Sheets API。每次成功上傳會保留一份隱藏的上傳前版本；在 Google 試算表重新整理後，可用「成績系統 → 復原最近一次上傳前版本」。復原前請先關閉所有裝置的自動同步，完成後各裝置先下載再編輯。</p>
+        </details>
       </div>
     </div>
   </div>
@@ -9451,6 +9430,10 @@ const ClassroomLayout = (() => {
     })();
 
     // BEGIN SAVE STATUS MODEL
+    // 教室範本與介面偏好保留，但不代表已有班級或教學紀錄。
+    function hasTeachingData(){
+      return !!(state.classOrder?.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length);
+    }
     const saveHealth = {
       initialized: false, pendingLocal: false, localAt: 0, failures: new Map(),
       revision: '', cloud: 'idle', operation: 'upload', cloudError: '', busy: false, autoDownloadBlocked: false
@@ -9464,11 +9447,11 @@ const ClassroomLayout = (() => {
       const readonly = !TabLock.isActive();
       const failed = saveHealth.failures.size > 0;
       const ready = !window.RatingAccount?.owner && gsConfigured();
+      const hasData = hasTeachingData();
       local.textContent = readonly ? '唯讀視窗' : failed ? '本機儲存失敗'
-        : saveHealth.pendingLocal ? '正在儲存…' : saveHealth.localAt ? '已存本機' : '尚無資料';
-      local.dataset.kind = failed ? 'error' : saveHealth.pendingLocal ? 'pending' : saveHealth.localAt ? 'saved' : '';
+        : saveHealth.pendingLocal ? '正在儲存…' : hasData && saveHealth.localAt ? '已存本機' : '尚無資料';
+      local.dataset.kind = failed ? 'error' : saveHealth.pendingLocal ? 'pending' : hasData && saveHealth.localAt ? 'saved' : '';
       local.title = saveHealth.localAt ? `最後存檔：${new Date(saveHealth.localAt).toLocaleString('zh-TW')}` : '';
-      const hasData = !!(state.classOrder?.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length);
       const pending = hasData && (!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision);
       cloud.textContent = !ready ? '未設定同步' : (saveHealth.busy||saveHealth.backingUp) ? (saveHealth.operation === 'download' ? '雲端載入中…' : '同步中…')
         : saveHealth.cloud === 'error' ? '同步失敗' : !hasData ? '尚無資料可同步' : saveHealth.cloud === 'downloaded' ? '已載入雲端' : pending ? '待同步'
@@ -11550,6 +11533,11 @@ const ClassroomLayout = (() => {
     function gsUpdateLastSyncLabel(){
       const el = document.getElementById('gs-last-sync');
       if(el) el.textContent = `最後同步：${gsFormatTime(gsConfig.lastSync)}`;
+      const configured=gsReady(), label=document.getElementById('gs-connection-state');
+      if(label){
+        label.textContent=configured?'連線資料已設定':'尚未設定連線';
+        document.getElementById('gs-connection-hint').textContent=configured?'選擇資料方向，或開啟下方自動同步。':'展開連線設定，填入網址與同步密碼。';
+      }
     }
 
     async function gsRequest(url, options, timeoutMs=20000){
@@ -12105,9 +12093,16 @@ const ClassroomLayout = (() => {
       if(codeEl && !codeEl.textContent) codeEl.textContent = GS_APPS_SCRIPT_CODE;
       gsSetSyncStatus(saveHealth.configError||saveHealth.cloudError||'',saveHealth.configError||saveHealth.cloudError?'error':'');
       gsUpdateLastSyncLabel();
+      document.getElementById('gs-connection').open = !gsReady() || !!saveHealth.configError;
       gsheetMask.classList.add('show');
+      gsheetMask.querySelector('.content').scrollTop=0;
+      (gsReady()?document.getElementById('gs-upload'):gsUrlInput).focus({preventScroll:true});
     }
-    function closeGsheetModal(){ setGsheetTokenVisible(false); gsheetMask.classList.remove('show'); }
+    function closeGsheetModal(){
+      setGsheetTokenVisible(false);gsheetMask.classList.remove('show');
+      const entryShown=window.RatingAccount?.refreshEntry?.({resetChoice:true});
+      document.getElementById(entryShown?'account-email':'btn-data').focus();
+    }
 
     document.getElementById('btn-gsheet').addEventListener('click', openGsheetModal);
     document.getElementById('gsheet-close').addEventListener('click', closeGsheetModal);
@@ -12615,6 +12610,7 @@ const ClassroomLayout = (() => {
 
       // ★ 還原自動上傳（清除過程的自動同步已被抑制，雲端資料未受影響）
       _gsSuppressAutoUpload = false;
+      window.RatingAccount?.refreshEntry?.({resetChoice:true});
     });
 
     // 讓清除按鈕也有 ripple 效果（可選）
@@ -22599,7 +22595,7 @@ initWebAppGuide();
 
 // Account sync reuses the validated full-backup path for every teaching data type.
 window.RatingBridge = {
-  entryState:()=>({hasData:!!(state.classOrder?.length||state.progress?.order?.length||state.taskBoard?.library?.length||state.taskBoard?.current||state.classroomTemplates?.length),hasGoogle:gsConnectionState()!=='missing',hasClasses:!!state.classOrder?.length,googleConfigured:gsConfigured()}),
+  entryState:()=>({hasData:hasTeachingData(),hasGoogle:gsConnectionState()!=='missing',hasClasses:!!state.classOrder?.length,googleConfigured:gsConfigured()}),
   isReadonly:()=>TabLock.isReadonly(),
   refreshAccess:()=>renderSaveHealth(),
   openGoogle:()=>openGsheetModal(),
@@ -22651,16 +22647,16 @@ window.RatingBridge = {
 <section id="account-entry" hidden aria-label="成績管理系統登入入口">
   <header class="entry-header"><span>成績管理系統</span><button id="entry-theme" class="btn" type="button">切換主題</button></header>
   <div class="entry-layout">
-    <div class="entry-brand"><img src="icon.png" alt="" width="72" height="72"><h1>教學紀錄，<br><strong>從這裡接續。</strong></h1><p>登入帳號，在不同裝置接續班級紀錄。</p></div>
+    <div class="entry-brand"><img src="icon.png" alt="" width="64" height="64"><span class="entry-kicker">老師的日常教學幫手</span><h1>每一筆用心，<br><strong>都好好記下。</strong></h1><p>班級、成績與課堂紀錄，<br>在熟悉的地方輕鬆接續。</p><div class="entry-benefits"><span><b aria-hidden="true">✓</b> 登入後自動儲存</span><span><b aria-hidden="true">✓</b> 換台裝置也能繼續</span></div></div>
     <div class="entry-card">
       <div id="account-entry-host"></div>
-      <div class="entry-alternatives"><span>其他使用方式</span><button id="entry-google" class="btn" type="button">使用 Google 試算表 <span aria-hidden="true">→</span></button><button id="entry-local" class="btn" type="button">使用本機空間 <span aria-hidden="true">→</span></button></div>
+      <div class="entry-alternatives"><span>不登入也可以使用</span><button id="entry-google" class="btn" type="button"><span><strong>使用 Google 試算表</strong><small>連接原有試算表，接續紀錄</small></span><span aria-hidden="true">→</span></button><button id="entry-local" class="btn" type="button"><span><strong>先使用本機空間</strong><small>資料只儲存在這個瀏覽器</small></span><span aria-hidden="true">→</span></button></div>
     </div>
   </div>
 </section>
 <dialog id="account-dialog" aria-labelledby="account-title">
 <div id="account-panel">
-  <div class="account-heading"><h2 id="account-title">登入帳號</h2><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
+  <div class="account-heading"><div><span class="sync-eyebrow">成績管理系統</span><h2 id="account-title">登入帳號</h2></div><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
   <p id="account-help">登入後使用自己的雲端空間。</p>
   <form id="account-form" name="sign-in" method="post" autocomplete="on">
     <label id="account-email-label"><span id="account-email-caption">Email</span><input id="account-email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="254" placeholder="請輸入註冊時使用的電子郵件"></label>
@@ -22672,10 +22668,10 @@ window.RatingBridge = {
   <div id="account-code-actions" class="account-actions" hidden><button id="account-code-resend" class="btn" type="button">重新寄送驗證碼</button><button id="account-code-change" class="btn" type="button">更換 Email</button></div>
   <div id="account-login-links" class="account-actions"><button id="account-switch" class="btn" type="button">建立新帳號</button><button id="account-forgot" class="btn" type="button">忘記密碼</button><button id="account-code-existing" class="btn" type="button" hidden>已有驗證碼</button></div>
   <section id="account-workspace" hidden>
-    <p id="account-identity"></p>
-    <p id="account-cloud-summary">登入後自動儲存，並接收其他裝置的更新。</p>
+    <div class="account-profile"><span class="account-avatar" aria-hidden="true">✓</span><div><small>目前登入帳號</small><p id="account-identity"></p></div></div>
+    <p class="account-sync-note">紀錄會自動儲存，並接收其他裝置的更新。</p><p id="account-cloud-summary">登入後自動儲存，並接收其他裝置的更新。</p>
     <div class="account-actions"><button id="account-check" class="btn" type="button">立即同步／重試</button></div>
-    <details id="account-advanced"><summary>備份與還原</summary><p>多分頁依最後修改時間保留較新的整份資料，載入前會留下本機備份。</p><div class="account-actions"><button id="account-backup" class="btn" type="button">下載本機備份</button><button id="account-upload" class="btn" type="button">手動上傳</button><button id="account-download" class="btn" type="button">下載雲端版本</button></div><p>帶入原本的本機資料：先在 Google 試算表／本機空間下載完整備份，再登入並還原。</p></details>
+    <details id="account-advanced"><summary>進階同步與備份 <span aria-hidden="true">⌄</span></summary><p>多分頁依最後修改時間保留較新的整份資料，載入前會留下本機備份。</p><div class="account-actions"><button id="account-backup" class="btn" type="button">下載本機備份</button><button id="account-upload" class="btn" type="button">手動上傳</button><button id="account-download" class="btn" type="button">下載雲端版本</button></div><p>帶入原本的本機資料：先在 Google 試算表／本機空間下載完整備份，再登入並還原。</p></details>
   </section>
   <p id="account-feedback" role="status" aria-live="polite"></p>
   <div class="account-actions"><button id="account-exit" class="btn" type="button" hidden>登出，清空並返回本機空間</button></div>
