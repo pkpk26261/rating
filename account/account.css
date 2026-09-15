@@ -1,14 +1,14 @@
 html[data-account-pending="true"] .app{visibility:hidden;pointer-events:none}
 #account-dialog{color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:20px;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:24px;box-sizing:border-box;box-shadow:var(--shadow)}
 #account-dialog::backdrop{background:rgba(0,0,0,.6)}
-#account-dialog h2{margin:0;font-size:22px}
-#account-dialog p{color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
+#account-panel h2{margin:0;font-size:22px}
+#account-panel p{color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
 .account-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #account-form{display:grid;gap:16px}
 #account-form label{display:grid;gap:7px;font-size:14px}
 #account-form input{box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit}
 .account-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-#account-dialog .btn{min-height:44px;justify-content:center}
+#account-panel .btn{min-height:44px;justify-content:center}
 #account-submit{width:100%;background:var(--accent);color:var(--bg);font-weight:700}
 #account-feedback{white-space:pre-line;min-height:24px;color:var(--fg)}
 #account-feedback[data-error="true"]{color:var(--bad)}
@@ -24,7 +24,7 @@ html[data-account-pending="true"] .app{visibility:hidden;pointer-events:none}
 .storage-choice-copy{display:grid;gap:5px;flex:1;min-width:0}
 .storage-choice-copy strong{font-size:14px;font-weight:600}
 .storage-choice-copy small{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
-#account-dialog [hidden]{display:none!important}
+#account-panel [hidden]{display:none!important}
 
 .storage-choice-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px 8px}
 .storage-choice-line .save-health-badge{font-size:11px;color:var(--muted)}
@@ -63,3 +63,54 @@ body .app #data-more #dt-display{font-size:11px;padding:4px 12px;box-sizing:bord
 #data-dropdown .data-inner .storage-choice-copy small{display:block}
 .sync-method-indicator{flex:0 0 16px;height:16px;border:2px solid var(--muted);border-radius:50%;box-sizing:border-box}
 [aria-pressed="true"]>.sync-method-indicator{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--card)}
+
+
+#account-code-hint{font-size:12px;line-height:1.5;color:var(--muted)}
+#account-code{letter-spacing:.2em;font-size:20px}
+#account-code:disabled{opacity:.65}
+
+/* The same account panel is mounted inline or in the workspace dialog. */
+#account-entry[hidden]{display:none!important}
+body.account-entry-visible #app{display:none!important}
+body.account-entry-visible #mobile-block-overlay,body:has(#account-dialog[open]) #mobile-block-overlay{display:none!important}
+body.account-entry-visible{overflow:auto!important}
+#account-entry{min-height:100dvh;box-sizing:border-box;padding:24px 40px 48px;color:var(--fg);background:radial-gradient(ellipse at 15% 45%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 65%),var(--bg)}
+.entry-header{display:flex;justify-content:space-between;align-items:center;gap:16px;max-width:1120px;margin:auto;font-size:15px;font-weight:650}
+.entry-header .btn{min-height:44px}
+.entry-layout{max-width:1000px;margin:auto;min-height:calc(100dvh - 116px);display:grid;grid-template-columns:1fr 440px;align-items:center;gap:72px;padding:40px 0;box-sizing:border-box}
+.entry-brand img{border-radius:22px;box-shadow:var(--shadow);margin-bottom:24px}
+.entry-brand h1{font-size:clamp(30px,3.4vw,46px);line-height:1.4;letter-spacing:-.035em;margin:0 0 18px;font-weight:650}
+.entry-brand strong{color:var(--accent);font-weight:650}
+.entry-brand p{color:var(--muted);font-size:15px;line-height:1.8;margin:0}
+.entry-card{padding:32px;background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);min-width:0}
+#account-panel{min-width:0;color:var(--fg)}
+#account-panel .account-heading{margin-bottom:24px}
+#account-panel .account-heading h2{font-size:24px;letter-spacing:-.02em}
+#account-panel .account-actions{gap:8px}
+#account-login-links{justify-content:space-between}
+#account-login-links .btn{border:0;background:transparent;color:var(--muted);padding:8px 4px;font-size:14px}
+#account-login-links .btn:hover{color:var(--accent)}
+#account-form{gap:18px}
+#account-form input{min-height:48px;font-size:16px}
+#account-submit{min-height:48px!important;margin-top:4px}
+#account-panel button:focus-visible,#account-panel input:focus-visible,#account-entry button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.account-password-field{display:flex;align-items:center;position:relative;min-width:0}
+#account-form .account-password-field input{padding-right:64px}
+#account-password-toggle{position:absolute;right:3px;top:2px;bottom:2px;min-width:52px;border:0;background:transparent;color:var(--muted);font:inherit;cursor:pointer;border-radius:8px}
+.entry-alternatives{border-top:1px solid var(--line);margin-top:24px;padding-top:20px;display:grid;gap:10px}
+.entry-alternatives>span{font-size:12px;color:var(--muted);margin-bottom:2px}
+.entry-alternatives .btn{width:100%;display:flex;justify-content:space-between;min-height:48px;font-size:14px;font-weight:500}
+@media(max-width:800px){
+ #account-entry{padding:16px 20px 32px}
+ .entry-layout{grid-template-columns:minmax(0,440px);justify-content:center;min-height:0;gap:24px;padding:36px 0 0}
+ .entry-brand{text-align:center}.entry-brand img{width:48px;height:48px;border-radius:15px;margin-bottom:12px}
+ .entry-brand h1{font-size:26px;margin-bottom:8px}.entry-brand h1 br{display:none}
+ .entry-brand p{font-size:13px}.entry-card{padding:24px}
+}
+@media(max-width:440px){.entry-brand{display:none}.entry-layout{padding-top:24px}.entry-card{padding:24px 20px;border-radius:18px}#account-entry{padding:12px 16px 24px}.entry-header{font-size:14px}}
+
+#account-panel>.account-actions:has(>#account-exit[hidden]){display:none}
+.entry-alternatives .btn,.entry-header .btn{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.entry-alternatives .btn:hover,.entry-header .btn:hover{background:color-mix(in srgb,var(--accent) 8%,var(--card));border-color:var(--accent)}
+
+#account-form input::placeholder{color:var(--muted);opacity:1}
