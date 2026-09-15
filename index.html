@@ -22503,7 +22503,7 @@ initWebAppGuide();
     for(const t of templateList()){const o=document.createElement('option');o.value='saved:'+t.id;o.textContent=t.name;group.append(o);}
   }
   const nameDialog=document.createElement('dialog');nameDialog.className='room-dialog';nameDialog.id='room-template-name-dialog';
-  nameDialog.innerHTML='<form><h2 id="room-template-name-title">儲存為範本</h2><p id="room-template-backup-help">新增的座位圖範例也會包含在 Google 備份中。開啟「資料與同步」的自動上傳後，新增、改名與刪除都會自動同步；下次載入即可使用。</p><label>範本名稱 <input id="room-template-name" class="input" maxlength="80" required></label><p id="room-template-name-error" role="status"></p><button class="btn" type="button" id="room-template-name-cancel">取消</button> <button class="btn primary" type="submit">儲存</button></form>';
+  nameDialog.innerHTML='<form><h2 id="room-template-name-title">儲存為範本</h2><p id="room-template-backup-help">登入帳號後，自建範本會自動同步，換裝置登入同一帳號即可使用。使用 Google 試算表時，請開啟自動上傳。</p><label>範本名稱 <input id="room-template-name" class="input" maxlength="80" required></label><p id="room-template-name-error" role="status"></p><button class="btn" type="button" id="room-template-name-cancel">取消</button> <button class="btn primary" type="submit">儲存</button></form>';
   nameDialog.setAttribute('aria-labelledby','room-template-name-title');nameDialog.setAttribute('aria-describedby','room-template-backup-help');document.body.append(nameDialog);
   let naming=null;
   function openTemplateName(id=null){
