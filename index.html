@@ -222,10 +222,10 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
 </script>
 <!-- END ACCOUNT STORAGE BOOTSTRAP -->
   <script>const localStorage = window.RatingStorage;</script>
-  <link rel="stylesheet" href="account/account.css?v=c9fd64fd2f6506d8">
+  <link rel="stylesheet" href="account/account.css?v=1b3a0cd353614eee">
   <script defer src="vendor/supabase-2.116.0.js?v=84ee9bf45695c1dd"></script>
   <script defer src="account/sync-policy.js?v=c6b4f568b0b83613"></script>
-  <script defer src="account/account.js?v=e60678e5e36f54d2"></script>
+  <script defer src="account/account.js?v=b88efd2fdee3ad6d"></script>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -270,6 +270,12 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
     .clear-selection-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0;}
     #clear-count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
     .clear-selection-tools>div,.clear-footer>div{display:flex;gap:8px;}
+    #clear-account-warning:not([hidden]){display:block;margin-bottom:16px;padding:16px;border:2px solid #f87171;border-radius:12px;background:#381c24;color:#ffe4e6;}
+    #clear-account-warning strong{font-size:18px;color:#fda4af;}
+    #clear-account-warning p{line-height:1.7;margin:10px 0;}
+    #clear-mask #clear-backup{background:#fcd34d;color:#30220a;border-color:#fcd34d;font-weight:700;}
+    :root[data-theme="light"] #clear-account-warning{background:#fff1f2;color:#881337;}
+    :root[data-theme="light"] #clear-account-warning strong{color:#be123c;}
     #clear-mask .btn{min-height:44px;color:var(--fg);background:var(--card);border-color:var(--line);}
     #clear-mask .clear-selection-tools .btn{padding:8px 10px;border-color:transparent;background:transparent;font-size:13px;box-shadow:none;}
     .clear-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -905,7 +911,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
     }
 
     /* 匯出 / 清除按鈕隱藏 */
-    body.no-data #btn-manual-sync,
     body.no-data #btn-reset{
       display:none !important;
     }
@@ -7888,7 +7893,8 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                 </section>
                 <div class="data-section" aria-label="檔案操作">
                   <button type="button" class="data-item" id="btn-import-roster">📂 匯入名單</button>
-                  <button type="button" class="data-item" id="btn-manual-sync" title="匯出目前所有班級的成績">💾 匯出成績報表</button>
+                  <button type="button" class="data-item" id="import-progress-file">📂 匯入教學進度</button>
+                  <button type="button" class="data-item" id="btn-manual-sync" title="匯出目前所有班級的成績">💾 匯出成績／教學進度</button>
                 </div>
                 <details id="data-more" class="data-section">
                   <summary>備份與資料管理<span aria-hidden="true">⌄</span></summary>
@@ -8596,6 +8602,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
     <div class="modal clear-dialog" role="document">
       <header><div><h3 id="clear-title">清除資料</h3><p id="clear-description">選擇要清除的本機資料類別。</p></div><button id="clear-close" class="close" aria-label="關閉">✕</button></header>
       <div class="content">
+        <section id="clear-account-warning" hidden aria-label="帳號資料刪除警告"><strong>⚠ 刪除後無法復原</strong><p>清除會同步刪除目前帳號的雲端資料，其他裝置也會同步此變更，無法從帳號雲端找回。</p><p><b>請先下載完整備份</b>，並確認檔案已保存在下載資料夾，再繼續清除。</p><button type="button" class="btn" id="clear-backup">💾 先下載完整備份</button></section>
         <div id="clear-gs-note"><span aria-hidden="true">☁️</span><span>只清除本機資料，Google 試算表內容會保留。</span></div>
         <div class="clear-selection-tools"><span id="clear-count" role="status" aria-live="polite">已選 0 項</span><div><button id="clear-sel-all" class="btn">全選</button><button id="clear-sel-none" class="btn">全不選</button></div></div>
         <div class="clear-options" role="group" aria-label="要清除的資料類別">
@@ -8633,8 +8640,8 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
           <div id="export-class-list"></div>
         </section>
         <div class="export-progress-option">
-          <label id="export-prog-label"><input type="checkbox" id="export-prog"><span>另外匯出教學進度<small>獨立檔案</small></span></label>
-          <p id="export-prog-hint" class="export-help">勾選後另存教學進度；未勾選則只匯出成績。</p>
+          <label id="export-prog-label"><input type="checkbox" id="export-prog"><span>同時匯出教學進度<small>加入成績檔的分頁</small></span></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="btn add" id="export-progress-only">單獨匯出教學進度</button></div>
         </div>
       </div>
       <footer class="export-footer"><p class="export-help">匯出檔可透過「匯入名單」重新匯入。</p><div><button id="export-cancel" class="btn">取消</button><button id="export-go" class="btn add">匯出</button></div></footer>
@@ -8664,9 +8671,9 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             </ol>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 4px;">
               <span style="font-size:13px; font-weight:700;">Apps Script 程式碼</span>
-              <button id="gs-copy-code" class="btn" style="font-size:12px; padding:3px 10px;">📋 複製程式碼</button>
+              <button id="gs-copy-code" class="btn">📋 複製程式碼</button>
             </div>
-            <pre id="gs-code" style="font-size:11px; line-height:1.5; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
+            <pre id="gs-code" tabindex="0" aria-label="Apps Script 程式碼，可水平捲動" style="font-size:11px; line-height:1.5; border-radius:8px; padding:10px; overflow:auto; max-height:240px; white-space:pre;"></pre>
             </details></div>
           </div>
         </details>
@@ -11268,7 +11275,7 @@ const ClassroomLayout = (() => {
     });
 
     /* ===== 匯出（可選資料夾＋可改檔名；不支援則退回下載） ===== */
-    async function exportWorkbookWithPicker(wb, suggestedName, bookType='xlsx'){
+    async function exportWorkbookWithPicker(wb, suggestedName, bookType='xlsx', requireDestination=false){
       const mimeMap = {
         xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         csv:  'text/csv',
@@ -11296,61 +11303,44 @@ const ClassroomLayout = (() => {
           await writable.close();
 
           setStatus(`已儲存：${handle.name}`);
-          return;
+          return true;
         } catch (err) {
           if (err && err.name === 'AbortError') {
             setStatus('已取消匯出。');
-            return;
+            return false;
           }
-          console.warn('showSaveFilePicker 失敗，改用下載：', err);
+          if(requireDestination && err?.name!=='SecurityError' && err?.name!=='NotAllowedError'){
+            await appAlert('檔案未儲存：'+err.message+'。請重新匯出並選擇可寫入的資料夾。');return false;
+          }
+          console.warn('showSaveFilePicker 無法使用：', err);
         }
       }
 
+      if(requireDestination){
+        const proceed=await safeConfirmDialog({
+          title:'此瀏覽器無法開啟另存視窗',
+          message:'若要每次選擇儲存位置，請到 Chrome「設定 → 下載」，開啟「下載前詢問每個檔案的儲存位置」。\n\n開啟後按「下載檔案」；未開啟時會存到 Chrome 預設下載資料夾。',
+          okText:'下載檔案',cancelText:'取消'
+        });
+        if(!proceed)return false;
+      }
       // 退回原本下載方式
       XLSX.writeFile(wb, suggestedName, { bookType });
       setStatus(`已開始下載：${suggestedName}`);
+      return true;
     }
 
-    /* ★ 多檔匯出：選一次資料夾，所有檔案自動儲存到同一目錄 */
+    /* 多檔匯出：逐份另存，不要求整個資料夾的讀寫權限。 */
     async function exportMultipleToDir(files){
-      // files = [{ wb, name, bookType }, ...]
-      const mimeMap = {
-        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        csv:  'text/csv',
-        ods:  'application/vnd.oasis.opendocument.spreadsheet'
-      };
-
-      // 嘗試使用 showDirectoryPicker（選一次資料夾）
-      if(window.showDirectoryPicker && isSecureContext){
-        try{
-          const dirHandle = await window.showDirectoryPicker({ mode:'readwrite' });
-          const saved = [];
-          for(const f of files){
-            const mime = mimeMap[f.bookType] || mimeMap.xlsx;
-            const data = XLSX.write(f.wb, { bookType: f.bookType, type:'array' });
-            const blob = new Blob([data], { type: mime });
-            const fileHandle = await dirHandle.getFileHandle(f.name, { create:true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            saved.push(f.name);
-          }
-          setStatus(`已儲存 ${saved.length} 個檔案：${saved.join('、')}`);
-          return;
-        }catch(err){
-          if(err && err.name === 'AbortError'){
-            setStatus('已取消匯出。');
-            return;
-          }
-          console.warn('showDirectoryPicker 失敗，改用逐檔下載：', err);
-        }
-      }
-
-      // 退回：逐檔下載
       for(const f of files){
-        XLSX.writeFile(f.wb, f.name, { bookType: f.bookType });
+        const proceed=await safeConfirmDialog({
+          title:'分別儲存匯出檔案',
+          message:`第 ${files.indexOf(f)+1} / ${files.length} 份檔案\n${f.name}`,
+          okText:'選擇儲存位置',cancelText:'停止匯出'
+        });
+        if(!proceed){setStatus('已停止後續匯出。');return;}
+        if(await exportWorkbookWithPicker(f.wb,f.name,f.bookType,true)===false)return;
       }
-      setStatus(`已開始下載 ${files.length} 個檔案`);
     }
 
     /* ===== 建立班級成績二維陣列（AoA，Excel 與 Google 試算表共用） ===== */
@@ -11427,6 +11417,8 @@ const ClassroomLayout = (() => {
       const aoa = buildClassAoA(cls);
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
+      // 班級還原資訊不顯示在成績報表中，保留供重新匯入使用。
+      ws['!rows'] = [{hidden:true}];
       const baseCols = [{wch:14},{wch:6},{wch:12},{wch:24},{wch:10},{wch:8}];
       const hwColsW = Array.from({length: hwSt.cols.length}, ()=>({wch:8}));
       ws['!cols'] = [
@@ -12111,12 +12103,11 @@ const ClassroomLayout = (() => {
     function resetManualSyncButton(){
       if(!manualSyncBtn) return;
       manualSyncBtn.disabled = false;
-      manualSyncBtn.textContent = '💾 匯出成績報表';
-      manualSyncBtn.title = '選擇要匯出的班級成績';
+      manualSyncBtn.textContent = '💾 匯出成績／教學進度';
+      manualSyncBtn.title = '匯出班級成績或獨立教學進度';
     }
     resetManualSyncButton();
     manualSyncBtn?.addEventListener('click', ()=>{
-      if(state.classOrder.length===0){ appAlert('尚未載入任何班級資料'); return; }
       openExportModal();
     });
 
@@ -12269,14 +12260,26 @@ const ClassroomLayout = (() => {
       }
     });
 
+    document.getElementById('export-progress-only').addEventListener('click',async()=>{
+      try{
+        if(!ensureProgressState(false).order.length){appAlert('尚無教學進度可匯出');return;}
+        const wb=XLSX.utils.book_new();appendProgressSheet(wb);
+        closeExportModal();
+        await exportWorkbookWithPicker(wb,`教學進度_${new Date().toISOString().slice(0,10)}.xlsx`,'xlsx',true);
+      }catch(error){appAlert('匯出失敗：'+error.message);}
+    });
+    document.getElementById('import-progress-file').addEventListener('click',()=>{
+      document.getElementById('file-input').click();
+    });
     // 執行匯出
     exportGo.addEventListener('click', async ()=>{
       try{
-        const fmt = document.querySelector('input[name="export-format"]:checked')?.value || 'xlsx';
+        const selectedFormat = document.querySelector('input[name="export-format"]:checked')?.value || 'xlsx';
         const selectedClasses = [...exportClassBox.querySelectorAll('.export-cls-cb:checked')].map(cb=>cb.value);
         const includeProgress = exportProgCb.checked;
+        const fmt = includeProgress && selectedFormat==='csv' ? 'xlsx' : selectedFormat;
 
-        if(selectedClasses.length===0){ appAlert('請至少選擇一個班級'); return; }
+        if(selectedClasses.length===0&&!includeProgress){ appAlert('請選擇班級，或勾選教學進度'); return; }
 
         closeExportModal();
 
@@ -12289,6 +12292,11 @@ const ClassroomLayout = (() => {
           return prog && prog.order && prog.order.length > 0;
         })();
 
+        if(!selectedClasses.length){
+          if(!hasProgressData){appAlert('尚無教學進度可匯出');return;}
+          const wb=XLSX.utils.book_new();appendProgressSheet(wb);
+          await exportWorkbookWithPicker(wb,`教學進度_${stamp}.xlsx`,'xlsx',true);return;
+        }
         if(fmt==='csv'){
           // CSV：每個班級各產一個檔案
           const csvFiles = [];
@@ -12297,14 +12305,6 @@ const ClassroomLayout = (() => {
             const ws = buildClassSheet(cls);
             XLSX.utils.book_append_sheet(wb, ws, uniqueSheetName(wb, cls));
             csvFiles.push({ wb, name: `成績匯出_${cls}_${stamp}.csv`, bookType: 'csv' });
-          }
-          // CSV 不支援多工作表，勾選時將教學進度另存為 XLSX。
-          if(includeProgress && hasProgressData){
-            const wbProg = XLSX.utils.book_new();
-            appendProgressSheet(wbProg);
-            if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
-              csvFiles.push({ wb: wbProg, name: `教學進度_${stamp}.xlsx`, bookType: 'xlsx' });
-            }
           }
           // 多檔一次選路徑
           if(csvFiles.length > 1){
@@ -12322,22 +12322,8 @@ const ClassroomLayout = (() => {
           }
           const fname = `成績匯出_${stamp}.${fmt}`;
 
-          // ★ 勾選「獨立檔案」且有進度資料 → 兩個檔案存到同一資料夾
-          if(includeProgress && hasProgressData){
-            const wbProg = XLSX.utils.book_new();
-            appendProgressSheet(wbProg);
-            if(wbProg.SheetNames && wbProg.SheetNames.length > 0){
-              const progFname = `教學進度_${stamp}.${fmt}`;
-              await exportMultipleToDir([
-                { wb, name: fname, bookType: fmt },
-                { wb: wbProg, name: progFname, bookType: fmt }
-              ]);
-            } else {
-              await exportWorkbookWithPicker(wb, fname, fmt);
-            }
-          } else {
-            await exportWorkbookWithPicker(wb, fname, fmt);
-          }
+          if(includeProgress && hasProgressData) appendProgressSheet(wb);
+          await exportWorkbookWithPicker(wb, fname, fmt,true);
         }
       }catch(err){
         appAlert('匯出失敗：'+err.message);
@@ -12472,8 +12458,9 @@ const ClassroomLayout = (() => {
     });
     function openClearModal(){
       clearReturnFocus=document.activeElement;
+      document.getElementById('clear-account-warning').hidden=!window.RatingAccount?.owner;
       const note = document.getElementById('clear-gs-note');
-      if(note){note.style.display = (window.RatingAccount?.owner || (typeof gsReady === 'function' && gsReady())) ? '' : 'none';note.lastElementChild.textContent=window.RatingAccount?.owner?'清除會同步至目前登入的系統帳號。':'只清除本機資料，Google 試算表內容會保留。';}
+      if(note){note.style.display = (!window.RatingAccount?.owner && (typeof gsReady === 'function' && gsReady())) ? '' : 'none';note.lastElementChild.textContent=window.RatingAccount?.owner?'清除會同步至目前登入的系統帳號。':'只清除本機資料，Google 試算表內容會保留。';}
       document.getElementById('clear-description').textContent=window.RatingAccount?.owner?'選擇要清除的帳號資料類別。':'選擇要清除的本機資料類別。';
       clearMask.classList.add('show');
       updateClearSelection();
@@ -12481,6 +12468,7 @@ const ClassroomLayout = (() => {
     }
     function closeClearModal(){ clearMask.classList.remove('show');if(clearReturnFocus?.isConnected)clearReturnFocus.focus({preventScroll:true}); }
 
+    document.getElementById('clear-backup').addEventListener('click',()=>downloadFullBackup());
     clearClose.addEventListener('click', closeClearModal);
     clearCancel.addEventListener('click', closeClearModal);
     clearMask.addEventListener('click', e=>{ if(e.target===clearMask) closeClearModal(); });
@@ -12511,7 +12499,7 @@ const ClassroomLayout = (() => {
       if(picked.includes('seating') || picked.includes('classMap')){
         confirmMsg += '\n已建立的自訂座位範本會保留。';
       }
-      if(window.RatingAccount?.owner){confirmMsg+='\n\n清除會同步至目前登入的系統帳號。';}
+      if(window.RatingAccount?.owner){confirmMsg+='\n\n⚠ 刪除後無法復原。此操作會同步刪除目前帳號的雲端資料，其他裝置也會同步此變更。\n請先下載完整備份，並確認檔案已保存；未備份的資料將無法找回。';}
       else if(typeof gsReady === 'function' && gsReady()){
         confirmMsg += `\n\n☁️ 此清除只會刪除「本機」資料，不會更動 Google 試算表內容。`;
         if(gsConfig.autoSync){
@@ -12522,9 +12510,9 @@ const ClassroomLayout = (() => {
         }
       }
       const ok = await safeConfirmDialog({
-        title: '確認清除資料',
+        title: window.RatingAccount?.owner ? '刪除帳號資料後無法復原' : '確認清除資料',
         message: confirmMsg,
-        okText: '確認清除',
+        okText: window.RatingAccount?.owner ? '確認永久刪除' : '確認清除',
         cancelText: '取消'
       });
       if(!ok){ return; }
@@ -22595,6 +22583,7 @@ initWebAppGuide();
 
 // Account sync reuses the validated full-backup path for every teaching data type.
 window.RatingBridge = {
+  confirm:options=>safeConfirmDialog(options),
   entryState:()=>({hasData:hasTeachingData(),hasGoogle:gsConnectionState()!=='missing',hasClasses:!!state.classOrder?.length,googleConfigured:gsConfigured()}),
   isReadonly:()=>TabLock.isReadonly(),
   refreshAccess:()=>renderSaveHealth(),
