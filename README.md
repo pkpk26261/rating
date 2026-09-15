@@ -1,6 +1,8 @@
+> 帳號功能（本機開發中）：已新增 Email 登入／註冊、Supabase 自動儲存及跨裝置即時更新。雲端資料表與 Realtime 已設定；寄信與正式發布狀態請見 [帳號設定與驗證說明](account/README.md)。
+
 # 成績管理系統
 
-一個純前端的班級成績管理工具，資料預設儲存於本機瀏覽器（localStorage），可下載完整備份，或另行設定 Google 試算表同步。開啟 `index.html` 即可使用。
+一個純前端的班級成績管理工具，資料預設儲存於本機瀏覽器（localStorage），可下載完整備份，並可選擇 Google 試算表同步或登入系統帳號同步，一次只啟用一種。開啟 `index.html` 即可使用。
 
 ## 功能總覽
 
@@ -228,6 +230,7 @@ const SECRET_TOKEN = '在這裡填入你的密碼';
 const BACKUP_SHEET = '__GRADE_SYNC_BACKUP__';
 const BACKUP_PREFIX = '__GRADE_SYNC_COPY_';
 const BACKUP_MARKER = 'grade-sync-backup-v1';
+const ACCOUNT_SOURCE_SHEET = '__ACCOUNT_SOURCE__';
 
 function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
@@ -285,11 +288,11 @@ function isManaged(name, rows) {
     (header.includes('姓名') && header.includes('座號'));
 }
 function validateUpload(payload) {
-  if (!payload || payload.action !== 'upload' || !payload.sheets || typeof payload.sheets !== 'object' || Array.isArray(payload.sheets) || typeof payload.replaceManagedSheets !== 'boolean') throw new Error('上傳格式錯誤，尚未寫入。');
+  if (!payload || !['upload','accountBackup'].includes(payload.action) || !payload.sheets || typeof payload.sheets !== 'object' || Array.isArray(payload.sheets) || typeof payload.replaceManagedSheets !== 'boolean') throw new Error('上傳格式錯誤，尚未寫入。');
   const names = Object.keys(payload.sheets), seen = new Set();
   if (!names.length) throw new Error('上傳不可為空，尚未寫入。');
   return names.map(name => {
-    if (!name.trim() || name.length > 100 || /[\[\]:*?/\\]/.test(name) || name === BACKUP_SHEET || name.startsWith(BACKUP_PREFIX) || seen.has(name.toLowerCase())) throw new Error('分頁名稱無效或重複：' + name);
+    if (!name.trim() || name.length > 100 || /[\[\]:*?/\\]/.test(name) || name === BACKUP_SHEET || name === ACCOUNT_SOURCE_SHEET || name.startsWith(BACKUP_PREFIX) || seen.has(name.toLowerCase())) throw new Error('分頁名稱無效或重複：' + name);
     seen.add(name.toLowerCase());
     const rows = payload.sheets[name];
     if (!Array.isArray(rows) || !rows.length || rows.some(r => !Array.isArray(r))) throw new Error('分頁資料格式錯誤：' + name);
@@ -326,7 +329,7 @@ function uploadPlan(ss, payload, entries, previous, sheets = ss.getSheets()) {
   let nextId = 1;
   const allocate = () => { while (used.has(nextId)) nextId++; used.add(nextId); return nextId++; };
   const incoming = new Map(entries.map(e => [e.name, e]));
-  const active = sheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
+  const active = sheets.filter(s => s.getName() !== BACKUP_SHEET && s.getName() !== ACCOUNT_SOURCE_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
   const currentRows = readSheetValues(ss, active);
   const current = new Map(active.map((s,i) => [s.getName(), comparableRows(currentRows[i])]));
   const managed = new Set(active.filter((s,i) => isManaged(s.getName(), currentRows[i])).map(s => s.getSheetId()));
@@ -370,13 +373,14 @@ function uploadPlan(ss, payload, entries, previous, sheets = ss.getSheets()) {
 }
 function doGet(e) {
   if (!authorized(e?.parameter?.token)) return jsonOut({ok:false, error:'密碼錯誤'});
+  if(e?.parameter?.action==='capabilities')return jsonOut({ok:true,accountBackupProtocol:1});
   try {
     return jsonOut(withSyncLock(() => {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       const allSheets = ss.getSheets();
       readBackup(ss, allSheets);
       const sheets = Object.create(null);
-      const active = allSheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
+      const active = allSheets.filter(s => s.getName() !== BACKUP_SHEET && s.getName() !== ACCOUNT_SOURCE_SHEET && !s.getName().startsWith(BACKUP_PREFIX));
       const rows = readSheetValues(ss, active);
       active.forEach((s, i) => {
         const values = rows[i];
@@ -385,6 +389,10 @@ function doGet(e) {
       return {ok:true, sheets};
     }));
   } catch (err) { return jsonOut({ok:false, error:String(err.message || err)}); }
+}
+function accountVersionTime(value){
+  const fraction=String(value).match(/\.(\d+)/)?.[1]||'';
+  return Date.parse(value)*1000+Number(fraction.padEnd(6,'0').slice(3,6));
 }
 function doPost(e) {
   let submitted = false;
@@ -396,11 +404,36 @@ function doPost(e) {
     return jsonOut(withSyncLock(() => {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       const allSheets = ss.getSheets();
+      const source=payload.action==='accountBackup'?payload.accountSource:null;
+      if(payload.action==='accountBackup'&&!source)throw new Error('缺少帳號備份版本。');
+      const marker=allSheets.find(s=>s.getName()===ACCOUNT_SOURCE_SHEET);
+      if(marker && !source)throw new Error('此試算表已用於帳號備份，請從線上帳號更新。');
+      if(source){
+        if(!/^[0-9a-f-]{36}$/i.test(source.userId)||!/^[0-9a-f-]{36}$/i.test(source.revision)||!Number.isFinite(Date.parse(source.updatedAt)))throw new Error('帳號備份版本格式錯誤。');
+        if(marker){
+          const values=marker.getDataRange().getValues();
+          if(values[0]?.[0]!=='account-source-v1')throw new Error('帳號備份索引格式不符。');
+          const previous=JSON.parse(values[1]?.[0]||'null');
+          if(previous?.userId!==source.userId)throw new Error('此試算表已綁定另一個帳號，請使用各自的試算表。');
+          if(source.revision===previous.revision)return {ok:true,unchanged:true,accountBackup:true};
+          if(accountVersionTime(source.updatedAt)<=accountVersionTime(previous.updatedAt))return {ok:true,skipped:true,accountBackup:true};
+        }
+      }
       const requests = uploadPlan(ss, payload, entries, readBackup(ss, allSheets), allSheets);
+      if(source){
+        let id=marker?.getSheetId();
+        if(!id){
+          const used=new Set(allSheets.map(s=>s.getSheetId()));
+          requests.forEach(r=>{if(r.addSheet)used.add(r.addSheet.properties.sheetId);if(r.duplicateSheet)used.add(r.duplicateSheet.newSheetId);});
+          id=1;while(used.has(id))id++;
+          requests.push({addSheet:{properties:{sheetId:id,title:ACCOUNT_SOURCE_SHEET,hidden:true,gridProperties:{rowCount:2,columnCount:1}}}});
+        }
+        requests.push(writeCells(id,[['account-source-v1'],[JSON.stringify(source)]]));
+      }
       if (!requests.length) return {ok:true, unchanged:true};
       submitted = true;
       Sheets.Spreadsheets.batchUpdate({requests}, ss.getId());
-      return {ok:true, backupAvailable:true};
+      return {ok:true, backupAvailable:true, ...(source?{accountBackup:true}:{})};
     }));
   } catch (err) {
     return jsonOut({ok:false, error:String(err.message || err) + (submitted ? '；未收到成功確認，請先下載核對。原子更新不會只套用部分分頁；可從試算表「成績系統」選單復原上傳前版本。' : '')});
@@ -411,6 +444,8 @@ function onOpen() {
 }
 function restorePlan(ss, backup) {
   const requests = [], sheets = ss.getSheets(), record = backup.record;
+  const source=sheets.find(s=>s.getName()===ACCOUNT_SOURCE_SHEET);
+  if(source)requests.push({deleteSheet:{sheetId:source.getSheetId()}});
   // 先恢復舊分頁，再移除本次新增分頁，始終保留可見分頁。
   record.copies.forEach(c => {
     const source = sheets.find(s => s.getSheetId() === c.sourceId);
@@ -485,7 +520,7 @@ function restorePreviousUpload() {
 - 新版 Google 同步在 `__CLASS_META__` 標頭第三欄起加入分段的完整補充快照與原表格對照。保留原班級分頁、幹部欄位及可編輯成績表。每段 JSON 字串小於單格上限，包含的完整備份不帶同步網址或密碼。
 - 未人工修改的分頁從補充快照還原內部學生代碼、各類紀錄及完整結構。人工修改班級表時，以表格內容為準，並保留可對應學生的扣分累計、抽號、空組與座位格數。只改幹部選項時，以 metadata 當前選項為準。
 - 舊版表格仍可下載。缺少座位格數的舊表採至少 6×6，依原講台座標放置，這是相容預設，不是找回原始格數。舊表沒有記錄的停用格、抽號等資訊仍無法還原。所有操作裝置應使用新版網頁，避免舊版上傳移除補充快照。
-- 自動下載不覆蓋尚未確認同步的本機資料。手動下載先保存一份本機復原點，可在「資料與同步 → 下載雲端載入前的本機備份」取出。僅保留最近一次下載前版本；需長期留存時仍應下載完整備份。
+- 自動下載不覆蓋尚未確認同步的本機資料。手動下載先保存一份內部本機復原點，僅保留最近一次下載前版本。選單已移除「下載同步前備份」入口；需自行留存時，請先使用「下載完整備份」。
 - 下載期間若資料、連線設定或作用視窗變更，取消套用。非法成績、重複學生／座位、無效違規次數、損壞記事或補充快照會拒絕整批，保留本機資料。
 - 單純切頁、切班與排列方式只存本機偏好，不觸發雲端資料上傳。下載成功記錄對應版本；只有教學進度也可上傳。班級分頁名稱碰撞會明確拒絕上傳。
 - 此次未加入跨裝置的雲端版本衝突合併。兩台裝置同時編輯仍可能覆蓋彼此，不能把同一瀏覽器分頁鎖或單次原子寫入當成跨裝置衝突保護。

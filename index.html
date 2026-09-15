@@ -10,6 +10,12 @@
   <meta name="apple-mobile-web-app-title" content="成績系統">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>成績管理系統</title>
+  <script src="account/storage.js"></script>
+  <script>const localStorage = window.RatingStorage;</script>
+  <link rel="stylesheet" href="account/account.css">
+  <script defer src="vendor/supabase-2.116.0.js"></script>
+  <script defer src="account/sync-policy.js"></script>
+  <script defer src="account/account.js"></script>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -6294,16 +6300,19 @@
     #draw-pane .dc-section{gap:2px;}
     #draw-pane .dc-toggle{min-height:44px;box-sizing:border-box;}
     #draw-chance-settings[hidden], #draw-chance-panel[hidden]{display:none;}
-    .draw-chance-panel{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid #d4a537;border-radius:14px;background:linear-gradient(110deg,rgba(245,180,40,.16),rgba(245,180,40,.04));}
+    #draw-pane .chance-active .draw-history-wrap{min-height:100px;}
+    .draw-chance-panel{animation:drawChanceArrival .35s ease-out;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid #d4a537;border-radius:14px;background:linear-gradient(110deg,rgba(245,180,40,.16),rgba(245,180,40,.04));}
+    @keyframes drawChanceArrival{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
     .draw-chance-panel strong{display:block;color:#ffd97d;font-size:20px;}
     .draw-chance-panel span{display:block;color:var(--fg);font-size:13px;margin-top:4px;}
     .draw-chance-actions{display:flex;gap:8px;flex-shrink:0;}
     #draw-chance-panel button{min-height:44px;padding:8px 14px;}
+    #draw-chance-panel button:disabled{opacity:.55;cursor:wait;}
     #btn-draw-chance{background:#f4cf76;color:#302207;border-color:#f4cf76;font-weight:800;}
     #draw-pane .drum-slot.chance-selected{border-color:#efbd4f;box-shadow:0 0 0 2px #efbd4f,0 0 24px rgba(239,189,79,.45);}
     :root[data-theme="light"] .draw-chance-panel strong{color:#805500;}
     @media(max-width:1100px){.draw-chance-panel{align-items:stretch;flex-direction:column;}.draw-chance-actions button{flex:1;}}
-    @media(prefers-reduced-motion:reduce){#draw-pane .pop,#draw-pane .revealed{animation:none!important;}}
+    @media(prefers-reduced-motion:reduce){#draw-pane .pop,#draw-pane .revealed,#draw-chance-panel{animation:none!important;}}
 
     /* 抽號各層可縮到容器內；六位學生在動畫、結果與歷史皆維持同一列。 */
     #draw-pane,#draw-pane .draw-wrap,#draw-pane .controls-card,#draw-pane .spotlight-card,
@@ -7639,29 +7648,41 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             </button>
             <div class="data-dropdown" id="data-dropdown" hidden>
               <div class="data-inner">
-        <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
-          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
-        </time>
+
+                <section class="storage-choices" aria-label="同步方式" aria-describedby="sync-method-help">
+                  <p id="sync-method-help" class="storage-choices-title">同步方式（一次只能選擇一種）</p>
+                  <button type="button" class="data-item storage-choice" id="btn-gsheet" aria-haspopup="dialog" aria-controls="gsheet-mask" aria-pressed="true">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
+                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong>Google 試算表</strong><span id="save-cloud-status" class="save-health-badge">未設定同步</span></span><small id="google-entry-detail">設定連線、上傳與下載</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
+                  </button>
+                  <button id="btn-account" class="data-item storage-choice" type="button" aria-haspopup="dialog" aria-controls="account-dialog" aria-pressed="false">
+                    <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+                    <span class="storage-choice-copy"><span class="storage-choice-line"><strong id="account-entry-title">系統帳號</strong><span id="account-status" class="save-health-badge" role="status">未登入</span></span><small id="account-entry-detail">登入／註冊，使用帳號雲端空間</small></span><span class="sync-method-indicator" aria-hidden="true"></span>
+                  </button>
+                </section>
                 <div id="save-health" class="save-health" aria-label="儲存與同步狀態">
                   <div class="save-health-summary">
                     <div class="data-status-row"><span>本機儲存</span><span id="save-local-status" class="save-health-badge">尚無資料</span></div>
-                    <div class="data-status-row"><span>Google 雲端</span><span id="save-cloud-status" class="save-health-badge">未設定同步</span></div>
                     <span id="save-health-detail" class="save-health-detail" hidden></span>
                   </div>
                   <button id="save-retry" class="save-health-retry" type="button" hidden>重試</button>
                 </div>
-                <button type="button" class="data-item" id="btn-gsheet">☁️ Google 同步設定與下載</button>
                 <div class="data-section" aria-label="檔案操作">
                   <button type="button" class="data-item" id="btn-import-roster">📂 匯入名單</button>
                   <button type="button" class="data-item" id="btn-manual-sync" title="匯出目前所有班級的成績">💾 匯出成績報表</button>
-                  <button type="button" class="data-item" id="btn-backup-export">💾 下載完整備份</button>
-                  <button type="button" class="data-item" id="btn-backup-before-cloud" hidden>💾 下載雲端載入前的本機備份</button>
-                  <button type="button" class="data-item" id="btn-backup-restore">📥 還原完整備份</button>
                 </div>
-                <div class="data-section">
+                <details id="data-more" class="data-section">
+                  <summary>更多工具<span aria-hidden="true">⌄</span></summary>
+                  <div class="data-more-content">
+                  <button type="button" class="data-item" id="btn-backup-export">💾 下載完整備份</button>
+                  <button type="button" class="data-item" id="btn-backup-restore">📥 還原完整備份</button>
                   <button id="btn-reset" class="data-item danger" title="選擇要清除的本機資料">清除資料…</button>
                 </div>
-                <div id="status" class="data-activity" aria-label="最近操作">尚未載入名單。</div>
+                  <div id="status" class="data-activity" aria-label="最近操作">尚未載入名單。</div>
+        <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
+          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
+        </time>
+                </details>
               </div>
             </div>
           </div>
@@ -9115,7 +9136,7 @@ const ClassroomLayout = (() => {
     const SESSION_KEY = 'pscore_session_v1';
 
     /* =========================================================
-       多分頁單一寫入鎖：同一瀏覽器同時只允許「一個分頁」寫入資料
+       訪客多分頁單一寫入鎖：帳號模式使用獨立分頁快取與雲端版本檢查
        （localStorage + Google 同步），避免兩個分頁互相覆蓋造成存錯。
        - 用 BroadcastChannel 互相溝通；不支援時退回單分頁行為。
        - 後開的分頁自動轉唯讀，顯示遮罩；可按鈕接管（接管會重新載入）。
@@ -9125,7 +9146,7 @@ const ClassroomLayout = (() => {
                   : 'tab-' + Date.now() + '-' + Math.random().toString(36).slice(2);
       let active = true;          // 本分頁是否為作用中（可寫入）
       let bc = null;
-      try{ bc = ('BroadcastChannel' in self) ? new BroadcastChannel('pscore_tablock') : null; }catch(e){ bc = null; }
+      try{ bc = !window.RatingAccount?.owner && ('BroadcastChannel' in self) ? new BroadcastChannel('pscore_tablock:guest') : null; }catch(e){ bc = null; }
 
       const overlay   = document.getElementById('tablock-overlay');
       const closeBtn  = document.getElementById('tablock-close');
@@ -9220,7 +9241,8 @@ const ClassroomLayout = (() => {
 
       return {
         init,
-        isActive: ()=> active
+        isActive: ()=> active && (window.RatingAccount?.ready !== false),
+        isReadonly: ()=> !active
       };
     })();
 
@@ -9237,27 +9259,31 @@ const ClassroomLayout = (() => {
       if(!local || !cloud || !detail || !retry) return;
       const readonly = !TabLock.isActive();
       const failed = saveHealth.failures.size > 0;
-      const ready = gsReady();
+      const ready = !window.RatingAccount?.owner && gsConfigured();
       local.textContent = readonly ? '唯讀視窗' : failed ? '本機儲存失敗'
         : saveHealth.pendingLocal ? '正在儲存…' : saveHealth.localAt ? '已存本機' : '尚無資料';
       local.dataset.kind = failed ? 'error' : saveHealth.pendingLocal ? 'pending' : saveHealth.localAt ? 'saved' : '';
       local.title = saveHealth.localAt ? `最後存檔：${new Date(saveHealth.localAt).toLocaleString('zh-TW')}` : '';
       const hasData = !!(state.classOrder?.length || state.progress?.order?.length || state.taskBoard?.current || state.taskBoard?.library?.length);
       const pending = hasData && (!saveHealth.revision || saveHealth.revision !== gsConfig.lastUploadedRevision);
-      cloud.textContent = !ready ? '未設定同步' : saveHealth.busy ? (saveHealth.operation === 'download' ? '雲端載入中…' : '同步中…')
+      cloud.textContent = !ready ? '未設定同步' : (saveHealth.busy||saveHealth.backingUp) ? (saveHealth.operation === 'download' ? '雲端載入中…' : '同步中…')
         : saveHealth.cloud === 'error' ? '同步失敗' : !hasData ? '尚無資料可同步' : saveHealth.cloud === 'downloaded' ? '已載入雲端' : pending ? '待同步'
         : saveHealth.cloud === 'synced' || gsConfig.lastUploadedRevision ? '已同步' : '尚未同步';
-      cloud.dataset.kind = !ready ? '' : saveHealth.busy ? 'busy' : saveHealth.cloud === 'error' ? 'error' : pending ? 'pending' : saveHealth.cloud === 'synced' || gsConfig.lastUploadedRevision ? 'saved' : '';
+      cloud.dataset.kind = !ready ? '' : (saveHealth.busy||saveHealth.backingUp) ? 'busy' : saveHealth.cloud === 'error' ? 'error' : pending ? 'pending' : saveHealth.cloud === 'synced' || gsConfig.lastUploadedRevision ? 'saved' : '';
       cloud.title = ready && gsConfig.lastSync ? `最後同步：${new Date(gsConfig.lastSync).toLocaleString('zh-TW')}` : '';
+      const googleState=gsDisplayStatus();
+      if(window.RatingAccount?.owner||!ready){cloud.textContent=googleState.text;cloud.dataset.kind=googleState.kind;}
       const messages = [];
+      if(!window.RatingAccount?.owner && saveHealth.configError)messages.push(saveHealth.configError);
       if(failed) messages.push('本機尚有資料未存妥，請重試；若仍失敗，請先匯出備份。');
       if(ready && saveHealth.cloud === 'error') messages.push(saveHealth.cloudError);
-      if(saveHealth.autoDownloadBlocked) messages.push('本機有尚未確認同步的資料，已暫停自動下載。請先下載完整備份，再選擇上傳或下載。');
-      if(state.backupSyncPaused) messages.push('已還原備份，自動上傳與開啟時雲端載入已暫停。確認資料後可手動同步恢復。');
+      if(ready && saveHealth.autoDownloadBlocked) messages.push('Google 有待核對的資料，請開啟 Google 試算表選擇上傳或下載。');
+      if(ready && !(typeof window!=='undefined' && window.RatingAccount?.owner) && state.backupSyncPaused) messages.push('Google 自動同步已暫停，請開啟 Google 試算表確認資料。');
       detail.textContent = messages.join(' ');
+      detail.dataset.kind = saveHealth.configError || failed || (ready && saveHealth.cloud === 'error') ? 'error' : 'notice';
       detail.hidden = messages.length === 0;
       retry.hidden = readonly || !(failed || (ready && (pending || saveHealth.cloud === 'error')));
-      retry.disabled = saveHealth.busy;
+      retry.disabled = saveHealth.busy || saveHealth.backingUp || (!failed && !gsReady());
       retry.textContent = failed ? '重試儲存' : saveHealth.cloud === 'error' ? '重試同步' : '立即同步';
       const summary = document.getElementById('data-status');
       if(summary){
@@ -9267,6 +9293,7 @@ const ClassroomLayout = (() => {
         summary.dataset.kind = useLocal ? local.dataset.kind : state.backupSyncPaused && !saveHealth.busy && saveHealth.cloud !== 'error' ? 'pending' : cloud.dataset.kind;
         summary.title = [local.textContent, cloud.textContent, detail.textContent].filter(Boolean).join('；');
       }
+      if(typeof window !== 'undefined') window.RatingAccount?.renderStatus?.();
     }
     function writeLocalJSON(key, value){
       if(key===SESSION_KEY&&saveHealth.attendanceError)return false;
@@ -9698,6 +9725,7 @@ const ClassroomLayout = (() => {
       if(saveHealth.cloud === 'downloaded') saveHealth.cloud = 'idle';
       saveHealth.revision = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       gsScheduleAutoUpload();
+      if(typeof window !== 'undefined') window.RatingAccount?.changed?.();
       }
       renderSaveHealth();
       if(_saveTimer) return;
@@ -11241,25 +11269,48 @@ const ClassroomLayout = (() => {
     };
     function gsLoadConfig(){
       try{
-        const raw = localStorage.getItem(GS_CFG_KEY);
-        if(raw){
-          const o = JSON.parse(raw);
-          gsConfig.url      = typeof o.url === 'string' ? o.url : '';
-          gsConfig.token    = typeof o.token === 'string' ? o.token : '';
-          gsConfig.autoSync = !!o.autoSync;
-          gsConfig.autoLoad = (o.autoLoad === undefined) ? true : !!o.autoLoad;
-          gsConfig.lastSync = Number(o.lastSync) || 0;
-          gsConfig.lastUploadedRevision = typeof o.lastUploadedRevision === 'string' ? o.lastUploadedRevision : '';
-        }
-      }catch(e){ /* 忽略損壞設定 */ }
+        const raw=localStorage.getItem(GS_CFG_KEY);
+        const o=raw?JSON.parse(raw):{};
+        if(!o||typeof o!=='object'||Array.isArray(o)||['url','token'].some(k=>o[k]!==undefined&&typeof o[k]!=='string'))throw Error('invalid configuration');
+        const next={url:(o.url||'').trim(),token:o.token||'',autoSync:!!o.autoSync,autoLoad:o.autoLoad===undefined?true:!!o.autoLoad,
+          lastSync:Number(o.lastSync)||0,lastUploadedRevision:typeof o.lastUploadedRevision==='string'?o.lastUploadedRevision:'',accountBackupRevision:typeof o.accountBackupRevision==='string'?o.accountBackupRevision:''};
+        Object.assign(gsConfig,next);saveHealth.configError='';return true;
+      }catch(error){saveHealth.configError='無法讀取 Google 設定，原設定已保留。請重新開啟設定視窗重試。';return false;}
     }
     function gsSaveConfig(){
-      writeLocalJSON(GS_CFG_KEY, gsConfig);
-      resetManualSyncButton();
-      window._refreshOnboarding?.();
+      if(saveHealth.configError)return false;
+      const saved=writeLocalJSON(GS_CFG_KEY,gsConfig);
+      resetManualSyncButton();window._refreshOnboarding?.();return saved;
     }
+    function gsConnectionState(){
+      if(saveHealth.configError)return 'error';
+      if(!gsConfig.url&&!gsConfig.token)return 'missing';
+      return gsConfig.url&&/^https:\/\/script\.google\.com\//i.test(gsConfig.url)&&gsConfig.token?'configured':'incomplete';
+    }
+    function gsConfigured(){return gsConnectionState()==='configured';}
     function gsReady(){
-      return !!(gsConfig.url && /^https:\/\/script\.google\.com\//i.test(gsConfig.url) && gsConfig.token);
+      if(typeof window!=='undefined'&&(window.RatingAccount?.owner||window.RatingAccount?.ready===false||window.RatingAccount?.busy))return false;
+      return gsConfigured();
+    }
+    function gsDisplayStatus(){
+      if(typeof window!=='undefined'&&window.RatingAccount?.owner)return {status:'inactive',text:'未啟用',kind:'',detail:'目前使用系統帳號同步。切換至 Google 試算表會先登出帳號。',configured:false};
+      const connection=gsConnectionState();
+      const make=(status,text,kind='',detail='')=>({status,text,kind,detail,configured:connection==='configured'});
+      if(connection==='error')return make('error','讀取設定失敗','error',saveHealth.configError);
+      if(connection==='missing')return make('missing','未設定同步');
+      if(connection==='incomplete')return make('incomplete','設定未完成','pending','請確認 Google 網址與密碼已填寫完整。');
+      if(saveHealth.busy)return make('working','同步中…','busy');
+      if(saveHealth.cloud==='error')return make('error','同步失敗','error',saveHealth.cloudError);
+      if(saveHealth.cloud==='downloaded')return make('saved','已載入雲端','saved');
+      if(gsConfig.lastUploadedRevision&&gsConfig.lastUploadedRevision===saveHealth.revision)return make('saved','已同步','saved');
+      return make('waiting','已設定・待同步','pending');
+    }
+    function gsRefreshConfigUI(){
+      if(typeof gsheetMask!=='undefined'&&gsheetMask.classList.contains('show')){
+        gsUrlInput.value=gsConfig.url;gsTokenInput.value=gsConfig.token;
+        gsAutoCb.checked=gsConfig.autoSync;gsAutoLoadCb.checked=gsConfig.autoLoad;
+      }
+      renderSaveHealth();
     }
     function gsSetSyncStatus(msg, kind){
       const el = document.getElementById('gs-status');
@@ -11360,12 +11411,12 @@ const ClassroomLayout = (() => {
       // 自訂作業可以叫「缺交」「小計」「班級」；以報表結構區分同名欄。
       return header.map((h,i)=>i>=prefix.length && i<end ? '' : h);
     }
-    function appendSyncSupplement(sheets, progressNames={}){
+    function appendSyncSupplement(sheets, progressNames={}, confirmedBackup=null){
       // 試算表仍保留可編輯的資料表；補充快照保留表格無法表達的完整狀態。
       const projections = Object.fromEntries(Object.entries(sheets).filter(([name])=>name!=='__CLASS_META__'));
-      const backup=createFullBackup();
+      const backup=confirmedBackup?JSON.parse(JSON.stringify(confirmedBackup)):createFullBackup();
       const stamp=Number(saveHealth.revision.split('-')[0]) || saveHealth.localAt || Date.now();
-      backup.createdAt=new Date(stamp).toISOString();backup.data.ts=stamp;
+      if(!confirmedBackup){backup.createdAt=new Date(stamp).toISOString();backup.data.ts=stamp;}
       const bundle = {version:1, backup, projections, progressNames};
       const raw = JSON.stringify(bundle);
       const chunks = [];
@@ -11460,7 +11511,8 @@ const ClassroomLayout = (() => {
     // END SYNC COMPLETENESS MODEL
 
     async function gsUpload(opts={}){
-      if(!TabLock.isActive() || saveHealth.busy) return false;
+      if(typeof window!=='undefined' && (window.RatingAccount?.owner||window.RatingAccount?.busy))return false;
+      if(!TabLock.isActive() || saveHealth.busy || saveHealth.backingUp) return false;
       if(!gsReady()){
         markCloudFailure('upload', new Error('請先填寫正確的網頁應用程式網址與密碼。'));
         return false;
@@ -11554,6 +11606,7 @@ const ClassroomLayout = (() => {
 
     /* ★ 下載：從 Google 試算表讀回資料，組成 workbook 後沿用既有匯入流程 */
     async function gsDownload(opts={}){
+      if(typeof window!=='undefined' && window.RatingAccount?.owner){gsSetSyncStatus('目前使用系統帳號同步，Google 試算表同步未啟用。', '');return false;}
       if(_drawAnimating){gsSetSyncStatus('請先完成抽號或機會時間選擇，再載入雲端資料。', 'error');return false;}
       if(saveHealth.busy) return false;
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()){
@@ -11697,7 +11750,6 @@ const ClassroomLayout = (() => {
         saveHealth.busy = false;
         renderSaveHealth();
         gsSetLoadingMask(false);
-        refreshBeforeCloudBackup();
         if(state.mode==='hw') renderHW(elSelect.value);
       }
     }
@@ -11726,6 +11778,7 @@ const ClassroomLayout = (() => {
     function gsCancelAutoUpload(){ if(_gsAutoTimer){ clearTimeout(_gsAutoTimer); _gsAutoTimer = null; } }
     function gsScheduleAutoUpload(){
       renderSaveHealth();
+      if(typeof window!=='undefined' && window.RatingAccount?.owner)return;
       if(state.backupSyncPaused) return;
       if(_gsSuppressAutoUpload) return;  // ★ 清除動作不自動上傳，避免誤刪雲端資料
       if(typeof TabLock !== 'undefined' && !TabLock.isActive()) return;  // ★ 非作用分頁不自動上傳
@@ -11740,6 +11793,9 @@ const ClassroomLayout = (() => {
     }
 
     gsLoadConfig();
+    window.addEventListener('storage',event=>{
+      if(window.RatingAccount?.owner && event.key==='rating-account:'+window.RatingAccount.owner+':google-connection'){if(gsLoadConfig()){saveHealth.cloud='idle';saveHealth.cloudError='';}gsRefreshConfigUI();}
+    });
 
 
     const exportMask     = document.getElementById('export-mask');
@@ -11798,7 +11854,7 @@ const ClassroomLayout = (() => {
     window.addEventListener('keydown', e=>{ if(e.key==='Escape' && exportMask.classList.contains('show')) closeExportModal(); });
 
     /* ===== Google 試算表同步：UI 串接 ===== */
-    const GS_APPS_SCRIPT_CODE = "// 請把下一行的「在這裡填入你的密碼」換成自己的密碼，保留左右引號。\n// 整份程式只需修改這一行，其他地方不用改。\nconst SECRET_TOKEN = '在這裡填入你的密碼';\n\n// ── 以下程式不用修改 ──\n/** 成績系統同步：先驗證，再以單一 Sheets API batchUpdate 備份及寫入。\n * 啟用 Apps Script「服務 → Google Sheets API」後，設定密碼並更新部署。\n * 隱藏備份只保留最近一次上傳前的同步分頁；不是整份試算表的歷史封存。\n */\n\nconst BACKUP_SHEET = '__GRADE_SYNC_BACKUP__';\nconst BACKUP_PREFIX = '__GRADE_SYNC_COPY_';\nconst BACKUP_MARKER = 'grade-sync-backup-v1';\n\nfunction jsonOut(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);\n}\nfunction authorized(token) {\n  return typeof SECRET_TOKEN === 'string' && SECRET_TOKEN.trim().length > 0 &&\n    SECRET_TOKEN !== ['在這裡', '填入你的密碼'].join('') && token === SECRET_TOKEN;\n}\nfunction withSyncLock(action) {\n  const lock = LockService.getScriptLock();\n  if (!lock.tryLock(5000)) throw new Error('其他同步或復原正在進行，請稍候重試。');\n  try { return action(); } finally { lock.releaseLock(); }\n}\nfunction requireSheetsAPI() {\n  if (typeof Sheets === 'undefined') throw new Error('請先在 Apps Script「服務」新增 Google Sheets API，再更新部署。尚未寫入。');\n}\nfunction readBackup(ss, sheets = ss.getSheets()) {\n  const sh = sheets.find(s => s.getName() === BACKUP_SHEET);\n  if (!sh) {\n    if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX))) throw new Error('備份索引遺失，請先檢查隱藏備份分頁。');\n    return null;\n  }\n  const values = sh.getDataRange().getValues();\n  if (values[0]?.[0] !== BACKUP_MARKER) throw new Error('備份保留名稱已被其他分頁使用，尚未寫入。');\n  const record = JSON.parse(values[1]?.[0] || 'null');\n  if (!record || record.version !== 1 || !Array.isArray(record.copies) || !Array.isArray(record.created)) throw new Error('備份索引損壞，尚未寫入。');\n  const ids = new Set(), sourceIds = new Set();\n  record.copies.forEach(c => {\n    const copy = sheets.find(s => s.getSheetId() === c.backupId);\n    if (!Number.isInteger(c.sourceId) || !Number.isInteger(c.backupId) || ids.has(c.backupId) || sourceIds.has(c.sourceId) || !copy || copy.getName() !== BACKUP_PREFIX + c.backupId || typeof c.name !== 'string' || c.name === BACKUP_SHEET || c.name.startsWith(BACKUP_PREFIX)) throw new Error('備份分頁不完整，尚未寫入。');\n    ids.add(c.backupId); sourceIds.add(c.sourceId);\n  });\n  record.created.forEach(c => {\n    if (!Number.isInteger(c.id) || typeof c.name !== 'string' || sourceIds.has(c.id) || ids.has(c.id)) throw new Error('備份索引損壞，尚未寫入。');\n    sourceIds.add(c.id);\n  });\n  if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX) && !ids.has(s.getSheetId()))) throw new Error('發現未登錄的備份分頁，尚未寫入。');\n  return {sheetId:sh.getSheetId(), record};\n}\n// 一次取得多個範圍，避免每個班級分別往返 Google。\nfunction readSheetValues(ss, sheets, headerOnly = false) {\n  if (!sheets.length) return [];\n  requireSheetsAPI();\n  const ranges = sheets.map(s => \"'\" + s.getName().replace(/'/g, \"''\") + \"'\" + (headerOnly ? '!1:1' : ''));\n  const result = Sheets.Spreadsheets.Values.batchGet(ss.getId(), {\n    ranges, majorDimension:'ROWS', valueRenderOption:'UNFORMATTED_VALUE', dateTimeRenderOption:'FORMATTED_STRING'\n  });\n  if (!Array.isArray(result.valueRanges) || result.valueRanges.length !== sheets.length) throw new Error('雲端資料不完整，請稍候再試。');\n  return result.valueRanges.map(r => r.values || []);\n}\nfunction isManaged(name, rows) {\n  const header = (rows[0] || []).map(v => String(v).trim());\n  return name === '__CLASS_META__' || header[0] === '__CLASS_META__' ||\n    (header[0] || '').replace(/\\s+/g, '') === '教學進度' ||\n    (header.includes('姓名') && header.includes('座號'));\n}\nfunction validateUpload(payload) {\n  if (!payload || payload.action !== 'upload' || !payload.sheets || typeof payload.sheets !== 'object' || Array.isArray(payload.sheets) || typeof payload.replaceManagedSheets !== 'boolean') throw new Error('上傳格式錯誤，尚未寫入。');\n  const names = Object.keys(payload.sheets), seen = new Set();\n  if (!names.length) throw new Error('上傳不可為空，尚未寫入。');\n  return names.map(name => {\n    if (!name.trim() || name.length > 100 || /[\\[\\]:*?/\\\\]/.test(name) || name === BACKUP_SHEET || name.startsWith(BACKUP_PREFIX) || seen.has(name.toLowerCase())) throw new Error('分頁名稱無效或重複：' + name);\n    seen.add(name.toLowerCase());\n    const rows = payload.sheets[name];\n    if (!Array.isArray(rows) || !rows.length || rows.some(r => !Array.isArray(r))) throw new Error('分頁資料格式錯誤：' + name);\n    const cols = rows.reduce((n, r) => Math.max(n, r.length), 0);\n    if (!cols || !isManaged(name, rows)) throw new Error('不是成績系統分頁：' + name);\n    const normalized = rows.map(row => Array.from({length:cols}, (_, i) => {\n      const v = row[i] === undefined || row[i] === null ? '' : row[i];\n      if (!['string','number','boolean'].includes(typeof v) || (typeof v === 'number' && !Number.isFinite(v)) || (typeof v === 'string' && v.length > 50000)) throw new Error('儲存格資料無效：' + name);\n      return v;\n    }));\n    return {name, rows:normalized, cols};\n  });\n}\nfunction valueRows(rows) {\n  return rows.map(row => ({values:row.map(v => ({userEnteredValue:\n    typeof v === 'number' ? {numberValue:v} : typeof v === 'boolean' ? {boolValue:v} : {stringValue:v}\n  }))})); // 字串以文字儲存，包含以等號開頭的姓名或備註。\n}\nfunction writeCells(id, rows) {\n  return {updateCells:{range:{sheetId:id}, rows:valueRows(rows), fields:'userEnteredValue'}};\n}\n// 只忽略 Sheets API 省略的尾端空白，不轉型、不四捨五入、不移動中間空列。\nfunction comparableRows(rows) {\n  const result = rows.map(row => {\n    const cells = row.map(v => v === null || v === undefined ? '' : v);\n    while (cells.length && cells[cells.length - 1] === '') cells.pop();\n    return cells;\n  });\n  while (result.length && !result[result.length - 1].length) result.pop();\n  return JSON.stringify(result);\n}\nfunction uploadPlan(ss, payload, entries, previous, sheets = ss.getSheets()) {\n  const requests = [], used = new Set(sheets.map(s => s.getSheetId()));\n  let nextId = 1;\n  const allocate = () => { while (used.has(nextId)) nextId++; used.add(nextId); return nextId++; };\n  const incoming = new Map(entries.map(e => [e.name, e]));\n  const active = sheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));\n  const currentRows = readSheetValues(ss, active);\n  const current = new Map(active.map((s,i) => [s.getName(), comparableRows(currentRows[i])]));\n  const managed = new Set(active.filter((s,i) => isManaged(s.getName(), currentRows[i])).map(s => s.getSheetId()));\n  entries.forEach(e => {\n    const collision = active.find(s => s.getName().toLowerCase() === e.name.toLowerCase());\n    if (collision && (collision.getName() !== e.name || !managed.has(collision.getSheetId()))) throw new Error('同名分頁不是可覆寫的同步分頁：' + e.name);\n  });\n  const changedEntries = entries.filter(e => current.get(e.name) !== comparableRows(e.rows));\n  const changedNames = new Set(changedEntries.map(e => e.name));\n  const affected = active.filter(s => changedNames.has(s.getName()) || (!incoming.has(s.getName()) && payload.replaceManagedSheets && managed.has(s.getSheetId())));\n  if (!changedEntries.length && !affected.length) return []; // 不推進既有復原點。\n\n  const record = {version:1, createdAt:new Date().toISOString(), copies:[], created:[]};\n  affected.forEach(s => {\n    const backupId = allocate();\n    record.copies.push({sourceId:s.getSheetId(), backupId, name:s.getName(), hidden:s.isSheetHidden()});\n    requests.push({duplicateSheet:{sourceSheetId:s.getSheetId(), newSheetId:backupId, newSheetName:BACKUP_PREFIX + backupId}});\n    // 固定備份當下的值，避免公式因後續刪除或改寫來源分頁而改變。\n    requests.push({copyPaste:{source:{sheetId:s.getSheetId()}, destination:{sheetId:backupId}, pasteType:'PASTE_VALUES'}});\n    requests.push({updateSheetProperties:{properties:{sheetId:backupId, hidden:true}, fields:'hidden'}});\n  });\n  changedEntries.forEach(e => {\n    const existing = active.find(s => s.getName() === e.name);\n    const id = existing ? existing.getSheetId() : allocate();\n    if (!existing) {\n      record.created.push({id, name:e.name});\n      requests.push({addSheet:{properties:{sheetId:id, title:e.name, gridProperties:{rowCount:e.rows.length, columnCount:e.cols}}}});\n    } else {\n      requests.push({updateSheetProperties:{properties:{sheetId:id, gridProperties:{rowCount:Math.max(existing.getMaxRows(), e.rows.length), columnCount:Math.max(existing.getMaxColumns(), e.cols)}}, fields:'gridProperties.rowCount,gridProperties.columnCount'}});\n    }\n    requests.push(writeCells(id, e.rows));\n  });\n  affected.filter(s => !incoming.has(s.getName())).forEach(s => requests.push({deleteSheet:{sheetId:s.getSheetId()}}));\n  if (previous) previous.record.copies.forEach(c => requests.push({deleteSheet:{sheetId:c.backupId}}));\n  const manifestId = previous ? previous.sheetId : allocate();\n  if (!previous) requests.push({addSheet:{properties:{sheetId:manifestId, title:BACKUP_SHEET, hidden:true, gridProperties:{rowCount:2, columnCount:1}}}});\n  const manifest = JSON.stringify(record);\n  if (manifest.length > 50000) throw new Error('備份索引超出容量，尚未寫入。');\n  requests.push(writeCells(manifestId, [[BACKUP_MARKER], [manifest]]));\n  return requests;\n}\nfunction doGet(e) {\n  if (!authorized(e?.parameter?.token)) return jsonOut({ok:false, error:'密碼錯誤'});\n  try {\n    return jsonOut(withSyncLock(() => {\n      const ss = SpreadsheetApp.getActiveSpreadsheet();\n      const allSheets = ss.getSheets();\n      readBackup(ss, allSheets);\n      const sheets = Object.create(null);\n      const active = allSheets.filter(s => s.getName() !== BACKUP_SHEET && !s.getName().startsWith(BACKUP_PREFIX));\n      const rows = readSheetValues(ss, active);\n      active.forEach((s, i) => {\n        const values = rows[i];\n        if (values.length) sheets[s.getName()] = values;\n      });\n      return {ok:true, sheets};\n    }));\n  } catch (err) { return jsonOut({ok:false, error:String(err.message || err)}); }\n}\nfunction doPost(e) {\n  let submitted = false;\n  try {\n    const payload = JSON.parse(e?.postData?.contents || 'null');\n    if (!authorized(payload?.token)) return jsonOut({ok:false, error:'密碼錯誤'});\n    const entries = validateUpload(payload);\n    requireSheetsAPI();\n    return jsonOut(withSyncLock(() => {\n      const ss = SpreadsheetApp.getActiveSpreadsheet();\n      const allSheets = ss.getSheets();\n      const requests = uploadPlan(ss, payload, entries, readBackup(ss, allSheets), allSheets);\n      if (!requests.length) return {ok:true, unchanged:true};\n      submitted = true;\n      Sheets.Spreadsheets.batchUpdate({requests}, ss.getId());\n      return {ok:true, backupAvailable:true};\n    }));\n  } catch (err) {\n    return jsonOut({ok:false, error:String(err.message || err) + (submitted ? '；未收到成功確認，請先下載核對。原子更新不會只套用部分分頁；可從試算表「成績系統」選單復原上傳前版本。' : '')});\n  }\n}\nfunction onOpen() {\n  SpreadsheetApp.getUi().createMenu('成績系統').addItem('復原最近一次上傳前版本', 'restorePreviousUpload').addToUi();\n}\nfunction restorePlan(ss, backup) {\n  const requests = [], sheets = ss.getSheets(), record = backup.record;\n  // 先恢復舊分頁，再移除本次新增分頁，始終保留可見分頁。\n  record.copies.forEach(c => {\n    const source = sheets.find(s => s.getSheetId() === c.sourceId);\n    const copy = sheets.find(s => s.getSheetId() === c.backupId);\n    if ((source && source.getName() !== c.name) || sheets.some(s => s.getName() === c.name && s.getSheetId() !== c.sourceId)) throw new Error('分頁已被手動改名或取代，請先檢查：' + c.name);\n    if (!source) requests.push({addSheet:{properties:{sheetId:c.sourceId, title:c.name, hidden:!!c.hidden, gridProperties:{rowCount:copy.getMaxRows(), columnCount:copy.getMaxColumns()}}}});\n    else requests.push({updateSheetProperties:{properties:{sheetId:c.sourceId, gridProperties:{rowCount:Math.max(source.getMaxRows(), copy.getMaxRows()), columnCount:Math.max(source.getMaxColumns(), copy.getMaxColumns())}}, fields:'gridProperties.rowCount,gridProperties.columnCount'}});\n    requests.push({repeatCell:{range:{sheetId:c.sourceId}, cell:{}, fields:'userEnteredValue,userEnteredFormat,note,dataValidation'}});\n    requests.push({copyPaste:{source:{sheetId:c.backupId, startRowIndex:0, endRowIndex:copy.getMaxRows(), startColumnIndex:0, endColumnIndex:copy.getMaxColumns()}, destination:{sheetId:c.sourceId, startRowIndex:0, endRowIndex:copy.getMaxRows(), startColumnIndex:0, endColumnIndex:copy.getMaxColumns()}, pasteType:'PASTE_NORMAL'}});\n  });\n  record.created.forEach(c => {\n    const source = sheets.find(s => s.getSheetId() === c.id);\n    if (source && source.getName() !== c.name) throw new Error('新增分頁已被手動改名，請先檢查：' + c.name);\n    if (source) requests.push({deleteSheet:{sheetId:c.id}});\n  });\n  record.copies.forEach(c => requests.push({deleteSheet:{sheetId:c.backupId}}));\n  requests.push({deleteSheet:{sheetId:backup.sheetId}});\n  return requests;\n}\nfunction restorePreviousUpload() {\n  const ui = SpreadsheetApp.getUi();\n  try {\n    const ss = SpreadsheetApp.getActiveSpreadsheet(), preview = readBackup(ss);\n    if (!preview) { ui.alert('目前沒有可復原的上傳前版本。'); return; }\n    const answer = ui.alert('復原上傳前版本', '將復原 ' + preview.record.createdAt + ' 上傳前的同步資料，移除該次新增分頁。請先關閉所有裝置的自動同步並保留目前資料備份。復原後，所有裝置須先從雲端下載再編輯。是否繼續？', ui.ButtonSet.YES_NO);\n    if (answer !== ui.Button.YES) return;\n    requireSheetsAPI();\n    withSyncLock(() => {\n      const current = readBackup(ss);\n      if (!current || JSON.stringify(current.record) !== JSON.stringify(preview.record)) throw new Error('確認期間有新的上傳，請重新開啟復原。');\n      Sheets.Spreadsheets.batchUpdate({requests:restorePlan(ss, current)}, ss.getId());\n    });\n    ui.alert('雲端已復原。請在各裝置先從 Google 下載，再恢復編輯與自動上傳。');\n  } catch (err) { ui.alert('未確認復原成功：' + (err.message || err) + '。請核對雲端內容；請勿直接重傳本機舊資料。'); }\n}";
+    const GS_APPS_SCRIPT_CODE = "// 請把下一行的「在這裡填入你的密碼」換成自己的密碼，保留左右引號。\n// 整份程式只需修改這一行，其他地方不用改。\nconst SECRET_TOKEN = '在這裡填入你的密碼';\n\n// ── 以下程式不用修改 ──\n/** 成績系統同步：先驗證，再以單一 Sheets API batchUpdate 備份及寫入。\n * 啟用 Apps Script「服務 → Google Sheets API」後，設定密碼並更新部署。\n * 隱藏備份只保留最近一次上傳前的同步分頁；不是整份試算表的歷史封存。\n */\n\nconst BACKUP_SHEET = '__GRADE_SYNC_BACKUP__';\nconst BACKUP_PREFIX = '__GRADE_SYNC_COPY_';\nconst BACKUP_MARKER = 'grade-sync-backup-v1';\nconst ACCOUNT_SOURCE_SHEET = '__ACCOUNT_SOURCE__';\n\nfunction jsonOut(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);\n}\nfunction authorized(token) {\n  return typeof SECRET_TOKEN === 'string' && SECRET_TOKEN.trim().length > 0 &&\n    SECRET_TOKEN !== ['在這裡', '填入你的密碼'].join('') && token === SECRET_TOKEN;\n}\nfunction withSyncLock(action) {\n  const lock = LockService.getScriptLock();\n  if (!lock.tryLock(5000)) throw new Error('其他同步或復原正在進行，請稍候重試。');\n  try { return action(); } finally { lock.releaseLock(); }\n}\nfunction requireSheetsAPI() {\n  if (typeof Sheets === 'undefined') throw new Error('請先在 Apps Script「服務」新增 Google Sheets API，再更新部署。尚未寫入。');\n}\nfunction readBackup(ss, sheets = ss.getSheets()) {\n  const sh = sheets.find(s => s.getName() === BACKUP_SHEET);\n  if (!sh) {\n    if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX))) throw new Error('備份索引遺失，請先檢查隱藏備份分頁。');\n    return null;\n  }\n  const values = sh.getDataRange().getValues();\n  if (values[0]?.[0] !== BACKUP_MARKER) throw new Error('備份保留名稱已被其他分頁使用，尚未寫入。');\n  const record = JSON.parse(values[1]?.[0] || 'null');\n  if (!record || record.version !== 1 || !Array.isArray(record.copies) || !Array.isArray(record.created)) throw new Error('備份索引損壞，尚未寫入。');\n  const ids = new Set(), sourceIds = new Set();\n  record.copies.forEach(c => {\n    const copy = sheets.find(s => s.getSheetId() === c.backupId);\n    if (!Number.isInteger(c.sourceId) || !Number.isInteger(c.backupId) || ids.has(c.backupId) || sourceIds.has(c.sourceId) || !copy || copy.getName() !== BACKUP_PREFIX + c.backupId || typeof c.name !== 'string' || c.name === BACKUP_SHEET || c.name.startsWith(BACKUP_PREFIX)) throw new Error('備份分頁不完整，尚未寫入。');\n    ids.add(c.backupId); sourceIds.add(c.sourceId);\n  });\n  record.created.forEach(c => {\n    if (!Number.isInteger(c.id) || typeof c.name !== 'string' || sourceIds.has(c.id) || ids.has(c.id)) throw new Error('備份索引損壞，尚未寫入。');\n    sourceIds.add(c.id);\n  });\n  if (sheets.some(s => s.getName().startsWith(BACKUP_PREFIX) && !ids.has(s.getSheetId()))) throw new Error('發現未登錄的備份分頁，尚未寫入。');\n  return {sheetId:sh.getSheetId(), record};\n}\n// 一次取得多個範圍，避免每個班級分別往返 Google。\nfunction readSheetValues(ss, sheets, headerOnly = false) {\n  if (!sheets.length) return [];\n  requireSheetsAPI();\n  const ranges = sheets.map(s => \"'\" + s.getName().replace(/'/g, \"''\") + \"'\" + (headerOnly ? '!1:1' : ''));\n  const result = Sheets.Spreadsheets.Values.batchGet(ss.getId(), {\n    ranges, majorDimension:'ROWS', valueRenderOption:'UNFORMATTED_VALUE', dateTimeRenderOption:'FORMATTED_STRING'\n  });\n  if (!Array.isArray(result.valueRanges) || result.valueRanges.length !== sheets.length) throw new Error('雲端資料不完整，請稍候再試。');\n  return result.valueRanges.map(r => r.values || []);\n}\nfunction isManaged(name, rows) {\n  const header = (rows[0] || []).map(v => String(v).trim());\n  return name === '__CLASS_META__' || header[0] === '__CLASS_META__' ||\n    (header[0] || '').replace(/\\s+/g, '') === '教學進度' ||\n    (header.includes('姓名') && header.includes('座號'));\n}\nfunction validateUpload(payload) {\n  if (!payload || !['upload','accountBackup'].includes(payload.action) || !payload.sheets || typeof payload.sheets !== 'object' || Array.isArray(payload.sheets) || typeof payload.replaceManagedSheets !== 'boolean') throw new Error('上傳格式錯誤，尚未寫入。');\n  const names = Object.keys(payload.sheets), seen = new Set();\n  if (!names.length) throw new Error('上傳不可為空，尚未寫入。');\n  return names.map(name => {\n    if (!name.trim() || name.length > 100 || /[\\[\\]:*?/\\\\]/.test(name) || name === BACKUP_SHEET || name === ACCOUNT_SOURCE_SHEET || name.startsWith(BACKUP_PREFIX) || seen.has(name.toLowerCase())) throw new Error('分頁名稱無效或重複：' + name);\n    seen.add(name.toLowerCase());\n    const rows = payload.sheets[name];\n    if (!Array.isArray(rows) || !rows.length || rows.some(r => !Array.isArray(r))) throw new Error('分頁資料格式錯誤：' + name);\n    const cols = rows.reduce((n, r) => Math.max(n, r.length), 0);\n    if (!cols || !isManaged(name, rows)) throw new Error('不是成績系統分頁：' + name);\n    const normalized = rows.map(row => Array.from({length:cols}, (_, i) => {\n      const v = row[i] === undefined || row[i] === null ? '' : row[i];\n      if (!['string','number','boolean'].includes(typeof v) || (typeof v === 'number' && !Number.isFinite(v)) || (typeof v === 'string' && v.length > 50000)) throw new Error('儲存格資料無效：' + name);\n      return v;\n    }));\n    return {name, rows:normalized, cols};\n  });\n}\nfunction valueRows(rows) {\n  return rows.map(row => ({values:row.map(v => ({userEnteredValue:\n    typeof v === 'number' ? {numberValue:v} : typeof v === 'boolean' ? {boolValue:v} : {stringValue:v}\n  }))})); // 字串以文字儲存，包含以等號開頭的姓名或備註。\n}\nfunction writeCells(id, rows) {\n  return {updateCells:{range:{sheetId:id}, rows:valueRows(rows), fields:'userEnteredValue'}};\n}\n// 只忽略 Sheets API 省略的尾端空白，不轉型、不四捨五入、不移動中間空列。\nfunction comparableRows(rows) {\n  const result = rows.map(row => {\n    const cells = row.map(v => v === null || v === undefined ? '' : v);\n    while (cells.length && cells[cells.length - 1] === '') cells.pop();\n    return cells;\n  });\n  while (result.length && !result[result.length - 1].length) result.pop();\n  return JSON.stringify(result);\n}\nfunction uploadPlan(ss, payload, entries, previous, sheets = ss.getSheets()) {\n  const requests = [], used = new Set(sheets.map(s => s.getSheetId()));\n  let nextId = 1;\n  const allocate = () => { while (used.has(nextId)) nextId++; used.add(nextId); return nextId++; };\n  const incoming = new Map(entries.map(e => [e.name, e]));\n  const active = sheets.filter(s => s.getName() !== BACKUP_SHEET && s.getName() !== ACCOUNT_SOURCE_SHEET && !s.getName().startsWith(BACKUP_PREFIX));\n  const currentRows = readSheetValues(ss, active);\n  const current = new Map(active.map((s,i) => [s.getName(), comparableRows(currentRows[i])]));\n  const managed = new Set(active.filter((s,i) => isManaged(s.getName(), currentRows[i])).map(s => s.getSheetId()));\n  entries.forEach(e => {\n    const collision = active.find(s => s.getName().toLowerCase() === e.name.toLowerCase());\n    if (collision && (collision.getName() !== e.name || !managed.has(collision.getSheetId()))) throw new Error('同名分頁不是可覆寫的同步分頁：' + e.name);\n  });\n  const changedEntries = entries.filter(e => current.get(e.name) !== comparableRows(e.rows));\n  const changedNames = new Set(changedEntries.map(e => e.name));\n  const affected = active.filter(s => changedNames.has(s.getName()) || (!incoming.has(s.getName()) && payload.replaceManagedSheets && managed.has(s.getSheetId())));\n  if (!changedEntries.length && !affected.length) return []; // 不推進既有復原點。\n\n  const record = {version:1, createdAt:new Date().toISOString(), copies:[], created:[]};\n  affected.forEach(s => {\n    const backupId = allocate();\n    record.copies.push({sourceId:s.getSheetId(), backupId, name:s.getName(), hidden:s.isSheetHidden()});\n    requests.push({duplicateSheet:{sourceSheetId:s.getSheetId(), newSheetId:backupId, newSheetName:BACKUP_PREFIX + backupId}});\n    // 固定備份當下的值，避免公式因後續刪除或改寫來源分頁而改變。\n    requests.push({copyPaste:{source:{sheetId:s.getSheetId()}, destination:{sheetId:backupId}, pasteType:'PASTE_VALUES'}});\n    requests.push({updateSheetProperties:{properties:{sheetId:backupId, hidden:true}, fields:'hidden'}});\n  });\n  changedEntries.forEach(e => {\n    const existing = active.find(s => s.getName() === e.name);\n    const id = existing ? existing.getSheetId() : allocate();\n    if (!existing) {\n      record.created.push({id, name:e.name});\n      requests.push({addSheet:{properties:{sheetId:id, title:e.name, gridProperties:{rowCount:e.rows.length, columnCount:e.cols}}}});\n    } else {\n      requests.push({updateSheetProperties:{properties:{sheetId:id, gridProperties:{rowCount:Math.max(existing.getMaxRows(), e.rows.length), columnCount:Math.max(existing.getMaxColumns(), e.cols)}}, fields:'gridProperties.rowCount,gridProperties.columnCount'}});\n    }\n    requests.push(writeCells(id, e.rows));\n  });\n  affected.filter(s => !incoming.has(s.getName())).forEach(s => requests.push({deleteSheet:{sheetId:s.getSheetId()}}));\n  if (previous) previous.record.copies.forEach(c => requests.push({deleteSheet:{sheetId:c.backupId}}));\n  const manifestId = previous ? previous.sheetId : allocate();\n  if (!previous) requests.push({addSheet:{properties:{sheetId:manifestId, title:BACKUP_SHEET, hidden:true, gridProperties:{rowCount:2, columnCount:1}}}});\n  const manifest = JSON.stringify(record);\n  if (manifest.length > 50000) throw new Error('備份索引超出容量，尚未寫入。');\n  requests.push(writeCells(manifestId, [[BACKUP_MARKER], [manifest]]));\n  return requests;\n}\nfunction doGet(e) {\n  if (!authorized(e?.parameter?.token)) return jsonOut({ok:false, error:'密碼錯誤'});\n  if(e?.parameter?.action==='capabilities')return jsonOut({ok:true,accountBackupProtocol:1});\n  try {\n    return jsonOut(withSyncLock(() => {\n      const ss = SpreadsheetApp.getActiveSpreadsheet();\n      const allSheets = ss.getSheets();\n      readBackup(ss, allSheets);\n      const sheets = Object.create(null);\n      const active = allSheets.filter(s => s.getName() !== BACKUP_SHEET && s.getName() !== ACCOUNT_SOURCE_SHEET && !s.getName().startsWith(BACKUP_PREFIX));\n      const rows = readSheetValues(ss, active);\n      active.forEach((s, i) => {\n        const values = rows[i];\n        if (values.length) sheets[s.getName()] = values;\n      });\n      return {ok:true, sheets};\n    }));\n  } catch (err) { return jsonOut({ok:false, error:String(err.message || err)}); }\n}\nfunction accountVersionTime(value){\n  const fraction=String(value).match(/\\.(\\d+)/)?.[1]||'';\n  return Date.parse(value)*1000+Number(fraction.padEnd(6,'0').slice(3,6));\n}\nfunction doPost(e) {\n  let submitted = false;\n  try {\n    const payload = JSON.parse(e?.postData?.contents || 'null');\n    if (!authorized(payload?.token)) return jsonOut({ok:false, error:'密碼錯誤'});\n    const entries = validateUpload(payload);\n    requireSheetsAPI();\n    return jsonOut(withSyncLock(() => {\n      const ss = SpreadsheetApp.getActiveSpreadsheet();\n      const allSheets = ss.getSheets();\n      const source=payload.action==='accountBackup'?payload.accountSource:null;\n      if(payload.action==='accountBackup'&&!source)throw new Error('缺少帳號備份版本。');\n      const marker=allSheets.find(s=>s.getName()===ACCOUNT_SOURCE_SHEET);\n      if(marker && !source)throw new Error('此試算表已用於帳號備份，請從線上帳號更新。');\n      if(source){\n        if(!/^[0-9a-f-]{36}$/i.test(source.userId)||!/^[0-9a-f-]{36}$/i.test(source.revision)||!Number.isFinite(Date.parse(source.updatedAt)))throw new Error('帳號備份版本格式錯誤。');\n        if(marker){\n          const values=marker.getDataRange().getValues();\n          if(values[0]?.[0]!=='account-source-v1')throw new Error('帳號備份索引格式不符。');\n          const previous=JSON.parse(values[1]?.[0]||'null');\n          if(previous?.userId!==source.userId)throw new Error('此試算表已綁定另一個帳號，請使用各自的試算表。');\n          if(source.revision===previous.revision)return {ok:true,unchanged:true,accountBackup:true};\n          if(accountVersionTime(source.updatedAt)\u003c=accountVersionTime(previous.updatedAt))return {ok:true,skipped:true,accountBackup:true};\n        }\n      }\n      const requests = uploadPlan(ss, payload, entries, readBackup(ss, allSheets), allSheets);\n      if(source){\n        let id=marker?.getSheetId();\n        if(!id){\n          const used=new Set(allSheets.map(s=>s.getSheetId()));\n          requests.forEach(r=>{if(r.addSheet)used.add(r.addSheet.properties.sheetId);if(r.duplicateSheet)used.add(r.duplicateSheet.newSheetId);});\n          id=1;while(used.has(id))id++;\n          requests.push({addSheet:{properties:{sheetId:id,title:ACCOUNT_SOURCE_SHEET,hidden:true,gridProperties:{rowCount:2,columnCount:1}}}});\n        }\n        requests.push(writeCells(id,[['account-source-v1'],[JSON.stringify(source)]]));\n      }\n      if (!requests.length) return {ok:true, unchanged:true};\n      submitted = true;\n      Sheets.Spreadsheets.batchUpdate({requests}, ss.getId());\n      return {ok:true, backupAvailable:true, ...(source?{accountBackup:true}:{})};\n    }));\n  } catch (err) {\n    return jsonOut({ok:false, error:String(err.message || err) + (submitted ? '；未收到成功確認，請先下載核對。原子更新不會只套用部分分頁；可從試算表「成績系統」選單復原上傳前版本。' : '')});\n  }\n}\nfunction onOpen() {\n  SpreadsheetApp.getUi().createMenu('成績系統').addItem('復原最近一次上傳前版本', 'restorePreviousUpload').addToUi();\n}\nfunction restorePlan(ss, backup) {\n  const requests = [], sheets = ss.getSheets(), record = backup.record;\n  const source=sheets.find(s=>s.getName()===ACCOUNT_SOURCE_SHEET);\n  if(source)requests.push({deleteSheet:{sheetId:source.getSheetId()}});\n  // 先恢復舊分頁，再移除本次新增分頁，始終保留可見分頁。\n  record.copies.forEach(c => {\n    const source = sheets.find(s => s.getSheetId() === c.sourceId);\n    const copy = sheets.find(s => s.getSheetId() === c.backupId);\n    if ((source && source.getName() !== c.name) || sheets.some(s => s.getName() === c.name && s.getSheetId() !== c.sourceId)) throw new Error('分頁已被手動改名或取代，請先檢查：' + c.name);\n    if (!source) requests.push({addSheet:{properties:{sheetId:c.sourceId, title:c.name, hidden:!!c.hidden, gridProperties:{rowCount:copy.getMaxRows(), columnCount:copy.getMaxColumns()}}}});\n    else requests.push({updateSheetProperties:{properties:{sheetId:c.sourceId, gridProperties:{rowCount:Math.max(source.getMaxRows(), copy.getMaxRows()), columnCount:Math.max(source.getMaxColumns(), copy.getMaxColumns())}}, fields:'gridProperties.rowCount,gridProperties.columnCount'}});\n    requests.push({repeatCell:{range:{sheetId:c.sourceId}, cell:{}, fields:'userEnteredValue,userEnteredFormat,note,dataValidation'}});\n    requests.push({copyPaste:{source:{sheetId:c.backupId, startRowIndex:0, endRowIndex:copy.getMaxRows(), startColumnIndex:0, endColumnIndex:copy.getMaxColumns()}, destination:{sheetId:c.sourceId, startRowIndex:0, endRowIndex:copy.getMaxRows(), startColumnIndex:0, endColumnIndex:copy.getMaxColumns()}, pasteType:'PASTE_NORMAL'}});\n  });\n  record.created.forEach(c => {\n    const source = sheets.find(s => s.getSheetId() === c.id);\n    if (source && source.getName() !== c.name) throw new Error('新增分頁已被手動改名，請先檢查：' + c.name);\n    if (source) requests.push({deleteSheet:{sheetId:c.id}});\n  });\n  record.copies.forEach(c => requests.push({deleteSheet:{sheetId:c.backupId}}));\n  requests.push({deleteSheet:{sheetId:backup.sheetId}});\n  return requests;\n}\nfunction restorePreviousUpload() {\n  const ui = SpreadsheetApp.getUi();\n  try {\n    const ss = SpreadsheetApp.getActiveSpreadsheet(), preview = readBackup(ss);\n    if (!preview) { ui.alert('目前沒有可復原的上傳前版本。'); return; }\n    const answer = ui.alert('復原上傳前版本', '將復原 ' + preview.record.createdAt + ' 上傳前的同步資料，移除該次新增分頁。請先關閉所有裝置的自動同步並保留目前資料備份。復原後，所有裝置須先從雲端下載再編輯。是否繼續？', ui.ButtonSet.YES_NO);\n    if (answer !== ui.Button.YES) return;\n    requireSheetsAPI();\n    withSyncLock(() => {\n      const current = readBackup(ss);\n      if (!current || JSON.stringify(current.record) !== JSON.stringify(preview.record)) throw new Error('確認期間有新的上傳，請重新開啟復原。');\n      Sheets.Spreadsheets.batchUpdate({requests:restorePlan(ss, current)}, ss.getId());\n    });\n    ui.alert('雲端已復原。請在各裝置先從 Google 下載，再恢復編輯與自動上傳。');\n  } catch (err) { ui.alert('未確認復原成功：' + (err.message || err) + '。請核對雲端內容；請勿直接重傳本機舊資料。'); }\n}";
 
     const gsheetMask  = document.getElementById('gsheet-mask');
     const gsUrlInput  = document.getElementById('gs-url');
@@ -11834,6 +11890,8 @@ const ClassroomLayout = (() => {
     }
     document.getElementById('gs-token-toggle').addEventListener('click',()=>setGsheetTokenVisible(gsTokenInput.type==='password'));
     function openGsheetModal(){
+      if(window.RatingAccount?.owner){window.RatingAccount.switchToGoogle?.();return;}
+      gsLoadConfig();renderSaveHealth();
       setGsheetTokenVisible(false);
       gsUrlInput.value   = gsConfig.url;
       gsTokenInput.value = gsConfig.token;
@@ -11841,7 +11899,7 @@ const ClassroomLayout = (() => {
       gsAutoLoadCb.checked = gsConfig.autoLoad;
       const codeEl = document.getElementById('gs-code');
       if(codeEl && !codeEl.textContent) codeEl.textContent = GS_APPS_SCRIPT_CODE;
-      gsSetSyncStatus('', '');
+      gsSetSyncStatus(saveHealth.configError||saveHealth.cloudError||'',saveHealth.configError||saveHealth.cloudError?'error':'');
       gsUpdateLastSyncLabel();
       gsheetMask.classList.add('show');
     }
@@ -11892,19 +11950,6 @@ const ClassroomLayout = (() => {
       backupReadVersion++; resetBackupPreview(); backupMask.classList.remove('show');
       document.getElementById('btn-data').focus();
     }
-    const beforeCloudButton=document.getElementById('btn-backup-before-cloud');
-    function refreshBeforeCloudBackup(){
-      try{beforeCloudButton.hidden=!localStorage.getItem('pscore_before_cloud_download_v1');}catch{beforeCloudButton.hidden=true;}
-    }
-    refreshBeforeCloudBackup();
-    beforeCloudButton.addEventListener('click',()=>{
-      try{
-        const data=JSON.parse(localStorage.getItem('pscore_before_cloud_download_v1') || 'null');
-        if(!data) throw new Error('目前沒有下載前備份。');
-        for(const d of Object.values(data.draw || {})){d.history ||= [];d.drawn ||= [];}
-        downloadFullBackup({format:BACKUP_FORMAT,version:BACKUP_VERSION,createdAt:new Date(data.ts).toISOString(),data});
-      }catch(error){appAlert('備份未完成：'+error.message);}
-    });
     document.getElementById('btn-backup-export').addEventListener('click',downloadFullBackup);
     document.getElementById('backup-before-export').addEventListener('click',downloadFullBackup);
     document.getElementById('btn-backup-restore').addEventListener('click',()=>{
@@ -11971,8 +12016,8 @@ const ClassroomLayout = (() => {
       const btn  = document.getElementById('btn-data');
       const dd   = document.getElementById('data-dropdown');
       if(!menu || !btn || !dd) return;
-      const openMenu  = ()=>{ dd.hidden = false; btn.setAttribute('aria-expanded','true'); };
-      const closeMenu = ()=>{ dd.hidden = true;  btn.setAttribute('aria-expanded','false'); };
+      const openMenu  = ()=>{gsLoadConfig();renderSaveHealth();dd.hidden = false;btn.setAttribute('aria-expanded','true');};
+      const closeMenu = ()=>{ dd.hidden = true; btn.setAttribute('aria-expanded','false'); document.getElementById('data-more').open=false; };
       btn.addEventListener('click', (e)=>{ e.stopPropagation(); dd.hidden ? openMenu() : closeMenu(); });
       dd.addEventListener('click', e=>{ if(e.target.closest('.data-item')) closeMenu(); });
       document.getElementById('btn-import-roster').addEventListener('click', ()=>document.getElementById('file-input').click());
@@ -11984,7 +12029,11 @@ const ClassroomLayout = (() => {
     window.addEventListener('keydown', e=>{ if(e.key==='Escape' && gsheetMask.classList.contains('show')) closeGsheetModal(); });
 
     function gsConnectionChanged(){
+      saveHealth.configError='';
+      try{window.RatingStorage?.setGoogleConnection?.({url:gsConfig.url,token:gsConfig.token});}
+      catch(error){saveHealth.configError='Google 設定未能儲存，請重試；原設定仍保留。';renderSaveHealth();return;}
       gsConfig.lastUploadedRevision = '';
+      gsConfig.accountBackupRevision='';
       gsConfig.lastSync = 0;
       saveHealth.cloud = 'idle';
       saveHealth.cloudError = '';
@@ -12225,7 +12274,8 @@ const ClassroomLayout = (() => {
     function openClearModal(){
       clearReturnFocus=document.activeElement;
       const note = document.getElementById('clear-gs-note');
-      if(note) note.style.display = (typeof gsReady === 'function' && gsReady()) ? '' : 'none';
+      if(note){note.style.display = (window.RatingAccount?.owner || (typeof gsReady === 'function' && gsReady())) ? '' : 'none';note.lastElementChild.textContent=window.RatingAccount?.owner?'清除會同步至目前登入的系統帳號。':'只清除本機資料，Google 試算表內容會保留。';}
+      document.getElementById('clear-description').textContent=window.RatingAccount?.owner?'選擇要清除的帳號資料類別。':'選擇要清除的本機資料類別。';
       clearMask.classList.add('show');
       updateClearSelection();
       clearClose.focus({preventScroll:true});
@@ -12262,7 +12312,8 @@ const ClassroomLayout = (() => {
       if(picked.includes('seating') || picked.includes('classMap')){
         confirmMsg += '\n已建立的自訂座位範本會保留。';
       }
-      if(typeof gsReady === 'function' && gsReady()){
+      if(window.RatingAccount?.owner){confirmMsg+='\n\n清除會同步至目前登入的系統帳號。';}
+      else if(typeof gsReady === 'function' && gsReady()){
         confirmMsg += `\n\n☁️ 此清除只會刪除「本機」資料，不會更動 Google 試算表內容。`;
         if(gsConfig.autoSync){
           confirmMsg += `\n（已開啟自動同步，但清除動作不會自動上傳覆蓋雲端。）`;
@@ -18803,7 +18854,7 @@ elProgAdd?.addEventListener('click', ()=>{
     //   - 僅在作用分頁、已設定網址密碼、且開啟「自動載入」時執行
     //   - 失敗時自動沿用本機暫存資料，不影響使用
     (function gsAutoLoadOnStartup(){
-      if(state.backupSyncPaused || !gsConfig.autoLoad || !gsReady()) return;
+      if((typeof window!=='undefined' && window.RatingAccount?.owner) || state.backupSyncPaused || !gsConfig.autoLoad || !gsReady()) return;
       // 等分頁鎖判定完成（init 內探測約 250ms）後再決定是否載入
       setTimeout(async ()=>{
         if(state.backupSyncPaused) return;
@@ -19916,7 +19967,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
     function renderDraw(cls){
       if(pendingDraw && !drawRoundIsCurrent(pendingDraw)) cancelDrawRound();
-      if(pendingDraw){cls=pendingDraw.cls;elSelect.value=cls;}
+      if(pendingDraw && state.mode==='draw'){cls=pendingDraw.cls;elSelect.value=cls;}
       syncDrawClassSelect(cls);
 
       if(!cls){
@@ -20247,6 +20298,7 @@ elProgAdd?.addEventListener('click', ()=>{
         let startTime = null;
 
         function tick(now){
+          if(options.isCurrent && !options.isCurrent()) return;
           if(startTime===null) startTime = now;
           const elapsed = now - startTime;
 
@@ -20318,6 +20370,7 @@ elProgAdd?.addEventListener('click', ()=>{
       elBtnDraw.disabled=!!round || drawSequenceExceedsLimit(elDrawSeq.value) || !elSelect.value;
       elBtnDraw.textContent=!round?'🎰 開始抽籤！':round.phase==='waiting'?'等待機會時間選擇…':'🎰 抽籤中...';
       elChancePanel.hidden=!round || round.phase==='initial';
+      elChancePanel.parentElement.classList.toggle('chance-active',!elChancePanel.hidden);
       if(!round) return;
       const waiting=round.phase==='waiting';
       elChanceStart.disabled=elChanceKeep.disabled=!waiting;
@@ -20352,7 +20405,7 @@ elProgAdd?.addEventListener('click', ()=>{
     }
     function drawRoundIsCurrent(round){
       const list=state.classMap[round.cls];
-      return state.draw?.[round.cls]===round.drawState && Array.isArray(list)
+      return TabLock.isActive() && state.draw?.[round.cls]===round.drawState && Array.isArray(list)
         && list.length===round.list.length && list.every((s,i)=>s.id===round.list[i].id)
         && round.drawState.seqPos===round.originalSeqPos
         && JSON.stringify(round.drawState.drawn)===JSON.stringify(round.drawn);
@@ -20396,7 +20449,7 @@ elProgAdd?.addEventListener('click', ()=>{
         if(pendingDraw!==round)return;
         if(state.mode==='draw' && !document.hidden) drawSound.chanceCue('win');
         finishDrawRound(round);
-      },{cls:round.cls,slowdown:round.slowdown,chance:true});
+      },{cls:round.cls,slowdown:round.slowdown,chance:true,isCurrent:()=>pendingDraw===round});
     }
     elChanceStart.addEventListener('click',startChanceRedraw);
     elChanceKeep.addEventListener('click',()=>{
@@ -20405,7 +20458,8 @@ elProgAdd?.addEventListener('click', ()=>{
     });
     // === 事件：抽！（含動畫） ===
     elBtnDraw?.addEventListener('click', ()=>{
-      if(_drawAnimating || saveHealth.busy || !TabLock.isActive()) return;
+      if(_drawAnimating || !TabLock.isActive()) return;
+      if(saveHealth.busy && saveHealth.operation==='download')return appAlert('正在載入雲端資料，請稍候再抽號。');
       if(!syncDrawSequenceValidation()){elDrawSeq.focus();return;}
       const cls=elSelect.value;if(!cls) return appAlert('請先選擇班級');
       const d=ensureDrawState(cls),list=(state.classMap[cls]||[]).slice();
@@ -20427,7 +20481,7 @@ elProgAdd?.addEventListener('click', ()=>{
           round.phase='waiting';renderDrawRound();
           if(state.mode==='draw' && !document.hidden){drawSound.begin('intro');elChanceStart.focus({preventScroll:true});}
         }else{drawSound.finish();finishDrawRound(round);}
-      },{cls,slowdown:round.slowdown});
+      },{cls,slowdown:round.slowdown,isCurrent:()=>pendingDraw===round});
     });
 
     // === 事件：撤銷最近一次 ===
@@ -22339,6 +22393,36 @@ initWebAppGuide();
 })();
 // END CLASSROOM EDITOR
 
+// Account sync reuses the validated full-backup path for every teaching data type.
+window.RatingBridge = {
+  isReadonly:()=>TabLock.isReadonly(),
+  refreshAccess:()=>renderSaveHealth(),
+  openGoogle:()=>openGsheetModal(),
+  assertCanSwitch:()=>{if(saveHealth.busy||saveHealth.backingUp)throw Error('同步正在進行，請等候完成後再切換同步方式。');},
+  cancelGoogle:()=>gsCancelAutoUpload(),
+  resumeGoogle:()=>{if(saveHealth.revision!==gsConfig.lastUploadedRevision)gsScheduleAutoUpload();},
+  revision:()=>saveHealth.revision,
+  flush:()=>saveSessionNow(),
+  snapshot:()=>createFullBackup(),
+  backup:()=>downloadFullBackup(),
+  validate:value=>validateFullBackup(value),
+  assertWritable:()=>{if(!TabLock.isActive() || saveHealth.busy || _drawAnimating)throw Error('請先切換至作用中視窗，並等候目前操作完成。');},
+  canReceive:()=>TabLock.isActive()&&!saveHealth.busy&&!_drawAnimating&&!state.timer?.running
+    &&!document.activeElement?.matches('input,textarea,[contenteditable="true"]')
+    &&!document.querySelector('dialog[open]:not(#account-dialog),.modal-mask.show'),
+  restore:backup=>{
+    const checked=validateFullBackup(backup);
+    if(!saveSessionNow())throw Error('本機儲存未完成，尚未下載。');
+    // Store before-image before the single-key commit, preserving unrelated caches.
+    localStorage.setItem('pscore_before_cloud_download_v1',JSON.stringify(createFullBackup().data));
+    const view={mode:state.mode,cls:elSelect.value,filter:state.filter};
+    applyFullBackup(checked);
+    syncClassSelectionAfterMutation(state.classOrder.includes(view.cls)?view.cls:checked.data.selectedClass);
+    state.filter=view.filter;elSearch.value=view.filter;setMode(view.mode);applyListViewUI();
+    if(!saveSessionNow())throw Error('資料已載入，部分本機快取儲存失敗，請重試儲存。');
+  }
+};
+
 // Keep both roster drawers below the sticky navigation, including wrapped mobile layouts.
 (() => {
   const topbar = document.querySelector('.topbar');
@@ -22359,5 +22443,23 @@ initWebAppGuide();
 })();
 
 </script>
+<dialog id="account-dialog" aria-labelledby="account-title">
+  <div class="account-heading"><h2 id="account-title">登入帳號</h2><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
+  <p id="account-help">登入後使用自己的雲端空間。</p>
+  <form id="account-form" name="sign-in" method="post" autocomplete="on">
+    <label id="account-email-label">Email<input id="account-email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="254"></label>
+    <label id="account-password-label">密碼<input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="1" maxlength="128" placeholder="註冊時至少 8 個字元"></label>
+    <button id="account-submit" class="btn" type="submit">登入</button>
+  </form>
+  <div id="account-login-links" class="account-actions"><button id="account-switch" class="btn" type="button">建立新帳號</button><button id="account-forgot" class="btn" type="button">忘記密碼</button></div>
+  <section id="account-workspace" hidden>
+    <p id="account-identity"></p>
+    <p id="account-cloud-summary">登入後自動儲存，並接收其他裝置的更新。</p>
+    <div class="account-actions"><button id="account-check" class="btn" type="button">立即同步／重試</button></div>
+    <details id="account-advanced"><summary>備份與還原</summary><p>多分頁依最後修改時間保留較新的整份資料，載入前會留下本機備份。</p><div class="account-actions"><button id="account-backup" class="btn" type="button">下載本機備份</button><button id="account-upload" class="btn" type="button">手動上傳</button><button id="account-download" class="btn" type="button">下載雲端版本</button></div><p>帶入原本的本機資料：先在 Google 試算表／本機空間下載完整備份，再登入並還原。</p></details>
+  </section>
+  <p id="account-feedback" role="status" aria-live="polite"></p>
+  <div class="account-actions"><button id="account-exit" class="btn" type="button" hidden>登出，返回本機空間</button></div>
+</dialog>
 </body>
 </html>
