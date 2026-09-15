@@ -22447,11 +22447,14 @@ window.RatingBridge = {
   <div class="account-heading"><h2 id="account-title">登入帳號</h2><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
   <p id="account-help">登入後使用自己的雲端空間。</p>
   <form id="account-form" name="sign-in" method="post" autocomplete="on">
-    <label id="account-email-label">Email<input id="account-email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="254"></label>
-    <label id="account-password-label">密碼<input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="1" maxlength="128" placeholder="註冊時至少 8 個字元"></label>
+    <label id="account-email-label"><span id="account-email-caption">Email</span><input id="account-email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="254" placeholder="請輸入註冊時使用的電子郵件"></label>
+    <label id="account-password-label"><span id="account-password-caption">密碼</span><input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="1" maxlength="128" placeholder="請輸入密碼"></label>
+    <label id="account-password-confirm-label" hidden>再次輸入密碼<input id="account-password-confirm" name="password-confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="請再次輸入相同密碼"></label>
+    <label id="account-code-label" hidden>郵件驗證碼<input id="account-code" name="recovery-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" placeholder="請輸入郵件中的數字驗證碼" aria-describedby="account-code-hint"><small id="account-code-hint">請查看最新一封驗證郵件。</small></label>
     <button id="account-submit" class="btn" type="submit">登入</button>
   </form>
-  <div id="account-login-links" class="account-actions"><button id="account-switch" class="btn" type="button">建立新帳號</button><button id="account-forgot" class="btn" type="button">忘記密碼</button></div>
+  <div id="account-code-actions" class="account-actions" hidden><button id="account-code-resend" class="btn" type="button">重新寄送驗證碼</button><button id="account-code-change" class="btn" type="button">更換 Email</button></div>
+  <div id="account-login-links" class="account-actions"><button id="account-switch" class="btn" type="button">建立新帳號</button><button id="account-forgot" class="btn" type="button">忘記密碼</button><button id="account-code-existing" class="btn" type="button" hidden>已有驗證碼</button></div>
   <section id="account-workspace" hidden>
     <p id="account-identity"></p>
     <p id="account-cloud-summary">登入後自動儲存，並接收其他裝置的更新。</p>
