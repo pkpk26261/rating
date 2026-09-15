@@ -7157,6 +7157,12 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
 .app-message-dialog p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;}
 .app-message-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
 .app-message-actions [hidden]{display:none;}
+.backup-save-dialog{width:min(520px,calc(100vw - 32px));}
+.backup-save-dialog #backup-save-name{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.backup-save-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+.backup-save-actions .btn{min-height:44px;padding:10px 14px;text-decoration:none;justify-content:center;white-space:normal;}
+.backup-save-actions [hidden]{display:none!important;}
+.backup-save-dialog #backup-save-status{font-size:13px;margin-top:16px;color:var(--muted);}
 /* 加扣分卡片依內容區高度平均分配，卡片中間留白可收縮。 */
 body[data-mode="list"] #students.grid{flex:1 1 0;min-height:0;align-content:stretch;gap:6px;}
 body[data-mode="list"] #students.grid .card{--score-scale:1;transform:none;opacity:1;min-height:0;box-sizing:border-box;padding:calc(8px * var(--score-scale)) !important;gap:calc(4px * var(--score-scale));}
@@ -8153,7 +8159,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             </div>
           </div>
           <input id="file-input" type="file" accept=".xlsx,.xls,.ods,.csv" hidden multiple />
-          <input id="backup-file-input" type="file" accept=".json,application/json" hidden />
+          <input id="backup-file-input" type="file" accept=".json,.txt,application/json,text/plain" hidden />
         </div>
       </div>
     </header>
@@ -9087,7 +9093,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
     <div class="modal" role="document" style="width:min(600px,92vw)">
       <header><h3 id="backup-title">📥 還原完整備份</h3><button id="backup-close" class="close" aria-label="關閉還原備份">✕</button></header>
       <div class="content">
-        <p>請選擇由「下載完整備份」產生的 JSON 檔。Excel／CSV 成績匯出檔請保留作為查閱用途。</p>
+        <p>請選擇由「下載完整備份」產生的 JSON 檔或平板文字備份（.txt）。Excel／CSV 成績匯出檔請保留作為查閱用途。</p>
         <button id="backup-choose" type="button" class="btn">選擇備份檔案</button>
         <p id="backup-message" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7"></p>
         <div id="backup-preview" hidden>
@@ -12387,6 +12393,55 @@ const ClassroomLayout = (() => {
       openExportModal();
     });
 
+    function useTabletBackupSave(){
+      const ua=navigator.userAgent||'',touch=navigator.maxTouchPoints>0;
+      return /iPad|iPhone|iPod|Android/i.test(ua) || touch && (/Macintosh/i.test(ua) || navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches);
+    }
+    function openTabletBackupSave(blob,filename){
+      if(document.getElementById('backup-save-dialog'))return false;
+      const dialog=document.createElement('dialog');
+      dialog.id='backup-save-dialog';dialog.className='app-message-dialog backup-save-dialog';
+      dialog.setAttribute('aria-labelledby','backup-save-title');
+      dialog.innerHTML='<h3 id="backup-save-title">儲存完整備份</h3><p id="backup-save-name"></p><p id="backup-save-help"></p><div class="backup-save-actions"><button type="button" class="btn primary" id="backup-save-share">開啟儲存選單</button><a class="btn" id="backup-save-download" target="_blank" rel="noopener">下載 JSON 備份</a><button type="button" class="btn" id="backup-save-close">關閉</button></div><p id="backup-save-status" role="status" aria-live="polite"></p>';
+      const share=dialog.querySelector('#backup-save-share'),download=dialog.querySelector('#backup-save-download');
+      const status=dialog.querySelector('#backup-save-status'),help=dialog.querySelector('#backup-save-help');
+      const previousFocus=document.activeElement;
+      const url=URL.createObjectURL(blob);download.href=url;download.download=filename;
+      let shareFile=null;
+      if(typeof navigator.share==='function' && typeof navigator.canShare==='function'){
+        // 使用平板支援的檔案種類，兩者均保留同一份完整 JSON 內容。
+        for(const file of [new File([blob],filename,{type:'application/json'}),new File([blob],filename.replace(/\.json$/i,'.txt'),{type:'text/plain'})]){
+          try{if(navigator.canShare({files:[file]})){shareFile=file;break;}}catch(_){}
+        }
+      }
+      dialog.querySelector('#backup-save-name').textContent=shareFile?.name||filename;
+      share.hidden=!shareFile;
+      help.textContent=shareFile
+        ? '點「開啟儲存選單」，選擇「儲存到檔案」或裝置提供的檔案儲存位置，再完成儲存。'+(shareFile.type==='text/plain'?' 這台平板使用文字備份，內容完整，可直接用本系統還原。':'')
+        : '請點「下載 JSON 備份」，在裝置出現的下載或檔案預覽中完成儲存。請保留這個視窗，直到確認檔案已保存。';
+      function close(){
+        dialog.close();dialog.remove();
+        // 系統可能仍在讀取剛點開的檔案，不要在點擊當下移除網址。
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        if(previousFocus?.isConnected)previousFocus.focus();
+      }
+      dialog.querySelector('#backup-save-close').onclick=close;
+      dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
+      dialog.addEventListener('keydown',event=>event.stopPropagation());
+      download.addEventListener('click',()=>{status.textContent='已開啟下載，請確認檔案已保存；若未出現提示，可改用儲存選單。';});
+      share.addEventListener('click',async()=>{
+        share.disabled=true;status.textContent='請在系統選單選擇儲存位置。';
+        try{
+          // 直接在本次點按內呼叫，避免序列化、非同步等待消耗使用者啟用狀態。
+          await navigator.share({files:[shareFile]});
+          status.textContent='系統選單已完成，請到選擇的儲存位置確認備份檔案。';
+        }catch(error){
+          status.textContent=error.name==='AbortError'?'已取消儲存；備份仍在此視窗，可重新選擇。':'無法開啟儲存選單，請重試或點「下載 JSON 備份」。';
+        }finally{share.disabled=false;}
+      });
+      document.body.appendChild(dialog);dialog.showModal();(shareFile?share:download).focus();
+      return true;
+    }
     let fullBackupSaving = false;
     async function downloadFullBackup(snapshot=null){
       if(fullBackupSaving) return false;
@@ -12397,6 +12452,7 @@ const ClassroomLayout = (() => {
         const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
         if(blob.size > BACKUP_MAX_BYTES) throw new Error('備份超過 50 MB，請先減少資料量。');
         const filename = `成績系統完整備份_${backup.createdAt.replace(/[:.]/g,'-')}.json`;
+        if(useTabletBackupSave())return openTabletBackupSave(blob,filename);
         // 完整備份只讀取目前資料，不需要 Google 連線或上傳成功。
         if(typeof window.showSaveFilePicker === 'function' && window.isSecureContext){
           let handle;
@@ -12460,7 +12516,7 @@ const ClassroomLayout = (() => {
       const version = ++backupReadVersion; resetBackupPreview();
       backupMessage.textContent = '正在檢查備份…';
       try{
-        if(!/\.json$/i.test(file.name)) throw new Error('請選擇完整備份 JSON 檔，成績試算表不適用此入口。');
+        if(!/\.(json|txt)$/i.test(file.name)) throw new Error('請選擇完整備份 JSON 檔或平板文字備份（.txt），成績試算表不適用此入口。');
         if(file.size > BACKUP_MAX_BYTES) throw new Error('備份檔超過 50 MB，無法載入。');
         const text = await file.text();
         if(version !== backupReadVersion) return;
@@ -12515,7 +12571,9 @@ const ClassroomLayout = (() => {
       dd.addEventListener('click', e=>{ if(e.target.closest('.data-item')) closeMenu(); });
       document.getElementById('btn-import-roster').addEventListener('click', ()=>document.getElementById('file-input').click());
       menu.addEventListener('keydown', e=>{ if(e.key==='Escape'){closeMenu();btn.focus();} });
-      menu.addEventListener('focusout', e=>{ if(!menu.contains(e.relatedTarget)) closeMenu(); });
+      // Safari 點按按鈕可能先產生 relatedTarget=null 的失焦；此時關閉會吃掉後續點擊。
+      // 明確移至其他控制項才因失焦關閉；點外部仍由下方 click 事件處理。
+      menu.addEventListener('focusout', e=>{ if(e.relatedTarget && !menu.contains(e.relatedTarget)) closeMenu(); });
       document.addEventListener('click', (e)=>{ if(!menu.contains(e.target)) closeMenu(); });
     })();
     gsheetMask.addEventListener('click', e=>{ if(e.target===gsheetMask) closeGsheetModal(); });
