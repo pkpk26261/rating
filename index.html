@@ -12,10 +12,27 @@
   <title>成績管理系統</title>
   <!-- BEGIN ACCOUNT STORAGE BOOTSTRAP -->
 <script>
+var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}();"function"==typeof define&&define.amd?define(function(){return LZString}):"undefined"!=typeof module&&null!=module?module.exports=LZString:"undefined"!=typeof angular&&null!=angular&&angular.module("LZString",[]).factory("LZString",function(){return LZString});
 /* Keep every legacy cache, Google setting and backup in its account namespace.
  * Authentication has its own reserved storage; no secret key is used. */
 (function(root){
   'use strict';
+  const codec=typeof module==='object'&&module.exports?require('../vendor/lz-string-1.5.0.min.js'):root.LZString;
+  const compressed='\u0001rating-lz1:';
+  function unpack(value){
+    if(!value?.startsWith(compressed))return value;
+    const decoded=codec.decompressFromUTF16(value.slice(compressed.length));
+    if(decoded===null)throw Error('帳號快取無法讀取，原始資料已保留。');
+    return decoded;
+  }
+  function pack(value){
+    value=String(value);
+    if(value.length<1024&&!value.startsWith(compressed))return value;
+    const encoded=compressed+codec.compressToUTF16(value);
+    // Only commit an independently verified, lossless representation.
+    if(unpack(encoded)!==value)throw Error('帳號快取壓縮驗證失敗，原始資料已保留。');
+    return encoded.length<value.length||value.startsWith(compressed)?encoded:value;
+  }
   function scopedStorage(native, owner){
     const prefix = owner ? 'rating-account:' + owner + ':' : '';
     const keys = () => Array.from({length:native.length},(_,i)=>native.key(i))
@@ -23,8 +40,8 @@
     return {
       get length(){return keys().length;},
       key(i){const k=keys()[i];return k == null ? null : k.slice(prefix.length);},
-      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : native.getItem(prefix+k);},
-      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,String(v));},
+      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : prefix?unpack(native.getItem(prefix+k)):native.getItem(k);},
+      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,prefix?pack(v):String(v));},
       removeItem(k){if(prefix || !String(k).startsWith('rating-account:'))native.removeItem(prefix+k);},
       clear(){for(const k of keys())native.removeItem(k);}
     };
@@ -76,7 +93,7 @@
     const base='rating-account:'+owner+':',sessionKey='rating-workspace:'+owner;
     const epochKey=base+'epoch';
     const epoch=native.getItem(epochKey)||id;
-    native.setItem(epochKey,epoch);
+    if(!native.getItem(epochKey))native.setItem(epochKey,epoch);
     const isActive=()=>native.getItem(epochKey)===epoch;
     const check=()=>{if(!isActive())throw Error('帳號已登出並清除，請重新整理此分頁。');};
     const ownPrevious=session.getItem(sessionKey);
@@ -90,7 +107,8 @@
       if(!key?.startsWith(source))continue;
       const short=key.slice(source.length);
       if(!previous&&(short==='epoch'||short==='last-workspace'||short==='google-connection'||short.startsWith('workspace:')))continue;
-      native.setItem(prefix+short,native.getItem(key));
+      // Do not allocate a second uncompressed copy of a large teaching snapshot.
+      native.setItem(prefix+short,pack(unpack(native.getItem(key))));
     }session.setItem(sessionKey,id);}catch(error){
       for(const key of Array.from({length:native.length},(_,i)=>native.key(i)))if(prefix!==source&&key?.startsWith(prefix))native.removeItem(key);
       throw error;
@@ -182,10 +200,10 @@
 </script>
 <!-- END ACCOUNT STORAGE BOOTSTRAP -->
   <script>const localStorage = window.RatingStorage;</script>
-  <link rel="stylesheet" href="account/account.css?v=14d3b5c8cb98eacf">
+  <link rel="stylesheet" href="account/account.css?v=d87200d842279cfc">
   <script defer src="vendor/supabase-2.116.0.js?v=84ee9bf45695c1dd"></script>
   <script defer src="account/sync-policy.js?v=c6b4f568b0b83613"></script>
-  <script defer src="account/account.js?v=2e6b8cc676de706c"></script>
+  <script defer src="account/account.js?v=1ffc0e6478f95bbd"></script>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -2747,15 +2765,16 @@
     #viol-note-mask .content{ display:flex; flex-direction:column; gap:12px; }
     #viol-note-mask .viol-note-meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     #viol-note-mask .viol-note-help{ margin-left:auto; font-size:12px; opacity:.8; }
-    .viol-note-form{
+    #viol-note-mask .viol-note-form{
       display:grid;
-      grid-template-columns:170px minmax(0, 1fr) auto;
+      grid-template-columns:minmax(0, 200px) minmax(0, 1fr);
       gap:14px;
       align-items:end;
     }
+    #viol-note-mask #viol-note-add{grid-column:1/-1;justify-self:end;min-height:44px;}
     .viol-note-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
     .viol-note-field > span{ font-size:12px; color:var(--muted); }
-    .viol-note-input{
+    #viol-note-mask .viol-note-input{
       width:100%;
       min-width:0;
       max-width:100%;
@@ -2767,10 +2786,15 @@
       color:var(--fg);
       outline:none;
       box-sizing:border-box;
+      min-height:44px;
+      font-size:16px !important;
+      appearance:none;
+      -webkit-appearance:none;
     }
+    #viol-note-date::-webkit-date-and-time-value{min-width:0;text-align:left;}
     /* 平板先保留輸入空間，新增操作另起一排；避免原生日期欄位撐開格線。 */
     @media (max-width: 1100px), (pointer: coarse){
-      .viol-note-form{ grid-template-columns:170px minmax(0, 1fr); }
+      #viol-note-mask .viol-note-form{ grid-template-columns:minmax(0, 200px) minmax(0, 1fr); }
       #viol-note-add{ grid-column:1/-1; justify-self:end; min-height:44px; }
       .viol-note-input{ min-height:44px; font-size:16px; }
     }
@@ -2901,7 +2925,7 @@
     }
     @media (max-width: 640px){
       #viol-note-mask .viol-note-help{ margin-left:0; width:100%; }
-      .viol-note-form{ grid-template-columns:1fr; }
+      #viol-note-mask .viol-note-form{ grid-template-columns:minmax(0, 1fr); }
       .viol-note-entry{ grid-template-columns:1fr; }
       .viol-note-actions{ flex-direction:column-reverse; }
       .viol-note-remove{ justify-self:end; }
@@ -7787,7 +7811,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <button id="mode-progress" class="seg-btn" data-mode="progress" data-icon="📖">教學進度</button>
                 <button id="mode-warning" class="seg-btn" data-mode="warning" data-icon="⚠️">成績預警</button>
                 <button id="mode-violations" class="seg-btn" data-mode="violations" data-icon="🚨">違規記錄</button>
-            <div class="more-menu" id="more-menu">
+            <div class="more-menu" id="more-menu" hidden>
               <button id="mode-more" class="seg-btn more-toggle" type="button" aria-expanded="false" aria-controls="more-dropdown">
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4h8v3M3 12h18M10 12v3h4v-3"/></svg>
                 <span>課堂工具 ▾</span>
@@ -7810,9 +7834,8 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
       <div class="topbar__right">
         <div class="topbar__right-actions">
           <button id="btn-install-app" class="btn" type="button" aria-haspopup="dialog" aria-controls="webapp-guide" hidden>安裝 App</button>
-          <button id="btn-account-direct" class="btn" type="button" aria-haspopup="dialog" aria-controls="account-dialog">登入帳號</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
-            <button id="mode-manage" class="btn" data-mode="manage" data-icon="📋">學生管理</button>
+            <button id="mode-manage" class="btn" hidden data-mode="manage" data-icon="📋">學生管理</button>
           <div class="data-menu" id="data-menu">
             <button id="btn-data" class="btn data-toggle" type="button" aria-expanded="false" aria-controls="data-dropdown">
               <span>資料與同步</span><span id="data-status" role="status" aria-live="polite" aria-atomic="true">尚無資料</span><span aria-hidden="true">▾</span>
@@ -7820,6 +7843,9 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <div class="data-dropdown" id="data-dropdown" hidden>
               <div class="data-inner">
 
+        <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
+          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
+        </time>
                 <section class="storage-choices" aria-label="同步方式" aria-describedby="sync-method-help">
                   <p id="sync-method-help" class="storage-choices-title">同步方式（一次只能選擇一種）</p>
                   <button type="button" class="data-item storage-choice" id="btn-gsheet" aria-haspopup="dialog" aria-controls="gsheet-mask" aria-pressed="true">
@@ -7850,9 +7876,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                   <button id="btn-reset" class="data-item danger" title="選擇要清除的本機資料">清除資料…</button>
                 </div>
                   <div id="status" class="data-activity" aria-label="最近操作">尚未載入名單。</div>
-        <time id="dt-display" class="dt-display" aria-label="目前日期與時間" title="裝置目前時間">
-          <span>即時時間</span><span id="dt-date"></span> <span id="dt-time"></span>
-        </time>
+
                 </details>
               </div>
             </div>
@@ -22553,7 +22577,7 @@ initWebAppGuide();
 
 // Account sync reuses the validated full-backup path for every teaching data type.
 window.RatingBridge = {
-  entryState:()=>({hasData:!!(state.classOrder?.length||state.progress?.order?.length||state.taskBoard?.library?.length||state.taskBoard?.current||state.classroomTemplates?.length),hasGoogle:gsConnectionState()!=='missing'}),
+  entryState:()=>({hasData:!!(state.classOrder?.length||state.progress?.order?.length||state.taskBoard?.library?.length||state.taskBoard?.current||state.classroomTemplates?.length),hasGoogle:gsConnectionState()!=='missing',hasClasses:!!state.classOrder?.length,googleConfigured:gsConfigured()}),
   isReadonly:()=>TabLock.isReadonly(),
   refreshAccess:()=>renderSaveHealth(),
   openGoogle:()=>openGsheetModal(),
