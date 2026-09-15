@@ -3759,6 +3759,9 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       padding-top: 0;
       padding-bottom: 0;
     }
+    @keyframes studentSearchAutofill{from{opacity:1;}to{opacity:1;}}
+    #search-input:autofill{animation:studentSearchAutofill .01s;}
+    #search-input:-webkit-autofill{animation:studentSearchAutofill .01s;}
 
     /* 新增/刪除學生（只影響這兩顆，不會動到 +1/-1 等其他按鈕） */
     #btn-add-student, #btn-del-student{
@@ -8156,6 +8159,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
     </header>
 
 
+    <form id="student-search-form" role="search" autocomplete="off" hidden></form>
     <main class="layout" id="main-content" tabindex="-1">
       <!-- ★ 側欄收合按鈕（固定在 layout 左側） -->
       <button id="btn-sidebar" class="side-toggle" aria-label="收合側欄" aria-controls="sidebar" aria-expanded="true">‹</button>
@@ -8184,7 +8188,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
           <select id="class-select" class="select" disabled>
             <option value="" selected>請先匯入班級檔案</option>
           </select>
-          <input id="search-input" class="input" type="search" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
+          <input id="search-input" name="student-search" form="student-search-form" class="input" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="搜尋學生姓名或座號" placeholder="搜尋姓名 / 座號 (Enter 清除)" disabled />
           <div id="list-view-seg" class="seg hidden" role="group" aria-label="排列方式" style="margin-left:auto;">
             <button id="btn-view-seat" class="seg-btn active" title="依座位圖排列">🗺️ 座位圖</button>
             <button id="btn-view-order" class="seg-btn" title="依座號排列">🔢 座號</button>
@@ -11496,8 +11500,39 @@ const ClassroomLayout = (() => {
       openDelModal(cls);
     });
 
+    // 只有帳號驗證表單接受瀏覽器自動填入；包含動態新增的一般編輯欄位。
+    (function configureWorkspaceAutocomplete(){
+      const configure=element=>{
+        if(element.matches('form') && element.id!=='account-form')element.autocomplete='off';
+        if(element.matches('input,textarea') && element.form?.id!=='account-form'){
+          element.autocomplete='off';
+          element.setAttribute('data-lpignore','true');
+          element.setAttribute('data-1p-ignore','');
+        }
+      };
+      document.querySelectorAll('form,input,textarea').forEach(configure);
+      new MutationObserver(records=>{
+        for(const record of records)for(const node of record.addedNodes){
+          if(node.nodeType!==1)continue;
+          configure(node);node.querySelectorAll('form,input,textarea').forEach(configure);
+        }
+      }).observe(document.body,{childList:true,subtree:true});
+      document.addEventListener('focusin',event=>{if(event.target.matches('input,textarea'))configure(event.target);});
+    })();
+    function rejectStudentSearchAutofill(){
+      let autofilled=false;
+      try{autofilled=elSearch.matches(':autofill');}catch(_){autofilled=elSearch.matches(':-webkit-autofill');}
+      if(!autofilled)return false;
+      elSearch.value=state.filter||'';
+      return true;
+    }
+    elSearch.addEventListener('animationstart',event=>{if(event.animationName==='studentSearchAutofill')rejectStudentSearchAutofill();});
+    elSearch.addEventListener('change',rejectStudentSearchAutofill);
+    window.addEventListener('pageshow',rejectStudentSearchAutofill);
+    document.getElementById('student-search-form').addEventListener('submit',event=>event.preventDefault());
     // 🔎 依目前模式即時渲染 + Enter 清除
     elSearch.addEventListener('input', ()=>{
+      if(rejectStudentSearchAutofill())return;
       state.filter=elSearch.value.trim();
       const cls=elSelect.value;
       if(state.mode==='list') renderStudents(cls);
@@ -11505,7 +11540,8 @@ const ClassroomLayout = (() => {
       else if(state.mode==='hw') renderHW(cls);
     });
     elSearch.addEventListener('keydown',(e)=>{
-      if(e.key==='Enter'){
+      if(e.key==='Enter'&&!e.isComposing){
+        e.preventDefault();
         elSearch.value=''; state.filter='';
         const cls=elSelect.value;
         if(state.mode==='list') renderStudents(cls);
