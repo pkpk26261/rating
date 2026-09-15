@@ -10,12 +10,182 @@
   <meta name="apple-mobile-web-app-title" content="成績系統">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>成績管理系統</title>
-  <script src="account/storage.js"></script>
+  <!-- BEGIN ACCOUNT STORAGE BOOTSTRAP -->
+<script>
+/* Keep every legacy cache, Google setting and backup in its account namespace.
+ * Authentication has its own reserved storage; no secret key is used. */
+(function(root){
+  'use strict';
+  function scopedStorage(native, owner){
+    const prefix = owner ? 'rating-account:' + owner + ':' : '';
+    const keys = () => Array.from({length:native.length},(_,i)=>native.key(i))
+      .filter(k=>k && (prefix ? k.startsWith(prefix) : !k.startsWith('rating-account:')));
+    return {
+      get length(){return keys().length;},
+      key(i){const k=keys()[i];return k == null ? null : k.slice(prefix.length);},
+      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : native.getItem(prefix+k);},
+      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,String(v));},
+      removeItem(k){if(prefix || !String(k).startsWith('rating-account:'))native.removeItem(prefix+k);},
+      clear(){for(const k of keys())native.removeItem(k);}
+    };
+  }
+  const guestResetKey='rating-guest-reset-v1';
+  function resetGuestWorkspace(native){
+    const keys=Array.from({length:native.length},(_,i)=>native.key(i)).filter(k=>
+      /^(pscore_session_v1|scores_v[12]|deductions_v1|stu_notes_v1|pscore_before_cloud_download_v1|pscore_exam_dashboard_v1)$/.test(k)||/^(hw_v1__|seat_v1__|draw_v1__)/.test(k));
+    const configKey='gsheet_sync_v1',raw=native.getItem(configKey);
+    const config=raw?JSON.parse(raw):{};
+    if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Google 設定無法讀取，尚未清空本機資料。');
+    const before=new Map([...keys,configKey,guestResetKey].map(k=>[k,native.getItem(k)]));
+    try{
+      native.setItem(configKey,JSON.stringify({...config,autoSync:false,autoLoad:false,lastSync:0,lastUploadedRevision:'',accountBackupRevision:''}));
+      for(const key of keys)native.removeItem(key);
+      native.setItem(guestResetKey,String(Number(before.get(guestResetKey)||0)+1));
+    }catch(error){
+      for(const [key,value] of before){if(value===null)native.removeItem(key);else native.setItem(key,value);}
+      throw error;
+    }
+  }
+  // A guest tab opened before a reset must not save its old in-memory data back.
+  function guestStorage(native){
+    const scoped=scopedStorage(native,'');
+    let generation;try{generation=native.getItem(guestResetKey);}catch{}
+    const check=()=>{if(native.getItem(guestResetKey)!==generation)throw Error('本機空間已清空，請重新整理此分頁。');};
+    return {...scoped,get length(){return scoped.length;},
+      setItem(k,v){check();scoped.setItem(k,v);},
+      removeItem(k){check();scoped.removeItem(k);},
+      clear(){check();scoped.clear();}
+    };
+  }
+  function clearAccountSession(session,owner){
+    for(const key of ['rating-workspace:'+owner,'rating-auth','rating-owner','rating-recovery','rating-open-google'])session.removeItem(key);
+  }
+  function clearAccountLocalData(native,session,owner){
+    if(!owner)throw Error('無法辨識要清除的帳號。');
+    const prefix='rating-account:'+owner+':';
+    const keys=Array.from({length:native.length},(_,i)=>native.key(i)).filter(k=>k?.startsWith(prefix)||k?.startsWith('rating-account:auth:'));
+    // Remove the lease first so stale documents cannot recreate deleted caches.
+    native.removeItem(prefix+'epoch');
+    for(const key of keys)native.removeItem(key);
+    if(native.getItem('rating-account:last-owner')===owner)native.removeItem('rating-account:last-owner');
+    clearAccountSession(session,owner);
+  }
+  // Each document edits its own durable cache. Other tabs only meet at the
+  // server's compare-and-swap boundary, never through shared mutable revisions.
+  function accountStorage(native,session,owner,id,reloading=false){
+    const base='rating-account:'+owner+':',sessionKey='rating-workspace:'+owner;
+    const epochKey=base+'epoch';
+    const epoch=native.getItem(epochKey)||id;
+    native.setItem(epochKey,epoch);
+    const isActive=()=>native.getItem(epochKey)===epoch;
+    const check=()=>{if(!isActive())throw Error('帳號已登出並清除，請重新整理此分頁。');};
+    const ownPrevious=session.getItem(sessionKey);
+    if(reloading&&ownPrevious)id=ownPrevious;
+    const previous=ownPrevious||native.getItem(base+'last-workspace');
+    const source=previous?base+'workspace:'+previous+':':base;
+    const prefix=base+'workspace:'+id+':';
+    const all=Array.from({length:native.length},(_,i)=>native.key(i));
+    try{for(const key of all){
+      if(prefix===source)break;
+      if(!key?.startsWith(source))continue;
+      const short=key.slice(source.length);
+      if(!previous&&(short==='epoch'||short==='last-workspace'||short==='google-connection'||short.startsWith('workspace:')))continue;
+      native.setItem(prefix+short,native.getItem(key));
+    }session.setItem(sessionKey,id);}catch(error){
+      for(const key of Array.from({length:native.length},(_,i)=>native.key(i)))if(prefix!==source&&key?.startsWith(prefix))native.removeItem(key);
+      throw error;
+    }
+    // Reload retains this tab's workspace instead of temporarily doubling its disk use.
+    const scoped=scopedStorage(native,owner+':workspace:'+id);
+    return {...scoped,isActive,
+      get length(){return scoped.length;},
+      getItem(key){
+        check();
+        const own=scoped.getItem(key),shared=key==='gsheet_sync_v1'?native.getItem(base+'google-connection'):null;
+        if(!shared)return own;
+        const local=JSON.parse(own||'{}'),connection=JSON.parse(shared);
+        if(!connection||typeof connection!=='object'||Array.isArray(connection)||typeof connection.url!=='string'||typeof connection.token!=='string')throw Error('Invalid Google connection');
+        // Older background saves could create an empty shared record. It is not
+        // an explicit disconnect; preserve this account tab's complete setting.
+        if(!connection.explicit&&!connection.url&&!connection.token&&local.url&&local.token)return own;
+        const changed=local.url!==connection.url||local.token!==connection.token;
+        return JSON.stringify({...local,...connection,...(changed?{lastSync:0,lastUploadedRevision:'',accountBackupRevision:''}:{})});
+      },
+      setItem(key,value){
+        check();
+        if(key==='gsheet_sync_v1'){
+          const after=JSON.parse(value);
+          if(!native.getItem(base+'google-connection'))native.setItem(base+'google-connection',JSON.stringify({url:after.url||'',token:after.token||''}));
+        }
+        scoped.setItem(key,value);native.setItem(base+'last-workspace',id);
+      },
+      setGoogleConnection(connection){
+        check();
+        native.setItem(base+'google-connection',JSON.stringify({url:connection.url,token:connection.token,explicit:true}));
+      },
+      removeItem(key){check();scoped.removeItem(key);},
+      clear(){check();scoped.clear();}
+    };
+  }
+  if(typeof module==='object' && module.exports){module.exports={scopedStorage,accountStorage,resetGuestWorkspace,guestStorage,clearAccountLocalData};return;}
+  let owner='';
+  try{
+    // Migrate the previous per-tab login once, then keep login across reopening.
+    const old=sessionStorage.getItem('rating-auth');
+    if(old&&!root.localStorage.getItem('rating-account:auth:rating-auth'))root.localStorage.setItem('rating-account:auth:rating-auth',old);
+    sessionStorage.removeItem('rating-auth');
+    owner=sessionStorage.getItem('rating-owner')||root.localStorage.getItem('rating-account:last-owner')||'';
+  }catch{}
+  if(!/^[0-9a-f-]{36}$/i.test(owner))owner='';
+  // Lazy access preserves the existing app's handling of unavailable storage.
+  const native={get length(){return root.localStorage.length;},key:i=>root.localStorage.key(i),getItem:k=>root.localStorage.getItem(k),setItem:(k,v)=>root.localStorage.setItem(k,v),removeItem:k=>root.localStorage.removeItem(k)};
+  root.RatingAuthStorage={
+    getItem:key=>native.getItem('rating-account:auth:'+key),
+    setItem:(key,value)=>{
+      if(owner&&root.RatingStorage?.isActive&&!root.RatingStorage.isActive())throw Error('帳號已登出，無法儲存登入憑證。');
+      native.setItem('rating-account:auth:'+key,value);
+    },
+    removeItem:key=>native.removeItem('rating-account:auth:'+key)
+  };
+  root.RatingRememberOwner=id=>{if(id)native.setItem('rating-account:last-owner',id);else native.removeItem('rating-account:last-owner');};
+  root.RatingClearAccountLocalData=()=>clearAccountLocalData(native,sessionStorage,owner);
+  root.RatingResetGuestWorkspace=()=>resetGuestWorkspace(native);
+  root.RatingAccount={owner,ready:false,busy:false,initializationError:''};
+  try{
+    root.RatingStorage=owner?accountStorage(native,sessionStorage,owner,crypto.randomUUID(),performance.getEntriesByType('navigation')[0]?.type==='reload'):guestStorage(native);
+    root.RatingAccount.ready=!owner;
+  }catch(error){
+    root.RatingAccount.initializationError=error?.name==='QuotaExceededError'?'瀏覽器儲存空間不足，無法開啟帳號資料。原有資料已保留。':'瀏覽器無法讀取本機資料。請確認允許此網站使用儲存空間，再重新載入；原有資料已保留。';
+    const fail=()=>{throw Error(root.RatingAccount.initializationError);};
+    root.RatingStorage={get length(){return fail();},key:fail,getItem:fail,setItem:fail,removeItem:fail,clear:fail,isActive:()=>false};
+  }
+  if(!owner)root.addEventListener('storage',event=>{
+    if(event.key!==guestResetKey)return;
+    root.RatingAccount.ready=false;root.RatingBridge?.cancelGoogle();
+    root.location.reload();
+  });
+  if(owner&&!root.RatingAccount.initializationError){
+    const leaveClearedAccount=()=>{
+      if(root.RatingStorage.isActive())return;
+      root.RatingAccount.ready=false;
+      root.RatingBridge?.cancelGoogle();
+      document.documentElement.dataset.accountPending='true';
+      clearAccountSession(sessionStorage,owner);
+      root.location.reload();
+    };
+    root.addEventListener('storage',event=>{if(event.key===null||event.key==='rating-account:'+owner+':epoch')leaveClearedAccount();});
+    root.addEventListener('pageshow',leaveClearedAccount);
+    document.documentElement.dataset.accountPending='true';
+  }
+})(typeof window==='object'?window:globalThis);
+
+</script>
+<!-- END ACCOUNT STORAGE BOOTSTRAP -->
   <script>const localStorage = window.RatingStorage;</script>
-  <link rel="stylesheet" href="account/account.css">
-  <script defer src="vendor/supabase-2.116.0.js"></script>
-  <script defer src="account/sync-policy.js"></script>
-  <script defer src="account/account.js"></script>
+  <link rel="stylesheet" href="account/account.css?v=14d3b5c8cb98eacf">
+  <script defer src="vendor/supabase-2.116.0.js?v=84ee9bf45695c1dd"></script>
+  <script defer src="account/sync-policy.js?v=c6b4f568b0b83613"></script>
+  <script defer src="account/account.js?v=2e6b8cc676de706c"></script>
   <style>
     /* ===== 佈景主題 ===== */
     /* ★ 旋轉時的保底底色，避免露白（放在 html，不放 body） */
@@ -7640,6 +7810,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
       <div class="topbar__right">
         <div class="topbar__right-actions">
           <button id="btn-install-app" class="btn" type="button" aria-haspopup="dialog" aria-controls="webapp-guide" hidden>安裝 App</button>
+          <button id="btn-account-direct" class="btn" type="button" aria-haspopup="dialog" aria-controls="account-dialog">登入帳號</button>
           <button id="btn-theme" class="btn" title="切換為淺色主題" aria-pressed="false">☀️ 淺色</button>
             <button id="mode-manage" class="btn" data-mode="manage" data-icon="📋">學生管理</button>
           <div class="data-menu" id="data-menu">
@@ -7776,20 +7947,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
                   <button class="btn" id="btn-welcome-sample" type="button">下載範例名單</button>
                 </div>
               </div>
-              <div class="welcome-trust-grid" aria-label="快速重點">
-                <article class="welcome-mini-card welcome-mini-card--green">
-                  <strong>支援格式</strong>
-                  <span>Excel、CSV 都能匯入，也可直接拖放。</span>
-                </article>
-                <article class="welcome-mini-card welcome-mini-card--red">
-                  <strong>資料位置</strong>
-                  <span>沒設定同步前，資料只留在這台瀏覽器。</span>
-                </article>
-                <article class="welcome-mini-card welcome-mini-card--yellow">
-                  <strong>Google 同步</strong>
-                  <span>沿用既有試算表，同步全班成績與紀錄。</span>
-                </article>
-              </div>
+
             </aside>
 
           </div>
@@ -22395,6 +22553,7 @@ initWebAppGuide();
 
 // Account sync reuses the validated full-backup path for every teaching data type.
 window.RatingBridge = {
+  entryState:()=>({hasData:!!(state.classOrder?.length||state.progress?.order?.length||state.taskBoard?.library?.length||state.taskBoard?.current||state.classroomTemplates?.length),hasGoogle:gsConnectionState()!=='missing'}),
   isReadonly:()=>TabLock.isReadonly(),
   refreshAccess:()=>renderSaveHealth(),
   openGoogle:()=>openGsheetModal(),
@@ -22443,12 +22602,23 @@ window.RatingBridge = {
 })();
 
 </script>
+<section id="account-entry" hidden aria-label="成績管理系統登入入口">
+  <header class="entry-header"><span>成績管理系統</span><button id="entry-theme" class="btn" type="button">切換主題</button></header>
+  <div class="entry-layout">
+    <div class="entry-brand"><img src="icon.png" alt="" width="72" height="72"><h1>教學紀錄，<br><strong>從這裡接續。</strong></h1><p>登入帳號，在不同裝置接續班級紀錄。</p></div>
+    <div class="entry-card">
+      <div id="account-entry-host"></div>
+      <div class="entry-alternatives"><span>其他使用方式</span><button id="entry-google" class="btn" type="button">使用 Google 試算表 <span aria-hidden="true">→</span></button><button id="entry-local" class="btn" type="button">使用本機空間 <span aria-hidden="true">→</span></button></div>
+    </div>
+  </div>
+</section>
 <dialog id="account-dialog" aria-labelledby="account-title">
+<div id="account-panel">
   <div class="account-heading"><h2 id="account-title">登入帳號</h2><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
   <p id="account-help">登入後使用自己的雲端空間。</p>
   <form id="account-form" name="sign-in" method="post" autocomplete="on">
     <label id="account-email-label"><span id="account-email-caption">Email</span><input id="account-email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="254" placeholder="請輸入註冊時使用的電子郵件"></label>
-    <label id="account-password-label"><span id="account-password-caption">密碼</span><input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="1" maxlength="128" placeholder="請輸入密碼"></label>
+    <label id="account-password-label"><span id="account-password-caption">密碼</span><span class="account-password-field"><input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="1" maxlength="128" placeholder="請輸入密碼"><button id="account-password-toggle" type="button" aria-label="顯示密碼" aria-pressed="false">顯示</button></span></label>
     <label id="account-password-confirm-label" hidden>再次輸入密碼<input id="account-password-confirm" name="password-confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="請再次輸入相同密碼"></label>
     <label id="account-code-label" hidden>郵件驗證碼<input id="account-code" name="recovery-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" placeholder="請輸入郵件中的數字驗證碼" aria-describedby="account-code-hint"><small id="account-code-hint">請查看最新一封驗證郵件。</small></label>
     <button id="account-submit" class="btn" type="submit">登入</button>
@@ -22463,6 +22633,7 @@ window.RatingBridge = {
   </section>
   <p id="account-feedback" role="status" aria-live="polite"></p>
   <div class="account-actions"><button id="account-exit" class="btn" type="button" hidden>登出，清空並返回本機空間</button></div>
+</div>
 </dialog>
 </body>
 </html>
