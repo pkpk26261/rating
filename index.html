@@ -10338,6 +10338,7 @@ const ClassroomLayout = (() => {
     const elManageDel=document.getElementById('btn-manage-del');
     const elManageEdit=document.getElementById('btn-manage-edit');
     let manageSelectedClass = '';
+    let warningAllClasses = false;
     let manageEditMode = false;
     const elSeatControls=document.getElementById('seat-controls');
     const elSeatboard=document.getElementById('seatboard');
@@ -11139,6 +11140,16 @@ const ClassroomLayout = (() => {
 
     elSelect.addEventListener('change',(e)=>{
       const cls=e.target.value; if(!cls) return;
+      // 所有班級入口共用此路徑；先將編輯內容存回原班，再切換畫面。
+      if(state.mode==='manage' && manageEditMode) applyManageEdits();
+      hwFinishEdit();
+      manageSelectedClass=cls;
+      warningAllClasses=false;
+      state.filter='';elSearch.value='';
+      if(!saveHealth.attendanceError){
+        const attendance=attendanceData(),board=attendance.boards.find(b=>b.rosterKey===cls);
+        if(board)attendance.activeBoardId=board.id;
+      }
       state._seatNoticeDismissed = false;   // 切班重置提示
       renderStudents(cls); renderLeaderboard(cls);
       if(state.mode==='seat') renderSeatUI(cls);
@@ -11147,6 +11158,9 @@ const ClassroomLayout = (() => {
       if(state.mode==='draw') renderDraw(cls);
       if(state.mode==='attendance') renderAttendance();
       if(state.mode==='group') renderGroup(cls);
+      if(state.mode==='warning') renderWarning();
+      if(state.mode==='manage') renderManage();
+      document.dispatchEvent(new Event('class-selects-rendered'));
       saveSession('class change');   // ★ 新增
     });
 
@@ -11204,7 +11218,7 @@ const ClassroomLayout = (() => {
     function syncClassSelectionAfterMutation(nextClass){
       const classes = state.classOrder || [];
       const hasClasses = classes.length > 0;
-      const prevSelectedClass = manageSelectedClass || elSelect?.value || '';
+      const prevSelectedClass = elSelect?.value || manageSelectedClass || '';
       let activeClass = '';
 
       document.body.classList.toggle('no-data', !hasClasses);
@@ -17359,9 +17373,7 @@ function onTimerDone(){
           elManageClassList.innerHTML = '<div class="manage-empty">尚無班級</div>';
         } else {
           // 若無已選班級或已選班級已被刪，預設選第一個
-          if(!manageSelectedClass || !classes.includes(manageSelectedClass)){
-            manageSelectedClass = elSelect.value && classes.includes(elSelect.value) ? elSelect.value : classes[0];
-          }
+          manageSelectedClass = classes.includes(elSelect.value) ? elSelect.value : classes[0];
           if(elSelect && classes.includes(manageSelectedClass)) elSelect.value = manageSelectedClass;
           elManageClassList.innerHTML = classes.map(c=>{
             const count = (state.classMap[c]||[]).length;
@@ -17569,12 +17581,10 @@ function onTimerDone(){
     elManageClassList?.addEventListener('click', (e)=>{
       const item = e.target.closest('.manage-class-item');
       if(!item) return;
-      if(manageEditMode) applyManageEdits();
-      manageSelectedClass = item.dataset.cls;
-      if(elSelect && Array.from(elSelect.options).some(opt => opt.value === manageSelectedClass)){
-        elSelect.value = manageSelectedClass;
+      if(elSelect && Array.from(elSelect.options).some(opt => opt.value === item.dataset.cls)){
+        elSelect.value = item.dataset.cls;
+        elSelect.dispatchEvent(new Event('change'));
       }
-      renderManage();
     });
 
     elManageTable?.addEventListener('click', (e)=>{
@@ -17830,11 +17840,11 @@ function onTimerDone(){
     function renderAttendance({reveal=false}={}){
       const pane=document.getElementById('attendance-pane');if(!pane)return;attCleanup();
       const previous=pane.querySelector('.att-scroll');if(previous)attView.scroll.set(previous.dataset.board,[previous.scrollLeft,previous.scrollTop]);pane.replaceChildren();
-      let data;try{data=attendanceData();}catch(e){const error=attNode('p','att-error',e.message+' 已停止自動儲存以保留原始檔案，請從「資料與同步」還原有效的完整備份。');error.setAttribute('role','alert');pane.append(error);return;}
+      let data;try{data=attendanceData();const selected=data.boards.find(b=>b.rosterKey===elSelect.value);if(selected)data.activeBoardId=selected.id;}catch(e){const error=attNode('p','att-error',e.message+' 已停止自動儲存以保留原始檔案，請從「資料與同步」還原有效的完整備份。');error.setAttribute('role','alert');pane.append(error);return;}
       const board=attCurrent(),bar=attNode('div','att-toolbar'),label=attNode('label','att-board-field','點名板'),select=attNode('select','input');label.prepend(document.querySelector('#mode-attendance .att-icon').cloneNode(true));select.id='att-board-select';select.setAttribute('aria-label','點名板');
       if(!data.boards.length){const option=attNode('option','','尚無班級');option.value='';select.append(option);select.disabled=true;}
       for(const b of [...data.boards].sort((a,b)=>compareClassByGrade(a.rosterKey,b.rosterKey))){const option=attNode('option','',attBoardLabel(b));option.value=b.id;option.title=b.rosterKey;select.append(option);}if(board)select.value=board.id;
-      select.onchange=()=>{attCleanup();attendanceData().activeBoardId=select.value;saveSession('attendance board select');renderAttendance();};const picker=attNode('span','att-class-picker'),display=attNode('span','class-select-display');select.classList.add('class-color-select');display.setAttribute('aria-hidden','true');display.innerHTML=board?renderClassLabel(board.rosterKey):'尚無班級';picker.append(select,display);label.append(picker);bar.append(label);
+      select.onchange=()=>{const selected=attendanceBoard(select.value);elSelect.value=selected.rosterKey;elSelect.dispatchEvent(new Event('change'));};const picker=attNode('span','att-class-picker'),display=attNode('span','class-select-display');select.classList.add('class-color-select');display.setAttribute('aria-hidden','true');display.innerHTML=board?renderClassLabel(board.rosterKey):'尚無班級';picker.append(select,display);label.append(picker);bar.append(label);
       const add=attendanceButton('＋新增',()=>attendanceEdit(board.id),'btn att-primary');add.id='att-add-column';add.disabled=!board;bar.append(add);
       const edit=attendanceButton('編輯點名',()=>{const current=attCurrent();if(current)attendanceEdit(current.id,attView.selected.get(current.id));});edit.id='att-edit-column';edit.disabled=!board?.columns.length;bar.append(edit);
       pane.append(bar);
@@ -18404,7 +18414,11 @@ function onTimerDone(){
     document.getElementById('mode-group')?.addEventListener('click', ()=> setMode('group'));
     document.getElementById('mode-manage')?.addEventListener('click', ()=> setMode('manage'));
     document.getElementById('mode-warning')?.addEventListener('click', ()=> setMode('warning'));
-    document.getElementById('warning-class-select')?.addEventListener('change', ()=> renderWarning());
+    document.getElementById('warning-class-select')?.addEventListener('change', e=>{
+      warningAllClasses=!e.target.value;
+      if(warningAllClasses){renderWarning();return;}
+      elSelect.value=e.target.value;elSelect.dispatchEvent(new Event('change'));
+    });
     document.getElementById('warning-threshold-input')?.addEventListener('change', e => {
       const v = Math.max(0, Math.min(100, Number(e.target.value) || 60));
       e.target.value = v;
@@ -20290,7 +20304,7 @@ elProgAdd?.addEventListener('click', ()=>{
 
       // 同步 select 選項
       if(clsSelect){
-        const selectedVal = clsSelect.value;
+        const selectedVal = warningAllClasses ? '' : elSelect.value;
         clsSelect.innerHTML = '<option value="">所有班級</option>';
         state.classOrder.forEach(c => {
           const o = document.createElement('option');
