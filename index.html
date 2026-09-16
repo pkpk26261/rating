@@ -7529,6 +7529,8 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     :is(#hw-table,.att-table) thead tr>:nth-child(-n+2){height:52px;background:var(--bg);font-weight:600;vertical-align:middle;}
     :is(#hw-table,.att-table) tr>:first-child{width:var(--hw-seat-width);min-width:var(--hw-seat-width)!important;max-width:var(--hw-seat-width);text-align:center;}
     :is(#hw-table,.att-table) tr>:nth-child(2){left:var(--hw-seat-width);width:var(--hw-name-width);min-width:var(--hw-name-width)!important;max-width:var(--hw-name-width);text-align:left;box-shadow:2px 0 0 var(--line);}
+    /* 固定姓名欄的分隔線畫在欄內，避免蓋掉相鄰成績格的左側焦點框。 */
+    #hw-table tr>:nth-child(2){box-shadow:inset -2px 0 0 var(--line);}
     :is(#hw-table,.att-table) .hw-seatcell{gap:3px;justify-content:center;}
     :is(#hw-table,.att-table) .note-btn{font-size:12px;width:24px;min-width:24px;color:var(--muted);}
     .att-table tbody tr:last-child>:nth-child(-n+2){border-bottom:0;}
@@ -21999,7 +22001,11 @@ elProgAdd?.addEventListener('click', ()=>{
 
 <style>
 select.class-color-select{color:transparent!important;text-shadow:none!important;appearance:none!important;-webkit-appearance:none!important;background-image:none!important;background-color:var(--card)!important;border:1px solid var(--line)!important;border-radius:10px!important;padding:10px 14px!important;font-size:14px!important;font-weight:600!important;transition:border-color .15s,box-shadow .15s!important;}
-select.class-color-select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* 班級選單位於可捲動工具列時，焦點框留在元件內，避免上下邊被裁切。 */
+select.class-color-select:focus{outline:2px solid var(--accent)!important;outline-offset:-3px!important;box-shadow:none!important;}
+:is(.controls-row,.hw-grid-top,.grp-toolbar) :is(input,select):focus,
+:is(.controls-row,.hw-grid-top,.grp-toolbar) button:focus-visible,
+:is(#hw-search,#grp-search,#seat-panel-search):focus{outline:2px solid var(--accent)!important;outline-offset:-3px!important;box-shadow:none!important;}
 select.class-color-select option{color:var(--fg);background:var(--card);}
 .class-select-display{position:absolute;display:flex;align-items:center;gap:4px;pointer-events:none;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:var(--fg);}
 .class-select-display .class-label{flex:0 0 auto;min-width:0;white-space:nowrap;overflow-wrap:normal;line-height:1.4;}
