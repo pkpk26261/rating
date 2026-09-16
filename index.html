@@ -6919,8 +6919,11 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     #hw-table td[data-sum],#hw-table td[data-avg]{text-align:right;color:var(--muted);}
     #hw-pane #hw-table .hw-col-name{cursor:pointer!important;min-height:32px;max-width:156px;line-height:1.4;}
     #hw-table .hw-col-name .hw-title-text{color:var(--fg);overflow-wrap:anywhere;}
-    .hw-col-actions{display:flex;align-items:center;gap:8px;margin:6px 0 2px;}
-    #hw-table .hw-batch-entry{border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--accent);padding:6px 9px;font:inherit;font-size:12px;cursor:pointer;min-height:32px;}
+    .hw-col-heading{display:flex;align-items:center;gap:8px;}
+    #hw-pane #hw-table .hw-col-heading .hw-col-name{flex:1;min-width:0;overflow-wrap:anywhere;}
+    .hw-col-actions{display:flex;align-items:center;flex:none;margin:0;}
+    #hw-table .hw-batch-entry{border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--accent);padding:0;font:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;min-height:44px;}
+    #hw-table .hw-batch-entry svg{width:22px;height:22px;flex:none;}
     /* 成績直接融入表格，編輯焦點以整格標示。 */
     #hw-table .hw-cell-editor{width:156px;min-width:156px;max-width:156px;border:0;background:transparent;border-radius:0;}
     #hw-table .hw-cell-editor:hover{border-color:transparent;}
@@ -6961,9 +6964,12 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       #hw-table th.hw-col{width:172px;min-width:172px;max-width:172px;}
     }
     /* 批次輸入：統一欄位、核取選項與按鈕的操作高度。 */
-    #bulk-mask .modal{width:min(760px,94vw);}
-    #bulk-mask .content{padding:20px;}
-    #bulk-mask h4{margin:18px 0 14px;font-size:16px;}
+    #bulk-mask .modal{width:min(860px,94vw);max-height:calc(100dvh - 24px);}
+    #bulk-mask .content{padding:12px 20px;}
+    #bulk-mask .divider{margin:10px 0;}
+    #bulk-mask #bulk-scope{margin:0;line-height:1.5;}
+    #bulk-mask .content li{margin:3px 0;}
+    #bulk-mask h4{margin:10px 0 8px;font-size:16px;}
     #bulk-mask .bulk-same-grid{display:grid;grid-template-columns:minmax(120px,1fr) minmax(100px,1fr) auto auto;align-items:end;gap:12px;}
     #bulk-mask .bulk-field{display:grid;gap:8px;min-width:0;font-size:14px;}
     #bulk-mask .bulk-field :is(input,select){box-sizing:border-box;width:100%;min-width:0;height:44px;min-height:44px;margin:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;}
@@ -6973,8 +6979,8 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     #bulk-mask .btn{min-height:44px;margin:0;padding:10px 14px;white-space:nowrap;}
     #bulk-mask .bulk-paste-options{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;}
     #bulk-mask .bulk-paste-label{display:block;font-size:14px;margin:10px 0 8px;}
-    #bulk-mask #bulk-paste{display:block;box-sizing:border-box;width:100%;margin:0;min-height:150px;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:15px/1.6 ui-monospace,monospace;}
-    #bulk-mask .bulk-paste-footer{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:14px;}
+    #bulk-mask #bulk-paste{display:block;box-sizing:border-box;width:100%;margin:0;height:112px;min-height:112px;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:15px/1.6 ui-monospace,monospace;}
+    #bulk-mask .bulk-paste-footer{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:8px;}
     #bulk-mask .bulk-paste-footer .hw-rules{flex:1;min-width:180px;line-height:1.5;}
     #bulk-mask .bulk-error{color:var(--bad);font-size:14px;line-height:1.5;margin:10px 0;}
     #bulk-mask .bulk-error:empty{display:none;}
@@ -8757,7 +8763,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
         </div>
         <label class="bulk-paste-label" for="bulk-paste">貼上成績</label>
         <p id="bulk-paste-error" class="bulk-error" role="alert"></p>
-        <textarea id="bulk-paste" rows="6" aria-describedby="bulk-paste-error" placeholder="例：&#10;依表格順序：&#10;78&#10;85&#10;...&#10;&#10;按座號對應：&#10;1 78&#10;2 85&#10;..."></textarea>
+        <textarea id="bulk-paste" rows="6" aria-describedby="bulk-paste-error" placeholder="依順序：每行填一筆分數，例如 78、85。&#10;按座號：每行填「座號 分數」，例如 1 78。&#10;也可填未批改、缺交或免交。"></textarea>
         <div class="bulk-paste-footer">
           <button id="bulk-apply-paste" class="btn add">套用貼上值</button>
           <span class="hw-rules">可填數字、未批改、缺交、免交；格式錯誤時整批不套用。</span>
@@ -19341,14 +19347,19 @@ elProgAdd?.addEventListener('click', ()=>{
       for(const input of elHWTable.querySelectorAll('input[type="number"]')){input.readOnly=!editable;input.title=editable?'輸入數字即為已評分；清空即為未批改':'按「開始批改」後可修改成績';}
       for(const select of elHWTable.querySelectorAll('.hw-state-select'))select.disabled=!editable;
       for(const button of elHWTable.querySelectorAll('.hw-col-name'))button.disabled=!editable;
-      document.getElementById('hw-start-entry').disabled=!hwView.grading&&(!hwCanWrite()||!hwVisibleIds().length||!hw.cols.length);
+      // 保留入口可操作，點擊時檢查最新狀態，避免下載結束後留下過期的 disabled。
+      document.getElementById('hw-start-entry').disabled=false;
       document.getElementById('btn-hw-add').disabled=!hwCanWrite();
       for(const button of elHWTable.querySelectorAll('.hw-batch-entry'))button.disabled=!editable||!hwVisibleIds().length;
     }
     document.getElementById('hw-start-entry').addEventListener('click',()=>{
       hwFinishEdit();
       if(hwView.grading){closeHWColumnMenu();setHWGrading(false);hwMessage('');updateHWEntryView();return;}
-      if(!hwCanWrite()||!hwView.cls)return;
+      if(!TabLock.isActive()){hwMessage('此視窗目前為唯讀，請先改用此視窗再開始批改。',true);return;}
+      if(!hwCanWrite()){hwMessage('正在載入雲端資料，完成後請再按「開始批改」。',true);return;}
+      if(!hwView.cls){hwMessage('請先選擇班級。',true);return;}
+      if(!ensureHWState(hwView.cls).cols.length){hwMessage('請先按「新增作業」，再開始批改。',true);return;}
+      if(!hwVisibleIds().length){hwMessage(hwView.search?'找不到符合條件的學生，請清除篩選後再開始批改。':'這個班級尚無學生，請先新增學生。',true);return;}
       setHWGrading(true);hwMessage('');updateHWEntryView();
       const hw=ensureHWState(hwView.cls),all=visibleHWInputs();
       const pending=all.filter(i=>hwValueStatus(hw.data[i.closest('tr').dataset.id]?.[Number(i.dataset.col)])==='ungraded');
@@ -20456,7 +20467,7 @@ elProgAdd?.addEventListener('click', ()=>{
       const hw=ensureHWState(cls),list=getSortedList(cls);prepareHWEntryView(cls,hw);elHWClassPill.innerHTML=renderClassLabel(cls);syncHWClassSelect(cls);
       list.forEach(s=>{const row=hw.data[s.id]||(hw.data[s.id]=[]);while(row.length<hw.cols.length)row.push('');});
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
-      elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄">整批登錄</button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
+      elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><div class="hw-col-heading"><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄" title="整批登錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><rect x="8" y="2" width="8" height="5" rx="1.5"/><path d="m14 13 6-6 2 2-6 6-3 1 1-3ZM7 12h3M7 16h3"/></svg></button></div><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
         const summary=calcHWSummary(hw.data[s.id],hw.cols.length);
         return `<tr data-id="${escapeHTML(s.id)}">${renderStudentRosterCells(s,cls)}${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
       }).join('')}<tr id="hw-empty-row"><td colspan="${hw.cols.length+5}" class="hw-empty-message">沒有符合的學生。可清除篩選，或至學生管理新增學生。</td></tr></tbody>`;
