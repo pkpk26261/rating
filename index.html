@@ -23176,16 +23176,35 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let client,user=null,mode='login',working=false,cloud=null,epoch=0,switchingOwner=false;
   const metaKey='rating-cloud-meta';
   const mailWaitKey='rating-auth-mail-wait';
-  let mailWaitUntil=0;
+  let mailWaitUntil=0,mailSending=false;
   try{mailWaitUntil=Number(sessionStorage.getItem(mailWaitKey))||0;}catch{}
   const mailSeconds=()=>Math.max(0,Math.ceil((mailWaitUntil-Date.now())/1000));
   function paintMailWait(){
     const resend=$('account-code-resend');
-    if(resend){resend.disabled=working||mailSeconds()>0;resend.textContent=mailSeconds()?`重新寄送（${mailSeconds()} 秒）`:'重新寄送驗證碼';}
+    if(resend){resend.disabled=working||mailSeconds()>0;resend.textContent=mailSending?'正在寄送…':mailSeconds()?`重新寄送（${mailSeconds()} 秒）`:'重新寄送驗證碼';}
+    if(['verify-code','signup-code'].includes(mode)){
+      $('account-submit').disabled=working;
+      $('account-submit').textContent=mailSending?'正在寄送…':mode==='signup-code'?'完成註冊':'驗證並繼續';
+    }
     if(mode!=='forgot'&&mode!=='signup')return;
     const seconds=mailSeconds();
     $('account-submit').disabled=working||seconds>0;
     $('account-submit').textContent=seconds?`請等待 ${seconds} 秒後再試`:mode==='forgot'?'寄送驗證碼':'寄送註冊驗證碼';
+  }
+  const paintBeforeMail=()=>new Promise(resolve=>{
+    let frame;
+    const done=()=>{clearTimeout(fallback);cancelAnimationFrame(frame);resolve();};
+    // 切換到郵件 App 時 rAF 可能暫停，寄送請求不能因此等到使用者回來。
+    const fallback=setTimeout(done,80);
+    frame=requestAnimationFrame(()=>setTimeout(done,0));
+  });
+  async function showMailPending(stage){
+    mailSending=true;
+    if(stage)setMode(stage);else {$('account-code').value='';update();}
+    $('account-form').setAttribute('aria-busy','true');
+    message('正在寄送驗證碼，請稍候。收到郵件後可直接輸入，無須重新操作。');
+    paintMailWait();
+    await paintBeforeMail();
   }
   async function sendAuthMail(action){
     const result=await action();
@@ -23389,7 +23408,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     $('account-close').hidden=!A.ready;
     $('account-help').hidden=['login','signup','signup-code'].includes(mode);
     $('account-help').textContent=mode==='reset'?'請設定新密碼，並再次輸入確認。':mode==='verify-code'?'輸入最新郵件中的驗證碼，即可設定新密碼。':mode==='forgot'?'輸入註冊信箱以接收驗證碼。':signed?'資料會自動同步至帳號空間。':'';
-    $('account-code').disabled=working||!['verify-code','signup-code'].includes(mode);
+    $('account-code').disabled=(working&&!mailSending)||!['verify-code','signup-code'].includes(mode);
     refreshEntry();updateStatus();
   }
   function updateStatus(){
@@ -23475,8 +23494,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function run(action){
     if(working||switchingOwner)return;
     working=true;
-    if(syncPromise)await syncPromise;
-    try{busy(true);await action();}catch(e){message(explain(e),true);}finally{if(!switchingOwner){busy(false);update();paintMailWait();}}
+    try{busy(true);if(syncPromise)await syncPromise;await action();}catch(e){message(explain(e),true);}finally{mailSending=false;$('account-form').removeAttribute('aria-busy');if(!switchingOwner){busy(false);update();paintMailWait();}}
   }
   $('btn-account').onclick=open;
   $('account-close').onclick=close;
@@ -23491,9 +23509,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(working||mailSeconds()>0)return;
     run(async()=>{
       const email=$('account-email').value.trim(),isSignup=mode==='signup-code';
+      await showMailPending();
       const {error}=await sendAuthMail(()=>isSignup?client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}}):client.auth.resetPasswordForEmail(email,{redirectTo:redirect}));
       if(error)throw error;
-      $('account-code').value='';message('寄送申請已送出，請查看最新郵件中的驗證碼。若未收到，請確認信箱與垃圾郵件。');
+      message('寄送申請已送出，請查看最新郵件中的驗證碼。若未收到，請確認信箱與垃圾郵件。');
     });
   };
   $('account-form').onsubmit=e=>{
@@ -23504,15 +23523,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const email=$('account-email').value.trim(),password=$('account-password').value;
       if((mode==='signup'||mode==='reset')&&password!==$('account-password-confirm').value)throw Error('兩次輸入的密碼不一致，請重新確認。');
       if(mode==='signup'){
-        saveBeforeSwitch();
-        const {data,error}=await sendAuthMail(()=>client.auth.signUp({email,password,options:{emailRedirectTo:redirect}}));if(error)throw error;
-        if(data.session)await verify();else {
-          setMode('signup-code');
+        await showMailPending('signup-code');
+        let result;
+        try{saveBeforeSwitch();result=await sendAuthMail(()=>client.auth.signUp({email,password,options:{emailRedirectTo:redirect}}));if(result.error)throw result.error;}
+        catch(error){setMode('signup');throw error;}
+        if(result.data.session)await verify();else {
           message('註冊申請已送出，請查收最新驗證碼。未收到時請檢查垃圾郵件；已有帳號可返回登入。');
         }
       }else if(mode==='forgot'){
-        const {error}=await sendAuthMail(()=>client.auth.resetPasswordForEmail(email,{redirectTo:redirect}));if(error)throw error;
-        setMode('verify-code');
+        await showMailPending('verify-code');
+        try{const {error}=await sendAuthMail(()=>client.auth.resetPasswordForEmail(email,{redirectTo:redirect}));if(error)throw error;}catch(error){setMode('forgot');throw error;}
         message('重設申請已送出。若此 Email 已註冊，請到信箱查看驗證碼。');
       }else if(mode==='verify-code'||mode==='signup-code'){
         const isSignup=mode==='signup-code';
