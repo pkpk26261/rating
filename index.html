@@ -759,14 +759,15 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       grid-template-rows: 1fr;
       align-items: stretch;
       min-height:0; height:100%;
-      transition: grid-template-columns .25s ease;  /* 平滑伸縮 */
+      /* 欄寬一次到位；位移動畫由 initSidebarToggle 處理，避免每幀重排學生卡。 */
     }
 
+    .layout.sidebar-animating{overflow:clip;}
     /* 側欄可以被隱藏／滑動 */
     .sidebar{
       overflow:hidden;
-      transition: transform .25s ease, opacity .2s ease;
-      will-change: transform;
+      width:var(--sidebar-w);
+      box-sizing:border-box;
     }
 
     /* ★ 收合狀態：把第一欄寬度變 0，主區填滿 */
@@ -796,7 +797,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       box-shadow: var(--shadow);
       cursor:pointer; user-select:none;
       font-size:18px; font-weight:900;   /* 顯眼的箭頭 */
-      transition: left .25s ease, transform .25s ease, box-shadow .2s ease;
+      transition: box-shadow .2s ease;
     }
     .side-toggle:hover{ box-shadow:0 10px 24px rgba(0,0,0,.28); }
 
@@ -991,7 +992,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     .grid{ display:grid; grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr)); gap:8px; margin-top:0; align-items:stretch; justify-items:stretch; contain: layout style; }
     .card{ position:relative; border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:72px; box-shadow: var(--shadow); transform: translateY(6px); opacity:0; width:auto; }
     .card.show{ opacity:1; transform: translateY(0); transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .25s ease; }
-    .card:hover{ outline:1px solid rgba(129,140,248,.35); box-shadow: 0 12px 30px rgba(129,140,248,.12); }
+    .card:not(.room-desk):hover{ outline:1px solid rgba(129,140,248,.35); box-shadow: 0 12px 30px rgba(129,140,248,.12); }
     .name{ display:flex; align-items:center; gap:6px; font-weight:800; letter-spacing:.02em; line-height:1.05; min-width:0; }
     .name .student-name{ display:inline-block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
     .seat-badge{ background: color-mix(in oklab, var(--seat) 22%, black); border:1px solid color-mix(in oklab, var(--seat) 60%, black); color:white; font-weight:800; font-variant-numeric: tabular-nums; padding:1px 6px; border-radius:999px; line-height:1.2; font-size:10px; flex:0 0 auto; }
@@ -2371,7 +2372,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
 
     @media (max-width: 880px){
       .layout{ grid-template-columns: 1fr; }
-      .sidebar{ order:2; }
+      .sidebar{ order:2;width:auto; }
       .main{ order:1; }
       .seatwrap{ grid-template-columns: 1fr; }
     }
@@ -4379,8 +4380,9 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       text-align:center;
       max-width: 380px;
       width: calc(100% - 40px);
-      animation: timer-done-pop .35s cubic-bezier(.34,1.56,.64,1);
     }
+    .timer-done-mask.show .timer-done-panel{animation:timer-done-pop .35s cubic-bezier(.34,1.56,.64,1);}
+    .timer-done-mask.show .timer-done-icon{animation:timer-bell-ring 1.5s ease-in-out infinite;}
     @keyframes timer-done-pop{
       0%{ transform: scale(.8) translateY(20px); opacity:0; }
       100%{ transform: scale(1) translateY(0); opacity:1; }
@@ -4389,7 +4391,6 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       font-size: 56px;
       line-height:1;
       margin-bottom:12px;
-      animation: timer-bell-ring 1.5s ease-in-out infinite;
     }
     @keyframes timer-bell-ring{
       0%, 100%{ transform: rotate(0); }
@@ -5198,7 +5199,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     body[data-mode="list"] #students.grid .card{
       box-shadow: none !important;
     }
-    body[data-mode="list"] #students.grid .card:hover{
+    body[data-mode="list"] #students.grid .card:not(.room-desk):hover{
       box-shadow: none !important;
     }
 
@@ -5453,7 +5454,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease !important;
       contain: layout style;
     }
-    .card:hover{
+    .card:not(.room-desk):hover{
       transform: translateY(-2px) !important;
       border-color: rgba(129,140,248,.28) !important;
       box-shadow: 0 12px 32px rgba(129,140,248,.1), 0 4px 12px rgba(0,0,0,.15) !important;
@@ -5463,7 +5464,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       border: 1px solid rgba(0,0,0,.05) !important;
       box-shadow: 0 2px 8px rgba(0,0,0,.03);
     }
-    :root[data-theme="light"] .card:hover{
+    :root[data-theme="light"] .card:not(.room-desk):hover{
       border-color: rgba(99,102,241,.22) !important;
       box-shadow: 0 8px 24px rgba(99,102,241,.07), 0 2px 8px rgba(0,0,0,.05) !important;
     }
@@ -5472,7 +5473,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       border: 1px dashed rgba(255,255,255,.08) !important;
       transition: opacity .3s ease;
     }
-    .card.placeholder:hover{
+    .card.placeholder:not(.room-desk):hover{
       opacity: .7;
       transform: none !important;
       box-shadow: none !important;
@@ -5872,7 +5873,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       background: rgba(10,14,26,.82) !important;
       backdrop-filter: blur(8px);
       border-radius: 14px !important;
-      transition: all .25s ease !important;
+      transition: background-color .2s ease,border-color .2s ease,box-shadow .2s ease !important;
     }
     .side-toggle:hover{
       background: rgba(129,140,248,.14) !important;
@@ -6119,7 +6120,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
         display: none !important;
       }
       /* 卡片去除 hover 效果（觸控不需要） */
-      .card:hover{
+      .card:not(.room-desk):hover{
         transform: none !important;
         box-shadow: none !important;
       }
@@ -6473,7 +6474,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     /* ===== 老師工作介面：一致導覽、低干擾背景與清楚輸入焦點 ===== */
     :root{ --bg:#101b27; --card:#182635; --fg:#edf3f6; --muted:#a8b9c6; --line:#344655; --accent:#66cfbf; --accent-2:#66cfbf; --page-x:18px; --shadow:0 4px 16px rgba(0,0,0,.12); }
     :root[data-theme="light"]{ --bg:#f3f6f5; --card:#fff; --fg:#223932; --muted:#586e65; --line:#dce5e0; --accent:#197565; --accent-2:#197565; --shadow:0 3px 12px rgba(31,66,51,.04); }
-    body::before, body::after{ display:none !important; }
+    body::before, body::after{ display:none !important; animation:none !important; }
     body{ background:var(--bg); }
     .topbar{ display:grid; grid-template-columns:minmax(180px,1fr) auto auto; gap:10px 18px; padding:16px 24px 10px; background:var(--card) !important; backdrop-filter:none !important; box-shadow:none; }
     .title-stack{ display:contents; }
@@ -7701,6 +7702,8 @@ body[data-mode="seat"] #seat-controls{flex-wrap:wrap;padding-left:0;margin:0;bor
 #students.room-board{height:100%;min-height:220px;}
 .room-surface{position:relative;margin:0 auto;border:1px solid var(--line);border-radius:8px;box-sizing:content-box;isolation:isolate;background:color-mix(in srgb,var(--card) 70%,var(--bg));}
 .room-editing .room-surface{background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:var(--room-grid) var(--room-grid);background-position:calc(var(--room-grid) * -.5) calc(var(--room-grid) * -.5);touch-action:none;}
+/* 座位卡的 transform 是桌椅方位，不套用一般卡片的 hover 位移或旋轉過場。 */
+#students.room-board .room-desk{animation:none!important;opacity:1;transition:border-color .15s ease,box-shadow .15s ease!important;}
 .room-board .room-desk{position:absolute!important;box-sizing:border-box!important;min-height:0!important;max-height:none!important;min-width:0!important;margin:0!important;transform:none!important;overflow:visible!important;}
 :is(#seatboard,#room-template-preview) .room-desk .tile{padding-top:20px!important;cursor:grab;}
 :is(#seatboard,#room-template-preview) .room-desk .student-name{font-size:inherit!important;}
@@ -13858,7 +13861,7 @@ const ClassroomLayout = (() => {
       elStudents.innerHTML = '';
       elStudents.appendChild(frag);
       elStudents.querySelectorAll('.card').forEach(c=> io.observe(c));
-      requestAnimationFrame(()=> setupAutoFitForNames(elStudents));
+      requestAnimationFrame(()=>{if(!elStudents.classList.contains('room-board'))setupAutoFitForNames(elStudents);});
 
       if(q){
         const first = elStudents.querySelector('.card.match');
@@ -14194,20 +14197,47 @@ const ClassroomLayout = (() => {
       const layout = document.querySelector('.layout');
       const btn = document.getElementById('btn-sidebar');
 
-      function apply(collapsed){
+      const sidebar=document.getElementById('sidebar'),main=layout.querySelector('.main');
+      const motion=matchMedia('(prefers-reduced-motion: reduce)');
+      let animations=[],generation=0;
+      function finishMotion(){
+        generation++;
+        for(const animation of animations)animation.cancel();
+        animations=[];layout.classList.remove('sidebar-animating');
+        document.dispatchEvent(new Event('sidebar-motion-finished'));
+      }
+      function apply(collapsed,animate=false){
+        const targets=[sidebar,main,btn];
+        const play=animate&&!motion.matches&&!layout.classList.contains('sidebar-off')&&btn.getClientRects().length;
+        // 先讀取當前畫面位置，快速反向點選也從當下位置接續。
+        const before=play?targets.map(n=>({left:n.getBoundingClientRect().left,opacity:getComputedStyle(n).opacity})):[];
+        finishMotion();
         layout.classList.toggle('is-collapsed', collapsed);
-        // 展開時顯示 ‹；收合時顯示 ›
+        sidebar.inert=collapsed;
         btn.textContent = collapsed ? '›' : '‹';
         btn.setAttribute('aria-expanded', String(!collapsed));
+        btn.setAttribute('aria-label', collapsed ? '展開側欄' : '收合側欄');
         btn.setAttribute('title', collapsed ? '展開側欄' : '收合側欄');
         try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch{}
+        if(!play)return;
+        // 姓名縮放與座位配置先完成，再啟動位移，避免昂貴重繪插入動畫中途。
+        if(state.mode==='list'&&state.listViewMode!=='order')renderStudents(elSelect.value);
+        const after=targets.map(n=>({left:n.getBoundingClientRect().left,transform:getComputedStyle(n).transform,opacity:getComputedStyle(n).opacity}));
+        layout.classList.add('sidebar-animating');
+        const token=generation;
+        animations=targets.map((n,i)=>{
+          const base=after[i].transform==='none'?'':after[i].transform;
+          return n.animate([
+            {transform:`translateX(${before[i].left-after[i].left}px) ${base}`,opacity:before[i].opacity},
+            {transform:base||'none',opacity:after[i].opacity}
+          ],{duration:240,easing:'cubic-bezier(.22,.68,.32,1)'});
+        });
+        Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(generation===token)finishMotion();});
       }
-
-      // 點按切換
-      btn?.addEventListener('click', ()=>{
-        const collapsed = layout.classList.contains('is-collapsed');
-        apply(!collapsed);
-      });
+      btn?.addEventListener('click', ()=>apply(!layout.classList.contains('is-collapsed'),true));
+      window.addEventListener('resize',finishMotion);
+      motion.addEventListener('change',finishMotion);
+      new MutationObserver(finishMotion).observe(document.body,{attributes:true,attributeFilter:['data-mode']});
 
       // 開頁還原上次狀態
       const collapsed = localStorage.getItem(KEY) === '1';
@@ -19868,8 +19898,13 @@ elProgAdd?.addEventListener('click', ()=>{
     let nameResizeObserver=null;
     function setupAutoFitForNames(root){
       if(nameResizeObserver) nameResizeObserver.disconnect();
+      const fittedSizes=new WeakMap();
       const fitCard = card=>{
         if(state.mode !== 'list') return;
+        const width=card.clientWidth,height=card.clientHeight,previous=fittedSizes.get(card);
+        if(previous&&previous.width===width&&previous.height===height)return;
+        fittedSizes.set(card,{width,height});
+        if(card.classList.contains('room-desk')){const name=card.querySelector('.name');if(name)fitName(name);return;}
         const scale = getScoreCardScale(card.clientWidth, card.clientHeight);
         card.style.setProperty('--score-scale', scale);
         const name = card.querySelector('.name');
@@ -22139,6 +22174,7 @@ initWebAppGuide();
   let presentation=null,selectedScoreClass='',scoreAnchor=null,resizeViewport=null;
   const roomTouches=new Map();let pinch=null,pinchFrame=0;
   const views={seat:1,score:1}, histories=new Map();
+  let scoreWidth=0,scoreHeight=0;
   const originalFitName=fitName;
   fitName=function(name){
     if(!name.closest('.room-desk'))return originalFitName(name);
@@ -22592,7 +22628,7 @@ initWebAppGuide();
     if(pickedId){for(const t of document.querySelectorAll('#seatwrap .tile'))t.classList.toggle('picked',t.dataset.id===pickedId);board.classList.add('has-picked');}
     board.scrollTo(scroll.x,scroll.y);syncTools();requestAnimationFrame(fitSeatNames);
   };
-  renderStudents=function(cls){students.classList.remove('room-board');originalStudents(cls);if(state.listViewMode!=='order'&&cls)decorate(students,cls,true);syncTools();};
+  renderStudents=function(cls){students.classList.remove('room-board');originalStudents(cls);if(state.listViewMode!=='order'&&cls)decorate(students,cls,true);scoreWidth=students.clientWidth;scoreHeight=students.clientHeight;syncTools();};
   function localPoint(e){const surf=board.querySelector('.room-surface');if(!surf)return null;const rect=surf.getBoundingClientRect(),scale=+surf.dataset.scale;return {x:(e.clientX-rect.left-surf.clientLeft)/scale,y:(e.clientY-rect.top-surf.clientTop)/scale,scale};}
   function groupKeys(key){const l=presentation?.layout||ensureSeatState(elSelect.value).layout,id=l?.desks[key]?.groupId;return id?Object.keys(l.desks).filter(k=>l.desks[k].groupId===id):[key];}
   function selectOne(key,toggle){const keys=groupKeys(key);if(toggle){const remove=keys.every(k=>selected.has(k));for(const k of keys)if(remove)selected.delete(k);else selected.add(k);}else selected=new Set(keys);syncTools();}
@@ -22819,7 +22855,8 @@ initWebAppGuide();
   window.addEventListener('keydown',e=>{if(state.mode!=='seat'||e.target.closest('input,textarea,[contenteditable]'))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo(e.shiftKey);}if(e.key==='Escape'){if(!arrangePanel.hidden){closeMenus();$('room-arrange-menu').focus({preventScroll:true});}abortPointer();if(pickedId)clearPicked();}});
   const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelPinch();cancelGesture();closeMenus();oldClear();selected.clear();multi=false;tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
   let resizeFrame;new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(gesture)return;if(state.mode==='seat')renderSeatUI(elSelect.value);});}).observe(board);
-  let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order')renderStudents(elSelect.value);});}).observe(students);
+  document.addEventListener('sidebar-motion-finished',positionScorePopover);
+  let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order'&&(students.clientWidth!==scoreWidth||students.clientHeight!==scoreHeight))renderStudents(elSelect.value);});}).observe(students);
 
   const dialog=document.createElement('dialog');dialog.id='room-template-dialog';dialog.className='room-dialog';
   dialog.innerHTML=`<form method="dialog"><div class="room-dialog-head"><h2 id="room-dialog-title">套用教室配置</h2><button class="btn" value="cancel">取消</button></div><div class="room-template-fields"><div class="room-template-choice"><label id="room-type-label">配置方式<select id="room-template-type" class="select"><optgroup label="內建範本"><option value="classroom">預設教室（雙門・佈告欄）</option><option value="groups">分組</option></optgroup><optgroup id="room-my-templates" label="我的範本"></optgroup></select></label><div id="room-template-manage" hidden><button type="button" class="btn" id="room-template-rename">重新命名</button> <button type="button" class="btn" id="room-template-delete">刪除範本</button></div></div><label id="room-source-label">來源班級<select id="room-template-source" class="select"></select></label><label id="room-count-label">桌子數量<input id="room-template-count" class="input" type="number" min="1" max="81"></label><label id="room-rows-label">列數<input id="room-template-rows" class="input" type="number" min="1" max="9"></label><label id="room-cols-label">欄數<input id="room-template-cols" class="input" type="number" min="1" max="9"></label><label id="room-group-label">每組人數<select id="room-template-group" class="select"><option value="4">4 位</option><option value="6">6 位</option></select></label></div><div id="room-template-presets" role="group" aria-label="快速設定教室排數與欄數"><button class="btn" type="button" data-rows="5" data-cols="5">5 排 × 5 欄<span>25 張桌子</span></button><button class="btn" type="button" data-rows="5" data-cols="6">5 排 × 6 欄<span>30 張桌子</span></button><button class="btn" type="button" data-rows="6" data-cols="5">6 排 × 5 欄<span>30 張桌子</span></button></div><div id="room-template-preview" class="room-mini" aria-label="教室配置預覽"></div><p id="room-template-impact" role="status"></p><button id="room-template-apply" class="btn primary" type="button">套用配置</button></form>`;
