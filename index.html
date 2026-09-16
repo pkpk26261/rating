@@ -2388,6 +2388,10 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
     .modal header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background: var(--card); }
     .modal h3{ margin:0; font-size:16px; display:flex; gap:8px; align-items:center; }
     .modal .content{ padding:12px 16px; }
+    /* 標籤與輸入欄共用可用寬度，避免平板的全寬 select 規則擠出彈窗。 */
+    #add-stu-mask .content label{min-width:0;}
+    #add-stu-mask .content label>span{flex:0 0 3em;}
+    #add-stu-mask .content .select{min-width:0 !important;width:100%;box-sizing:border-box;flex:1 1 0 !important;}
     .modal .content ol{ margin:0 0 8px 18px; }
     .modal .content li{ margin:6px 0; }
     .modal .close{ cursor:pointer; border:1px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--card); }
@@ -6569,7 +6573,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       .hw-entry-status{ font-size:11px; }
       .welcome-title{ font-size:28px; }
     }
-    @media(prefers-reduced-motion:reduce){ *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+    @media(prefers-reduced-motion:reduce){ *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 
 
     /* 覆寫舊平板單欄工具列，避免隱含格線把導覽壓窄。 */
@@ -7029,7 +7033,7 @@ body .app #data-dropdown #dt-display{padding:4px 8px 10px;font-size:11px;border-
       body .app .topbar__right{ grid-row:2; }
       body .app .modebar{ grid-column:1 / -1; }
       body .app .title{ font-size:16px !important; }
-      #btn-data{ flex-wrap:wrap; gap:4px 7px; max-width:160px; justify-content:flex-start; }
+      body .app #btn-data{ flex-wrap:wrap; gap:4px 7px; max-width:160px; justify-content:flex-start; height:auto !important; min-height:56px; padding:8px 10px !important; }
       #data-status{ order:1; flex-basis:100%; text-align:left; }
       #btn-theme{ font-size:12px; }
     }
@@ -7204,7 +7208,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 
     /* Fit all groups in the available workspace; the pending drawer stays scrollable. */
     #group-pane{overflow:hidden;gap:12px;padding-bottom:8px;}
-    #group-pane .grp-workspace{flex:1;min-height:0;gap:10px;}
+    #group-pane .grp-workspace{flex:1;min-height:0;gap:10px;isolation:isolate;}
     #group-pane .grp-groups-section{flex:1;min-height:0;overflow:hidden;}
     #group-pane .grp-groups-section>.grp-section-head{margin-bottom:8px;}
     #group-pane #grp-board{gap:8px;}
@@ -8025,6 +8029,10 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
 @media(max-width:900px){body[data-mode="seat"] #seat-controls .btn{font-size:14px!important;padding-left:6px!important;padding-right:6px!important;}body[data-mode="seat"] #room-pending-tools{gap:4px;}}
 
 @media(max-width:900px){body[data-mode="seat"] .controls-row{gap:4px!important;padding:6px!important;}body[data-mode="seat"] .controls-row>#search-input{flex:1 1 80px;min-width:70px!important;}body[data-mode="seat"] #seat-controls{gap:4px!important;}body[data-mode="seat"] #seat-controls>.btn,body[data-mode="seat"] .room-modes>.btn{padding-left:6px!important;padding-right:6px!important;}}
+@media(max-width:700px){
+  body[data-mode="seat"] .main .controls-row{flex-wrap:wrap;}
+  body[data-mode="seat"] .controls-row #seat-controls{flex:1 1 100%;margin:0;padding-left:0;border-left:0;justify-content:flex-end;}
+}
 
 :is(#seatboard,#room-template-preview) .room-door[data-door-style="blocked"],#students.room-board .room-door[data-door-style="blocked"]{color:var(--danger,#c43b3b);}
 #room-rotation-tools{position:absolute;right:12px;top:8px;z-index:20;display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:0 3px 12px #0002;}
@@ -16461,7 +16469,7 @@ function ensureInAppModal(){
         <div id="inapp-body" style="font-size:15px; line-height:1.6;"></div>
         <div class="divider"></div>
         <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
-          <button id="inapp-ok" class="btn primary">停止提醒</button>
+          <button id="inapp-ok" class="btn primary">確定</button>
         </div>
       </div>
     </div>
@@ -17983,6 +17991,7 @@ function onTimerDone(){
       for(const [id,icon] of Object.entries({'theme':'moon','settings-open':'controls','project':'expand','exit':'exit','save':'save','load':'folder','clear':'trash','offset-reset':'reset','next-title':'bell','current-title':'clock','info-title':'people','retry':'reset','collapse':'left','reveal':'right','zoom-in':'plus','zoom-out':'minus'}))decorate(id,icon);
       decorate('offset-label','clock');
       let fitFrame=null;
+      const measure=document.createElement('canvas').getContext('2d');
       const classPickerWidth=220;
       function fitNumber(node,value,width,height){
         if(!measure||width<=0||height<=0)return;
@@ -22543,7 +22552,9 @@ initWebAppGuide();
     host.replaceChildren(surface);
     for(const f of l.fixtures){const node=surface.querySelector(`[data-room-id="${CSS.escape('f:'+f.id)}"]`);if(node)fitFixtureLabel(node,f,scale);}
     avoidStageTeacherLabels(surface);
-    if(!isScore){syncTools();requestAnimationFrame(fitSeatNames);}else requestAnimationFrame(()=>setupAutoFitForNames(host));
+    // 重繪可能已在 ResizeObserver 的 rAF 中；再延一幀會先畫出錯誤的姓名／分數順序。
+    // 先完成反向旋轉後的尺寸、姓名與分數排版，這一幀才顯示完成的座位卡。
+    if(!isScore){syncTools();requestAnimationFrame(fitSeatNames);}else setupAutoFitForNames(host);
   }
   // 座位頁直接建立自由配置物件，不再先生成舊列欄表格再套用第二層拖曳。
   renderSeatUI=function(cls){
@@ -22974,20 +22985,25 @@ window.RatingBridge = {
   }
 };
 
-// Keep both roster drawers below the sticky navigation, including wrapped mobile layouts.
+// 名單抽屜避開導覽與目前頁面的操作列，包含換行後的窄視窗。
 (() => {
   const topbar = document.querySelector('.topbar');
   if (!topbar) return;
+  const seatToolbar=document.querySelector('.main .controls-row');
+  const groupToolbar=document.querySelector('#group-pane .grp-toolbar');
   let frame = 0;
   function updateRosterPanelTop() {
     frame = 0;
-    const top = Math.max(16, Math.ceil(topbar.getBoundingClientRect().bottom) + 12);
+    const toolbar=document.body.dataset.mode==='group'?groupToolbar:document.body.dataset.mode==='seat'?seatToolbar:null;
+    const toolbarBottom=toolbar?.getClientRects().length?toolbar.getBoundingClientRect().bottom+8:0;
+    const top = Math.max(16, Math.ceil(topbar.getBoundingClientRect().bottom) + 12,Math.ceil(toolbarBottom));
     document.documentElement.style.setProperty('--roster-panel-top', top + 'px');
   }
   function scheduleUpdate() {
     if (!frame) frame = requestAnimationFrame(updateRosterPanelTop);
   }
-  new ResizeObserver(scheduleUpdate).observe(topbar);
+  const observer=new ResizeObserver(scheduleUpdate);
+  [topbar,seatToolbar,groupToolbar].filter(Boolean).forEach(node=>observer.observe(node));
   window.addEventListener('resize', scheduleUpdate, { passive: true });
   window.addEventListener('scroll', scheduleUpdate, { passive: true });
   updateRosterPanelTop();
