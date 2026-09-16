@@ -14219,9 +14219,9 @@ const ClassroomLayout = (() => {
         btn.setAttribute('aria-label', collapsed ? '展開側欄' : '收合側欄');
         btn.setAttribute('title', collapsed ? '展開側欄' : '收合側欄');
         try{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }catch{}
+        // 只調整既有座位畫布的顯示比例，不重建全班或重新量測每個姓名。
+        document.dispatchEvent(new Event('sidebar-layout-changed'));
         if(!play)return;
-        // 姓名縮放與座位配置先完成，再啟動位移，避免昂貴重繪插入動畫中途。
-        if(state.mode==='list'&&state.listViewMode!=='order')renderStudents(elSelect.value);
         const after=targets.map(n=>({left:n.getBoundingClientRect().left,transform:getComputedStyle(n).transform,opacity:getComputedStyle(n).opacity}));
         layout.classList.add('sidebar-animating');
         const token=generation;
@@ -14370,10 +14370,11 @@ const ClassroomLayout = (() => {
         name.replaceChildren(lines);name.dataset.nameColumns=String(columns);
       }
       name.classList.add('room-fitted-name');name.style.width=width+'px';name.style.maxWidth='100%';
+      const displayZoom=Number(name.closest('.room-surface')?.style.zoom)||1;
       let low=0,high=Math.max(1,height/(Math.ceil(chars.length/columns)||1)/1.12);
       // scrollWidth/scrollHeight 會取整數，小數尺寸可能讓每次測量都判定超出，將姓名錯縮至 0.5px。
       // 量測實際文字行的浮點邊界，縮放後仍能保留可讀的中文姓名。
-      for(let i=0;i<9;i++){const size=(low+high)/2;name.style.setProperty('font-size',size+'px','important');const lineWidth=Math.max(0,...[...name.children].map(n=>n.getBoundingClientRect().width));if(lineWidth<=width+.1&&name.getBoundingClientRect().height<=height+.1)low=size;else high=size;}
+      for(let i=0;i<9;i++){const size=(low+high)/2;name.style.setProperty('font-size',size+'px','important');const lineWidth=Math.max(0,...[...name.children].map(n=>n.getBoundingClientRect().width/displayZoom));if(lineWidth<=width+.1&&name.getBoundingClientRect().height/displayZoom<=height+.1)low=size;else high=size;}
       name.style.setProperty('font-size',Math.max(.5,Math.floor(low*4)/4)+'px','important');
     }
     function fitSeatNames(){
@@ -22174,7 +22175,7 @@ initWebAppGuide();
   let presentation=null,selectedScoreClass='',scoreAnchor=null,resizeViewport=null;
   const roomTouches=new Map();let pinch=null,pinchFrame=0;
   const views={seat:1,score:1}, histories=new Map();
-  let scoreWidth=0,scoreHeight=0;
+  let scoreWidth=0,scoreHeight=0,scoreScene=null;
   const originalFitName=fitName;
   fitName=function(name){
     if(!name.closest('.room-desk'))return originalFitName(name);
@@ -22190,7 +22191,7 @@ initWebAppGuide();
       content.style.setProperty('--room-score-font',font+'px');
       for(let i=0;i<3&&chip.scrollWidth>chip.clientWidth;i++){font*=Math.max(.1,(chip.clientWidth-6)/Math.max(1,chip.scrollWidth-6));content.style.setProperty('--room-score-font',font+'px');}
     }
-    const css=getComputedStyle(content),siblings=[...content.children].filter(n=>n!==name&&n.getClientRects().length),other=[...name.children].filter(n=>n!==text&&n.getClientRects().length).reduce((v,n)=>v+n.getBoundingClientRect().width+4,0);
+    const css=getComputedStyle(content),siblings=[...content.children].filter(n=>n!==name&&n.getClientRects().length),other=[...name.children].filter(n=>n!==text&&n.getClientRects().length).reduce((v,n)=>v+n.offsetWidth+4,0);
     name.style.setProperty('min-height','0','important');name.style.setProperty('height','auto','important');name.style.setProperty('flex','0 0 auto','important');
     const width=content.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-other,height=content.clientHeight-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom)-siblings.reduce((v,n)=>v+n.offsetHeight,0)-siblings.length*(parseFloat(css.gap)||0);
     fitClassroomName(text,width,height);
@@ -22600,6 +22601,7 @@ initWebAppGuide();
       }
     }
     host.replaceChildren(surface);
+    if(isScore)scoreScene={surface,cls,scale,width:viewWidth,height:viewHeight,outside};
     for(const f of l.fixtures){const node=surface.querySelector(`[data-room-id="${CSS.escape('f:'+f.id)}"]`);if(node)fitFixtureLabel(node,f,scale);}
     avoidStageTeacherLabels(surface);
     // 重繪可能已在 ResizeObserver 的 rAF 中；再延一幀會先畫出錯誤的姓名／分數順序。
@@ -22628,7 +22630,27 @@ initWebAppGuide();
     if(pickedId){for(const t of document.querySelectorAll('#seatwrap .tile'))t.classList.toggle('picked',t.dataset.id===pickedId);board.classList.add('has-picked');}
     board.scrollTo(scroll.x,scroll.y);syncTools();requestAnimationFrame(fitSeatNames);
   };
-  renderStudents=function(cls){students.classList.remove('room-board');originalStudents(cls);if(state.listViewMode!=='order'&&cls)decorate(students,cls,true);scoreWidth=students.clientWidth;scoreHeight=students.clientHeight;syncTools();};
+  function resizeScoreSurface(){
+    if(state.mode!=='list'||state.listViewMode==='order')return;
+    const scene=scoreScene;
+    if(!scene||scene.cls!==elSelect.value||!students.contains(scene.surface)){renderStudents(elSelect.value);return;}
+    const width=students.clientWidth,height=students.clientHeight;
+    if(width===scoreWidth&&height===scoreHeight)return;
+    const {surface,outside}=scene,fullWidth=scene.width+outside.left+outside.right,fullHeight=scene.height+outside.top+outside.bottom;
+    const scale=Math.min(Math.max(1,width-32)/fullWidth,Math.max(1,height-32)/fullHeight)*views.score,ratio=scale/scene.scale;
+    // zoom 同時調整捲動範圍與命中區；桌位、姓名、事件與分數節點皆保留。
+    surface.style.zoom=String(ratio);
+    if(Object.values(outside).some(Boolean)){
+      const spare=Math.max(0,(width-30-fullWidth*scale)/2);
+      surface.style.marginLeft=(spare+outside.left*scale+2)/ratio+'px';
+      surface.style.marginRight=(spare+outside.right*scale+2)/ratio+'px';
+      surface.style.marginTop=(2+outside.top*scale)/ratio+'px';
+      surface.style.marginBottom=(2+outside.bottom*scale)/ratio+'px';
+    }
+    scoreWidth=width;scoreHeight=height;positionScorePopover();
+  }
+  document.addEventListener('sidebar-layout-changed',resizeScoreSurface);
+  renderStudents=function(cls){scoreScene=null;students.classList.remove('room-board');originalStudents(cls);if(state.listViewMode!=='order'&&cls)decorate(students,cls,true);scoreWidth=students.clientWidth;scoreHeight=students.clientHeight;syncTools();};
   function localPoint(e){const surf=board.querySelector('.room-surface');if(!surf)return null;const rect=surf.getBoundingClientRect(),scale=+surf.dataset.scale;return {x:(e.clientX-rect.left-surf.clientLeft)/scale,y:(e.clientY-rect.top-surf.clientTop)/scale,scale};}
   function groupKeys(key){const l=presentation?.layout||ensureSeatState(elSelect.value).layout,id=l?.desks[key]?.groupId;return id?Object.keys(l.desks).filter(k=>l.desks[k].groupId===id):[key];}
   function selectOne(key,toggle){const keys=groupKeys(key);if(toggle){const remove=keys.every(k=>selected.has(k));for(const k of keys)if(remove)selected.delete(k);else selected.add(k);}else selected=new Set(keys);syncTools();}
@@ -22856,7 +22878,7 @@ initWebAppGuide();
   const observer=new MutationObserver(()=>{if(state.mode!=='seat'){cancelPinch();cancelGesture();closeMenus();oldClear();selected.clear();multi=false;tool='select';}syncTools();});observer.observe(document.body,{attributes:true,attributeFilter:['data-mode']});
   let resizeFrame;new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(gesture)return;if(state.mode==='seat')renderSeatUI(elSelect.value);});}).observe(board);
   document.addEventListener('sidebar-motion-finished',positionScorePopover);
-  let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order'&&(students.clientWidth!==scoreWidth||students.clientHeight!==scoreHeight))renderStudents(elSelect.value);});}).observe(students);
+  let scoreResize;new ResizeObserver(()=>{cancelAnimationFrame(scoreResize);scoreResize=requestAnimationFrame(()=>{if(state.mode==='list'&&state.listViewMode!=='order'&&(students.clientWidth!==scoreWidth||students.clientHeight!==scoreHeight))resizeScoreSurface();});}).observe(students);
 
   const dialog=document.createElement('dialog');dialog.id='room-template-dialog';dialog.className='room-dialog';
   dialog.innerHTML=`<form method="dialog"><div class="room-dialog-head"><h2 id="room-dialog-title">套用教室配置</h2><button class="btn" value="cancel">取消</button></div><div class="room-template-fields"><div class="room-template-choice"><label id="room-type-label">配置方式<select id="room-template-type" class="select"><optgroup label="內建範本"><option value="classroom">預設教室（雙門・佈告欄）</option><option value="groups">分組</option></optgroup><optgroup id="room-my-templates" label="我的範本"></optgroup></select></label><div id="room-template-manage" hidden><button type="button" class="btn" id="room-template-rename">重新命名</button> <button type="button" class="btn" id="room-template-delete">刪除範本</button></div></div><label id="room-source-label">來源班級<select id="room-template-source" class="select"></select></label><label id="room-count-label">桌子數量<input id="room-template-count" class="input" type="number" min="1" max="81"></label><label id="room-rows-label">列數<input id="room-template-rows" class="input" type="number" min="1" max="9"></label><label id="room-cols-label">欄數<input id="room-template-cols" class="input" type="number" min="1" max="9"></label><label id="room-group-label">每組人數<select id="room-template-group" class="select"><option value="4">4 位</option><option value="6">6 位</option></select></label></div><div id="room-template-presets" role="group" aria-label="快速設定教室排數與欄數"><button class="btn" type="button" data-rows="5" data-cols="5">5 排 × 5 欄<span>25 張桌子</span></button><button class="btn" type="button" data-rows="5" data-cols="6">5 排 × 6 欄<span>30 張桌子</span></button><button class="btn" type="button" data-rows="6" data-cols="5">6 排 × 5 欄<span>30 張桌子</span></button></div><div id="room-template-preview" class="room-mini" aria-label="教室配置預覽"></div><p id="room-template-impact" role="status"></p><button id="room-template-apply" class="btn primary" type="button">套用配置</button></form>`;
