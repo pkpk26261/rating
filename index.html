@@ -53,20 +53,65 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
       if(unpack(native.getItem(key))!==before)throw Error('帳號快取驗證失敗，請停止操作並保留本機資料。');
     }
   }
-  function scopedStorage(native, owner){
+  const guestResetKey='rating-guest-reset-v1';
+  const guestDataKey=key=>/^(pscore_session_v1|scores_v[12]|deductions_v1|stu_notes_v1|pscore_before_cloud_download_v1|pscore_exam_dashboard_v1)$/.test(key)||/^(hw_v1__|seat_v1__|draw_v1__)/.test(key);
+  const quotaError=error=>error?.name==='QuotaExceededError'||error?.name==='NS_ERROR_DOM_QUOTA_REACHED';
+  function nextGuestGeneration(value){
+    const packed=String(value||'').startsWith('lz1:');
+    return (packed?'lz1:':'')+String(Number(packed?value.slice(4):value||0)+1);
+  }
+  function writeGuestItem(native,key,value,onUpgrade){
+    const before=native.getItem(key);
+    native.setItem(key,value);
+    if(!value.startsWith(compressed)||String(native.getItem(guestResetKey)||'').startsWith('lz1:'))return;
+    // Use the existing reset notification to reload older, plaintext-only tabs.
+    // At full quota, first replace this one value with its smaller encoding to
+    // make room for the notification. If that fails, restore the original value.
+    try{
+      const generation='lz1:'+nextGuestGeneration(native.getItem(guestResetKey));
+      native.setItem(guestResetKey,generation);
+      onUpgrade(generation);
+    }catch(error){
+      if(before===null)native.removeItem(key);else native.setItem(key,before);
+      throw error;
+    }
+  }
+  function compactGuestCache(native,onUpgrade){
+    const keys=Array.from({length:native.length},(_,i)=>native.key(i)).filter(k=>k&&guestDataKey(k));
+    for(const key of keys){
+      const before=native.getItem(key);
+      if(!before||before.startsWith(compressed))continue;
+      const after=pack(before);
+      if(after.length>=before.length)continue;
+      writeGuestItem(native,key,after,onUpgrade);
+      if(unpack(native.getItem(key))!==before)throw Error('本機資料壓縮驗證失敗，請保留本機資料。');
+    }
+  }
+  function scopedStorage(native, owner,onUpgrade=()=>{}){
     const prefix = owner ? 'rating-account:' + owner + ':' : '';
     const keys = () => Array.from({length:native.length},(_,i)=>native.key(i))
       .filter(k=>k && (prefix ? k.startsWith(prefix) : !k.startsWith('rating-account:')));
     return {
       get length(){return keys().length;},
       key(i){const k=keys()[i];return k == null ? null : k.slice(prefix.length);},
-      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : prefix?unpack(native.getItem(prefix+k)):native.getItem(k);},
-      setItem(k,v){if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');native.setItem(prefix+k,prefix?pack(v):String(v));},
+      getItem(k){return !prefix && String(k).startsWith('rating-account:') ? null : prefix||guestDataKey(k)?unpack(native.getItem(prefix+k)):native.getItem(k);},
+      setItem(k,v){
+        if(!prefix && String(k).startsWith('rating-account:'))throw Error('保留的儲存名稱');
+        if(prefix){native.setItem(prefix+k,pack(v));return;}
+        const value=guestDataKey(k)?pack(v):String(v);
+        const write=()=>guestDataKey(k)?writeGuestItem(native,k,value,onUpgrade):native.setItem(k,value);
+        try{write();}catch(error){
+          if(!quotaError(error))throw error;
+          // Shrink only this site's known teaching records, retaining all keys,
+          // Google credentials, other accounts and pre-download backups.
+          compactGuestCache(native,onUpgrade);
+          write();
+        }
+      },
       removeItem(k){if(prefix || !String(k).startsWith('rating-account:'))native.removeItem(prefix+k);},
       clear(){for(const k of keys())native.removeItem(k);}
     };
   }
-  const guestResetKey='rating-guest-reset-v1';
   function resetGuestWorkspace(native){
     const keys=Array.from({length:native.length},(_,i)=>native.key(i)).filter(k=>
       /^(pscore_session_v1|scores_v[12]|deductions_v1|stu_notes_v1|pscore_before_cloud_download_v1|pscore_exam_dashboard_v1)$/.test(k)||/^(hw_v1__|seat_v1__|draw_v1__)/.test(k));
@@ -77,7 +122,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
     try{
       native.setItem(configKey,JSON.stringify({...config,autoSync:false,autoLoad:false,lastSync:0,lastUploadedRevision:'',accountBackupRevision:''}));
       for(const key of keys)native.removeItem(key);
-      native.setItem(guestResetKey,String(Number(before.get(guestResetKey)||0)+1));
+      native.setItem(guestResetKey,nextGuestGeneration(before.get(guestResetKey)));
     }catch(error){
       for(const [key,value] of before){if(value===null)native.removeItem(key);else native.setItem(key,value);}
       throw error;
@@ -85,10 +130,10 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
   }
   // A guest tab opened before a reset must not save its old in-memory data back.
   function guestStorage(native){
-    const scoped=scopedStorage(native,'');
     let generation;try{generation=native.getItem(guestResetKey);}catch{}
+    const scoped=scopedStorage(native,'',value=>{generation=value;});
     const check=()=>{if(native.getItem(guestResetKey)!==generation)throw Error('本機空間已清空，請重新整理此分頁。');};
-    return {...scoped,get length(){return scoped.length;},
+    return {...scoped,isActive:()=>native.getItem(guestResetKey)===generation,get length(){return scoped.length;},
       setItem(k,v){check();scoped.setItem(k,v);},
       removeItem(k){check();scoped.removeItem(k);},
       clear(){check();scoped.clear();}
@@ -198,11 +243,15 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
     const fail=()=>{throw Error(root.RatingAccount.initializationError);};
     root.RatingStorage={get length(){return fail();},key:fail,getItem:fail,setItem:fail,removeItem:fail,clear:fail,isActive:()=>false};
   }
-  if(!owner)root.addEventListener('storage',event=>{
-    if(event.key!==guestResetKey)return;
-    root.RatingAccount.ready=false;root.RatingBridge?.cancelGoogle();
-    root.location.reload();
-  });
+  if(!owner&&!root.RatingAccount.initializationError){
+    const refreshGuest=()=>{
+      try{if(root.RatingStorage.isActive())return;}catch{return;}
+      root.RatingAccount.ready=false;root.RatingBridge?.cancelGoogle();
+      root.location.reload();
+    };
+    root.addEventListener('storage',event=>{if(event.key===null||event.key===guestResetKey)refreshGuest();});
+    root.addEventListener('pageshow',refreshGuest);
+  }
   if(owner&&!root.RatingAccount.initializationError){
     const leaveClearedAccount=()=>{
       if(root.RatingStorage.isActive())return;
