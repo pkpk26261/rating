@@ -7404,12 +7404,12 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
 }
 
     /* 分組與名單共用可用寬高，完整名單以重排及等比例調整呈現在一頁。 */
-    #group-pane{max-width:none;min-width:0;overflow:hidden;gap:16px;padding:0;box-sizing:border-box;}
+    #group-pane{max-width:none;min-width:0;text-size-adjust:none;-webkit-text-size-adjust:none;overflow:clip;gap:16px;padding:0;box-sizing:border-box;}
     #group-pane .grp-toolbar{padding:12px 16px;border-radius:14px;background:color-mix(in srgb,var(--accent) 3%,var(--card));}
     #group-pane .grp-workspace{position:relative;flex:1;flex-direction:row;min-height:0;gap:16px;isolation:isolate;}
     #group-pane .grp-groups-section{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:hidden;}
     #group-pane .grp-groups-section>.grp-section-head{flex-shrink:0;margin-bottom:12px;}
-    #group-pane #grp-board{flex:none;min-height:0;width:100%;gap:12px;overflow:hidden;align-content:stretch;}
+    #group-pane #grp-board{transform-origin:top left;flex:none;min-height:0;width:100%;gap:12px;overflow:hidden;align-content:stretch;}
     #group-pane #grp-board .grp-card{min-height:0;overflow:hidden;background:var(--card);}
     #group-pane #grp-board .grp-card-header{flex-shrink:0;padding:8px 12px;}
     #group-pane #grp-board .grp-name{font-size:17px;min-height:36px;white-space:normal;}
@@ -7420,31 +7420,57 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
     #group-pane #grp-board .grp-member-select{min-height:40px;padding:4px 8px;gap:8px;}
     #group-pane #grp-board .grp-member-name{font-size:16px;white-space:normal;}
     #group-pane #grp-board .grp-avatar{width:28px;height:28px;font-size:13px;}
-    #group-pane .grp-unassigned-wrap{position:relative;top:auto;right:auto;flex:0 0 clamp(260px,22vw,360px);width:auto;max-width:100%;height:auto;max-height:none;padding:14px;gap:12px;box-shadow:none;z-index:auto;overflow:hidden;}
-    #group-pane .grp-unassigned-wrap.is-collapsed{position:absolute;inset:0 0 0 auto;width:clamp(260px,22vw,360px);}
+    #group-pane .grp-unassigned-wrap{position:relative;top:auto;right:auto;flex:0 0 clamp(280px,26vw,420px);width:auto;max-width:100%;height:auto;max-height:none;padding:14px;gap:12px;box-shadow:none;z-index:auto;overflow:hidden;}
+    #group-pane .grp-unassigned-wrap.is-collapsed{position:absolute;inset:0 0 0 auto;width:clamp(280px,26vw,420px);}
     #group-pane .grp-unassigned .grp-member-select{min-height:48px;padding:6px 10px;gap:10px;}
     #group-pane .grp-unassigned .grp-member{min-height:48px;}
     #group-pane .grp-unassigned .grp-member-name{font-size:17px;}
-    #group-pane .grp-unassigned{flex:none;min-height:0;overflow:hidden;gap:6px;}
-    #group-pane .grp-unassigned .grp-member-select{flex-direction:column;justify-content:center;gap:3px;padding:5px;min-height:48px;}
+    #group-pane .grp-unassigned{transform-origin:top left;flex:none;min-height:0;overflow:hidden;gap:6px;}
+    #group-pane .grp-unassigned .grp-member-select{justify-content:flex-start;gap:5px;padding:4px 6px;min-height:32px;}
+    #group-pane .grp-unassigned .grp-member{min-height:32px;}
     #group-pane .grp-unassigned .grp-member-select::after{position:absolute;right:4px;top:4px;width:auto;}
     #group-pane .grp-unassigned .grp-member{position:relative;}
     #group-pane .grp-unassigned .grp-avatar{width:22px;height:20px;font-size:11px;}
-    #group-pane .grp-unassigned .grp-member-name{font-size:14px;line-height:1.25;text-align:center;}
+    #group-pane .grp-unassigned .grp-member-name{font-size:14px;line-height:1.25;}
     @media(max-width:700px){
-      #group-pane{gap:12px;overflow:hidden;}
+      #group-pane{gap:12px;overflow:clip;}
       #group-pane .grp-toolbar{padding:12px;gap:10px;}
       #group-pane .grp-toolbar-left{flex-basis:100%;gap:8px 12px;}
-      #group-pane .grp-setup-field:first-child{flex:1;min-width:0;}
+      #group-pane .grp-setup-field{white-space:nowrap;}
+      #group-pane .grp-setup-field:first-child{flex:1 0 100%;min-width:0;}
       #group-pane .grp-class-select{flex:1;width:0;min-width:100px;}
       #group-pane .grp-plan{line-height:1.5;flex-basis:100%;}
       #group-pane .grp-head-actions{margin-left:0;width:100%;}
       #group-pane .grp-primary{flex:1;justify-content:center;}
       #group-pane .grp-workspace{flex-direction:column;flex:1;gap:12px;}
       #group-pane .grp-groups-section{flex:1;min-height:0;}
-      #group-pane .grp-unassigned-wrap{flex:0 0 42%;min-height:0;padding:12px;}
+      #group-pane .grp-unassigned-wrap{flex:0 0 50%;min-height:0;padding:8px;gap:6px;}
+      #group-pane .grp-unassigned-wrap .grp-section-head{gap:6px;}
+      #group-pane .grp-unassigned-wrap h3{font-size:14px;}
+      #group-pane #grp-panel-collapse{min-height:28px;padding:3px 8px;font-size:12px;}
+      #group-pane #grp-search{min-height:28px;height:28px;padding:3px 8px;font-size:12px;}
+      #group-pane .grp-touch-hint{display:none;}
       #group-pane .grp-unassigned-wrap.is-collapsed{width:100%;}
       #group-pane .grp-touch-hint{font-size:11px;}
+    }
+
+    @media(max-width:700px) and (max-height:600px){
+      #group-pane .grp-toolbar{padding:6px 8px;gap:4px;}
+      #group-pane .grp-toolbar h2{font-size:16px;}
+      #group-pane .grp-toolbar-left{gap:4px 8px;flex:1 1 280px;}
+      #group-pane .grp-setup-field:first-child{flex:1 1 140px;}
+      #group-pane .grp-head-actions{width:auto;margin-left:auto;}
+      #group-pane #group-class-pill{min-height:28px;height:28px;}
+      #group-pane .grp-toolbar :is(.btn,.grp-class-select,.grp-stepper,.grp-step-btn,.grp-input){min-height:28px;height:28px;font-size:12px;}
+      #group-pane .grp-toolbar .grp-action-icon{width:32px;height:28px;flex-basis:32px;}
+      #group-pane .grp-plan{font-size:12px;}
+      #group-pane .grp-step-btn{width:28px;}
+    }
+
+    @media(min-width:560px) and (max-width:700px) and (max-height:600px){
+      #group-pane .grp-workspace{flex-direction:row;}
+      #group-pane .grp-unassigned-wrap{flex:0 0 250px;}
+      #group-pane .grp-unassigned-wrap.is-collapsed{width:250px;}
     }
 
     #seatwrap{grid-template-columns:minmax(0,1fr);}
@@ -8990,7 +9016,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <aside id="grp-unassigned-wrap" class="grp-unassigned-wrap" aria-label="待分組學生">
               <div class="grp-section-head"><h3>待分組 <span id="grp-unassigned-count"></span></h3><button id="grp-panel-collapse" class="btn" type="button" aria-label="收納待分組視窗">收納 ›</button></div>
               <label class="grp-search-label" for="grp-search">搜尋待分組學生</label><input id="grp-search" type="search" class="input" placeholder="搜尋姓名或座號" aria-label="搜尋待分組學生">
-              <p class="grp-touch-hint">橫拖學生可移動，上下滑動瀏覽名單</p>
+              <p class="grp-touch-hint">點選可多選，橫向拖移調整分組</p>
               <div id="grp-unassigned" class="grp-unassigned"></div>
             </aside>
           </div>
@@ -9406,8 +9432,9 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
               <small id="gs-url-hint">使用 Apps Script 部署產生的網址，結尾須為 /exec。</small>
             </div>
             <div class="gs-field-card">
-              <label for="gs-token"><span class="gs-step-number" aria-hidden="true">2</span><span>輸入同步密碼<small>與 Apps Script 程式碼中的密碼相同</small></span></label>
-              <div class="gs-token-field"><input id="gs-token" type="password" autocomplete="off" placeholder="填入你在程式碼中設定的密碼"><button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" title="顯示同步密碼"></button></div>
+              <label for="gs-token"><span class="gs-step-number" aria-hidden="true">2</span><span>輸入同步密碼<small>對應 Google Apps Script 程式碼中的密碼，用於 Google 資料同步</small></span></label>
+              <div class="gs-token-field"><input id="gs-token" type="password" autocomplete="off" aria-describedby="gs-token-hint gs-settings-storage" placeholder="填入你在程式碼中設定的密碼"><button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" title="顯示同步密碼"></button></div>
+              <small id="gs-token-hint">這是 Google 同步專用密碼，與系統帳號的登入密碼不同。</small>
             </div>
             <p id="gs-settings-storage" class="sync-caption">設定會自動儲存在此瀏覽器。</p>
           </div>
@@ -9753,7 +9780,23 @@ const ClassroomLayout = (() => {
   }
   function ordered(s,corner) {
     const l=s.layout||legacy(s), disabled=new Set(s.disabled||[]), right=[1,2].includes(corner), bottom=[2,3].includes(corner);
-    return Object.keys(l.desks).filter(k=>!disabled.has(k)).sort((a,b)=>{const da=l.desks[a],db=l.desks[b];return (right?-1:1)*(da.x-db.x)||(bottom?-1:1)*(da.y-db.y)||a.localeCompare(b);}).map(key=>{const [r,c]=key.split('-').map(Number);return {r,c};});
+    const desks=Object.entries(l.desks).map(([key,d])=>{
+      const b=bounds(d);
+      return {key,x:(b.left+b.right)/2,y:(b.top+b.bottom)/2,width:b.right-b.left};
+    }).sort((a,b)=>a.x-b.x||a.y-b.y||a.key.localeCompare(b.key));
+    const widths=desks.map(d=>d.width).sort((a,b)=>a-b);
+    const tolerance=Math.max(1,(widths[Math.floor(widths.length/2)]||0)*.35);
+    const columns=[];
+    // 以完整桌面中心辨識同欄；容許輕微偏移，避免旋轉／尺寸讓上方桌子被當成另一欄。
+    // 禁止入座的桌子仍參與欄位辨識，最後才跳過，保持其他桌子的排位方向。
+    for(const desk of desks){
+      let column=columns[columns.length-1];
+      if(!column||desk.x-column.x>tolerance){column={x:desk.x,desks:[]};columns.push(column);}
+      column.desks.push(desk);
+    }
+    if(right)columns.reverse();
+    return columns.flatMap(column=>column.desks.sort((a,b)=>(bottom?-1:1)*(a.y-b.y)||(right?-1:1)*(a.x-b.x)||a.key.localeCompare(b.key)))
+      .filter(d=>!disabled.has(d.key)).map(d=>{const [r,c]=d.key.split('-').map(Number);return {r,c};});
   }
   function move(layout,ids,dx,dy,alignToGrid=true) {
     const objects=ids.map(id=>id.startsWith('f:')?layout.fixtures.find(f=>f.id===id.slice(2)):layout.desks[id]).filter(Boolean);
@@ -12334,7 +12377,7 @@ const ClassroomLayout = (() => {
       document.getElementById('gs-auto-hint').textContent=account?'已設定連線即自動備份，先存帳號，再存 Google':'停止編輯約 1 秒後，儲存到試算表';
       gsAutoLoadCb.disabled=account;gsAutoLoadCb.checked=account?false:gsConfig.autoLoad;
       document.getElementById('gs-autoload-hint').textContent=account?'登入期間從帳號載入，避免兩處資料互相覆蓋':'下次開啟網頁時，使用試算表的最新資料';
-      document.getElementById('gs-settings-storage').textContent=account?'連結與密碼會儲存到此帳號，同帳號可跨裝置使用。':'設定會自動儲存在此瀏覽器。';
+      document.getElementById('gs-settings-storage').textContent=account?'部署網址與同步密碼會自動儲存至目前系統帳號；待帳號顯示已同步後，換電腦登入同一帳號即可取回，無需重新輸入。':'設定會自動儲存在此瀏覽器。';
     }
 
     async function gsRequest(url, options, timeoutMs=20000){
@@ -17464,7 +17507,7 @@ function onTimerDone(){
     window.addEventListener('blur',cancelGroupEdgeSwipe);
     document.addEventListener('visibilitychange',()=>{if(document.hidden) cancelGroupEdgeSwipe();});
     // END GROUP EDGE SWIPE
-    document.getElementById('grp-unassigned-tab').addEventListener('click',()=>{setGroupPanelCollapsed(false);document.getElementById('grp-search').focus();});
+    document.getElementById('grp-unassigned-tab').addEventListener('click',()=>{setGroupPanelCollapsed(false);document.getElementById('grp-search').focus({preventScroll:true});});
     document.getElementById('grp-panel-collapse').addEventListener('click',e=>{setGroupPanelCollapsed(true);if(e.detail===0) document.getElementById('grp-unassigned-tab').focus();});
     function fitGroupBoard(){
       const board=document.getElementById('grp-board'),section=board?.parentElement;
@@ -17474,7 +17517,7 @@ function onTimerDone(){
       if(width<=0 || height<=0) return;
       const count=board.children.length,gap=12;
       let best={scale:0,columns:1,score:0};
-      board.style.zoom=1;board.style.height='auto';board.style.gridTemplateRows='none';
+      board.style.transform='none';board.style.height='auto';board.style.gridTemplateRows='none';
       // 量測真實姓名、組名和每組人數，確保不平均裁切較多人的組別。
       for(let columns=1;columns<=count;columns++){
         const naturalWidth=Math.max(width,columns*180+(columns-1)*gap);
@@ -17491,7 +17534,7 @@ function onTimerDone(){
       board.style.gridTemplateRows=`repeat(${Math.ceil(count/best.columns)},minmax(0,1fr))`;
       board.style.width=(width/best.scale)+'px';
       board.style.height=(height/best.scale)+'px';
-      board.style.zoom=best.scale;
+      board.style.transform=`scale(${best.scale})`;
     }
     function fitGroupRoster(){
       const panel=document.getElementById('grp-unassigned-wrap'),list=document.getElementById('grp-unassigned');
@@ -17502,7 +17545,7 @@ function onTimerDone(){
       const visible=Array.from(panel.children).filter(el=>el.getClientRects().length).length;
       const height=panel.clientHeight-parseFloat(getComputedStyle(panel).paddingTop)-parseFloat(getComputedStyle(panel).paddingBottom)-used-(visible-1)*parseFloat(getComputedStyle(panel).gap);
       if(width<=0 || height<=0) return;
-      list.style.zoom=1;list.style.height='auto';list.style.gridTemplateRows='none';
+      list.style.transform='none';list.style.height='auto';list.style.gridTemplateRows='none';
       let best={scale:0,columns:1};
       const count=list.children.length;
       for(let columns=1;columns<=Math.min(6,Math.max(1,count));columns++){
@@ -17513,7 +17556,7 @@ function onTimerDone(){
         if(scale>best.scale+0.01)best={scale,columns};
       }
       list.style.gridTemplateColumns=`repeat(${best.columns},minmax(0,1fr))`;
-      list.style.width=(width/best.scale)+'px';list.style.height=(height/best.scale)+'px';list.style.zoom=best.scale;
+      list.style.width=(width/best.scale)+'px';list.style.height=(height/best.scale)+'px';list.style.transform=`scale(${best.scale})`;
     }
     if(typeof ResizeObserver!=='undefined'){
       new ResizeObserver(()=>fitGroupBoard()).observe(document.querySelector('.grp-groups-section'));
@@ -17667,11 +17710,14 @@ function onTimerDone(){
         dropGroupDrag(cls,id,-1);
       });
 
+      const previousPendingCount=Number(elUnWrap.dataset.pendingCount||0);
+      elUnWrap.dataset.pendingCount=String(unassigned.length);
       document.getElementById('grp-unassigned-count').textContent=`${unassigned.length} 人`;
       document.querySelector('#grp-unassigned-tab .grp-tab-label').textContent=`待分組 · ${unassigned.length} 人`;
       document.getElementById('grp-unassigned-tab').setAttribute('aria-label',`展開待分組，${unassigned.length} 人`);
       if(groupPanelClass!==cls){groupPanelClass=cls;setGroupPanelCollapsed(!unassigned.length);}
       else if(!unassigned.length) setGroupPanelCollapsed(true);
+      else if(previousPendingCount===0) setGroupPanelCollapsed(false);
       const q=search.value.trim().toLowerCase();
       newUn.dataset.empty=unassigned.length ? '沒有符合的學生，請調整搜尋。' : '全班已分組完成';
       unassigned.filter(s=>!q || matchFilter(s,q)).forEach((s, mi)=>{
