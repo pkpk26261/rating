@@ -530,6 +530,11 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
 #gsheet-mask .gs-field-card input:focus{border-color:#67d4c4;outline:2px solid #67d4c4;outline-offset:2px}
 #gsheet-mask .gs-field-card>small{color:#b8cbd8;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 #gsheet-mask .gs-token-field{gap:12px;min-width:0}
+#gs-token[data-concealed="true"]{-webkit-text-security:disc;}
+#gs-token::placeholder{-webkit-text-security:none;}
+@keyframes googleTokenAutofill{from{opacity:1;}to{opacity:1;}}
+#gs-token:autofill{animation:googleTokenAutofill .01s;}
+#gs-token:-webkit-autofill{animation:googleTokenAutofill .01s;}
 #gsheet-mask .gs-token-field .btn{flex-basis:48px;min-height:48px;border:1px solid #8299ad;background:#213b48;color:#f0f7fc;border-radius:8px}
 #gsheet-mask #gs-settings-storage{margin:0;padding:0;font-size:12px;line-height:1.6;color:var(--muted)}
 #gsheet-mask .gs-setup-callout summary{display:flex;align-items:center;gap:12px;list-style:none;padding:16px;min-height:76px}
@@ -6732,7 +6737,15 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
     #hw-table tr>:nth-child(-n+2){ text-align:center; }
     #hw-table tr>:nth-child(2){ text-align:left; }
     #hw-table .note-btn{ font-size:12px; width:24px; min-width:24px; }
-    #hw-table .hw-empty-message{ padding:40px 20px; text-align:center; color:var(--muted); }
+    #hw-empty-state{position:sticky;left:0;box-sizing:border-box;width:100%;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px 24px;text-align:center;background:var(--card);}
+    #hw-empty-state .hw-empty-icon{display:grid;place-items:center;width:48px;height:48px;margin-bottom:4px;border-radius:16px;background:color-mix(in srgb,var(--accent) 12%,var(--card));color:var(--accent);}
+    #hw-empty-state strong{color:var(--fg);font-size:18px;font-weight:650;line-height:1.5;}
+    #hw-empty-state p{max-width:440px;margin:0;color:var(--muted);font-size:14px;line-height:1.7;}
+    #hw-empty-state[data-kind="search"] .hw-empty-class-icon,#hw-empty-state[data-kind="class"] .hw-empty-search-icon{display:none;}
+    #hw-pane .hwtbl-wrap:has(#hw-empty-state:not([hidden])){display:flex;flex-direction:column;flex:1 1 0;}
+    #hw-pane .hwtbl-wrap:has(#hw-empty-state:not([hidden])) #hw-table{flex:0 0 auto;}
+    #hw-pane .hwtbl-wrap:has(#hw-empty-state:not([hidden])) #hw-empty-state{flex:1 0 auto;}
+    @media(max-height:650px){#hw-empty-state{min-height:180px;padding:24px 20px;}}
     .welcome-shell{ max-width:880px; margin:20px auto; }
     .welcome-rail, .welcome-hero, .welcome-mini-card{ background:var(--card) !important; box-shadow:none !important; border-color:var(--line); }
     .welcome-title{ font-size:38px; }
@@ -7399,7 +7412,7 @@ body .app .topbar.topbar--compact .modebar .seg-btn{padding-left:8px !important;
   body[data-mode="list"]:has(#students.is-order) .app .modebar .seg-btn{font-size:11px;min-height:28px;padding:4px!important;}
   body[data-mode="list"]:has(#students.is-order) .app .controls-row{flex-wrap:nowrap;gap:6px;margin-bottom:6px;}
   body[data-mode="list"]:has(#students.is-order) .app #class-select{width:110px;min-width:0!important;padding:6px;}
-  body[data-mode="list"]:has(#students.is-order) .app #search-input{width:0;min-width:0!important;flex:1 1 0;padding:6px;}
+  body[data-mode="list"]:has(#students.is-order) .app #search-input{width:0;min-width:168px!important;flex:1 1 0;padding:10px 14px;}
   body[data-mode="list"]:has(#students.is-order) #list-view-seg{flex-shrink:0;}
 }
 
@@ -8304,7 +8317,7 @@ body[data-mode="list"] #students.grid.room-board .room-upright .seat-badge{flex:
 /* 加扣分工具合併同一列；窄視窗保持單列並可橫向捲動。 */
 body[data-mode="list"] .main>.controls-row{flex-wrap:nowrap;flex-shrink:0;gap:8px;min-width:0;overflow-x:auto;white-space:nowrap;align-items:center!important;}
 body[data-mode="list"] .controls-row>label,body[data-mode="list"] #list-view-seg{flex-shrink:0;}
-body[data-mode="list"] .controls-row #search-input{flex:0 1 220px;min-width:110px;width:220px;height:44px;box-sizing:border-box;}
+body[data-mode="list"] .controls-row #search-input{flex:0 1 220px;min-width:168px!important;width:220px;height:44px;min-height:42px;padding:10px 14px;box-sizing:border-box;}
 body[data-mode="list"] #list-view-seg{margin-left:auto!important;}
 body[data-mode="list"] #room-score-tools:not([hidden])+#list-view-seg{margin-left:0!important;}
 body[data-mode="list"] #room-score-tools{display:flex;flex:0 0 auto;flex-wrap:nowrap;gap:4px;margin:0 0 0 auto;padding:0;min-height:44px;border:0;}
@@ -9032,7 +9045,6 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
           <div class="hw-filter-row" aria-label="班級與學生篩選">
             <label class="hw-class-field">班級 <select id="hw-class-select" class="hw-class-select" aria-label="作業成績班級"><option value="">尚未載入</option></select></label>
             <input id="hw-search" class="input" type="search" placeholder="搜尋姓名或座號" aria-label="搜尋成績學生">
-            <button id="hw-filter-reset" class="btn" type="button" hidden>清除篩選</button>
           </div>
           <span id="hw-class-pill" hidden></span>
           <div class="hw-grid-context">
@@ -9050,6 +9062,11 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
           <p id="hw-grid-message" role="status" aria-live="polite"></p>
           <div class="hwtbl-wrap">
             <table class="hwtbl" id="hw-table" role="grid" tabindex="0" aria-label="全班作業成績"></table>
+            <div id="hw-empty-state" data-kind="search" role="status" aria-live="polite" hidden>
+              <span class="hw-empty-icon" aria-hidden="true"><svg class="hw-empty-search-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><svg class="hw-empty-class-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m1-17a3 3 0 0 1 0 6m2 4a6 6 0 0 1 3 5v2"/></svg></span>
+              <strong id="hw-empty-title">找不到符合的學生</strong>
+              <p id="hw-empty-description">請換個姓名或座號搜尋；點搜尋框的叉號，或按 Enter 顯示全班。</p>
+            </div>
           </div>
         </section>
 
@@ -9433,7 +9450,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             </div>
             <div class="gs-field-card">
               <label for="gs-token"><span class="gs-step-number" aria-hidden="true">2</span><span>輸入同步密碼<small>對應 Google Apps Script 程式碼中的密碼，用於 Google 資料同步</small></span></label>
-              <div class="gs-token-field"><input id="gs-token" type="password" autocomplete="off" aria-describedby="gs-token-hint gs-settings-storage" placeholder="填入你在程式碼中設定的密碼"><button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" title="顯示同步密碼"></button></div>
+              <form id="gs-token-form" class="gs-token-field" autocomplete="off"><input id="gs-token" name="google-sync-secret" type="text" data-concealed="true" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="gs-token-hint gs-settings-storage" placeholder="填入你在程式碼中設定的密碼"><button id="gs-token-toggle" type="button" class="btn" aria-controls="gs-token" aria-label="顯示同步密碼" aria-pressed="false" title="顯示同步密碼"></button></form>
               <small id="gs-token-hint">這是 Google 同步專用密碼，與系統帳號的登入密碼不同。</small>
             </div>
             <p id="gs-settings-storage" class="sync-caption">設定會自動儲存在此瀏覽器。</p>
@@ -13001,7 +13018,9 @@ const ClassroomLayout = (() => {
     }
 
     function setGsheetTokenVisible(visible){
-      gsTokenInput.type = visible ? 'text' : 'password';
+      // 用遮罩文字欄避免被辨識成系統登入欄；舊引擎不支援遮罩才退回密碼欄。
+      gsTokenInput.type = !visible && !CSS.supports('-webkit-text-security','disc') ? 'password' : 'text';
+      gsTokenInput.dataset.concealed = String(!visible);
       const button = document.getElementById('gs-token-toggle');
       button.innerHTML = visible
         ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.6 5.1A12 12 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-3 3.7M6.2 6.2C3.5 8.4 2 12 2 12s3.5 7 10 7a12 12 0 0 0 5.8-1.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>'
@@ -13010,7 +13029,21 @@ const ClassroomLayout = (() => {
       button.setAttribute('aria-label', visible ? '隱藏同步密碼' : '顯示同步密碼');
       button.setAttribute('aria-pressed', String(visible));
     }
-    document.getElementById('gs-token-toggle').addEventListener('click',()=>setGsheetTokenVisible(gsTokenInput.type==='password'));
+    document.getElementById('gs-token-toggle').addEventListener('click',()=>setGsheetTokenVisible(gsTokenInput.dataset.concealed==='true'));
+    document.getElementById('gs-token-form').addEventListener('submit',event=>event.preventDefault());
+    function rejectGoogleTokenAutofill(){
+      let autofilled=false;
+      try{autofilled=gsTokenInput.matches(':autofill');}catch(_){autofilled=gsTokenInput.matches(':-webkit-autofill');}
+      if(!autofilled)return false;
+      // input 先檢查再儲存，不能讓帳號登入密碼覆蓋本機或雲端 Google 設定。
+      gsTokenInput.value=gsConfig.token||'';
+      gsSetSyncStatus('已略過瀏覽器自動填入，請使用 Apps Script 的同步密碼。');
+      return true;
+    }
+    gsTokenInput.addEventListener('animationstart',event=>{if(event.animationName==='googleTokenAutofill')rejectGoogleTokenAutofill();});
+    gsTokenInput.addEventListener('change',rejectGoogleTokenAutofill);
+    gsTokenInput.addEventListener('focus',rejectGoogleTokenAutofill);
+    window.addEventListener('pageshow',rejectGoogleTokenAutofill);
     function openGsheetModal(){
       gsLoadConfig();renderSaveHealth();
       setGsheetTokenVisible(false);
@@ -13264,7 +13297,7 @@ const ClassroomLayout = (() => {
       window.RatingAccount?.settingsChanged?.();
     }
     gsUrlInput.addEventListener('input', ()=>{ gsConfig.url = gsUrlInput.value.trim(); gsConnectionChanged(); });
-    gsTokenInput.addEventListener('input', ()=>{ gsConfig.token = gsTokenInput.value.trim(); gsConnectionChanged(); });
+    gsTokenInput.addEventListener('input', ()=>{ if(rejectGoogleTokenAutofill())return;gsConfig.token = gsTokenInput.value.trim(); gsConnectionChanged(); });
     gsAutoCb.addEventListener('change', ()=>{
       gsConfig.autoSync = gsAutoCb.checked;
       gsCancelAutoUpload();
@@ -19923,9 +19956,11 @@ elProgAdd?.addEventListener('click', ()=>{
         tr.hidden=!tr.contains(document.activeElement) && !hwEntryStudentMatches(s,hw.data[s.id]||[],cols,hwView.search,false);
         if(!tr.hidden)visible++;
       }
-      const empty=document.getElementById('hw-empty-row');if(empty)empty.hidden=visible>0;
+      const empty=document.getElementById('hw-empty-state');
+      empty.hidden=visible>0;empty.dataset.kind=students.length?'search':'class';
+      document.getElementById('hw-empty-title').textContent=students.length?'找不到符合的學生':'這個班級還沒有學生';
+      document.getElementById('hw-empty-description').textContent=students.length?'請換個姓名或座號搜尋；點搜尋框的叉號，或按 Enter 顯示全班。':'請至「學生管理」新增或匯入名單，完成後即可開始批改。';
 
-      document.getElementById('hw-filter-reset').hidden=!hwView.search;
       updateHWWorkspaceActions(hw);
       hwGrid.selection=rebaseHWSelection(hwGrid.selection,hwVisibleIds());
       paintHWSelection();
@@ -20067,7 +20102,12 @@ elProgAdd?.addEventListener('click', ()=>{
     function visibleHWInputs(){return [...elHWTable.querySelectorAll('tr[data-id] input[type="number"]')].filter(i=>!i.disabled && !i.closest('tr').hidden);}
     document.getElementById('hw-search').addEventListener('input',e=>{hwView.search=e.target.value;hwGrid.selection=null;hwGrid.touchStart=null;updateHWEntryView();});
 
-    document.getElementById('hw-filter-reset').addEventListener('click',()=>{hwView.search='';hwGrid.selection=null;document.getElementById('hw-search').value='';updateHWEntryView();});
+    document.getElementById('hw-search').addEventListener('keydown',event=>{
+      if(event.key==='Enter'&&!event.isComposing){
+        event.preventDefault();hwView.search='';hwGrid.selection=null;hwGrid.touchStart=null;
+        document.getElementById('hw-search').value='';updateHWEntryView();
+      }
+    });
     function clearHWSelection(){
       hwFinishEdit();hwGrid.selection=null;hwGrid.touchStart=null;hwGrid.touchSelect=false;hwGrid.drag=null;
       paintHWSelection();hwMessage('');
@@ -21156,14 +21196,14 @@ elProgAdd?.addEventListener('click', ()=>{
 
     function renderHW(cls){
       if(_cleanupHWPointerDrag){_cleanupHWPointerDrag();_cleanupHWPointerDrag=null;}_dismissHWColBar();closeHWColumnMenu();
-      if(!cls){elHWTable.innerHTML='';elHWClassPill.textContent='未選擇';syncHWClassSelect(cls);return;}
+      if(!cls){elHWTable.innerHTML='';document.getElementById('hw-empty-state').hidden=true;elHWClassPill.textContent='未選擇';syncHWClassSelect(cls);return;}
       const hw=ensureHWState(cls),list=getSortedList(cls);prepareHWEntryView(cls,hw);elHWClassPill.innerHTML=renderClassLabel(cls);syncHWClassSelect(cls);
       list.forEach(s=>{const row=hw.data[s.id]||(hw.data[s.id]=[]);while(row.length<hw.cols.length)row.push('');});
       elHWTable.style.setProperty('--hw-grade-count',hw.cols.length);
       elHWTable.innerHTML=`<colgroup><col style="width:var(--hw-seat-width)"><col style="width:var(--hw-name-width)">${hw.cols.map(()=>'<col style="width:var(--hw-grade-width)">').join('')}<col><col style="width:120px"><col style="width:120px"></colgroup><thead><tr><th>座號</th><th>姓名</th>${hw.cols.map((name,col)=>`<th class="hw-col" data-col-index="${col}"><div class="hw-col-heading"><div class="hw-col-actions"><button type="button" class="hw-batch-entry" data-col="${col}" aria-label="${escapeHTML(name)} 整批登錄" title="整批登錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><rect x="8" y="2" width="8" height="5" rx="1.5"/><path d="m14 13 6-6 2 2-6 6-3 1 1-3ZM7 12h3M7 16h3"/></svg></button></div><button type="button" class="hw-col-name" data-col="${col}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHTML(name)} 作業選單">${escapeHTML(name)} <span aria-hidden="true">⌄</span></button></div></th>`).join('')}<th class="hw-table-spacer" aria-hidden="true"></th><th class="num hw-total">小計</th><th class="num hw-total">平均</th></tr></thead><tbody>${list.map(s=>{
         const summary=calcHWSummary(hw.data[s.id],hw.cols.length);
         return `<tr data-id="${escapeHTML(s.id)}">${renderStudentRosterCells(s,cls)}${hw.cols.map((_,c)=>renderHWCell(hw.data[s.id][c],c,`${s.seat||''} ${s.name||''}`,hw.cols[c])).join('')}<td class="hw-table-spacer" aria-hidden="true"></td><td class="num" data-sum>${summary.count?summary.sum:'—'}</td><td class="num" data-avg>${renderHWAverage(summary)}</td></tr>`;
-      }).join('')}<tr id="hw-empty-row"><td colspan="${hw.cols.length+5}" class="hw-empty-message">沒有符合的學生。可清除篩選，或至學生管理新增學生。</td></tr></tbody>`;
+      }).join('')}</tbody>`;
       for(const tr of elHWTable.querySelectorAll('tr[data-id]')){
         const id=tr.dataset.id;
         const summary=()=>{const s=calcHWSummary(hw.data[id],hw.cols.length);tr.querySelector('[data-sum]').textContent=s.count?s.sum:'—';tr.querySelector('[data-avg]').innerHTML=renderHWAverage(s);};
@@ -23069,7 +23109,8 @@ select.class-color-select{flex-shrink:0;box-sizing:border-box;}
   }
   function syncTools(){
     const active=state.mode==='seat',cls=elSelect.value;
-    elSearch.placeholder=active?'搜尋姓名／座號':searchPlaceholder;
+    elSearch.placeholder=state.mode==='list'?'搜尋姓名或座號':active?'搜尋姓名／座號':searchPlaceholder;
+    elSearch.title=state.mode==='list'?'搜尋學生姓名或座號；按 Enter 或框內叉號顯示全班學生。':'';
     zoomLabel.textContent=Math.round(views.seat*100)+'%';$('room-zoom-out').disabled=views.seat<=.4;$('room-zoom-in').disabled=views.seat>=8;
     editTools.hidden=!active||!editing;viewTools.hidden=!active;$('room-multi').hidden=!active||!editing;
     scoreTools.hidden=state.mode!=='list'||state.listViewMode==='order'||!cls;
