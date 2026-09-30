@@ -2731,7 +2731,7 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
 
     /* ===== 成績預警模式 ===== */
     #warning-pane{
-      display:flex; flex-direction:column; min-height:0; overflow:hidden;
+      display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden;
     }
     .warn-threshold-wrap{
       display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted);
@@ -2749,7 +2749,7 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
       font-size:13px; color:var(--muted);
     }
     .warning-content{
-      margin-top:12px; overflow-y:auto; flex:1 1 auto;
+      margin-top:12px; overflow-y:auto; flex:1 1 0; min-height:0;
       display:flex; flex-direction:column; gap:18px;
     }
     .warning-class-group{
@@ -2796,12 +2796,24 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
     .warn-sub{ font-size:11px; color:var(--muted); }
     .warning-empty{
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:10px; padding:64px 32px;
+      flex:1 0 auto; box-sizing:border-box; min-height:180px;
+      gap:10px; padding:24px 20px;
       color:var(--muted); text-align:center;
     }
     .warning-empty .warn-empty-icon{ font-size:48px; }
     .warning-empty .warn-empty-msg{ font-size:16px; font-weight:600; color:var(--ok); }
-    .warning-empty .warn-empty-sub{ font-size:13px; }
+    .warning-empty .warn-empty-sub{ font-size:13px; line-height:1.7; max-width:440px; }
+    .warn-empty-details{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:100%;font-size:13px;line-height:1.6;}
+    .warn-empty-count{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:var(--fg);}
+    .warn-empty-count strong{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums;}
+    .warn-empty-rules{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;max-width:100%;}
+    .warn-empty-rule{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--muted) 8%,var(--card));white-space:nowrap;}
+    .warn-empty-rule b{font-weight:500;color:var(--fg);}
+    @media(max-height:650px){
+      .warning-empty{padding:12px 16px;gap:8px;}
+      .warning-empty .warn-empty-icon{font-size:40px;}
+      .warn-empty-details{gap:12px;}
+    }
     :root[data-theme="light"] .warning-table th{ background:#fff; }
     :root[data-theme="light"] .warning-class-title{
       background:color-mix(in oklab, var(--accent) 5%, #fff);
@@ -21164,7 +21176,7 @@ elProgAdd?.addEventListener('click', ()=>{
       }
 
       if(totalFailing === 0){
-        content.innerHTML = `<div class="warning-empty"><span class="warn-empty-icon">📋</span><span class="warn-empty-msg">${assessed ? '目前沒有低於門檻的成績' : '尚無可計算的成績'}</span><span class="warn-empty-sub">未批改、免交不計平均；缺交以 0 分計入。${unassessed ? `另有 ${unassessed} 位學生尚無可計算成績。` : ''}</span></div>`;
+        content.innerHTML = `<div class="warning-empty"><span class="warn-empty-icon">📋</span><span class="warn-empty-msg">${assessed ? '目前沒有低於門檻的成績' : '尚無可計算的成績'}</span><div class="warn-empty-details">${unassessed ? `<div class="warn-empty-count"><strong>${unassessed} 位學生</strong><span>尚無可計算成績</span></div>` : ''}<div class="warn-empty-rules"><span class="warn-empty-rule"><b>未批改・免交</b><span>不計平均</span></span><span class="warn-empty-rule"><b>缺交</b><span>以 0 分計入</span></span></div></div></div>`;
         if(summaryEl) summaryEl.textContent = `已計算 ${assessed} 人；尚無可計算成績 ${unassessed} 人`;
       } else {
         content.innerHTML = fragments.join('');
