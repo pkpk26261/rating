@@ -24224,7 +24224,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(!['error','pending'].includes(local?.dataset.kind)&&local?.textContent!=='唯讀視窗'){
         const google=RatingBridge.googleStatus();
         const dual=google.configured&&['saved','empty'].includes(syncState);
-        summary.textContent=dual?(google.kind==='saved'?'雙重備份完成':google.kind==='error'?'帳號已存・Google 備份失敗':google.kind==='busy'?'帳號已存・Google 備份中':'帳號已存・Google 待備份'):text;
+        summary.textContent=dual?(google.kind==='saved'?'已備份':google.kind==='error'?'備份失敗':google.kind==='busy'?'備份中':'待備份'):text;
         summary.dataset.kind=dual?google.kind:$('account-status').dataset.kind;
         summary.title='系統帳號：'+text+'；Google：'+google.text;
       }
