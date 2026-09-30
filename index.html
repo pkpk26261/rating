@@ -650,6 +650,101 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
  .entry-brand{display:none}
 }
 
+/* 免登入工具入口：與登入並列，窄畫面依閱讀順序排列。 */
+#account-entry .entry-brand h1{font-size:clamp(28px,2.6vw,54px);margin-bottom:12px}
+#account-entry .entry-brand>img{width:56px;margin-bottom:16px}
+#account-entry .entry-brand>p{font-size:15px}
+.entry-tools{margin-top:28px;text-align:left}
+.entry-tools-heading{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.entry-tools-heading h2{font-size:18px;margin:0;color:var(--fg)}
+.entry-tools-heading>span{font-size:12px;color:var(--accent);padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+#account-entry .entry-tools>p{font-size:13px;line-height:1.5;margin:0 0 14px}
+.entry-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.entry-tool{display:flex;align-items:center;gap:10px;padding:16px 12px;min-height:84px;min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fg);text-align:left;font:inherit;cursor:pointer}
+.entry-tool:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--card))}
+.entry-tool>span:nth-child(2){display:grid;gap:5px;min-width:0;flex:1}
+#account-entry .entry-tool strong{font-size:15px;font-weight:600;color:var(--fg)}
+.entry-tool small{font-size:12px;color:var(--muted);line-height:1.5}
+.entry-tool>span:last-child{color:var(--muted)}
+.entry-tool-icon{color:var(--accent);flex:0 0 28px}.entry-tool-icon svg{display:block;width:28px;height:28px}
+#public-tools-dialog{box-sizing:border-box;width:min(1180px,calc(100vw - 32px));height:min(860px,calc(100dvh - 32px));max-width:none;max-height:none;padding:0;border:1px solid var(--line);border-radius:22px;background:var(--bg);color:var(--fg);box-shadow:var(--shadow)}
+#public-tools-dialog::backdrop{background:#0009;backdrop-filter:blur(6px)}
+#public-tools-dialog[open]{display:flex}
+.public-tools-shell{display:flex;flex-direction:column;min-width:0;min-height:0;width:100%;height:100%}
+.public-tools-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--card)}
+.public-tools-header h2{margin:4px 0 0;font-size:22px}.public-tools-eyebrow{font-size:12px;color:var(--accent)}
+.public-tools-actions,.public-controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+#public-tools-dialog .btn{min-height:44px;white-space:normal}
+#public-tools-content{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:auto;padding:24px;gap:20px;box-sizing:border-box}
+#public-tools-dialog [hidden]{display:none!important}
+#public-tools-dialog button:focus-visible,#public-tools-dialog :is(input,textarea,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.public-stage{display:flex;flex:1 0 auto;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px 0;min-height:200px;min-width:0}
+.public-stage p,.public-stage h3{margin:0}.public-stage p{color:var(--muted);line-height:1.6}
+.public-caption{font-size:14px;color:var(--muted)}
+.public-clock{font-size:clamp(48px,10vw,128px);font-weight:650;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.04em;color:var(--accent)}
+.public-stage .public-controls{margin-top:6px}.public-stage .btn.primary{min-width:150px}
+.public-settings,.public-editor{background:var(--card);border:1px solid var(--line);padding:20px;border-radius:16px;display:grid;gap:16px;flex-shrink:0}
+.public-presets{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.public-fields{display:flex;align-items:end;justify-content:center;gap:12px;flex-wrap:wrap}
+#public-tools-dialog label{display:grid;gap:8px;font-size:13px;color:var(--muted);min-width:0}
+#public-tools-dialog :is(input,textarea,select){box-sizing:border-box;max-width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:inherit}
+.public-fields input[type=number]{width:110px}
+#public-tools-dialog textarea{resize:vertical;min-height:72px;line-height:1.6}
+#public-tools-dialog .public-checkbox{display:flex;align-items:center;gap:8px}
+#public-tools-dialog input[type=checkbox]{min-height:20px;width:20px;accent-color:var(--accent)}
+#public-tools-feedback{margin:0;padding:12px 24px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);flex-shrink:0;line-height:1.6}
+#public-tools-feedback:empty{display:none}#public-tools-feedback[data-error=true]{color:var(--bad)}
+.public-task-title{font-size:clamp(26px,4vw,48px);line-height:1.4;overflow-wrap:anywhere;max-width:100%}
+.public-task-description{max-width:600px;white-space:pre-line;overflow-wrap:anywhere}
+.public-board-toolbar{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.public-board-toolbar select{width:260px}.public-board-toolbar>.public-controls{justify-content:flex-start}
+.public-step-list{display:flex;gap:8px;flex-wrap:wrap;padding:0;margin:0;list-style:none}
+.public-step-list li{display:flex;align-items:center;gap:8px;flex:1 1 180px;padding:12px;border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere}
+.public-step-list li[aria-current]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card))}
+.public-step-list li>span{color:var(--accent)}.public-step-list small{margin-left:auto;color:var(--muted);white-space:nowrap}
+.public-editor-steps{display:grid;gap:16px}.public-step-editor{display:grid;gap:12px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;margin:0}
+.public-step-editor legend{color:var(--accent);font-size:14px}.public-step-editor .public-fields{justify-content:flex-start}.public-step-editor .public-fields>label:first-child{flex:1;min-width:160px}
+.public-draw-result{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;max-width:100%;color:var(--accent);font-size:clamp(36px,7vw,88px);font-weight:650;font-variant-numeric:tabular-nums;line-height:1.2}
+.public-draw-result>span{padding:10px 18px;min-width:80px;box-sizing:border-box;border-radius:18px;background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.public-history summary{cursor:pointer;font-size:14px;color:var(--muted)}.public-history p{font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+#public-tools-content:has(#exam-pane){padding:12px;overflow:hidden}#public-tools-content #exam-pane{flex:1;min-height:0;width:100%}
+#public-tools-dialog:fullscreen,#public-tools-dialog.public-projecting{width:100vw;height:100dvh;border:0;border-radius:0;max-height:none;max-width:none;margin:0}
+#public-tools-dialog.public-projecting{position:fixed;inset:0}
+@media(max-width:960px){
+ #account-entry .entry-layout{align-content:start}
+ #account-entry .entry-brand{text-align:left}
+ #account-entry .entry-tools{margin-top:20px}
+}
+@media(max-width:540px){
+ #public-tools-dialog{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0;margin:0}
+ .public-tools-header{padding:12px 16px;gap:8px}.public-tools-header h2{font-size:18px}.public-tools-eyebrow{font-size:11px}
+ .public-tools-actions{gap:6px}.public-tools-actions .btn{padding:8px 10px;font-size:12px}
+ #public-tools-content{padding:16px;gap:16px}.public-settings,.public-editor{padding:14px}
+ .public-fields{gap:10px}.public-fields input[type=number]{width:84px}.public-stage{padding:12px 0}
+ .entry-tool{padding:12px 10px;gap:8px;min-height:80px}.entry-tool-icon{flex-basis:24px}.entry-tool-icon svg{width:24px;height:24px}
+ .entry-tool small{font-size:11px}#account-entry .entry-tool strong{font-size:14px}
+}
+@media(max-height:620px){#account-entry .entry-brand{display:block}#account-entry .entry-brand>img,#account-entry .entry-kicker{display:none}.entry-tools{margin-top:14px}.public-stage{min-height:150px}.public-clock{font-size:64px}}
+
+/* One brand lockup; number draw shares the classroom reel and reveal styles. */
+#account-entry .entry-site-name{gap:14px;font-size:21px;letter-spacing:-.02em}
+#account-entry .entry-site-name img{width:48px;height:48px;border-radius:14px}
+.entry-site-name>span{display:grid;gap:5px}.entry-site-name small{font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--muted)}
+.public-draw-stage{position:relative;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,rgba(129,140,248,.06),rgba(52,211,153,.04));padding:24px 12px;box-sizing:border-box}
+.public-draw-stage>:not(canvas){position:relative;z-index:1}
+#public-draw-result{width:100%;padding:18px 8px;box-sizing:border-box;font-size:56px}
+#public-draw-result>.drum-slot{padding:0;min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;color:var(--accent);font-size:36px}
+#public-draw-result>.drum-slot:has(.slot-reel){display:block}
+#public-draw-result.single-row>.drum-slot{flex:0 1 120px}
+#public-draw-result .slot-reel{width:100%}
+#public-draw-result .slot-seat{font-size:clamp(20px,4vw,44px);font-weight:750}
+#public-draw-result.single-row .slot-seat{font-size:clamp(10px,30cqw,44px)}
+.public-draw-count{display:grid;gap:10px;text-align:center;font-size:13px;color:var(--muted)}
+.public-draw-count .btn[aria-pressed=true]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--accent)}
+.public-draw-options{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+@media(max-width:540px){#account-entry .entry-site-name{gap:10px;font-size:18px}#account-entry .entry-site-name img{width:40px;height:40px}.entry-site-name small{font-size:10px}.public-draw-count .public-presets{gap:6px}.public-draw-count .btn{padding:8px 10px}.public-draw-stage{padding:16px 4px}}
+@media(prefers-reduced-motion:reduce){.public-draw-stage,.public-draw-stage .drum-slot{animation:none!important}}
+
 </style>
 <!-- END ACCOUNT UI STYLES -->
   <style>
@@ -8755,32 +8850,6 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <p class="seat-panel-hint">點選學生再點座位，或直接拖曳入座</p>
             <div id="unassigned-list" class="list"></div>
           </aside>
-        </div>
-
-        <!-- ★ 空狀態歡迎引導 -->
-        <div id="welcome-guide" class="welcome-guide">
-          <div class="welcome-shell">
-            <aside class="welcome-rail" aria-label="開始使用說明">
-              <div class="welcome-hero">
-                <span class="welcome-kicker">老師，開始今天的紀錄</span>
-                <div class="welcome-mark">
-                  <div class="welcome-icon"><img src="icon.png" alt="成績系統圖示"></div>
-                  <div class="welcome-copy">
-                    <h2 class="welcome-title">先匯入名單<br><strong>再開始記錄</strong></h2>
-                    <p class="welcome-sub">有 Excel/CSV 就直接匯入；沒有名單可先用範例檔試試。<span class="welcome-sub__sync">已有 Google 試算表？可直接連線載入。</span></p>
-                  </div>
-                </div>
-                <div class="welcome-quick-actions">
-                  <button class="btn primary" id="btn-welcome-import" type="button">📂 立即匯入檔案</button>
-                  <button class="btn" id="btn-welcome-cloud" type="button">☁️ 從 Google 載入</button>
-                  <button class="btn" id="btn-welcome-create" type="button">手動建立班級</button>
-                  <button class="btn" id="btn-welcome-sample" type="button">下載範例名單</button>
-                </div>
-              </div>
-
-            </aside>
-
-          </div>
         </div>
 
         <!-- 列表（座位鏡像） -->
@@ -18718,7 +18787,13 @@ function onTimerDone(){
     const ExamDashboard=(()=>{
       const el=id=>document.getElementById('exam-'+id),pane=el('pane');
       // The adapter also catches browsers that deny access to the localStorage getter itself.
-      const store=examCreateStore({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
+      let publicMode=false;
+      const examStores=new Map();
+      function scopedExamStore(scope){
+        if(!examStores.has(scope))examStores.set(scope,examCreateStore({getItem:key=>(scope?window.localStorage:localStorage).getItem(scope+key),setItem:(key,value)=>(scope?window.localStorage:localStorage).setItem(scope+key,value)}));
+        return examStores.get(scope);
+      }
+      let store=scopedExamStore('');
       let initialized=false,active=false,ticker=null,previous=null,rotationAt=0,projectionFocus=null,projectRequest=0;
       const ended=new Set();let inputError='',hovered=false,lastScrollAnchor=null;
       const text=(id,value)=>{const target=el(id);(target.querySelector(':scope > .exam-label')||target).textContent=value;};
@@ -18796,7 +18871,7 @@ function onTimerDone(){
 
       }
       function writable(){
-        if(!TabLock.isActive()){inputError='此視窗為唯讀，請先改用此視窗再編輯。';health();return false;}
+        if(!publicMode&&!TabLock.isActive()){inputError='此視窗為唯讀，請先改用此視窗再編輯。';health();return false;}
         return true;
       }
       function change(mutate){
@@ -18892,7 +18967,7 @@ function onTimerDone(){
         if(crossed.length){el('end-alert').querySelector('span').textContent=crossed.map(p=>p.label+' '+(p.subject||'考試')+'已結束，請停止作答。').join('\n');el('end-alert').hidden=false;}
         const now=Date.now(),editing=pane.contains(document.activeElement)&&document.activeElement.matches('input,textarea,[contenteditable="true"]');
         if(hovered||editing||hasDialog())rotationAt=now;
-        else if(store.data.autoRotate&&now-rotationAt>=8000&&!store.blocked&&!store.error&&TabLock.isActive())flip();
+        else if(store.data.autoRotate&&now-rotationAt>=8000&&!store.blocked&&!store.error&&(publicMode||TabLock.isActive()))flip();
         pane.style.setProperty('--exam-progress',store.data.autoRotate?Math.max(0,Math.min(1,(now-rotationAt)/8000)):0);
       }
       function flip(){if(change(d=>{d.slide=1-d.slide;})){rotationAt=Date.now();renderInfo();}}
@@ -18918,8 +18993,10 @@ function onTimerDone(){
         if(!active||request!==projectRequest){if(document.fullscreenElement===pane)try{await document.exitFullscreen();}catch(_){}return;}
         el('exit').focus();
       }
-      function activate(){
-        if(!initialized){store.load();initialized=true;}
+      function activate(asPublic=false){
+        const changed=publicMode!==asPublic;publicMode=asPublic;
+        store=scopedExamStore(publicMode?'rating-public-tools:':'');
+        if(!initialized||changed){store.load();initialized=true;}
         if(ticker!==null)clearInterval(ticker);active=true;previous=null;lastScrollAnchor=null;rotationAt=Date.now();render();ticker=setInterval(tick,1000);
       }
       function deactivate(){
@@ -19038,13 +19115,14 @@ function onTimerDone(){
       });
       document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&pane.classList.contains('exam-projecting'))endProjection();});
       window.addEventListener('storage',event=>{
-        if(event.key!==EXAM_STORAGE_KEY||!initialized||store.dirty)return;
+        if(event.key!==(publicMode?'rating-public-tools:':'')+EXAM_STORAGE_KEY||!initialized||store.dirty)return;
         store.load();if(active){previous=null;render();}
       });
       window.addEventListener('pagehide',deactivate);
-      window.addEventListener('pageshow',()=>{if(state.mode==='exam'&&!active)activate();});
+      window.addEventListener('pageshow',()=>{if(publicMode&&window.RatingPublicTools?.active==='exam'&&!active)activate(true);else if(!publicMode&&state.mode==='exam'&&!active)activate();});
       return {activate,deactivate};
     })();
+    window.RatingExamDashboard=ExamDashboard;
     // END EXAM DASHBOARD UI
 
     function setMode(m){
@@ -20193,8 +20271,6 @@ elProgAdd?.addEventListener('click', ()=>{
     document.addEventListener('pointercancel',()=>hwGrid.drag=null);
     elHWTable.addEventListener('focusout',()=>requestAnimationFrame(()=>{if(state.mode==='hw')updateHWEntryView();}));
 
-    document.getElementById('btn-welcome-cloud').addEventListener('click', ()=>document.getElementById('btn-gsheet').click());
-    document.getElementById('btn-welcome-create').addEventListener('click', ()=>{ setMode('manage'); elManageAddClass.disabled=false; elManageAddClass.click(); });
 
     // 啟動：先嘗試從本機暫存還原；失敗才顯示空畫面
     if (!tryRestoreSession()) {
@@ -20233,20 +20309,8 @@ elProgAdd?.addEventListener('click', ()=>{
 
 
 
-    /* ★ 歡迎引導按鈕 */
-    document.getElementById('btn-welcome-import')?.addEventListener('click', ()=>{
-      document.getElementById('file-input')?.click();
-    });
-    document.getElementById('btn-welcome-sample')?.addEventListener('click', ()=>{ downloadSampleWorkbook(); });
-
-    function hideWelcomeGuide(){
-      const g = document.getElementById('welcome-guide');
-      if(g) g.style.display = 'none';
-    }
-    function showWelcomeGuide(){
-      const g = document.getElementById('welcome-guide');
-      if(g) g.style.display = '';
-    }
+    function hideWelcomeGuide(){}
+    function showWelcomeGuide(){if(state.mode==='list')setMode('manage');}
 
     /* ===== 舊導覽已停用，保留空狀態匯入入口即可 ===== */
     (function initOnboarding(){
@@ -21533,6 +21597,9 @@ elProgAdd?.addEventListener('click', ()=>{
         return accelDist+cruiseDist+decelDist*(1-Math.pow(1-p,power));
       }};
     }
+
+    // Public number draw shares motion and celebration, without student or account state.
+    window.RatingDrawAnimation={motion:drawMotion,confetti:fireConfetti};
 
     /* ===== 🎰 抽籤動畫引擎 ===== */
     let _drawAnimating = false;
@@ -23747,15 +23814,21 @@ window.RatingBridge = {
 
 </script>
 <section id="account-entry" hidden aria-label="成績管理系統登入入口">
-  <header class="entry-header"><span class="entry-site-name"><img src="icon.png" alt="" width="28" height="28">成績管理系統</span><div class="entry-header-actions"><button id="entry-theme" class="btn" type="button">切換主題</button></div></header>
+  <header class="entry-header"><span class="entry-site-name"><img src="icon.png" alt="" width="48" height="48"><span>成績管理系統<small>老師的日常教學幫手</small></span></span><div class="entry-header-actions"><button id="entry-theme" class="btn" type="button">切換主題</button></div></header>
   <div class="entry-layout">
-    <div class="entry-brand"><img src="icon.png" alt="" width="64" height="64"><span class="entry-kicker">老師的日常教學幫手</span><h1>每一筆用心，<br><strong>都好好記下。</strong></h1><p>班級、成績與課堂紀錄，<br>在熟悉的地方輕鬆接續。</p><div class="entry-benefits"><span><b aria-hidden="true">✓</b> 登入後自動儲存</span><span><b aria-hidden="true">✓</b> 換台裝置也能繼續</span></div></div>
+    <div class="entry-brand"><h1>每一筆用心，<br><strong>都好好記下。</strong></h1><p>班級、成績與課堂紀錄，<br>在熟悉的地方輕鬆接續。</p><section class="entry-tools" aria-labelledby="entry-tools-title"><div class="entry-tools-heading"><h2 id="entry-tools-title">先用課堂工具</h2><span>免登入</span></div><p>打開就能用，設定留在這台裝置。</p><div class="entry-tools-grid">
+<button type="button" class="entry-tool" data-public-tool="timer"><span class="entry-tool-icon" data-tool-icon="timer" aria-hidden="true"></span><span><strong>倒數計時</strong><small>掌握課堂時間</small></span><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+<button type="button" class="entry-tool" data-public-tool="board"><span class="entry-tool-icon" data-tool-icon="board" aria-hidden="true"></span><span><strong>課堂任務板</strong><small>流程與投影</small></span><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+<button type="button" class="entry-tool" data-public-tool="exam"><span class="entry-tool-icon" data-tool-icon="exam" aria-hidden="true"></span><span><strong>考試時間表</strong><small>節次與倒數</small></span><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+<button type="button" class="entry-tool" data-public-tool="draw"><span class="entry-tool-icon" data-tool-icon="draw" aria-hidden="true"></span><span><strong>抽號碼</strong><small>範圍與隨機抽號</small></span><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+</div></section></div>
     <div class="entry-card">
       <div id="account-entry-host"></div>
       <p class="entry-account-note">登入後，班級與教學紀錄會自動保存到帳號雲端。<br>Google 試算表可在登入後設定為輔助備份。</p>
     </div>
   </div>
 </section>
+<dialog id="public-tools-dialog" aria-labelledby="public-tools-title"><div class="public-tools-shell"><header class="public-tools-header"><div><span class="public-tools-eyebrow">免登入課堂工具</span><h2 id="public-tools-title"></h2></div><div class="public-tools-actions"><button class="btn" type="button" id="public-tools-project">全螢幕</button><button class="btn" type="button" id="public-tools-close">返回登入</button></div></header><div id="public-tools-content"></div><p id="public-tools-feedback" role="status" aria-live="polite"></p></div></dialog>
 <dialog id="account-dialog" aria-labelledby="account-title">
 <div id="account-panel">
   <div class="account-heading"><div><span class="sync-eyebrow">成績管理系統</span><h2 id="account-title">登入帳號</h2></div><button id="account-close" class="btn" type="button" aria-label="關閉帳號視窗">關閉</button></div>
@@ -24124,6 +24197,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function refreshEntry(){
     const show=!A.owner&&!user;
     $('app').inert=working||!A.ready||show;
+    if(!show)window.RatingPublicTools?.close();
     entry.hidden=!show;document.body.classList.toggle('account-entry-visible',show);
     refreshToolbar();
     $('entry-theme').textContent=$('btn-theme').textContent;
@@ -24446,6 +24520,150 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
     verify().catch(e=>{if(A.owner)open();message(explain(e),true);});
   }catch(e){if(A.owner)open();message(explain(e),true);}
+})();
+
+</script>
+<script data-bundled-source="account/public-tools.js">
+/* Independent, device-local classroom tools. No teacher state or account API access. */
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id),dialog=$('public-tools-dialog'),content=$('public-tools-content');
+  if(!dialog)return;
+  const KEY='rating-public-tools:v1',clone=v=>JSON.parse(JSON.stringify(v));
+  const escape=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const id=()=>crypto.randomUUID();
+  const example=()=>({id:id(),name:'閱讀・討論・分享',steps:[{title:'閱讀課文',description:'圈出重點，記下你的發現。',seconds:180},{title:'小組討論',description:'交換想法，一起整理重點。',seconds:300},{title:'分享成果',description:'用自己的話說出小組的想法。',seconds:180}]});
+  const defaults=()=>({version:1,timer:{seconds:300,remaining:300,endAt:0,running:false},board:{flows:[],current:null},draw:{start:1,end:30,count:1,unique:true,history:[]}});
+  let data=defaults(),active='',returnFocus=null,examParent=null,examNext=null,storageBlocked=false,draft=null,lastSaved=null,drawRun=0,drawing=false;
+  const remaining=t=>t.running?Math.max(0,Math.ceil((t.endAt-Date.now())/1000)):t.remaining;
+  const format=n=>`${String(Math.floor(Math.max(0,n)/60)).padStart(2,'0')}:${String(Math.max(0,n)%60).padStart(2,'0')}`;
+  function feedback(text,error=false){$('public-tools-feedback').textContent=text;$('public-tools-feedback').dataset.error=String(error);}
+  function validate(v){
+    if(v?.version!==1||!v.timer||!v.board||!v.draw)throw Error('課堂工具設定格式不正確。');
+    const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
+    const timer=t=>t&&integer(t.seconds,0,86400)&&integer(t.remaining,0,86400)&&typeof t.running==='boolean'&&Number.isFinite(t.endAt)&&t.endAt>=0&&t.endAt<1e15;
+    const flow=f=>f&&typeof f.id==='string'&&f.id.length<=100&&typeof f.name==='string'&&f.name.trim()&&f.name.length<=120&&Array.isArray(f.steps)&&f.steps.length>0&&f.steps.length<=30&&f.steps.every(s=>typeof s.title==='string'&&s.title.trim()&&s.title.length<=120&&typeof s.description==='string'&&s.description.length<=2000&&integer(s.seconds,0,86400));
+    const b=v.board,c=b.current,d=v.draw;
+    if(!timer(v.timer)||!Array.isArray(b.flows)||b.flows.length>60||!b.flows.every(flow)||c&&(!flow(c)||!integer(c.index,0,c.steps.length-1)||!['ready','active','completed'].includes(c.status)||!timer(c.timer)))throw Error('計時或任務資料不正確。');
+    if(!integer(d.start,0,9999)||!integer(d.end,d.start,9999)||!integer(d.count,1,100)||d.count>d.end-d.start+1||typeof d.unique!=='boolean'||d.slowdown!==undefined&&typeof d.slowdown!=='boolean'||!Array.isArray(d.history)||d.history.length>10000||!d.history.every(n=>integer(n,d.start,d.end))||d.unique&&new Set(d.history).size!==d.history.length)throw Error('抽號資料不正確。');
+    return v;
+  }
+  function load(){try{const raw=window.localStorage.getItem(KEY);lastSaved=raw;data=raw?validate(JSON.parse(raw)):defaults();storageBlocked=false;}catch(e){storageBlocked=true;feedback('無法讀取課堂工具設定，原始資料已保留。可以先使用，儲存前請處理裝置儲存問題。',true);}}
+  function save(){
+    if(storageBlocked){feedback('原有課堂工具設定無法讀取，尚未覆寫；目前操作僅保留在此頁面。',true);return false;}
+    try{if(window.localStorage.getItem(KEY)!==lastSaved){feedback('另一個視窗已更新工具設定，尚未覆寫。請先重新載入頁面。',true);return false;}const serialized=JSON.stringify(validate(data));window.localStorage.setItem(KEY,serialized);lastSaved=serialized;feedback('設定已存這台裝置');return true;}catch(e){feedback('設定未存妥，請保留此頁面並檢查瀏覽器儲存空間。',true);return false;}
+  }
+  const button=(action,label,primary=false)=>`<button type="button" class="btn${primary?' primary':''}" data-public-action="${action}">${label}</button>`;
+  const timerState=seconds=>({seconds,remaining:seconds,running:false,endAt:0});
+  const setTimer=t=>{t.running=true;t.endAt=Date.now()+t.remaining*1000;};
+  const pause=t=>{t.remaining=remaining(t);t.running=false;t.endAt=0;};
+  const toolTitles={timer:'倒數計時',board:'課堂任務板',exam:'考試時間表',draw:'抽號碼'};
+  const icons={timer:'<circle cx="12" cy="13" r="8"/><path d="M9 2h6m-3 0v3m0 4v4l3 2"/>',board:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 4V2h8v2M8 10h8m-8 5h8"/>',exam:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4m10-4v4M3 10h18m-13 4h2m4 0h2m-8 3h2m4 0h2"/>',draw:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8" cy="8" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="16" cy="16" r=".6"/>'};
+  document.querySelectorAll('[data-tool-icon]').forEach(e=>e.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">${icons[e.dataset.toolIcon]}</svg>`);
+  function tick(){
+    for(const t of [data.timer,data.board.current?.timer])if(t?.running&&remaining(t)===0){t.running=false;t.remaining=0;t.endAt=0;save();}
+    if(active==='timer'){const toggle=content.querySelector('[data-public-action=timer-toggle]');if(toggle)toggle.textContent=data.timer.running?'暫停':data.timer.remaining===0?'重新開始':'開始／繼續';$('public-timer-clock').textContent=format(remaining(data.timer));$('public-timer-state').textContent=data.timer.running?'倒數中':data.timer.remaining===0?'時間到':'已暫停';}
+    if(active==='board'&&!draft){const c=data.board.current;if(c){const toggle=content.querySelector('[data-public-action=board-toggle]');if(toggle)toggle.textContent=c.timer.running?'暫停':c.status==='ready'?'開始任務':c.timer.remaining===0&&c.steps[c.index].seconds?'重新計時':'繼續';$('public-board-clock').textContent=c.status==='completed'?'完成':c.steps[c.index].seconds?format(remaining(c.timer)):'不計時';$('public-board-state').textContent=c.status==='completed'?'所有任務已完成':c.status==='ready'?'準備開始':c.timer.running?'倒數中':c.timer.remaining===0&&c.steps[c.index].seconds?'時間到，請切換下一步':'依老師指示進行';}}
+  }
+  function renderTimer(){const t=data.timer;content.innerHTML=`<section class="public-stage"><p class="public-caption">給每段課堂一個節奏</p><output id="public-timer-clock" class="public-clock" aria-label="剩餘時間">${format(remaining(t))}</output><p id="public-timer-state" role="status"></p><div class="public-controls">${button('timer-toggle',t.running?'暫停':'開始／繼續',true)}${button('timer-reset','重設')}${button('timer-add','＋1 分鐘')}</div></section><form id="public-timer-form" class="public-settings"><div class="public-presets">${[1,3,5,10,15].map(n=>button('timer-preset-'+n,n+' 分鐘')).join('')}</div><div class="public-fields"><label>分鐘<input name="minutes" type="number" min="0" max="1440" value="${Math.floor(t.seconds/60)}" required></label><label>秒<input name="seconds" type="number" min="0" max="59" value="${t.seconds%60}" required></label><button class="btn" type="submit">設定時間</button></div></form>`;tick();}
+  function renderBoard(){
+    const b=data.board,c=b.current;draft=null;
+    content.innerHTML=`<div class="public-board-toolbar"><label>目前流程<select id="public-board-select"><option value="">選擇流程</option>${b.flows.map(f=>`<option value="${escape(f.id)}" ${c?.sourceId===f.id?'selected':''}>${escape(f.name)}</option>`).join('')}</select></label><div class="public-controls">${button('board-example','套用範例')}${button('board-new','建立流程')}${c?button('board-edit','編輯流程'):''}${c?.sourceId?button('board-delete','刪除流程'):''}</div></div>`;
+    if(!c){content.innerHTML+=`<section class="public-stage"><h3>安排今天的課堂</h3><p>套用範例，或建立自己的任務流程。</p></section>`;return;}
+    const s=c.steps[c.index];
+    content.innerHTML+=`<section class="public-stage"><p class="public-caption">${escape(c.name)} · ${c.status==='completed'?'全部完成':'步驟 '+(c.index+1)+' / '+c.steps.length}</p><h3 class="public-task-title">${c.status==='completed'?'今天的任務完成了！':escape(s.title)}</h3><p class="public-task-description">${c.status==='completed'?'回想一下，今天學到了什麼？':escape(s.description)}</p><output id="public-board-clock" class="public-clock"></output><p id="public-board-state" role="status"></p><div class="public-controls">${c.status==='completed'?button('board-restart','重新開始',true):(c.status==='ready'||s.seconds?button('board-toggle',c.timer.running?'暫停':c.status==='ready'?'開始任務':'繼續',true):'')+button('board-next',c.index===c.steps.length-1?'完成課堂':'下一步')+(s.seconds?button('board-add','＋1 分鐘'):'')}</div></section><ol class="public-step-list">${c.steps.map((s,i)=>`<li ${i===c.index?'aria-current="step"':''}><span>${i+1}</span>${escape(s.title)}<small>${s.seconds?format(s.seconds):'不計時'}</small></li>`).join('')}</ol>`;tick();
+  }
+  function useFlow(f){data.board.current={...clone(f),sourceId:f.id,index:0,status:'ready',timer:timerState(f.steps[0].seconds)};save();renderBoard();}
+  function collectDraft(){const form=$('public-board-editor');if(!form)return;draft.name=form.elements.flowName.value;draft.steps=[...form.querySelectorAll('.public-step-editor')].map(e=>({title:e.querySelector('[name="title"]').value,description:e.querySelector('[name="description"]').value,seconds:Number(e.querySelector('[name="duration"]').value)*60}));}
+  function editor(){
+    content.innerHTML=`<form id="public-board-editor" class="public-editor"><label>流程名稱<input name="flowName" maxlength="120" value="${escape(draft.name)}" required></label><div class="public-editor-steps">${draft.steps.map((s,i)=>`<fieldset class="public-step-editor"><legend>步驟 ${i+1}</legend><div class="public-fields"><label>任務名稱<input name="title" maxlength="120" value="${escape(s.title)}" required></label><label>分鐘（0 不計時）<input name="duration" type="number" min="0" max="1440" step="1" value="${s.seconds/60}" required></label></div><label>說明<textarea name="description" maxlength="2000">${escape(s.description)}</textarea></label><div class="public-controls">${i?button('step-up-'+i,'上移'):''}${i<draft.steps.length-1?button('step-down-'+i,'下移'):''}${draft.steps.length>1?button('step-remove-'+i,'移除'):''}</div></fieldset>`).join('')}</div><div class="public-controls">${button('step-add','新增步驟')}<button class="btn primary" type="submit">儲存並使用</button>${button('board-cancel','取消')}</div></form>`;
+  }
+  function renderDraw(){
+    const d=data.draw;
+    content.innerHTML=`<section class="public-stage public-draw-stage"><canvas class="draw-confetti" aria-hidden="true"></canvas><p class="public-caption">只抽號碼，不使用學生名單</p><div id="public-draw-result" class="public-draw-result draw-drum ${d.count<=6?'single-row':''}" role="status" aria-live="polite">${d.history.length?d.history.slice(-d.count).map(n=>`<span class="drum-slot revealed"><span class="slot-seat">${n}</span></span>`).join(''):'<span class="public-draw-placeholder">?</span>'}</div><p id="public-draw-summary">${d.unique?'剩餘 '+(d.end-d.start+1-d.history.length)+' 個號碼':'可重複抽取'}</p><div class="public-controls">${button('draw-go','開始抽號',true)}${button('draw-reset','重新一輪')}</div></section><form id="public-draw-form" class="public-settings"><div class="public-draw-count"><span>一次抽幾個</span><div class="public-presets">${[1,2,3,4,5,6].map(n=>`<button type="button" class="btn" data-public-action="draw-count-${n}" aria-pressed="${d.count===n}">${n} 個</button>`).join('')}</div></div><div class="public-fields"><label>起始號碼<input name="start" type="number" min="0" max="9999" value="${d.start}" required></label><label>結束號碼<input name="end" type="number" min="0" max="9999" value="${d.end}" required></label><label>自訂抽取數量<input name="count" type="number" min="1" max="100" value="${d.count}" required></label></div><div class="public-draw-options"><label class="public-checkbox"><input name="unique" type="checkbox" ${d.unique?'checked':''}>本輪不重複</label><label class="public-checkbox"><input name="slowdown" type="checkbox" ${d.slowdown!==false?'checked':''}>緩慢揭曉</label></div><button class="btn" type="submit">套用範圍，開始新一輪</button></form><details class="public-history"><summary>本輪已抽 ${d.history.length} 個</summary><p>${d.history.join('、')||'尚未抽取'}</p></details>`;
+  }
+  function randomIndex(n){const limit=Math.floor(0x100000000/n)*n,a=new Uint32Array(1);do{crypto.getRandomValues(a);}while(a[0]>=limit);return a[0]%n;}
+  function cancelDraw(){drawRun++;drawing=false;}
+  function draw(){
+    if(drawing)return;
+    const d=data.draw,seen=new Set(d.unique?d.history:[]),pool=Array.from({length:d.end-d.start+1},(_,i)=>i+d.start).filter(n=>!seen.has(n));
+    if(pool.length<d.count){feedback(pool.length?'剩餘號碼不足本次抽取數量，請重新一輪或調整數量。':'本輪已抽完，請重新一輪。',true);return;}
+    const candidates=pool.slice(),selected=[];
+    for(let i=0;i<d.count;i++){const j=randomIndex(pool.length);selected.push(pool[j]);pool.splice(j,1);}
+    if(d.history.length+selected.length>10000){feedback('本輪紀錄已滿，請重新一輪。',true);return;}
+    const run=++drawRun,result=$('public-draw-result'),stage=result.closest('section'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    drawing=true;result.setAttribute('aria-busy','true');result.setAttribute('aria-live','off');stage.classList.add('spinning');
+    content.querySelectorAll('button,input').forEach(e=>e.disabled=true);
+    content.querySelector('[data-public-action=draw-go]').textContent='抽號中…';feedback('號碼滾動中，依序揭曉');result.replaceChildren();
+    const slots=selected.map((pick,i)=>{
+      const el=document.createElement('div'),reel=document.createElement('div'),cells=d.slowdown===false?44:72;
+      el.className='drum-slot spinning';el.setAttribute('aria-hidden','true');reel.className='slot-reel';
+      for(let j=0;j<=cells;j++){const item=document.createElement('div');item.className='slot-item';const seat=document.createElement('span');seat.className='slot-seat';seat.textContent=j===cells?pick:candidates[randomIndex(candidates.length)];item.append(seat);reel.append(item);}
+      el.append(reel);result.append(el);
+      return {el,reel,dist:cells*120,motion:window.RatingDrawAnimation.motion(cells*120,Math.min(i,5),d.slowdown!==false),delay:reduced?0:Math.min(i,5)*400};
+    });
+    let started=null;
+    function frame(now){
+      if(run!==drawRun||active!=='draw'||!dialog.open)return;
+      if(started===null)started=now;
+      let finished=0;
+      slots.forEach(slot=>{const t=reduced?slot.motion.duration:Math.max(0,now-started-slot.delay);slot.reel.style.transform=`translateY(${-slot.motion.position(t)}px)`;if(t>=slot.motion.duration){slot.el.classList.remove('spinning');slot.el.classList.add('revealed');finished++;}});
+      if(finished<slots.length){requestAnimationFrame(frame);return;}
+      drawing=false;d.history.push(...selected);save();renderDraw();
+      const stage=$('public-draw-result').closest('section');stage.classList.add('celebrate');
+      if(!reduced)window.RatingDrawAnimation.confetti(stage.querySelector('canvas'),2000);
+      content.querySelector('[data-public-action=draw-go]').focus({preventScroll:true});
+    }
+    requestAnimationFrame(frame);
+  }
+  async function project(){if(active==='exam'){$('exam-project').click();return;}if(document.fullscreenElement){await document.exitFullscreen?.();return;}try{await dialog.requestFullscreen();}catch{dialog.classList.toggle('public-projecting');}updateProject();}
+  function updateProject(){$('public-tools-project').textContent=document.fullscreenElement===dialog||dialog.classList.contains('public-projecting')?'退出全螢幕':'全螢幕';}
+  function detachExam(){if(!examParent)return;window.RatingExamDashboard.deactivate();const e=$('exam-pane');e.classList.add('hidden');examParent.insertBefore(e,examNext);examParent=null;examNext=null;}
+  function close(){if(dialog.open)dialog.close();else cleanup();}
+  function cleanup(){cancelDraw();detachExam();active='';draft=null;dialog.classList.remove('public-projecting');if(document.fullscreenElement===dialog)document.exitFullscreen?.().catch(()=>{});returnFocus?.focus({preventScroll:true});}
+  function open(tool){
+    if(!toolTitles[tool]||$('account-entry').hidden)return;
+    cancelDraw();detachExam();active=tool;draft=null;returnFocus=document.querySelector(`[data-public-tool="${tool}"]`);$('public-tools-title').textContent=toolTitles[tool];feedback(storageBlocked?'原有工具設定無法讀取，操作僅保留在此頁面。':'',storageBlocked);
+    if(!dialog.open)dialog.showModal();
+    if(tool==='exam'){const e=$('exam-pane');examParent=e.parentNode;examNext=e.nextSibling;content.replaceChildren(e);e.classList.remove('hidden');window.RatingExamDashboard.activate(true);}
+    else if(tool==='timer')renderTimer();else if(tool==='board')renderBoard();else renderDraw();
+    updateProject();$('public-tools-close').focus();
+  }
+  document.querySelectorAll('[data-public-tool]').forEach(e=>e.addEventListener('click',()=>open(e.dataset.publicTool)));
+  content.addEventListener('click',event=>{
+    const action=event.target.closest('[data-public-action]')?.dataset.publicAction;if(!action)return;
+    if(drawing)return;
+    const t=data.timer,c=data.board.current;
+    if(action.startsWith('timer-preset-')){data.timer=timerState(Number(action.split('-').at(-1))*60);save();renderTimer();}
+    else if(action==='timer-toggle'){if(t.running)pause(t);else{if(t.remaining===0)t.remaining=t.seconds;if(t.remaining>0)setTimer(t);else return feedback('請先設定時間。',true);}save();renderTimer();}
+    else if(action==='timer-reset'){data.timer=timerState(t.seconds);save();renderTimer();}
+    else if(action==='timer-add'){const n=Math.min(86400,remaining(t)+60);t.remaining=n;if(t.running)t.endAt=Date.now()+n*1000;save();tick();}
+    else if(action.startsWith('draw-count-')){const count=Number(action.split('-').at(-1));if(count>data.draw.end-data.draw.start+1)return feedback('抽取數量超過號碼範圍，請先調整範圍。',true);data.draw.count=count;save();renderDraw();}
+    else if(action==='draw-go')draw();else if(action==='draw-reset'){data.draw.history=[];save();renderDraw();}
+    else if(action==='board-example'){if(data.board.flows.length>=60)return feedback('流程已達 60 份，請先刪除不需要的流程。',true);const f=example();data.board.flows.push(f);useFlow(f);}
+    else if(action==='board-new'){draft={id:id(),name:'',steps:[{title:'',description:'',seconds:180}]};editor();}
+    else if(action==='board-edit'){if(!c)return;pause(c.timer);save();draft=clone(c);editor();}
+    else if(action==='board-cancel')renderBoard();
+    else if(action==='board-delete'){if(c?.sourceId&&confirm('刪除這份本機流程？')){data.board.flows=data.board.flows.filter(f=>f.id!==c.sourceId);data.board.current=null;save();renderBoard();}}
+    else if(action==='board-toggle'){if(c.status==='ready')c.status='active';if(c.timer.running)pause(c.timer);else{if(c.timer.remaining===0)c.timer.remaining=c.steps[c.index].seconds;if(c.timer.remaining>0)setTimer(c.timer);}save();renderBoard();}
+    else if(action==='board-next'){pause(c.timer);if(c.index===c.steps.length-1)c.status='completed';else{c.index++;c.status='active';c.timer=timerState(c.steps[c.index].seconds);if(c.timer.remaining)setTimer(c.timer);}save();renderBoard();}
+    else if(action==='board-add'){const n=Math.min(86400,remaining(c.timer)+60);c.timer.remaining=n;if(c.timer.running)c.timer.endAt=Date.now()+n*1000;save();tick();}
+    else if(action==='board-restart')useFlow(c);
+    else if(action.startsWith('step-')){collectDraft();const [,op,pos]=action.split('-'),i=Number(pos);if(op==='add'){if(draft.steps.length>=30)return feedback('每份流程最多 30 個步驟。',true);draft.steps.push({title:'',description:'',seconds:180});}else if(op==='remove')draft.steps.splice(i,1);else{const j=i+(op==='up'?-1:1);[draft.steps[i],draft.steps[j]]=[draft.steps[j],draft.steps[i]];}editor();}
+  });
+  content.addEventListener('change',event=>{if(event.target.id==='public-board-select'){const f=data.board.flows.find(f=>f.id===event.target.value);if(f)useFlow(f);}});
+  content.addEventListener('submit',event=>{
+    if(!['public-timer-form','public-draw-form','public-board-editor'].includes(event.target.id))return;
+    event.preventDefault();if(drawing)return;const f=event.target.elements;
+    if(event.target.id==='public-timer-form'){const n=Number(f.minutes.value)*60+Number(f.seconds.value);if(!Number.isInteger(n)||n<=0||n>86400)return feedback('請設定 1 秒至 24 小時。',true);data.timer=timerState(n);save();renderTimer();}
+    else if(event.target.id==='public-draw-form'){const next={start:Number(f.start.value),end:Number(f.end.value),count:Number(f.count.value),unique:f.unique.checked,slowdown:f.slowdown.checked,history:[]};try{validate({...data,draw:next});data.draw=next;save();renderDraw();}catch(e){feedback('號碼須為 0–9999，結束不得小於起始；每次數量不可超過範圍或 100 個。',true);}}
+    else{collectDraft();const flow={id:draft.sourceId||draft.id,name:draft.name.trim(),steps:draft.steps.map(s=>({...s,title:s.title.trim()}))};try{const exists=data.board.flows.findIndex(f=>f.id===flow.id),next=clone(data);if(exists<0)next.board.flows.push(flow);else next.board.flows[exists]=flow;next.board.current=null;validate(next);data=next;useFlow(flow);}catch(e){feedback('請填完整名稱與任務；流程最多 60 份，時間須為 0–1440 分鐘。',true);}}
+  });
+  $('public-tools-close').addEventListener('click',close);$('public-tools-project').addEventListener('click',project);dialog.addEventListener('close',cleanup);
+  document.addEventListener('fullscreenchange',updateProject);
+  window.addEventListener('storage',e=>{if(e.key!==KEY)return;feedback('另一個視窗已更新本機工具。關閉後重新開啟頁面可載入；目前操作保留在此頁面。');});
+  load();setInterval(tick,250);
+  window.RatingPublicTools={open,close,get active(){return active;}};
 })();
 
 </script>
