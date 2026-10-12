@@ -748,6 +748,132 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
 @media(max-width:540px){#account-entry .entry-site-name{gap:10px;font-size:18px}#account-entry .entry-site-name img{width:40px;height:40px}.entry-site-name small{font-size:10px}.public-draw-count .public-presets{gap:6px}.public-draw-count .btn{padding:8px 10px}.public-draw-stage{padding:16px 4px}}
 @media(prefers-reduced-motion:reduce){.public-draw-stage,.public-draw-stage .drum-slot{animation:none!important}}
 
+/* Number-only draw: keep the controls and results in one viewport. */
+#public-tools-dialog[data-tool=draw]{height:min(760px,calc(100dvh - 32px))}
+#public-tools-dialog[data-tool=draw] #public-tools-content{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-rows:minmax(0,1fr) auto;gap:16px;padding:20px;overflow:hidden}
+#public-tools-dialog[data-tool=draw] .public-draw-stage{min-height:0;padding:20px 12px;gap:16px;overflow:hidden}
+#public-tools-dialog[data-tool=draw] #public-draw-result{flex:1;min-height:120px;align-items:center;align-content:center;padding:8px 0;gap:8px}
+#public-tools-dialog[data-tool=draw] .public-draw-placeholder{display:grid;place-items:center;width:140px;height:140px;font-size:72px;border:1px solid var(--line)}
+#public-draw-form{align-content:center;gap:20px;min-width:0;padding:24px}
+#public-draw-form h3{font-size:16px;margin:0;color:var(--fg)}
+#public-draw-form .public-draw-count{text-align:left}
+#public-draw-form .public-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#public-draw-form .public-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#public-draw-form .public-fields label:last-child{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+#public-draw-form .public-fields input{width:100%}
+#public-draw-form .public-fields label:last-child input{width:80px}
+#public-draw-form .public-draw-options{justify-content:flex-start;gap:12px}
+#public-tools-dialog[data-tool=draw] .public-history{grid-column:1/-1;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px 16px;min-width:0}
+#public-tools-dialog[data-tool=draw] .public-history summary{font-size:13px}
+.public-history-body{display:flex;align-items:center;gap:16px;min-width:0}
+#public-tools-dialog[data-tool=draw] .public-history p{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 0;flex:1;min-width:0;line-height:1.6;font-variant-numeric:tabular-nums}
+.public-history p span{color:var(--fg)}
+.public-draw-pages{display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;font-size:12px;color:var(--muted)}
+#public-tools-dialog .public-draw-pages .btn{padding:6px 10px}
+#public-tools-dialog[data-tool=draw] #public-tools-feedback{padding:8px 20px;font-size:12px}
+@media(min-width:601px) and (max-height:640px){
+ #public-tools-dialog[data-tool=draw] .public-tools-header{padding:10px 20px}
+ #public-tools-dialog[data-tool=draw] #public-tools-content{padding:12px;gap:10px;grid-template-columns:minmax(0,1fr) 310px}
+ #public-draw-form{padding:14px;gap:10px}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage{padding:12px 8px;gap:8px}
+}
+@media(max-width:600px){
+ #public-tools-dialog[data-tool=draw]{width:100vw;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0}
+ #public-tools-dialog[data-tool=draw] .public-tools-header{padding:10px 12px}
+ #public-tools-dialog[data-tool=draw] #public-tools-content{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(180px,1fr) auto auto;padding:12px;gap:10px}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage{padding:10px 8px;gap:6px}
+ #public-draw-form{padding:12px;gap:10px}
+ #public-draw-form h3{display:none}
+ #public-draw-form .public-presets{grid-template-columns:repeat(6,1fr);gap:4px}
+ #public-draw-form .public-presets .btn{padding:6px 2px;font-size:12px}
+ #public-draw-form .public-draw-count{gap:6px}
+ #public-draw-form .public-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ #public-draw-form .public-fields label:last-child{grid-column:auto;display:grid}
+ #public-draw-form .public-fields label:last-child input{width:100%}
+ #public-tools-dialog #public-draw-form label{gap:5px;font-size:12px}
+ #public-tools-dialog[data-tool=draw] .public-history{padding:10px 12px}
+ .public-history-body{gap:8px;flex-wrap:wrap}
+ #public-tools-dialog[data-tool=draw] .public-history p{font-size:12px;gap:2px 10px}
+ #public-tools-dialog[data-tool=draw] .public-draw-placeholder{width:100px;height:100px;font-size:54px}
+}
+@media(min-width:601px) and (max-height:450px){
+ #public-tools-dialog[data-tool=draw] .public-tools-header{padding:6px 16px}
+ #public-tools-dialog[data-tool=draw] .public-tools-eyebrow{display:none}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage{gap:4px;padding:8px}
+ #public-tools-dialog[data-tool=draw] .public-caption{display:none}
+ #public-tools-dialog[data-tool=draw] #public-draw-result{min-height:0;padding:0;zoom:.65}
+ #public-tools-dialog[data-tool=draw] .public-history{padding:6px 12px}
+ #public-draw-form{gap:6px;padding:10px}
+ #public-draw-form h3{display:none}
+ #public-draw-form .public-presets{grid-template-columns:repeat(6,1fr);gap:4px}
+ #public-draw-form .public-presets .btn{padding:4px 2px;font-size:12px}
+ #public-draw-form .public-draw-count{gap:4px}
+ #public-draw-form .public-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ #public-draw-form .public-fields label:last-child{grid-column:auto;display:grid}
+ #public-draw-form .public-fields label:last-child input{width:100%}
+ #public-tools-dialog #public-draw-form label{gap:4px;font-size:12px}
+ #public-tools-dialog #public-draw-form input{padding:6px 8px}
+}
+@media(max-width:600px){
+ #public-tools-dialog[data-tool=draw] #public-tools-content{grid-template-rows:minmax(0,1fr) auto auto}
+ #public-tools-dialog[data-tool=draw] #public-draw-result{min-height:0;padding:0;zoom:.75}
+ #public-tools-dialog[data-tool=draw] .public-caption{font-size:11px}
+}
+@media(min-width:601px) and (max-height:640px){
+ #public-draw-form h3{display:none}
+ #public-draw-form .public-presets{grid-template-columns:repeat(6,1fr);gap:4px}
+ #public-draw-form .public-presets .btn{padding:4px 2px;font-size:12px}
+ #public-draw-form .public-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ #public-draw-form .public-fields label:last-child{grid-column:auto;display:grid}
+ #public-draw-form .public-fields label:last-child input{width:100%}
+ #public-tools-dialog[data-tool=draw] #public-draw-result{min-height:0}
+}
+#public-tools-dialog[data-tool=draw] .public-history{position:relative}
+#public-tools-dialog[data-tool=draw] .public-history:has(nav) summary{padding-right:140px;min-height:44px;display:flex;align-items:center}
+.public-history .public-draw-pages{position:absolute;right:12px;top:6px}
+.public-history-body{display:block}
+@media(max-width:600px){
+ #public-tools-dialog[data-tool=draw] .public-history:has(nav) summary{font-size:12px;padding-right:132px}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage:has(.public-draw-pages) .public-caption{display:none}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage:has(.public-draw-pages) #public-draw-result{zoom:.5}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage:has(.public-draw-pages){gap:4px;padding:8px}
+}
+@media(min-width:601px) and (max-height:450px){
+ #public-tools-dialog[data-tool=draw]{width:100vw;height:100dvh;margin:0;border:0;border-radius:0}
+ #public-tools-dialog[data-tool=draw] .public-history:has(nav) summary{min-height:22px}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage:has(.public-draw-pages) #public-draw-result{zoom:.5}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage>.public-draw-pages{position:absolute;bottom:60px;right:8px}
+ #public-tools-dialog[data-tool=draw] .public-draw-stage:has(.public-draw-pages) #public-draw-summary{align-self:flex-start;font-size:12px}
+}
+/* A quiet record strip with individually readable number chips. */
+#public-tools-dialog[data-tool=draw] .public-history{display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:12px;padding:12px 16px;border-radius:14px}
+.public-history-title{margin:0;font-size:13px;font-weight:500;color:var(--muted);line-height:1.5}
+.public-history-header{min-width:0}
+.public-history-body{display:flex;align-items:center;gap:16px;min-width:0}
+#public-tools-dialog[data-tool=draw] .public-history p{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin:0;font-size:12px}
+.public-history p span{display:grid;place-items:center;min-width:0;height:30px;border-radius:8px;background:color-mix(in srgb,var(--accent) 9%,var(--bg));color:var(--accent);font-weight:650;font-variant-numeric:tabular-nums;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line))}
+.public-history .public-draw-pages{position:static;gap:6px}
+#public-tools-dialog .public-history .public-draw-pages .btn{min-height:32px;min-width:32px;padding:4px;font-size:20px;line-height:1}
+@media(max-width:600px){
+ #public-tools-dialog[data-tool=draw] .public-history{display:block;padding:8px 12px}
+ .public-history-header{min-height:32px;display:flex;align-items:center;padding-right:124px;margin-bottom:6px}
+ .public-history .public-draw-pages{position:absolute;right:12px;top:8px}
+ #public-tools-dialog[data-tool=draw] .public-history p{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+ .public-history p span{height:24px;border-radius:6px;font-size:12px}
+}
+@media(min-width:601px) and (max-height:450px){
+ #public-tools-dialog[data-tool=draw] .public-history{grid-template-columns:110px minmax(0,1fr);padding:8px 12px;gap:8px}
+ .public-history-body{gap:8px}
+ #public-tools-dialog[data-tool=draw] .public-history p{gap:4px}
+ .public-history p span{height:26px;font-size:11px;border-radius:6px}
+}
+
+/* Public classroom tools expose only their relevant controls. */
+#exam-pane[data-public=true] #exam-load,#exam-pane[data-public=true] .exam-rotation-control{display:none!important}
+#public-draw-form .public-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+#public-draw-form .public-fields label:last-child{grid-column:auto;display:grid;align-items:normal;justify-content:normal}
+#public-draw-form .public-fields label:last-child input{width:100%}
+
 </style>
 <!-- END ACCOUNT UI STYLES -->
   <style>
@@ -18927,7 +19053,7 @@ function onTimerDone(){
         decorate('info-title',slide===0?'people':'rules');text('info-title',slide===0?'人數統計':'考試規則');text('zoom-value',(slide===0?d.remarksZoom:d.rulesZoom)+'%');
         el('zoom-out').disabled=(slide===0?d.remarksZoom:d.rulesZoom)<=50;el('zoom-in').disabled=(slide===0?d.remarksZoom:d.rulesZoom)>=200;
         pane.style.setProperty('--exam-remarks-scale',d.remarksZoom/100);pane.style.setProperty('--exam-rules-scale',d.rulesZoom/100);
-        el('auto-rotate').checked=d.autoRotate;text('rotation-status',d.autoRotate?'已開啟':'已關閉');
+        el('auto-rotate').checked=publicMode||d.autoRotate;text('rotation-status',publicMode||d.autoRotate?'已開啟':'已關閉');
         pane.querySelectorAll('[data-exam-slide]').forEach(b=>{const selected=Number(b.dataset.examSlide)===slide;b.setAttribute('aria-pressed',String(selected));b.querySelector('.exam-toggle-line')?.classList.toggle('is-current',selected);});
       }
       function render(){
@@ -18971,8 +19097,8 @@ function onTimerDone(){
         if(crossed.length){el('end-alert').querySelector('span').textContent=crossed.map(p=>p.label+' '+(p.subject||'考試')+'已結束，請停止作答。').join('\n');el('end-alert').hidden=false;}
         const now=Date.now(),editing=pane.contains(document.activeElement)&&document.activeElement.matches('input,textarea,[contenteditable="true"]');
         if(hovered||editing||hasDialog())rotationAt=now;
-        else if(store.data.autoRotate&&now-rotationAt>=8000&&!store.blocked&&!store.error&&(publicMode||TabLock.isActive()))flip();
-        pane.style.setProperty('--exam-progress',store.data.autoRotate?Math.max(0,Math.min(1,(now-rotationAt)/8000)):0);
+        else if((publicMode||store.data.autoRotate)&&now-rotationAt>=8000&&!store.blocked&&!store.error&&(publicMode||TabLock.isActive()))flip();
+        pane.style.setProperty('--exam-progress',(publicMode||store.data.autoRotate)?Math.max(0,Math.min(1,(now-rotationAt)/8000)):0);
       }
       function flip(){if(change(d=>{d.slide=1-d.slide;})){rotationAt=Date.now();renderInfo();}}
       function examConfirm(message){
@@ -18998,7 +19124,9 @@ function onTimerDone(){
         el('exit').focus();
       }
       function activate(asPublic=false){
-        const changed=publicMode!==asPublic;publicMode=asPublic;
+        const changed=publicMode!==asPublic;publicMode=asPublic;pane.dataset.public=String(publicMode);
+        el('load').hidden=publicMode;el('auto-rotate').closest('.exam-rotation-control').hidden=publicMode;
+        text('clear',publicMode?'重設':'清除資料');decorate('clear',publicMode?'reset':'trash');
         store=scopedExamStore(publicMode?'rating-public-tools:':'');
         if(!initialized||changed){store.load();initialized=true;}
         if(ticker!==null)clearInterval(ticker);active=true;previous=null;lastScrollAnchor=null;rotationAt=Date.now();render();ticker=setInterval(tick,1000);
@@ -19080,7 +19208,7 @@ function onTimerDone(){
       pane.addEventListener('scroll',cancelEdgeDrag,true);
       el('reveal').addEventListener('blur',()=>{if(!el('reveal').matches(':hover'))hideEdgeReveal();});
 
-      el('auto-rotate').addEventListener('change',()=>{change(d=>{d.autoRotate=el('auto-rotate').checked;});rotationAt=Date.now();renderInfo();});
+      el('auto-rotate').addEventListener('change',()=>{if(publicMode)return;change(d=>{d.autoRotate=el('auto-rotate').checked;});rotationAt=Date.now();renderInfo();});
       for(const key of ['expected','actual','remarks'])el(key).addEventListener('input',()=>{
         const value=key==='remarks'?el(key).value:el(key).value===''?NaN:Number(el(key).value);
         const ok=change(d=>{d[key]=value;});el(key).setAttribute('aria-invalid',String(!ok));
@@ -19100,14 +19228,14 @@ function onTimerDone(){
       el('save').addEventListener('click',()=>{if(writable()){store.save();health();}});
       el('retry').addEventListener('click',()=>{if(!writable())return;if(store.blocked){if(store.load()){inputError='';render();}}else store.save();health();});
       el('load').addEventListener('click',async()=>{
-        if(!writable())return;const before=JSON.stringify(store.data);
+        if(publicMode||!writable())return;const before=JSON.stringify(store.data);
         if(!await examConfirm('載入此瀏覽器已儲存的考試資料？尚未儲存的考試內容將被取代。'))return;
         if(!writable()||before!==JSON.stringify(store.data))return;
         inputError='';if(store.load()){previous=null;render();}health();
       });
       el('clear').addEventListener('click',async()=>{
         if(!writable())return;const before=JSON.stringify(store.data);
-        if(!await examConfirm('清除考試資料並恢復預設時間與規則？只影響考試時間表，不會清除成績、名單或 Google 資料。'))return;
+        if(!await examConfirm(publicMode?'重設考試時間表？科目、人數與備註將重設，時間與規則恢復預設。':'清除考試資料並恢復預設時間與規則？只影響考試時間表，不會清除成績、名單或 Google 資料。'))return;
         if(!writable()||before!==JSON.stringify(store.data))return;
         if(store.reset()){inputError='';previous=null;el('end-alert').hidden=true;render();}health();
       });
@@ -24545,21 +24673,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const id=()=>crypto.randomUUID();
   const example=()=>({id:id(),name:'閱讀・討論・分享',steps:[{title:'閱讀課文',description:'圈出重點，記下你的發現。',seconds:180},{title:'小組討論',description:'交換想法，一起整理重點。',seconds:300},{title:'分享成果',description:'用自己的話說出小組的想法。',seconds:180}]});
   const defaults=()=>({version:1,timer:{seconds:300,remaining:300,endAt:0,running:false},board:{flows:[],current:null},draw:{start:1,end:30,count:1,unique:true,history:[]}});
-  let data=defaults(),active='',returnFocus=null,examParent=null,examNext=null,storageBlocked=false,draft=null,lastSaved=null,drawRun=0,drawing=false;
+  let data=defaults(),active='',returnFocus=null,examParent=null,examNext=null,storageBlocked=false,draft=null,lastSaved=null,drawRun=0,drawing=false,historyPage=-1,resultPage=0;
   const remaining=t=>t.running?Math.max(0,Math.ceil((t.endAt-Date.now())/1000)):t.remaining;
   const format=n=>`${String(Math.floor(Math.max(0,n)/60)).padStart(2,'0')}:${String(Math.max(0,n)%60).padStart(2,'0')}`;
   function feedback(text,error=false){$('public-tools-feedback').textContent=text;$('public-tools-feedback').dataset.error=String(error);}
-  function validate(v){
+  function validate(v,maxDrawCount=6){
     if(v?.version!==1||!v.timer||!v.board||!v.draw)throw Error('課堂工具設定格式不正確。');
     const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
     const timer=t=>t&&integer(t.seconds,0,86400)&&integer(t.remaining,0,86400)&&typeof t.running==='boolean'&&Number.isFinite(t.endAt)&&t.endAt>=0&&t.endAt<1e15;
     const flow=f=>f&&typeof f.id==='string'&&f.id.length<=100&&typeof f.name==='string'&&f.name.trim()&&f.name.length<=120&&Array.isArray(f.steps)&&f.steps.length>0&&f.steps.length<=30&&f.steps.every(s=>typeof s.title==='string'&&s.title.trim()&&s.title.length<=120&&typeof s.description==='string'&&s.description.length<=2000&&integer(s.seconds,0,86400));
     const b=v.board,c=b.current,d=v.draw;
     if(!timer(v.timer)||!Array.isArray(b.flows)||b.flows.length>60||!b.flows.every(flow)||c&&(!flow(c)||!integer(c.index,0,c.steps.length-1)||!['ready','active','completed'].includes(c.status)||!timer(c.timer)))throw Error('計時或任務資料不正確。');
-    if(!integer(d.start,0,9999)||!integer(d.end,d.start,9999)||!integer(d.count,1,100)||d.count>d.end-d.start+1||typeof d.unique!=='boolean'||d.slowdown!==undefined&&typeof d.slowdown!=='boolean'||!Array.isArray(d.history)||d.history.length>10000||!d.history.every(n=>integer(n,d.start,d.end))||d.unique&&new Set(d.history).size!==d.history.length)throw Error('抽號資料不正確。');
+    if(!integer(d.start,0,9999)||!integer(d.end,d.start,9999)||!integer(d.count,1,maxDrawCount)||d.count>d.end-d.start+1||typeof d.unique!=='boolean'||d.slowdown!==undefined&&typeof d.slowdown!=='boolean'||!Array.isArray(d.history)||d.history.length>10000||!d.history.every(n=>integer(n,d.start,d.end))||d.unique&&new Set(d.history).size!==d.history.length)throw Error('抽號資料不正確。');
     return v;
   }
-  function load(){try{const raw=window.localStorage.getItem(KEY);lastSaved=raw;data=raw?validate(JSON.parse(raw)):defaults();storageBlocked=false;}catch(e){storageBlocked=true;feedback('無法讀取課堂工具設定，原始資料已保留。可以先使用，儲存前請處理裝置儲存問題。',true);}}
+  function load(){try{const raw=window.localStorage.getItem(KEY);lastSaved=raw;data=raw?validate(JSON.parse(raw),100):defaults();data.draw.count=Math.min(data.draw.count,6);storageBlocked=false;}catch(e){storageBlocked=true;feedback('無法讀取課堂工具設定，原始資料已保留。可以先使用，儲存前請處理裝置儲存問題。',true);}}
   function save(){
     if(storageBlocked){feedback('原有課堂工具設定無法讀取，尚未覆寫；目前操作僅保留在此頁面。',true);return false;}
     try{if(window.localStorage.getItem(KEY)!==lastSaved){feedback('另一個視窗已更新工具設定，尚未覆寫。請先重新載入頁面。',true);return false;}const serialized=JSON.stringify(validate(data));window.localStorage.setItem(KEY,serialized);lastSaved=serialized;feedback('設定已存這台裝置');return true;}catch(e){feedback('設定未存妥，請保留此頁面並檢查瀏覽器儲存空間。',true);return false;}
@@ -24590,8 +24718,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     content.innerHTML=`<form id="public-board-editor" class="public-editor"><label>流程名稱<input name="flowName" maxlength="120" value="${escape(draft.name)}" required></label><div class="public-editor-steps">${draft.steps.map((s,i)=>`<fieldset class="public-step-editor"><legend>步驟 ${i+1}</legend><div class="public-fields"><label>任務名稱<input name="title" maxlength="120" value="${escape(s.title)}" required></label><label>分鐘（0 不計時）<input name="duration" type="number" min="0" max="1440" step="1" value="${s.seconds/60}" required></label></div><label>說明<textarea name="description" maxlength="2000">${escape(s.description)}</textarea></label><div class="public-controls">${i?button('step-up-'+i,'上移'):''}${i<draft.steps.length-1?button('step-down-'+i,'下移'):''}${draft.steps.length>1?button('step-remove-'+i,'移除'):''}</div></fieldset>`).join('')}</div><div class="public-controls">${button('step-add','新增步驟')}<button class="btn primary" type="submit">儲存並使用</button>${button('board-cancel','取消')}</div></form>`;
   }
   function renderDraw(){
+    const focusedAction=document.activeElement?.dataset.publicAction;
     const d=data.draw;
-    content.innerHTML=`<section class="public-stage public-draw-stage"><canvas class="draw-confetti" aria-hidden="true"></canvas><p class="public-caption">只抽號碼，不使用學生名單</p><div id="public-draw-result" class="public-draw-result draw-drum ${d.count<=6?'single-row':''}" role="status" aria-live="polite">${d.history.length?d.history.slice(-d.count).map(n=>`<span class="drum-slot revealed"><span class="slot-seat">${n}</span></span>`).join(''):'<span class="public-draw-placeholder">?</span>'}</div><p id="public-draw-summary">${d.unique?'剩餘 '+(d.end-d.start+1-d.history.length)+' 個號碼':'可重複抽取'}</p><div class="public-controls">${button('draw-go','開始抽號',true)}${button('draw-reset','重新一輪')}</div></section><form id="public-draw-form" class="public-settings"><div class="public-draw-count"><span>一次抽幾個</span><div class="public-presets">${[1,2,3,4,5,6].map(n=>`<button type="button" class="btn" data-public-action="draw-count-${n}" aria-pressed="${d.count===n}">${n} 個</button>`).join('')}</div></div><div class="public-fields"><label>起始號碼<input name="start" type="number" min="0" max="9999" value="${d.start}" required></label><label>結束號碼<input name="end" type="number" min="0" max="9999" value="${d.end}" required></label><label>自訂抽取數量<input name="count" type="number" min="1" max="100" value="${d.count}" required></label></div><div class="public-draw-options"><label class="public-checkbox"><input name="unique" type="checkbox" ${d.unique?'checked':''}>本輪不重複</label><label class="public-checkbox"><input name="slowdown" type="checkbox" ${d.slowdown!==false?'checked':''}>緩慢揭曉</label></div><button class="btn" type="submit">套用範圍，開始新一輪</button></form><details class="public-history"><summary>本輪已抽 ${d.history.length} 個</summary><p>${d.history.join('、')||'尚未抽取'}</p></details>`;
+    const pages=Math.max(1,Math.ceil(d.history.length/12));
+    if(historyPage<0||historyPage>=pages)historyPage=pages-1;
+    const results=d.history.slice(-d.count),resultPages=Math.max(1,Math.ceil(results.length/6));
+    resultPage=Math.min(resultPage,resultPages-1);
+    content.innerHTML=`<section class="public-stage public-draw-stage"><canvas class="draw-confetti" aria-hidden="true"></canvas><p class="public-caption">只抽號碼，不使用學生名單</p><div id="public-draw-result" class="public-draw-result draw-drum single-row" role="status" aria-live="polite">${d.history.length?results.map((n,i)=>`<span ${Math.floor(i/6)!==resultPage?'hidden':''} class="drum-slot revealed"><span class="slot-seat">${n}</span></span>`).join(''):'<span class="public-draw-placeholder">?</span>'}</div>${resultPages>1?`<nav class="public-draw-pages" aria-label="抽號結果分頁">${button('draw-result-prev','上一頁')}<span>${resultPage+1} / ${resultPages}</span>${button('draw-result-next','下一頁')}</nav>`:''}<p id="public-draw-summary">${d.unique?'剩餘 '+(d.end-d.start+1-d.history.length)+' 個號碼':'可重複抽取'}</p><div class="public-controls">${button('draw-go','開始抽號',true)}${button('draw-reset','重新一輪')}</div></section><form id="public-draw-form" class="public-settings"><h3>抽號設定</h3><div class="public-draw-count"><span>一次抽幾個</span><div class="public-presets">${[1,2,3,4,5,6].map(n=>`<button type="button" class="btn" data-public-action="draw-count-${n}" aria-pressed="${d.count===n}">${n} 個</button>`).join('')}</div></div><div class="public-fields"><label>起始號碼<input name="start" type="number" min="0" max="9999" value="${d.start}" required></label><label>結束號碼<input name="end" type="number" min="0" max="9999" value="${d.end}" required></label></div><div class="public-draw-options"><label class="public-checkbox"><input name="unique" type="checkbox" ${d.unique?'checked':''}>本輪不重複</label><label class="public-checkbox"><input name="slowdown" type="checkbox" ${d.slowdown!==false?'checked':''}>緩慢揭曉</label></div><button class="btn" type="submit">套用範圍，開始新一輪</button></form><section class="public-history" aria-label="本輪抽號紀錄"><div class="public-history-header"><h3 class="public-history-title">本輪已抽 ${d.history.length} 個</h3></div><div class="public-history-body"><p>${d.history.slice(historyPage*12,(historyPage+1)*12).map(n=>`<span>${n}</span>`).join('')||'尚未抽取'}</p>${pages>1?`<nav class="public-draw-pages" aria-label="已抽紀錄分頁"><button type="button" class="btn" data-public-action="draw-history-prev" aria-label="上一頁紀錄">‹</button><span>${historyPage+1} / ${pages}</span><button type="button" class="btn" data-public-action="draw-history-next" aria-label="下一頁紀錄">›</button></nav>`:''}</div></section>`;
+    if(focusedAction)content.querySelector(`[data-public-action="${focusedAction}"]`)?.focus({preventScroll:true});
   }
   function randomIndex(n){const limit=Math.floor(0x100000000/n)*n,a=new Uint32Array(1);do{crypto.getRandomValues(a);}while(a[0]>=limit);return a[0]%n;}
   function cancelDraw(){drawRun++;drawing=false;}
@@ -24608,7 +24742,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     content.querySelector('[data-public-action=draw-go]').textContent='抽號中…';feedback('號碼滾動中，依序揭曉');result.replaceChildren();
     const slots=selected.map((pick,i)=>{
       const el=document.createElement('div'),reel=document.createElement('div'),cells=d.slowdown===false?44:72;
-      el.className='drum-slot spinning';el.setAttribute('aria-hidden','true');reel.className='slot-reel';
+      el.hidden=i>=6;el.className='drum-slot spinning';el.setAttribute('aria-hidden','true');reel.className='slot-reel';
       for(let j=0;j<=cells;j++){const item=document.createElement('div');item.className='slot-item';const seat=document.createElement('span');seat.className='slot-seat';seat.textContent=j===cells?pick:candidates[randomIndex(candidates.length)];item.append(seat);reel.append(item);}
       el.append(reel);result.append(el);
       return {el,reel,dist:cells*120,motion:window.RatingDrawAnimation.motion(cells*120,Math.min(i,5),d.slowdown!==false),delay:reduced?0:Math.min(i,5)*400};
@@ -24620,7 +24754,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       let finished=0;
       slots.forEach(slot=>{const t=reduced?slot.motion.duration:Math.max(0,now-started-slot.delay);slot.reel.style.transform=`translateY(${-slot.motion.position(t)}px)`;if(t>=slot.motion.duration){slot.el.classList.remove('spinning');slot.el.classList.add('revealed');finished++;}});
       if(finished<slots.length){requestAnimationFrame(frame);return;}
-      drawing=false;d.history.push(...selected);save();renderDraw();
+      drawing=false;historyPage=-1;resultPage=0;d.history.push(...selected);save();renderDraw();
       const stage=$('public-draw-result').closest('section');stage.classList.add('celebrate');
       if(!reduced)window.RatingDrawAnimation.confetti(stage.querySelector('canvas'),2000);
       content.querySelector('[data-public-action=draw-go]').focus({preventScroll:true});
@@ -24634,7 +24768,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function cleanup(){cancelDraw();detachExam();active='';draft=null;dialog.classList.remove('public-projecting');if(document.fullscreenElement===dialog)document.exitFullscreen?.().catch(()=>{});returnFocus?.focus({preventScroll:true});}
   function open(tool){
     if(!toolTitles[tool]||$('account-entry').hidden)return;
-    cancelDraw();detachExam();active=tool;draft=null;returnFocus=document.querySelector(`[data-public-tool="${tool}"]`);$('public-tools-title').textContent=toolTitles[tool];feedback(storageBlocked?'原有工具設定無法讀取，操作僅保留在此頁面。':'',storageBlocked);
+    cancelDraw();detachExam();active=tool;dialog.dataset.tool=tool;historyPage=-1;resultPage=0;draft=null;returnFocus=document.querySelector(`[data-public-tool="${tool}"]`);$('public-tools-title').textContent=toolTitles[tool];feedback(storageBlocked?'原有工具設定無法讀取，操作僅保留在此頁面。':'',storageBlocked);
     if(!dialog.open)dialog.showModal();
     if(tool==='exam'){const e=$('exam-pane');examParent=e.parentNode;examNext=e.nextSibling;content.replaceChildren(e);e.classList.remove('hidden');window.RatingExamDashboard.activate(true);}
     else if(tool==='timer')renderTimer();else if(tool==='board')renderBoard();else renderDraw();
@@ -24650,6 +24784,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     else if(action==='timer-toggle'){if(t.running)pause(t);else{if(t.remaining===0)t.remaining=t.seconds;if(t.remaining>0)setTimer(t);else return feedback('請先設定時間。',true);}save();renderTimer();}
     else if(action==='timer-reset'){data.timer=timerState(t.seconds);save();renderTimer();}
     else if(action==='timer-add'){const n=Math.min(86400,remaining(t)+60);t.remaining=n;if(t.running)t.endAt=Date.now()+n*1000;save();tick();}
+    else if(action.startsWith('draw-history-')){historyPage=Math.max(0,Math.min(Math.ceil(data.draw.history.length/12)-1,historyPage+(action.endsWith('next')?1:-1)));renderDraw();}
+    else if(action.startsWith('draw-result-')){resultPage=Math.max(0,Math.min(Math.ceil(Math.min(data.draw.count,data.draw.history.length)/6)-1,resultPage+(action.endsWith('next')?1:-1)));renderDraw();}
     else if(action.startsWith('draw-count-')){const count=Number(action.split('-').at(-1));if(count>data.draw.end-data.draw.start+1)return feedback('抽取數量超過號碼範圍，請先調整範圍。',true);data.draw.count=count;save();renderDraw();}
     else if(action==='draw-go')draw();else if(action==='draw-reset'){data.draw.history=[];save();renderDraw();}
     else if(action==='board-example'){if(data.board.flows.length>=60)return feedback('流程已達 60 份，請先刪除不需要的流程。',true);const f=example();data.board.flows.push(f);useFlow(f);}
@@ -24678,7 +24814,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!['public-timer-form','public-draw-form','public-board-editor'].includes(event.target.id))return;
     event.preventDefault();if(drawing)return;const f=event.target.elements;
     if(event.target.id==='public-timer-form'){const n=Number(f.minutes.value)*60+Number(f.seconds.value);if(!Number.isInteger(n)||n<=0||n>86400)return feedback('請設定 1 秒至 24 小時。',true);data.timer=timerState(n);save();renderTimer();}
-    else if(event.target.id==='public-draw-form'){const next={start:Number(f.start.value),end:Number(f.end.value),count:Number(f.count.value),unique:f.unique.checked,slowdown:f.slowdown.checked,history:[]};try{validate({...data,draw:next});data.draw=next;save();renderDraw();}catch(e){feedback('號碼須為 0–9999，結束不得小於起始；每次數量不可超過範圍或 100 個。',true);}}
+    else if(event.target.id==='public-draw-form'){const next={start:Number(f.start.value),end:Number(f.end.value),count:data.draw.count,unique:f.unique.checked,slowdown:f.slowdown.checked,history:[]};try{validate({...data,draw:next});data.draw=next;save();renderDraw();}catch(e){feedback('號碼須為 0–9999，結束不得小於起始；每次數量須為 1–6 個，且不可超過號碼範圍。',true);}}
     else{collectDraft();const flow={id:draft.sourceId||draft.id,name:draft.name.trim(),steps:draft.steps.map(s=>({...s,title:s.title.trim()}))};try{const exists=data.board.flows.findIndex(f=>f.id===flow.id),next=clone(data);if(exists<0)next.board.flows.push(flow);else next.board.flows[exists]=flow;next.board.current=null;validate(next);data=next;useFlow(flow);}catch(e){feedback('請填完整名稱與任務；流程最多 60 份，時間須為 0–1440 分鐘。',true);}}
   });
   $('public-tools-close').addEventListener('click',close);$('public-tools-project').addEventListener('click',project);dialog.addEventListener('close',cleanup);
