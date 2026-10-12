@@ -19266,7 +19266,8 @@ function onTimerDone(){
       if(m!=='taskboard'&&document.body.classList.contains('tb-projecting'))tbExitProjection();
       if(state.mode==='seat' || m==='seat')resetSeatPanel();
       if(state.mode==='group' || m==='group') resetGroupPanel();
-      if(m!=='hw')setHWGrading(false);
+      // 切頁先完成目前成績輸入，批改狀態保留至使用者按「結束批改」。
+      if(state.mode==='hw' && m!=='hw'){hwFinishEdit();closeHWColumnMenu();}
       if(state.mode === 'manage' && m !== 'manage' && manageEditMode) applyManageEdits();
       // ★ 無資料時，只允許切到 list、timer 和 manage
       const hasData = state.classOrder && state.classOrder.length > 0;
