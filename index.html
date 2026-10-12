@@ -304,6 +304,9 @@ html[data-account-pending="true"] .app{visibility:hidden;pointer-events:none}
 #account-identity{overflow-wrap:anywhere}
 #account-status[data-pending="true"]{color:var(--gold)}
 #account-panel [hidden]{display:none!important}
+#mobile-account{margin-top:24px;min-height:48px}
+#mobile-account[hidden]{display:none!important}
+body.mobile-blocked:has(#progclass-mask.show) #mobile-block-overlay{display:none!important}
 
 
 #account-status[data-kind="error"]{color:var(--bad)}
@@ -8665,6 +8668,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
     <div class="block-icon">🚫</div>
     <div class="block-title">本系統不支援手機操作</div>
     <div class="block-msg">請使用平板電腦或桌上型電腦／筆記型電腦開啟本網站，以獲得最佳使用體驗。</div>
+    <button id="mobile-account" class="btn" type="button" hidden>帳號與登出</button>
   </div>
   <script>
   (function(){
@@ -24207,6 +24211,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(panel.parentElement!==$('account-entry-host'))$('account-entry-host').append(panel);
     }else if(panel.parentElement!==dialog){dialog.append(panel);}
     $('account-close').hidden=show||!A.ready;
+    $('mobile-account').hidden=show||!A.owner;
+    $('mobile-account').disabled=working||!A.ready;
     document.querySelector('.skip-link').href=show?'#account-email':'#main-content';
   }
   function routeEntry(show,{replace=false}={}){
@@ -24229,6 +24235,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   window.addEventListener('popstate',followEntryRoute);
   window.addEventListener('hashchange',followEntryRoute);
   $('entry-theme').onclick=()=>{$('btn-theme').click();refreshEntry();};
+  $('mobile-account').onclick=()=>open('mobile-account');
   $('account-password-toggle').onclick=()=>{
     const input=$('account-password'),show=input.type==='password';input.type=show?'text':'password';
     $('account-password-toggle').textContent=show?'隱藏':'顯示';
@@ -24402,10 +24409,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   $('account-reload').onclick=()=>location.reload();
   dialog.addEventListener('close',()=>{if(A.ready)$(entry.hidden?accountReturnFocus:'account-email').focus();});
   dialog.addEventListener('cancel',e=>{if(!A.ready||working)e.preventDefault();});
-  $('account-switch').onclick=()=>setMode(mode==='login'?'signup':'login');
-  $('account-forgot').onclick=()=>setMode('forgot');
-  $('account-code-change').onclick=()=>setMode(mode==='signup-code'?'signup':'forgot');
-  $('account-code-existing').onclick=()=>{if($('account-email').reportValidity())setMode('verify-code');};
+  function changeFormMode(value){
+    setMode(value);
+    $(['verify-code','signup-code'].includes(value)?'account-code':value==='reset'?'account-password':'account-email').focus();
+  }
+  $('account-switch').onclick=()=>changeFormMode(mode==='login'?'signup':'login');
+  $('account-forgot').onclick=()=>changeFormMode('forgot');
+  $('account-code-change').onclick=()=>changeFormMode(mode==='signup-code'?'signup':'forgot');
+  $('account-code-existing').onclick=()=>{if($('account-email').reportValidity())changeFormMode('verify-code');};
   $('account-code-resend').onclick=()=>{
     if(working||mailSeconds()>0)return;
     run(async()=>{
@@ -24630,7 +24641,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     updateProject();$('public-tools-close').focus();
   }
   document.querySelectorAll('[data-public-tool]').forEach(e=>e.addEventListener('click',()=>open(e.dataset.publicTool)));
-  content.addEventListener('click',event=>{
+  let deletingBoard=false;
+  content.addEventListener('click',async event=>{
     const action=event.target.closest('[data-public-action]')?.dataset.publicAction;if(!action)return;
     if(drawing)return;
     const t=data.timer,c=data.board.current;
@@ -24644,7 +24656,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     else if(action==='board-new'){draft={id:id(),name:'',steps:[{title:'',description:'',seconds:180}]};editor();}
     else if(action==='board-edit'){if(!c)return;pause(c.timer);save();draft=clone(c);editor();}
     else if(action==='board-cancel')renderBoard();
-    else if(action==='board-delete'){if(c?.sourceId&&confirm('刪除這份本機流程？')){data.board.flows=data.board.flows.filter(f=>f.id!==c.sourceId);data.board.current=null;save();renderBoard();}}
+    else if(action==='board-delete'){
+      if(!c?.sourceId||deletingBoard)return;
+      deletingBoard=true;
+      try{
+        // Safari does not focus buttons on click; return to the delete action on cancel.
+        event.target.closest('[data-public-action]').focus();
+        if(await appConfirm('刪除這份本機流程？')&&active==='board'&&data.board.current===c){
+          data.board.flows=data.board.flows.filter(f=>f.id!==c.sourceId);data.board.current=null;save();renderBoard();
+        }
+      }finally{deletingBoard=false;}
+    }
     else if(action==='board-toggle'){if(c.status==='ready')c.status='active';if(c.timer.running)pause(c.timer);else{if(c.timer.remaining===0)c.timer.remaining=c.steps[c.index].seconds;if(c.timer.remaining>0)setTimer(c.timer);}save();renderBoard();}
     else if(action==='board-next'){pause(c.timer);if(c.index===c.steps.length-1)c.status='completed';else{c.index++;c.status='active';c.timer=timerState(c.steps[c.index].seconds);if(c.timer.remaining)setTimer(c.timer);}save();renderBoard();}
     else if(action==='board-add'){const n=Math.min(86400,remaining(c.timer)+60);c.timer.remaining=n;if(c.timer.running)c.timer.endAt=Date.now()+n*1000;save();tick();}
