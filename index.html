@@ -18026,7 +18026,6 @@ function onTimerDone(){
           groupPointerCancel=null;cancelGroupPanelTimer();
           const target=dragging && !cancelled ? groupDropTarget(event.clientX,event.clientY) : null;
           if(dragging){
-            setGroupPanelCollapsed(true);
             const suppress=ev=>{ev.preventDefault();ev.stopImmediatePropagation();};
             document.addEventListener('click',suppress,true);
             setTimeout(()=>document.removeEventListener('click',suppress,true),touchMode?400:0);
@@ -18075,7 +18074,6 @@ function onTimerDone(){
             anchorY=frontCard.offsetTop+frontCard.offsetHeight;
             preview.style.setProperty('--pickup-x',`${origin.left-ev.clientX+anchorX-frontCard.offsetLeft}px`);
             preview.style.setProperty('--pickup-y',`${origin.top-ev.clientY+anchorY-frontCard.offsetTop}px`);
-            setGroupPanelCollapsed(true);
             document.querySelectorAll('#group-pane .grp-member').forEach(el=>el.classList.toggle('grp-drag-source',ids.includes(el.dataset.id)));
           }
           preview.style.left=`${ev.clientX-anchorX}px`;
