@@ -11312,9 +11312,15 @@ const ClassroomLayout = (() => {
     elFile.addEventListener('change', async (e)=>{ const files=e.target.files; if(files && files.length) await handleFiles(files); e.target.value=''; });
     const dropmask=document.getElementById('dropmask'); let dragCounter=0;
     function isFileDrag(e){ const dt=e.dataTransfer; if(!dt) return false; const types=Array.from(dt.types||[]); return types.includes('Files')||types.includes('application/x-moz-file'); }
-    ['dragenter','dragover'].forEach(evt=>{ window.addEventListener(evt, e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter++; dropmask.classList.add('show'); }); });
-    window.addEventListener('dragleave', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter=Math.max(0,dragCounter-1); if(dragCounter===0) dropmask.classList.remove('show'); });
-    window.addEventListener('drop', async (e)=>{ const files=e.dataTransfer?.files; dragCounter=0; dropmask.classList.remove('show'); if(files && files.length){ e.preventDefault(); await handleFiles(files); } });
+    function clearFileDrag(){ dragCounter=0; dropmask.classList.remove('show'); }
+    window.addEventListener('dragenter', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter++; dropmask.classList.add('show'); });
+    window.addEventListener('dragover', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dropmask.classList.add('show'); });
+    window.addEventListener('dragleave', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); if(--dragCounter<=0) clearFileDrag(); });
+    window.addEventListener('drop', async (e)=>{ const files=e.dataTransfer?.files; clearFileDrag(); if(files && files.length){ e.preventDefault(); await handleFiles(files); } });
+    window.addEventListener('dragend',clearFileDrag);
+    window.addEventListener('blur',clearFileDrag);
+    window.addEventListener('pagehide',clearFileDrag);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)clearFileDrag();});
 
     /* ====== 解析 Excel（支援多檔匯入） ====== */
 
@@ -24010,6 +24016,7 @@ window.RatingBridge = {
   </section>
   <div id="account-session-actions" class="account-session-actions" hidden><button id="account-signout" class="btn" type="button">登出並返回登入頁</button></div>
   <p id="account-feedback" role="status" aria-live="polite"></p>
+  <button id="account-retry-session" class="btn" type="button" hidden>重試連線</button>
   <button id="account-reload" class="btn" type="button" hidden>重新載入</button>
 </div>
 </dialog>
@@ -24083,6 +24090,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let accountReturnFocus='btn-data';
   try{sessionStorage.removeItem('rating-entry-workspace');}catch{}
   let client,user=null,mode='login',working=false,cloud=null,epoch=0,switchingOwner=false;
+  let sessionCheck=null,retrySession=true;
+  const requestTimeout=20000,pendingRequests=new Set();
+
+  function accountFetch(url,options){
+    const upstream=options?.signal;
+    if(upstream?.aborted)return fetch(url,options);
+    const controller=new AbortController();
+    function cleanup(){
+      clearTimeout(timer);
+      upstream?.removeEventListener('abort',forwardAbort);
+      pendingRequests.delete(request);
+    }
+    function forwardAbort(){cleanup();controller.abort(upstream.reason);}
+    const request={deadline:Date.now()+requestTimeout,expire(){
+      cleanup();controller.abort(new DOMException('Account request timed out','TimeoutError'));
+    }};
+    const timer=setTimeout(request.expire,requestTimeout);
+    upstream?.addEventListener('abort',forwardAbort,{once:true});
+    pendingRequests.add(request);
+    // Keep the deadline through body reads, even after fetch receives headers.
+    return fetch(url,{...options,signal:controller.signal}).catch(error=>{cleanup();throw error;});
+  }
   const metaKey='rating-cloud-meta';
   const mailWaitKey='rating-auth-mail-wait';
   let mailWaitUntil=0,mailSending=false;
@@ -24333,7 +24362,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(/email address.*invalid/i.test(text))return '請輸入有效的 Email。';
     if(/email.*sending|smtp|email address not authorized/i.test(text))return '驗證信未寄出，請聯絡管理者檢查寄信服務。';
     if(/teacher_workspaces|schema cache|42P01|PGRST205/i.test(text))return '帳號已連線，但雲端資料表尚未完成設定，請聯絡管理者。';
-    if(/fetch|network|timeout|abort/i.test(text))return '連線未完成，請檢查網路後重試。本機資料仍保留。';
+    if(/fetch|network|timeout|timed out|abort/i.test(text))return '連線未完成，請檢查網路後重試。本機資料仍保留。';
     return text;
   }
   function busy(value){
@@ -24500,24 +24529,61 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function verify(){
     if(stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
     const ticket=++epoch;
-    const {data,error}=await client.auth.getSession();if(error)throw error;
+    const {data,error}=await client.auth.getSession();
     if(ticket!==epoch||stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
+    if(error)throw error;
     if(!data.session){
+      retrySession=false;$('account-retry-session').hidden=true;
       user=null;
       if(A.owner){A.ready=false;$('app').inert=true;document.documentElement.dataset.accountPending='true';RatingBridge.refreshAccess();open();message('登入已失效，請重新登入；或登出返回登入頁。');}
       else {A.ready=true;RatingBridge.refreshAccess();update();}
       return;
     }
-    const result=await client.auth.getUser();if(result.error)throw result.error;
+    const result=await client.auth.getUser();
     if(ticket!==epoch||stopped||switchingOwner||(A.owner&&!RatingStorage.isActive()))return;
+    if(result.error)throw result.error;
     const wasReady=A.ready;
     user=result.data.user;
     if(user.id!==A.owner){switchOwner(user.id);return;}
+    $('account-retry-session').hidden=true;
     A.ready=true;RatingRememberOwner(user.id);if(location.hash==='#login')routeEntry(false,{replace:true});delete document.documentElement.dataset.accountPending;$('app').inert=false;
     RatingBridge.refreshAccess();
     if(sessionStorage.getItem('rating-recovery')){mode='reset';open();setMode('reset');}
     else if(!wasReady&&dialog.open)dialog.close();
     update();startSync();
+  }
+  function showSessionError(error){
+    if(stopped||switchingOwner)return;
+    if(A.owner&&!A.ready){
+      open();
+      $('account-retry-session').hidden=false;
+    }
+    message(explain(error),true);
+  }
+  function checkSession(){
+    if(!client||working||sessionCheck)return;
+    const retry=$('account-retry-session');
+    retry.disabled=true;
+    sessionCheck=verify().catch(showSessionError).finally(()=>{
+      retry.disabled=false;
+      sessionCheck=null;
+    });
+  }
+  function resumeAccount(){
+    if(document.visibilityState!=='visible'||stopped||switchingOwner)return;
+    // A suspended tab's timers may not have fired while the wall clock advanced.
+    const now=Date.now();
+    let expired=false;
+    for(const request of pendingRequests){
+      if(request.deadline>now)continue;
+      request.expire();expired=true;
+    }
+    if(navigator.onLine===false)return;
+    const inFlight=A.ready?syncPromise:sessionCheck;
+    // Let the existing pass settle before retrying so an uncertain write can be reconciled.
+    if(expired&&inFlight){inFlight.then(resumeAccount,resumeAccount);return;}
+    if(A.owner&&!A.ready&&retrySession)checkSession();
+    else scheduleSync(0);
   }
   async function getCloud(uid){
     const {data,error}=await client.from('teacher_workspaces').select('payload,revision,updated_at').eq('user_id',uid).maybeSingle();
@@ -24557,6 +24623,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   $('btn-account').onclick=()=>open();
   $('account-close').onclick=close;
   $('account-reload').onclick=()=>location.reload();
+  $('account-retry-session').onclick=checkSession;
   dialog.addEventListener('close',()=>{if(A.ready)$(entry.hidden?accountReturnFocus:'account-email').focus();});
   dialog.addEventListener('cancel',e=>{if(!A.ready||working)e.preventDefault();});
   function changeFormMode(value){
@@ -24664,22 +24731,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   A.changed=()=>{refreshEntry();if(live()){paintSync('pending');scheduleSync();}};
   A.renderStatus=updateStatus;
   A.refreshEntry=()=>{refreshEntry();return !entry.hidden;};
-  window.addEventListener('online',()=>{if(A.owner&&!A.ready)verify().catch(e=>message(explain(e),true));});
-  setInterval(()=>{if(document.visibilityState==='visible'&&live())scheduleSync(0);},15000);
-  window.addEventListener('focus',()=>scheduleSync(0));
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')scheduleSync(0);});
-  window.addEventListener('online',()=>scheduleSync(0));
+  setInterval(resumeAccount,15000);
+  window.addEventListener('focus',resumeAccount);
+  window.addEventListener('pageshow',resumeAccount);
+  window.addEventListener('online',resumeAccount);
+  document.addEventListener('visibilitychange',resumeAccount);
   setMode('login');
   sessionStorage.removeItem('rating-open-google');
   try{
     if(!window.supabase)throw Error('登入元件未載入，請重新整理頁面。');
-    client=supabase.createClient(PROJECT_URL,KEY,{auth:{storage:window.RatingAuthStorage,storageKey:'rating-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},global:{fetch:(url,options)=>fetch(url,{...options,signal:options?.signal||AbortSignal.timeout(20000)})}});
+    client=supabase.createClient(PROJECT_URL,KEY,{auth:{storage:window.RatingAuthStorage,storageKey:'rating-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},global:{fetch:accountFetch}});
     client.auth.onAuthStateChange((event)=>{
       if(event==='SIGNED_OUT')RatingRememberOwner('');
       if(event==='PASSWORD_RECOVERY')sessionStorage.setItem('rating-recovery','1');
-      if(['SIGNED_IN','SIGNED_OUT','PASSWORD_RECOVERY'].includes(event))setTimeout(()=>verify().catch(e=>{open();message(explain(e),true);}),0);
+      if(['SIGNED_IN','SIGNED_OUT','PASSWORD_RECOVERY'].includes(event))setTimeout(()=>verify().catch(showSessionError),0);
+      if(event==='TOKEN_REFRESHED'&&A.owner&&!A.ready)setTimeout(resumeAccount,0);
     });
-    verify().catch(e=>{if(A.owner)open();message(explain(e),true);});
+    checkSession();
   }catch(e){if(A.owner)open();message(explain(e),true);}
 })();
 
