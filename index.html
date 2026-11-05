@@ -4931,6 +4931,10 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
       font-weight:800; font-size:14px; display:flex; align-items:center; gap:6px;
       flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     }
+    .manage-grade-setting{
+      display:flex; align-items:center; gap:8px; min-height:44px;
+      cursor:pointer; font-size:14px; white-space:nowrap;
+    }
     .manage-right-actions{ flex-shrink:0; display:flex; gap:6px; }
     .manage-right-actions .btn{ font-size:12px; padding:4px 10px; }
     .manage-tbl-wrap{
@@ -5006,6 +5010,7 @@ body .app #data-dropdown #dt-display{margin:0 0 12px;padding:0 0 12px;border:0;b
     .manage-tbl th.col-hwavg{
       box-shadow: inset 0 -2px 0 var(--line);
     }
+    #manage-pane.hide-grades .manage-tbl :is(.col-hw,.col-score,.col-hwavg){ display:none; }
 
     /* ── 編輯模式按鈕 ── */
     #btn-manage-edit.active{
@@ -9182,7 +9187,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
         </div>
 
         <!-- � 學生管理 -->
-        <section id="manage-pane" class="hidden" aria-label="學生管理">
+        <section id="manage-pane" class="hidden hide-grades" aria-label="學生管理">
           <div class="manage-split">
             <!-- 左側：班級列表 -->
             <div class="manage-left">
@@ -9198,6 +9203,7 @@ body[data-mode="seat"] #room-arrange-menu{min-height:44px;white-space:nowrap;fle
             <div class="manage-right">
               <div class="manage-right-head">
                 <span class="manage-right-title" id="manage-right-title">請選擇班級</span>
+                <label class="manage-grade-setting"><input id="manage-hide-grades" type="checkbox" checked>隱藏學生成績</label>
                 <div class="manage-right-actions">
                   <button id="btn-manage-edit" class="btn" disabled>✏️ 編輯模式</button>
                   <button id="btn-manage-add" class="btn add" disabled>＋ 新增學生</button>
@@ -18311,6 +18317,22 @@ function onTimerDone(){
     document.getElementById('grp-count-plus')?.addEventListener('click', ()=> _grpStep(1));
 
     /* ====== 👤 學生管理模式 ====== */
+    (function initManageGradeVisibility(){
+      const key = 'manage_hide_grades_v1';
+      const checkbox = document.getElementById('manage-hide-grades');
+      try{ checkbox.checked = localStorage.getItem(key) !== '0'; }catch{}
+      const apply = () => {
+        elManagePane.classList.toggle('hide-grades', checkbox.checked);
+        const empty = elManageTable.querySelector('td.manage-empty');
+        if(empty) empty.colSpan = checkbox.checked ? 4 : elManageTable.tHead.rows[0].cells.length;
+      };
+      apply();
+      checkbox.addEventListener('change', () => {
+        apply();
+        try{ localStorage.setItem(key, checkbox.checked ? '1' : '0'); }catch{}
+      });
+    })();
+
     function renderManage(){
       const classes = state.classOrder || [];
       const hasClasses = classes.length > 0;
@@ -18350,6 +18372,7 @@ function onTimerDone(){
       const cls = manageSelectedClass;
       const hw = cls ? ensureHWState(cls) : { cols:[], data:{} };
       const hwCols = hw.cols || [];
+      const columnCount = elManagePane.classList.contains('hide-grades') ? 4 : 6 + hwCols.length;
       const cadreOptions = cls ? ensureCadreOptions(cls) : [...DEFAULT_CADRE_OPTIONS];
       if(elManageTable){
         elManageTable.classList.toggle('is-editing', manageEditMode);
@@ -18369,7 +18392,7 @@ function onTimerDone(){
       }
       const tbody = document.getElementById('manage-tbody');
       if(!cls || !state.classMap[cls]){
-        if(tbody) tbody.innerHTML = `<tr><td colspan="${6 + hwCols.length}" class="manage-empty">請先選擇班級</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="${columnCount}" class="manage-empty">請先選擇班級</td></tr>`;
         if(elManageRightTitle) elManageRightTitle.textContent = '請選擇班級';
         return;
       }
@@ -18377,7 +18400,7 @@ function onTimerDone(){
       if(elManageRightTitle) elManageRightTitle.innerHTML = `📋 ${renderClassLabel(cls)} <span class="pill" style="font-weight:400;font-size:12px;">${list.length} 人</span>`;
       if(tbody){
         if(!list.length){
-          tbody.innerHTML = `<tr><td colspan="${6 + hwCols.length}" class="manage-empty">此班級沒有學生</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="${columnCount}" class="manage-empty">此班級沒有學生</td></tr>`;
         } else {
           // 依座號排序
           const sorted = [...list].sort((a,b)=>{
